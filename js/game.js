@@ -1076,6 +1076,34 @@ function update(dt) {
   enemyShots = enemyShots.filter(
     (shot) => shot.life > 0 && !projectileOutsideArena(shot),
   );
+  // Ground attacks are announced before impact and cannot hit a player who
+  // has already moved outside the visible warning zone.
+  for (let i = bossHazards.length - 1; i >= 0; i--) {
+    const hazard = bossHazards[i];
+    hazard.warning -= dt;
+    if (hazard.warning > 0) continue;
+    bossHazards.splice(i, 1);
+    const dx = hazard.x - player.x, dy = hazard.y - player.y;
+    const reach = hazard.radius + player.r;
+    if (dx * dx + dy * dy <= reach * reach && player.inv <= 0 && !tryDodge()) {
+      player.hp -= hazard.damage;
+      runDamageTaken += hazard.damage;
+      player.inv = 0.8;
+      damageFlash = 0.5;
+      shake = Math.max(shake, 11);
+      puff(player.x, player.y, "#eb94ff", 12);
+      if (player.hp <= 0) {
+        end();
+        return;
+      }
+    }
+    explosions.push({
+      x: hazard.x, y: hazard.y, radius: hazard.radius,
+      life: 0.48, maxLife: 0.48, evolved: true,
+    });
+    puff(hazard.x, hazard.y, "#ed99ff", 14);
+    playSfx("bomb");
+  }
   for (const b of bossShots) {
     b.x += b.vx * dt;
     b.y += b.vy * dt;
