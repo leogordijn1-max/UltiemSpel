@@ -72,6 +72,8 @@ function bindMainMenu() {
   $("recordsButton").onclick = showRecords;
   $("achievementsButton").onclick = showAchievements;
   $("encyclopediaButton").onclick = () => showEncyclopedia();
+  $("collectionButton").onclick = () => showCollection();
+  $("controlsButton").onclick = () => showControlsHelp(false);
 }
 
 function showCharacterSelection() {
@@ -181,7 +183,7 @@ function showWeaponSelection() {
   });
 }
 
-function showSettings() {
+function showSettings(fromPause = false) {
   panel("SETTINGS", "Audio, graphics quality, and performance options", (parent) => {
     parent.innerHTML = `<fieldset id="audioSettings"><legend>Sound settings</legend><label>Effects <input id="effectVolume" type="range" min="0" max="0.6" step="0.01"></label><label>Ambient music <input id="musicVolume" type="range" min="0" max="0.5" step="0.01"></label><label><input id="muteAudio" type="checkbox"> Mute all sound</label><label><input id="showFps" type="checkbox"> Show FPS, frametime and object timings</label><label>Graphics quality <select id="graphicsQuality"><option value="low">Low · reduced glow and particles</option><option value="medium">Medium</option><option value="high">High</option></select></label></fieldset>`;
     configureAudio();
@@ -195,7 +197,8 @@ function showSettings() {
       graphicsQuality = $("graphicsQuality").value;
       storageSet("shadowGraphics", graphicsQuality);
     };
-    backButton(parent);
+    if (fromPause) appendMenuButton(parent, "BACK TO PAUSE", showPauseMenu);
+    else backButton(parent);
   });
 }
 
@@ -384,38 +387,152 @@ function showEncyclopedia(category = "Weapons") {
 bindMainMenu();
 checkSavedAchievements();
 
+// Buttons and panels created here do not reset fullscreen.
+function appendMenuButton(parent, label, action, className = "") {
+  const button = document.createElement("button");
+  button.textContent = label;
+  if (className) button.className = className;
+  button.onclick = action;
+  parent.append(button);
+  return button;
+}
+
+function resumePausedRun() {
+  if (!active || gameState !== "paused") return false;
+  paused = false;
+  choiceScreenOpen = false;
+  gameState = "playing";
+  $("overlay").style.display = "none";
+  clearMovementKeys();
+  return true;
+}
+
+function showPauseMenu() {
+  if (!active || !["playing", "paused"].includes(gameState)) return false;
+  paused = true;
+  gameState = "paused";
+  clearMovementKeys();
+  panel("PAUSED", "Your run is safe while the game is paused.", (parent) => {
+    appendMenuButton(parent, "RESUME · P", resumePausedRun);
+    appendMenuButton(parent, "CURRENT BUILD", showCurrentBuild);
+    appendMenuButton(parent, "CONTROLS", () => showControlsHelp(true));
+    appendMenuButton(parent, "SETTINGS", () => showSettings(true));
+    appendMenuButton(parent, "RESTART RUN", () => {
+      if (!window.confirm("Restart this run? Unsaved run rewards will be lost.")) return;
+      reset();
+    }, "danger-action");
+    appendMenuButton(parent, "MAIN MENU", () => {
+      if (!window.confirm("Leave your current run? This run will end without completion rewards.")) return;
+      showMainMenu();
+    }, "danger-action");
+  });
+  return true;
+}
+
+function showCurrentBuild() {
+  if (!active || gameState !== "paused") return;
+  panel("CURRENT BUILD", `${getCharacter(selectedCharacter).name} · Level ${level} · ${formatGameTime(time)}`, (parent) => {
+    const section = document.createElement("div");
+    section.className = "build-details";
+    const weapons = selectedWeapons.map((key) => {
+      const weapon = weaponCatalog.find((w) => w.key === key);
+      const evolved = evolutionRecipes.find((r) => r.weapon === key && evolutions[r.id]);
+      const status = unlockedWeapons.includes(key)
+        ? `Level ${currentUpgradeLevel(key)} / 5${evolved ? " · " + evolved.name + " EVOLVED" : ""}`
+        : "LOCKED · unlock in a level-up";
+      return [weapon?.name || key, status];
+    });
+    const passives = opts.filter(([key]) => !isWeaponKey(key) && currentUpgradeLevel(key) > 0)
+      .map(([key, name]) => [name, `Level ${currentUpgradeLevel(key)}/${maxUpgradeLevel(key)} · ${upgradeEffectAtLevel(key, currentUpgradeLevel(key))}`]);
+    for (const [heading, entries] of [["WEAPONS", weapons], ["PASSIVES", passives]]) {
+      const subtitle = document.createElement("h2");
+      subtitle.textContent = heading;
+      section.append(subtitle);
+      for (const [name, description] of entries) {
+        const row = document.createElement("p");
+        row.textContent = `${name} · ${description}`;
+        section.append(row);
+      }
+      if (!entries.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "None unlocked yet.";
+        section.append(empty);
+      }
+    }
+    parent.append(section);
+    appendMenuButton(parent, "BACK TO PAUSE", showPauseMenu);
+  });
+}
+
+function showControlsHelp(fromPause = false) {
+  panel("CONTROLS", "Desktop-first keyboard controls", (parent) => {
+    const list = document.createElement("div");
+    list.className = "build-details";
+    for (const [label, description] of [
+      ["WASD / Arrow keys", "Move through the arena."],
+      ["Shift", "Dash in the current movement direction."],
+      ["P / Escape", "Pause or resume during normal gameplay."],
+      ["1 / 2 / 3", "Choose simulation speed during gameplay."],
+      ["F", "Toggle fullscreen without leaving your current screen."],
+      ["Level-up", "Choose from three upgrades when a choice appears."],
+    ]) {
+      const line = document.createElement("p");
+      const strong = document.createElement("strong");
+      strong.textContent = label + " — ";
+      line.append(strong, document.createTextNode(description));
+      list.append(line);
+    }
+    parent.append(list);
+    appendMenuButton(parent, fromPause ? "BACK TO PAUSE" : "BACK TO MAIN MENU",
+      fromPause ? showPauseMenu : showMainMenu);
+  });
+}
+
 $("pause").onclick = () => {
   if (!active || !["playing", "paused"].includes(gameState)) return;
-  paused = !paused;
-  if (paused) {
-    gameState = "paused";
-    panel("PAUSED", "The night waits for no one.", (parent) => {
-    const resume = document.createElement("button");
-    resume.textContent = "RESUME";
-    resume.onclick = () => { paused = false; gameState = "playing"; $("overlay").style.display = "none"; };
-    parent.append(resume);
-    });
-  } else { gameState = "playing"; $("overlay").style.display = "none"; }
+  if (gameState === "paused") resumePausedRun();
+  else showPauseMenu();
 };
 
 addEventListener("keydown", (event) => {
-  keys[event.key.toLowerCase()] = true;
-  keys[event.key] = true;
+  const editable = ["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) ||
+    event.target?.isContentEditable;
+  if (editable) return;
+  const key = event.key.toLowerCase();
   if (event.key === "Escape") {
-    if (!active) showMainMenu();
     event.preventDefault();
+    if (active && gameState === "playing") showPauseMenu();
+    else if (active && gameState === "paused") resumePausedRun();
+    else if (!active && gameState !== "main-menu") showMainMenu();
+    return;
   }
-  if (event.key.toLowerCase() === "f") {
+  if (key === "f" && !event.repeat) {
     event.preventDefault();
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     else document.documentElement.requestFullscreen?.().catch(() => {});
+    return;
   }
-  if (event.key === "Shift") { event.preventDefault(); startDash(); }
-  if (active && ["1", "2", "3"].includes(event.key)) { gameSpeed = Number(event.key); updateSpeedButtons(); }
+  if (!active || paused || gameState !== "playing") return;
+  keys[key] = true;
+  keys[event.key] = true;
+  if (event.key === "Shift") {
+    event.preventDefault();
+    if (!event.repeat) startDash();
+  }
+  if (["1", "2", "3"].includes(event.key)) {
+    gameSpeed = Number(event.key);
+    updateSpeedButtons();
+  }
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
-  if (event.key.toLowerCase() === "p" && active && (!paused || $("panel").querySelector("h1")?.textContent === "PAUSED")) $("pause").click();
+  if (key === "p" && !event.repeat) {
+    event.preventDefault();
+    showPauseMenu();
+  }
 });
-addEventListener("keyup", (event) => { keys[event.key.toLowerCase()] = false; keys[event.key] = false; });
+addEventListener("keyup", (event) => {
+  keys[event.key.toLowerCase()] = false;
+  keys[event.key] = false;
+});
 
 function clearMovementKeys() {
   for (const key in keys) keys[key] = false;
