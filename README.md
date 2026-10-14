@@ -38,3 +38,16 @@ Audio, beste runs, achievements en permanente upgrades worden lokaal opgeslagen 
 Graphics quality staat in Settings op Low, Medium of High. Dit verandert alleen decoratieve glow, achtergronddecoratie en particlelimieten. Schakel `Show FPS, frametime and object timings` in voor FPS, frametime, enemy-AI-, collision- en renderduur plus entity-aantallen.
 
 Run tests with `node --test tests/game-logic.test.js`. Run the repeatable target-search stress benchmark with `node tests/performance-benchmark.js`.
+
+
+## Update 4: Weapon evolutions
+
+Death Pulse now levels from 1 to 5 and can evolve into **Eclipse** (Death Pulse 5 + Expanding Aura 3 + boss defeated + evolution milestone). Eclipse sends a second shockwave with a brief slow. Mega Eiad gains a weaker secondary blast. Chain Lightning has a 600-pixel opening target range; Flame Cone auto-aims at nearby enemies; Frost Orb's tracking is faster. Tempest still fires two independent lightning chains.
+
+## Update 5: Waves, enemies and boss telegraphs
+
+Every wave has a recognizable theme: Drifter Swarm, Runner Rush, Heavy Horde, Ranged Raid, Elite Ambush or Chaos Mix. Waves pause during bossfights, and the HUD explicitly indicates that pause. Standard spawning remains mixed. **Burstlings** flash a visible explosion circle before detonating, while **Bulwarks** alternate between shielded and vulnerable states. Elite enemies can charge after a warning, briefly sprint or gain extra armor. Melee enemies use a modest intermittent separation check to reduce stacking.
+
+Ranged Shades must be on screen and within attack range before beginning an aimed 0.7-second warning; their projectile locks its direction at warning start and curves only moderately. Boss attacks now begin with visible warnings. Beau de Hond still fires MarioVis shotgun volleys, the Mourning Shade makes gapped radial rings and the Bell Tower fires aimed bell-bolt lanes. Each boss changes behavior below half HP and may summon different minions.
+
+Run all gameplay tests using `node --test tests/*.test.js`. These changes target desktop and should be tuned after full 20–30 minute playtests.
