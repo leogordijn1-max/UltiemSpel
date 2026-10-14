@@ -1,5 +1,5 @@
 // Safe, versioned localStorage access shared by the game and its menus.
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 function storageGet(key, fallback = null) {
   try {
@@ -37,6 +37,36 @@ function grantAchievement(progress, id, title, date = new Date().toLocaleDateStr
   return false;
 }
 
+function emptyModeRecords() {
+  return {
+    standard: { easy: {}, normal: {}, nightmare: {} },
+    endless: { easy: {}, normal: {}, nightmare: {} },
+  };
+}
+function normalizeModeRecord(record) {
+  const source = record && typeof record === "object" ? record : {};
+  return {
+    survived: nonNegativeInteger(source.survived),
+    kills: nonNegativeInteger(source.kills),
+    bosses: nonNegativeInteger(source.bosses),
+    wins: nonNegativeInteger(source.wins),
+  };
+}
+function updateModeRecord(progress, mode, difficulty, snapshot, isWin = false) {
+  const key = mode === "endless" ? "endless" : "standard";
+  const levelKey = ["easy", "normal", "nightmare"].includes(difficulty) ? difficulty : "normal";
+  if (!progress.records) progress.records = emptyModeRecords();
+  const previous = normalizeModeRecord(progress.records[key]?.[levelKey]);
+  const incoming = normalizeModeRecord(snapshot);
+  progress.records[key][levelKey] = {
+    survived: Math.max(previous.survived, incoming.survived),
+    kills: Math.max(previous.kills, incoming.kills),
+    bosses: Math.max(previous.bosses, incoming.bosses),
+    wins: previous.wins + (isWin ? 1 : 0),
+  };
+  return progress.records[key][levelKey];
+}
+
 function loadMetaProgress() {
   let saved = {};
   try {
@@ -61,11 +91,29 @@ function loadMetaProgress() {
       kills: nonNegativeInteger(run.kills),
       level: Math.max(1, nonNegativeInteger(run.level)),
       bosses: nonNegativeInteger(run.bosses),
-      difficulty: typeof run.difficulty === "string" ? run.difficulty : "normal",
-    })).sort((a, b) => b.survived - a.survived).slice(0, 5)
+      difficulty: ["easy", "normal", "nightmare"].includes(run.difficulty) ? run.difficulty : "normal",
+      mode: run.mode === "endless" ? "endless" : "standard",
+      victory: run.victory === true,
+      id: typeof run.id === "string" ? run.id.slice(0, 80) : "",
+    })).sort((a, b) => b.survived - a.survived).slice(0, 30)
     : [];
   const totals = saved.totals && typeof saved.totals === "object" ? saved.totals : {};
-
+  const records = emptyModeRecords();
+  for (const mode of ["standard", "endless"]) {
+    for (const difficulty of ["easy", "normal", "nightmare"]) {
+      records[mode][difficulty] = normalizeModeRecord(saved.records?.[mode]?.[difficulty]);
+    }
+  }
+  // Old saves had a top-run list, but no per-mode record data.
+  if (!saved.records) {
+    for (const run of runs) {
+      const rec = records[run.mode][run.difficulty];
+      rec.survived = Math.max(rec.survived, run.survived);
+      rec.kills = Math.max(rec.kills, run.kills);
+      rec.bosses = Math.max(rec.bosses, run.bosses);
+    }
+  }
+  const wins = nonNegativeInteger(totals.wins);
   return {
     version: SAVE_VERSION,
     points: nonNegativeInteger(saved.points),
@@ -73,11 +121,14 @@ function loadMetaProgress() {
     damageLevel: Math.min(5, nonNegativeInteger(saved.damageLevel)),
     achievements,
     runs,
+    records,
+    endlessUnlocked: saved.endlessUnlocked === true || wins > 0,
     bestFlawlessSurvival: nonNegativeInteger(saved.bestFlawlessSurvival),
     totals: {
       kills: nonNegativeInteger(totals.kills),
       bosses: nonNegativeInteger(totals.bosses),
       runs: nonNegativeInteger(totals.runs),
+      wins,
     },
   };
 }
