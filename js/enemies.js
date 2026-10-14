@@ -404,6 +404,14 @@ function damage(e, d, origin = player, damageType = "direct") {
     // Mark the enemy immediately so later hits in this frame cannot reward it twice.
     e.dead = true;
     kills++;
+    // Character kill thresholds trigger abilities independently of the weapon build.
+    if (typeof selectedCharacter !== "undefined" && typeof characterRuntime !== "undefined") {
+      if (progressCharacterKills(selectedCharacter, characterRuntime)) {
+        const activeAbility = getCharacter(selectedCharacter).ability;
+        if (typeof notify === "function") notify(`ABILITY · ${activeAbility}`, "evolution", 2.5);
+        puff(player.x, player.y, selectedCharacter === "mayoMaster" ? "#ffe38d" : "#8fffea", 12);
+      }
+    }
     puff(e.x, e.y, e.kind === 3 ? "#f6b4ff" : "#c75aab", 9);
     if (e === boss || !e.noXp) {
       const soulValue =
@@ -431,6 +439,15 @@ function damage(e, d, origin = player, damageType = "direct") {
     const killedFinalBoss = e === boss && e.isFinalBoss;
     if (e === boss) {
       bossesDefeated++;
+      if (typeof awardBossLoot === "function" && typeof metaProgress !== "undefined") {
+        const lootKey = e.isFinalBoss ? "final" : ["beau", "mourning", "bell"][e.variant] || null;
+        const trophy = awardBossLoot(metaProgress, lootKey);
+        if (trophy.first && typeof notify === "function") {
+          notify(`BOSS TROPHY · ${e.bossName || lootKey.toUpperCase()} · ${trophy.points ? "+" + trophy.points + " PTS" : "COLLECTED"}`, "achievement", 4);
+          if (trophy.characterUnlocked) notify("NEW CHARACTER · BEAU DE HOND UNLOCKED", "achievement", 5);
+        }
+        if (trophy.first && typeof saveMetaProgress === "function") saveMetaProgress();
+      }
       nextBossTime = time + 180;
       boss = null;
       $("bossHud").style.display = "none";
