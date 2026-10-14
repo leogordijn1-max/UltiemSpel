@@ -7,7 +7,7 @@ const weaponCatalog = [
   { key: "boomerang", name: "Boomerang", image: "", description: "A returning blade pierces enemies on its outbound and return path.", damage: "36 base", cooldown: "5.5s", evolution: "Level 5 + Phantom Shots level 3 + one boss defeated → Returning Storm" },
   { key: "flame", name: "Flame Cone", image: "", description: "A close-range cone burns groups of enemies and applies damage over time.", damage: "55 base + burn", cooldown: "4.45s", evolution: "Level 5 + Emmer Mayo level 3 + one boss defeated → Inferno" },
   { key: "frost", name: "Frost Orb", image: "", description: "Homing orbs burst into a chilling area that slows groups.", damage: "40 + area burst", cooldown: "3.75s", evolution: "Level 5 + Critical Force level 3 + one boss defeated → Glacier" },
-  { key: "nova", name: "Death Pulse", image: "", description: "Periodically damages nearby enemies and can slow them.", damage: "33 base", cooldown: "2.5s", evolution: "No weapon evolution; Expanding Aura and Chilling Pulse improve its area." },
+  { key: "nova", name: "Death Pulse", image: "", description: "Releases a damaging circular shockwave; evolves into a double-pulse eclipse.", damage: "34–70 base by level", cooldown: "2.9s → 1.95s", evolution: "Level 5 + Expanding Aura level 3 + one boss defeated → Eclipse" },
 ];
 
 const opts = [
@@ -18,7 +18,7 @@ const opts = [
   ["boomerang", "Boomerang", "A returning blade pierces enemies along its path."],
   ["flame", "Flame Cone", "Blast a wide close-range cone and burn enemies for extra damage."],
   ["frost", "Frost Orb", "Homing orbs damage and chill a group, slowing them for several seconds."],
-  ["nova", "Death Pulse", "Unlock a periodic area attack around the player."],
+  ["nova", "Death Pulse", "Strengthen the expanding pulse: more damage and shorter cooldown with each level."],
   ["damage", "Emmer Mayo", "Increase damage dealt by every weapon by 18% per level."],
   ["speed", "Quickstep", "Move and dash 10% faster per level; levels 3–5 also grant a small dodge chance."],
   ["rate", "Rapid Casting", "Reduce weapon cooldowns by 10% per level, stacking multiplicatively."],
@@ -41,10 +41,11 @@ const evolutionRecipes = [
   { id: "glacier", name: "Glacier", weapon: "frost", support: "critDamage", supportName: "Critical Force", level: 5, supportLevel: 3, visual: "A crystalline ice nova leaves a snowflake field." },
   { id: "splitDimension", name: "Split Dimension", weapon: "arcane", support: "pierce", supportName: "Phantom Shots", level: 5, supportLevel: 3, visual: "Cyan rift bolts split into spectral shards." },
   { id: "aegisRing", name: "Aegis Ring", weapon: "orbit", support: "bladeBlock", supportName: "Ward Blades", level: 5, supportLevel: 3, visual: "A radiant cyan shield ring surrounds the player." },
-  { id: "megaEiad", name: "Mega Eiad", weapon: "bomb", support: "damage", supportName: "Emmer Mayo", level: 5, supportLevel: 3, visual: "A purple-starburst blast expands from the original bomb." },
+  { id: "megaEiad", name: "Mega Eiad", weapon: "bomb", support: "damage", supportName: "Emmer Mayo", level: 5, supportLevel: 3, visual: "A purple-starburst blast expands from the original bomb and causes a second aftershock." },
+  { id: "eclipse", name: "Eclipse", weapon: "nova", support: "novaRange", supportName: "Expanding Aura", level: 5, supportLevel: 3, visual: "Two dark-violet shockwaves hit in quick succession, with a wider radius and a short slow." },
 ];
 
-function maxUpgradeLevel(key) { return key === "nova" ? 1 : 5; }
+function maxUpgradeLevel(key) { return 5; }
 function currentUpgradeLevel(key) {
   const rawLevel = Number(upgrades[key]) || 0;
   return Math.min(maxUpgradeLevel(key), Math.max(0, Math.floor(rawLevel)));
@@ -115,13 +116,13 @@ function upgradeEffectAtLevel(key, value) {
     novaRange: `${Math.round((1 + value * 0.18) * 100)}% Death Pulse radius`,
     novaSlow: `${value * 11}% enemy slow inside Death Pulse`,
     arcane: `${value} Arcane Bolt${value === 1 ? "" : "s"} per volley`,
-    orbit: `${value} orbiting Spirit Blade${value === 1 ? "" : "s"}`,
+    orbit: `${value} orbiting Spirit Blade${value === 1 ? "" : "s"} · ${35 + value * 3} contact damage`,
     bomb: `${Math.round((1 + (value - 1) * 0.2) * 100)}% bomb damage · ${150 + value * 24} blast radius`,
-    chain: `${22 + value * 9} base lightning damage · ${2 + Math.floor(value / 2)} jumps`,
+    chain: `${22 + value * 9} base lightning damage · ${2 + Math.floor(value / 2)} jumps · 600 targeting range`,
     boomerang: `${28 + value * 8} base damage${value >= 4 ? " · 2 blades" : ""}`,
     flame: `${42 + value * 13} base flame damage · ${8 + value * 5} burn DPS`,
     frost: `${28 + value * 12} base orb damage · ${1 + Math.floor(value / 2)} pierce`,
-    nova: "Unlock a periodic area pulse",
+    nova: `${25 + value * 9} base area damage · ${(2.9 - value * 0.19).toFixed(2)}s cooldown`,
   };
   if (key === "speed") return `${value * 10}% movement and dash speed${value >= 3 ? ` · ${Math.min(12, (value - 2) * 3)}% dodge chance` : ""}`;
   if (key === "critChance") return `${value * 5}% critical chance${value >= 3 ? ` · +${(value - 2) * 5}% critical damage` : ""}`;
@@ -329,7 +330,7 @@ function addXP(amount) {
 }
 
 function bladeScale() { return 1.25 * (1 + (upgrades.bladeSize || 0) * 0.18); }
-function novaRadius() { return 95 * (1 + (upgrades.novaRange || 0) * 0.18); }
+function novaRadius() { return 95 * (1 + (upgrades.novaRange || 0) * 0.18) * (evolutions.eclipse ? 1.18 : 1); }
 function nextLevelXpRequirement(currentRequirement, currentLevel) {
   const growth = currentLevel < 6 ? 1.15 : currentLevel < 15 ? 1.105 : 1.085;
   return Math.floor(currentRequirement * growth + 4);

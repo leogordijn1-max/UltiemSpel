@@ -82,7 +82,7 @@ test("the game resumes when every upgrade is capped", () => {
       "let upgrades = {",
       "  arcane: 5, damage: 5, rate: 5, health: 5, orbit: 5, chain: 5, boomerang: 5, flame: 5, frost: 5,",
       "  bladeBlock: 5, bladeSize: 5, pierce: 5, bomb: 5, speed: 5, magnet: 5, knockback: 5,",
-      "  nova: 1, novaRange: 5, novaSlow: 5, critChance: 5, critDamage: 5",
+      "  nova: 5, novaRange: 5, novaSlow: 5, critChance: 5, critDamage: 5",
       "};",
       "let paused = true, pendingLevelUps = 1, level = 6, choiceScreenOpen = false, active = true, gameState = 'level-up';",
       "let overlay = { style: { display: 'flex' } };",
@@ -265,9 +265,9 @@ test("Frost Orb and Flame Cone define distinct crowd-control and burn roles", ()
   assert.match(vm.runInContext("opts.find(([key]) => key === 'flame')[2]", context), /burn/i);
   assert.deepEqual(
     JSON.parse(vm.runInContext("JSON.stringify(evolutionRecipes.map((r) => [r.level, r.supportLevel, !!r.visual]))", context)),
-    Array.from({ length: 7 }, () => [5, 3, true]),
+    Array.from({ length: 8 }, () => [5, 3, true]),
   );
-  assert.equal(vm.runInContext("new Set(evolutionRecipes.map((r) => r.visual)).size", context), 7);
+  assert.equal(vm.runInContext("new Set(evolutionRecipes.map((r) => r.visual)).size", context), 8);
 });
 
 test("off-screen enemies are excluded from the visible arena bounds", () => {
@@ -344,7 +344,7 @@ test("Tempest launches two independently chained attacks with separate first tar
   assert.ok(Math.abs(vm.runInContext("weaponTimers.chain", context) - (4.25 * 0.88 / 1.15)) < 1e-10);
 });
 
-test("Chain Lightning's opening target range is limited to 820 pixels", () => {
+test("Chain Lightning does not target enemies outside the 600 pixel range", () => {
   const context = vm.createContext({});
   vm.runInContext(
     "let upgrades = { chain: 1, damage: 0, rate: 0 }, evolutions = {}; let player = { x: 0, y: 0 }, weaponTimers = { chain: 0 }, lightningSegments = []; let enemy = { x: 900, y: 0 }; let dist = (a,b) => Math.hypot(a.x-b.x,a.y-b.y), nearbyEnemies = (x,y,r) => Math.hypot(enemy.x-x,enemy.y-y) <= r ? [enemy] : [], nearestEnemy = (x,y,r) => Math.hypot(enemy.x-x,enemy.y-y) <= r ? enemy : null, damage = () => {};",
@@ -530,6 +530,28 @@ test("upgrade levels clamp at zero and five", () => {
   loadScript(context, "js/upgrades.js");
   assert.deepEqual(
     JSON.parse(vm.runInContext("JSON.stringify([currentUpgradeLevel('damage'), currentUpgradeLevel('chain'), currentUpgradeLevel('nova')])", context)),
-    [0, 5, 1],
+    [0, 5, 3],
   );
+});
+
+test("Death Pulse reaches level 5 and unlocks Eclipse with Expanding Aura", () => {
+  const context = vm.createContext({});
+  vm.runInContext("let upgrades = { nova: 5, novaRange: 3 }, evolutions = {}, selectedWeapons = ['nova'], unlockedWeapons = ['nova'], bossesDefeated = 1, time = 600;", context);
+  loadScript(context, "js/upgrades.js");
+  assert.equal(vm.runInContext("maxUpgradeLevel('nova')", context), 5);
+  assert.equal(vm.runInContext("eligibleEvolutions().some(r => r.id === 'eclipse')", context), true);
+  assert.equal(vm.runInContext("eligibleUpgrade('nova')", context), false);
+  vm.runInContext("evolutions.eclipse = true", context);
+  assert.equal(vm.runInContext("eligibleEvolutions().some(r => r.id === 'eclipse')", context), false);
+  assert.equal(vm.runInContext("novaRadius() > 95", context), true);
+});
+
+test("all eight weapons have their own evolution and maximum level five", () => {
+  const context = vm.createContext({});
+  vm.runInContext("let upgrades = {}, evolutions = {}, selectedWeapons = [], unlockedWeapons = [];", context);
+  loadScript(context, "js/upgrades.js");
+  assert.equal(vm.runInContext("weaponCatalog.length", context), 8);
+  assert.equal(vm.runInContext("evolutionRecipes.length", context), 8);
+  assert.equal(vm.runInContext("evolutionRecipes.every(r => maxUpgradeLevel(r.weapon) === 5)", context), true);
+  assert.equal(vm.runInContext("new Set(evolutionRecipes.map(r => r.weapon)).size", context), 8);
 });

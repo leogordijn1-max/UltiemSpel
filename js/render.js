@@ -196,6 +196,15 @@ function draw() {
   // Enemies and their projectiles.
   for (const e of enemies) {
     if (!visibleEnemy(e, -e.r * 2)) continue;
+    if (e.pulseSlowUntil > time) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(191, 108, 255, 0.85)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, enemyHitRadius(e) + 9, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     if (e.frostUntil > time) {
       ctx.save();
       ctx.strokeStyle = "rgba(126, 222, 255, 0.9)";
@@ -674,20 +683,29 @@ function draw() {
   }
   if (upgrades.nova) {
     const pulse = novaFlash > 0;
-    ctx.strokeStyle = pulse ? "rgba(180,152,245,.52)" : "rgba(175,108,255,.17)";
-    ctx.lineWidth = pulse ? 4 : 2;
-    ctx.shadowBlur = glow(0);
-    ctx.shadowColor = "#9778c7";
+    const echo = novaEchoFlash > 0;
+    ctx.save();
+    ctx.strokeStyle = evolutions.eclipse ? (pulse || echo ? "rgba(217,132,255,.95)" : "rgba(154,71,219,.4)") : (pulse ? "rgba(180,152,245,.52)" : "rgba(175,108,255,.17)");
+    ctx.lineWidth = pulse || echo ? 5 : 2;
+    ctx.shadowColor = evolutions.eclipse ? "#ba4cf5" : "#9778c7";
+    ctx.shadowBlur = glow(evolutions.eclipse ? 14 : 0);
     ctx.beginPath();
-    ctx.arc(player.x, player.y, novaRadius(), 0, 7);
+    ctx.arc(player.x, player.y, novaRadius(), 0, Math.PI * 2);
     ctx.stroke();
-    ctx.shadowBlur = glow(0);
+    if (evolutions.eclipse) {
+      ctx.strokeStyle = echo ? "rgba(248,203,255,.95)" : "rgba(141,70,185,.45)";
+      ctx.lineWidth = echo ? 5 : 2;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, novaRadius() * (echo ? 0.67 : 0.58), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
   for (const explosion of explosions) {
     const progress = 1 - explosion.life / explosion.maxLife;
     ctx.save();
     ctx.globalAlpha = Math.max(0, 1 - progress);
-    ctx.fillStyle = explosion.evolved ? "rgba(182, 95, 255, 0.32)" : "rgba(231, 145, 74, 0.25)";
+    ctx.fillStyle = explosion.aftershock ? "rgba(230, 169, 255, 0.22)" : explosion.evolved ? "rgba(182, 95, 255, 0.32)" : "rgba(231, 145, 74, 0.25)";
     ctx.strokeStyle = explosion.evolved ? "#e3bdff" : "#ffd18a";
     ctx.lineWidth = 5 * (1 - progress) + 1;
     ctx.shadowColor = explosion.evolved ? "#a44cff" : "#ff9b4d";
