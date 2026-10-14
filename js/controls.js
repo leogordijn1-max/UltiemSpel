@@ -270,8 +270,14 @@ function showMetaShop(category = "Stats") {
           let refunded = 0;
           for (const stat of statShopCatalog) {
             const level = Math.max(0, Math.floor(metaProgress[stat.id] || 0));
-            for (let index = 0; index < Math.min(stat.max, level); index++) refunded += shopStatCost(stat, index);
+            const receipts = metaProgress.statPurchaseCosts?.[stat.id] || [];
+            // Refund what was actually paid, including legacy flat-cost upgrades.
+            for (let index = 0; index < Math.min(stat.max, level); index++) {
+              const legacyCost = stat.id === "hpLevel" ? 2 : stat.id === "damageLevel" ? 3 : stat.baseCost;
+              refunded += Number.isFinite(receipts[index]) ? receipts[index] : legacyCost;
+            }
             metaProgress[stat.id] = 0;
+            if (metaProgress.statPurchaseCosts) metaProgress.statPurchaseCosts[stat.id] = [];
           }
           metaProgress.points += refunded;
           saveMetaProgress();
