@@ -193,6 +193,22 @@ function draw() {
     ctx.restore();
   }
   
+  // Final-boss marked ground strikes remain visible until they actually detonate.
+  for (const hazard of bossHazards) {
+    if (!visibleEnemy({ x: hazard.x, y: hazard.y, r: 0 }, -hazard.radius)) continue;
+    const pulse = 0.54 + 0.26 * Math.sin(time * 22);
+    ctx.save();
+    ctx.fillStyle = `rgba(195, 67, 221, ${0.15 + pulse * 0.08})`;
+    ctx.strokeStyle = `rgba(255, 151, 237, ${pulse + 0.2})`;
+    ctx.lineWidth = 4;
+    ctx.setLineDash([10, 7]);
+    ctx.beginPath();
+    ctx.arc(hazard.x, hazard.y, hazard.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // Enemies and their projectiles.
   for (const e of enemies) {
     if (!visibleEnemy(e, -e.r * 2)) continue;
@@ -270,7 +286,31 @@ function draw() {
       ctx.lineWidth = 3.5;
       ctx.setLineDash([12, 7]);
       ctx.beginPath();
-      if (e.variant === 1) {
+      if (e.isFinalBoss) {
+        const angle = e.shotAngle || 0;
+        const pattern = e.shotPattern || 0;
+        if (pattern === 0) {
+          // Only the flanking attack arcs are dangerous; the center is the safe lane.
+          for (const [start, end] of [[-1, -0.3], [0.3, 1]]) {
+            ctx.moveTo(e.x, e.y);
+            ctx.arc(e.x, e.y, 295, angle + start, angle + end);
+            ctx.closePath();
+          }
+          ctx.fill();
+        } else if (pattern === 1) {
+          const count = (e.finalPhase || 1) === 3 ? 16 : (e.finalPhase || 1) === 2 ? 14 : 12;
+          const gap = Math.PI * 2 / count * 1.6;
+          ctx.moveTo(e.x, e.y);
+          ctx.arc(e.x, e.y, 185, angle + gap, angle + Math.PI * 2 - gap);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // This ground target is locked from the first warning frame.
+          const size = 92 + (e.finalPhase || 1) * 12;
+          ctx.arc(e.warningX, e.warningY, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (e.variant === 1) {
         // Leave the same opening indicated by the actual Mourning Shade ring.
         const gapHalf = Math.PI * 2 / (e.phaseTwo ? 14 : 10) * 1.18;
         const start = e.shotAngle + gapHalf;
@@ -330,6 +370,59 @@ function draw() {
       ctx.restore();
     }
 
+    if (e.isFinalBoss) {
+      // Distinct Canvas placeholder until a custom final-boss meme asset is provided.
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate(Math.sin(time * 0.72) * 0.075);
+      ctx.shadowColor = e.hit ? "#fff8ff" : "#d75aff";
+      ctx.shadowBlur = glow(32);
+      ctx.fillStyle = e.hit ? "#ffffff" : "#33204e";
+      ctx.strokeStyle = "#d38eff";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, -e.r * 1.25);
+      ctx.lineTo(e.r * 0.76, -e.r * 0.6);
+      ctx.lineTo(e.r * 0.9, e.r * 0.72);
+      ctx.lineTo(0, e.r * 1.1);
+      ctx.lineTo(-e.r * 0.9, e.r * 0.72);
+      ctx.lineTo(-e.r * 0.76, -e.r * 0.6);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#f9b5ff";
+      ctx.beginPath();
+      ctx.moveTo(-e.r * 0.64, -e.r * 1.09);
+      ctx.lineTo(-e.r * 0.35, -e.r * 1.55);
+      ctx.lineTo(0, -e.r * 1.18);
+      ctx.lineTo(e.r * 0.35, -e.r * 1.55);
+      ctx.lineTo(e.r * 0.64, -e.r * 1.09);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = glow(20);
+      ctx.fillStyle = "#fff4ff";
+      ctx.beginPath();
+      ctx.ellipse(-e.r * 0.28, -e.r * 0.19, e.r * 0.13, e.r * 0.18, -0.12, 0, Math.PI * 2);
+      ctx.ellipse(e.r * 0.28, -e.r * 0.19, e.r * 0.13, e.r * 0.18, 0.12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#34103c";
+      ctx.beginPath();
+      ctx.arc(-e.r * 0.26, -e.r * 0.16, 3, 0, Math.PI * 2);
+      ctx.arc(e.r * 0.26, -e.r * 0.16, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      // Rotating satellites signal each higher phase without extra entities.
+      const satellites = (e.finalPhase || 1) + 1;
+      ctx.save();
+      ctx.fillStyle = "#e9b3ff";
+      ctx.shadowColor = "#cf6aff";
+      ctx.shadowBlur = glow(15);
+      for (let i = 0; i < satellites; i++) {
+        const angle = i * Math.PI * 2 / satellites + time * 0.8;
+        ctx.beginPath();
+        ctx.arc(e.x + Math.cos(angle) * e.r * 1.45, e.y + Math.sin(angle) * e.r * 1.45, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      continue;
+    }
     if (
       e.kind === 2 &&
       redEnemyImage.complete &&
@@ -944,6 +1037,22 @@ function draw() {
   }
   ctx.globalAlpha = 1;
   ctx.restore();
+  if (boss?.isFinalBoss && boss.finalIntro > 0 && active) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, boss.finalIntro / 0.55);
+    ctx.fillStyle = "rgba(31, 8, 47, 0.66)";
+    ctx.fillRect(0, H * 0.28, W, 105);
+    ctx.textAlign = "center";
+    ctx.shadowColor = "#de66ff";
+    ctx.shadowBlur = glow(19);
+    ctx.fillStyle = "#ffe4ff";
+    ctx.font = "900 32px system-ui";
+    ctx.fillText("THE LAST MEME", W / 2, H * 0.28 + 49);
+    ctx.shadowBlur = glow(0);
+    ctx.font = "700 15px system-ui";
+    ctx.fillText("FINAL BOSS · DEFEAT IT TO UNLOCK ENDLESS", W / 2, H * 0.28 + 77);
+    ctx.restore();
+  }
   if (evolutionFlash && time < evolutionFlash.until) {
     const age = time - evolutionFlash.started;
     const radius = 38 + age * 210;

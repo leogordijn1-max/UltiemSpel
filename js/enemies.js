@@ -38,6 +38,7 @@ const bossCatalog = [
   { name: "Beau de Hond", image: "img/BeauDeHond.png", attacks: "Telegraphed MarioVis shotgun fan and charge.", phase: "Below half HP, fires a wider fish fan and occasional shadow rings; summons minions." },
   { name: "The Mourning Shade", image: "", attacks: "Telegraphed radial shadow rings with a deliberate dodge gap.", phase: "Below half HP, creates larger, faster rotating rings and summons minions." },
   { name: "The Bell Tower", image: "", attacks: "Telegraphed aimed bell-bolt fans with a narrow safe lane.", phase: "Below half HP, fires additional side-lane volleys and summons minions." },
+  { name: "The Last Meme", image: "", attacks: "Final encounter: safe-gap rifts, a dark projectile ring and marked explosion zones.", phase: "Three phases at 100%, 66% and 33% HP. Appears around minute 25 in Standard Mode." },
 ];
 
 const ENEMY_GRID_SIZE = 140;
@@ -154,6 +155,13 @@ function nearestEnemies(x, y, radius, limit, include = null) {
   return closest;
 }
 
+const FINAL_BOSS_TIME = 25 * 60;
+function currentEndlessTier() {
+  if (typeof runMode === "undefined" || runMode !== "endless" || typeof time !== "number") return 0;
+  const startingAt = Math.max(FINAL_BOSS_TIME, typeof endlessStartTime === "number" ? endlessStartTime : 0);
+  return Math.min(16, Math.floor(Math.max(0, time - startingAt) / 120));
+}
+
 // Special waves can request a type; ordinary spawns retain a mixed distribution.
 function enemySpawn(preferredKind = null, forceElite = false) {
   const angle = rand(0, Math.PI * 2);
@@ -194,7 +202,13 @@ function enemySpawn(preferredKind = null, forceElite = false) {
     e.guardTimer = 3; e.shieldActive = true;
   }
   e.damage = (e.damage + growthTime * 0.004) * profile.enemyDamage;
-  if (forceElite || Math.random() < Math.min(0.12, 0.02 + growthTime / 12000)) {
+  const tier = currentEndlessTier();
+  if (tier) {
+    e.hp *= 1 + tier * 0.17;
+    e.damage *= 1 + tier * 0.065;
+    e.speed *= 1 + Math.min(0.3, tier * 0.022);
+  }
+  if (forceElite || Math.random() < Math.min(0.18, 0.02 + growthTime / 12000 + tier * 0.007)) {
     makeEliteEnemy(e);
   }
   enemies.push(e);
@@ -414,13 +428,15 @@ function damage(e, d, origin = player, damageType = "direct") {
     if (e.kind === 1 && Math.random() < profile.healthDropChance) {
       dropGem({ x: e.x, y: e.y, r: 7, kind: "health", value: 2 });
     }
+    const killedFinalBoss = e === boss && e.isFinalBoss;
     if (e === boss) {
       bossesDefeated++;
       nextBossTime = time + 180;
       boss = null;
       $("bossHud").style.display = "none";
       bossShots = [];
-      showBossReward();
+      if (typeof bossHazards !== "undefined") bossHazards = [];
+      if (!killedFinalBoss) showBossReward();
     }
     if (kills > highest) {
       highest = kills;
@@ -436,6 +452,7 @@ function damage(e, d, origin = player, damageType = "direct") {
       if (metaProgress.totals.bosses >= 3) unlockAchievement("boss3", "Boss Hunter");
       saveMetaProgress();
     }
+    if (killedFinalBoss && typeof showVictory === "function") showVictory();
   }
 }
 
@@ -550,18 +567,18 @@ function spawnBoss() {
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
   const a = rand(0, Math.PI * 2),
     radius = Math.hypot(W, H) * 0.65 + 90;
+  const tier = currentEndlessTier();
   const hp =
     (800 + bossNumber * 210 + growthTime * 0.4) *
-    1.18 *
-    profile.bossHealth;
+    1.18 * profile.bossHealth * (1 + tier * 0.18);
   boss = {
     x: player.x + Math.cos(a) * radius,
     y: player.y + Math.sin(a) * radius,
     r: (43 + bossNumber * 4) * (1 + bossNumber * 0.06),
     hp,
     maxHp: hp,
-    speed: 48 + bossNumber * 3,
-    damage: (24 + growthTime * 0.01) * profile.enemyDamage,
+    speed: (48 + bossNumber * 3) * (1 + Math.min(0.3, tier * 0.02)),
+    damage: (24 + growthTime * 0.01) * profile.enemyDamage * (1 + tier * 0.065),
     knockbackX: 0,
     knockbackY: 0,
     kind: 3,
@@ -588,6 +605,55 @@ function spawnBoss() {
   if (typeof notify === "function") notify(`BOSS INCOMING · ${boss.bossName}`, "boss", 4);
 }
 
+// The Last Meme is intentionally drawn in Canvas until its custom meme asset exists.
+function spawnFinalBoss() {
+  if (boss) return false;
+  bossNumber++;
+  const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
+  const angle = rand(0, Math.PI * 2);
+  const radius = Math.max(W, H) * 0.56 + 160;
+  const hp = (6000 + Math.min(2400, bossNumber * 200)) * profile.bossHealth;
+  boss = {
+    x: player.x + Math.cos(angle) * radius,
+    y: player.y + Math.sin(angle) * radius,
+    r: 70,
+    hp, maxHp: hp,
+    speed: 83,
+    damage: 28 * profile.enemyDamage,
+    knockbackX: 0, knockbackY: 0,
+    kind: 3,
+    variant: 3,
+    isFinalBoss: true,
+    bossName: "THE LAST MEME",
+    facing: 1, hit: 0,
+    finalPhase: 1,
+    phaseTwo: false,
+    phaseIntro: 2.2,
+    finalIntro: 2.2,
+    shootCooldown: 2.2,
+    shotWarning: 0,
+    shotAngle: 0,
+    shotPattern: 0,
+    shotRotation: 0,
+    volleyCount: 0,
+    warningX: 0,
+    warningY: 0,
+    chargeCooldown: 5,
+    chargeWarning: 0,
+    chargeActive: 0,
+    minionCooldown: 13,
+  };
+  enemies.push(boss);
+  nextBossTime = Infinity;
+  $("bossHud").style.display = "block";
+  $("bossName").textContent = "THE LAST MEME · PHASE I";
+  $("bossFill").style.width = "100%";
+  playSfx("boss");
+  puff(boss.x, boss.y, "#f5a5ff", 35);
+  notify("FINAL BOSS · THE LAST MEME · SURVIVE THE CHAOS", "boss", 5);
+  return true;
+}
+
 // Boss projectiles remember their variant so only Beau uses the original fish sprite.
 function addBossProjectile(e, angle, speed, damage = 13, type = "shadow") {
   if (bossShots.length >= 180) return;
@@ -604,6 +670,7 @@ function addBossProjectile(e, angle, speed, damage = 13, type = "shadow") {
 }
 
 function bossFire(e) {
+  if (e.isFinalBoss) return finalBossFire(e);
   const angle = Number.isFinite(e.shotAngle) ? e.shotAngle : Math.atan2(player.y - e.y, player.x - e.x);
   e.volleyCount = (e.volleyCount || 0) + 1;
   if (e.variant === 0) {
@@ -636,4 +703,40 @@ function bossFire(e) {
   }
   e.shotWarning = 0;
   e.shootCooldown = e.phaseTwo ? 2.35 : 2.9;
+}
+
+// Alternate visibly different patterns; all aim directions/target points were locked
+// when the attack warning began. Safe gaps remain where the warning indicates.
+function finalBossFire(e) {
+  const phase = e.finalPhase || 1;
+  const pattern = e.shotPattern || 0;
+  const angle = e.shotAngle || 0;
+  if (pattern === 0) {
+    // Rift volley: a deliberately clear central escape lane.
+    const offsets = phase === 3 ? [-0.95, -0.7, -0.45, 0.45, 0.7, 0.95]
+      : [-0.8, -0.54, -0.32, 0.32, 0.54, 0.8];
+    for (const offset of offsets) addBossProjectile(e, angle + offset, 165 + 16 * phase, 11 + phase, "rift");
+  } else if (pattern === 1) {
+    // Rotating dark ring, with a broad fixed safe gap aimed at the player.
+    const count = phase === 3 ? 16 : phase === 2 ? 14 : 12;
+    for (let i = 0; i < count; i++) {
+      const direction = e.shotRotation + i * Math.PI * 2 / count;
+      const relative = Math.atan2(Math.sin(direction - angle), Math.cos(direction - angle));
+      if (Math.abs(relative) < Math.PI * 2 / count * 1.6) continue;
+      addBossProjectile(e, direction, 127 + 12 * phase, 11 + phase, "shadow");
+    }
+  } else {
+    // The boss marked this point during wind-up; players can leave the blast area.
+    if (typeof bossHazards !== "undefined" && bossHazards.length < 14) {
+      bossHazards.push({
+        x: e.warningX, y: e.warningY,
+        radius: 92 + phase * 12,
+        warning: 0.52,
+        damage: (15 + 3 * phase) * (difficultyProfiles[difficulty] || difficultyProfiles.normal).enemyDamage,
+      });
+    }
+  }
+  e.volleyCount = (e.volleyCount || 0) + 1;
+  e.shotWarning = 0;
+  e.shootCooldown = Math.max(1.65, 3.0 - 0.35 * phase);
 }

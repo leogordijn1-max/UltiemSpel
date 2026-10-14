@@ -8,6 +8,7 @@ const achievementCatalog = [
   ["boss1", "First Boss", "Defeat one boss total (career)", (p) => `${Math.min(p.totals.bosses, 1)}/1`],
   ["boss3", "Boss Hunter", "Defeat three bosses total (career)", (p) => `${Math.min(p.totals.bosses, 3)}/3`],
   ["evolution", "Evolutionary Leap", "Evolve a weapon (career)", (p) => `${p.achievements.some((a) => a.id === "evolution") ? 1 : 0}/1`],
+  ["finalVictory", "Nightbreaker", "Defeat The Last Meme in Standard Mode to unlock Endless.", (p) => `${Math.min(p.totals.wins || 0, 1)}/1`],
   ["flawless", "Untouched", "Complete a five-minute run without taking damage", (p) => `${Math.min(p.bestFlawlessSurvival, 300)}/300 sec`],
 ];
 
@@ -19,6 +20,7 @@ function backButton(parent) {
   parent.append(button);
 }
 function showMainMenu() {
+  menuRunMode = "standard";
   active = false;
   paused = true;
   pendingLevelUps = 0;
@@ -36,8 +38,32 @@ function bindMainMenu() {
     storageSet("shadowDifficulty", menuDifficulty);
   };
   configureAudio();
-  $("start").onclick = showWeaponSelection;
+  $("start").textContent = "STANDARD · CHOOSE YOUR WEAPONS";
+  $("start").onclick = () => {
+    menuRunMode = "standard";
+    showWeaponSelection();
+  };
   $("start").onpointerdown = startAudio;
+  // A new Endless run is only selectable after the first standard victory.
+  let endlessButton = $("endlessStart");
+  if (!endlessButton) {
+    endlessButton = document.createElement("button");
+    endlessButton.id = "endlessStart";
+    endlessButton.className = "endless-menu-button";
+    $("start").insertAdjacentElement("afterend", endlessButton);
+  }
+  const canStartEndless = !!metaProgress.endlessUnlocked;
+  endlessButton.disabled = !canStartEndless;
+  endlessButton.textContent = canStartEndless
+    ? "∞ ENDLESS MODE · NEW RUN" : "∞ ENDLESS MODE · LOCKED";
+  endlessButton.title = canStartEndless
+    ? "Begin a new Endless run with your selected loadout."
+    : "Defeat The Last Meme in Standard Mode to unlock Endless.";
+  endlessButton.onclick = () => {
+    if (!metaProgress.endlessUnlocked) return;
+    menuRunMode = "endless";
+    showWeaponSelection();
+  };
   $("settingsButton").onclick = showSettings;
   $("metaShop").textContent = `PERMANENT UPGRADES · ${metaProgress.points} PTS`;
   $("metaShop").onclick = showMetaShop;
@@ -47,7 +73,9 @@ function bindMainMenu() {
 }
 
 function showWeaponSelection() {
-  panel("BUILD YOUR LOADOUT", "Choose one Start Weapon and two different Unlockable Weapons. Only the start weapon is active at level 1.", (parent) => {
+  const isEndless = menuRunMode === "endless" && metaProgress.endlessUnlocked;
+  panel(isEndless ? "ENDLESS · BUILD YOUR LOADOUT" : "BUILD YOUR LOADOUT",
+    "Choose one Start Weapon and two different Unlockable Weapons. Only the start weapon is active at level 1.", (parent) => {
     const slots = document.createElement("div");
     slots.className = "loadout-select-grid";
     const slotDefinitions = [
@@ -99,7 +127,7 @@ function showWeaponSelection() {
     const footer = document.createElement("div");
     footer.className = "menu-footer";
     const start = document.createElement("button");
-    start.textContent = `START RUN · ${weaponCatalog.find((weapon) => weapon.key === startWeapon).name} + 2 UNLOCKS`;
+    start.textContent = `START ${isEndless ? "ENDLESS" : "STANDARD"} · ${weaponCatalog.find((weapon) => weapon.key === startWeapon).name} + 2 UNLOCKS`;
     start.disabled = new Set(selectedWeapons).size !== 3;
     start.onclick = () => {
       storageSet("shadowWeapons", JSON.stringify({ startWeapon, unlockableWeapons }));
@@ -153,8 +181,42 @@ function showMetaShop() {
 }
 
 function showRecords() {
-  const runs = metaProgress.runs.map((run, index) => `${index + 1}. ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills · ${run.difficulty}`).join("<br>") || "No completed runs yet.";
-  panel("PERSONAL RECORDS", `Top runs:<br>${runs}<br><br>Lifetime: ${metaProgress.totals.kills} kills · ${metaProgress.totals.bosses} bosses · ${metaProgress.totals.runs} runs`, backButton);
+  panel("PERSONAL RECORDS", `Lifetime: ${metaProgress.totals.kills} kills · ${metaProgress.totals.bosses} bosses · ${metaProgress.totals.runs} runs · ${metaProgress.totals.wins || 0} victories`,
+    (parent) => {
+      const records = metaProgress.records || emptyModeRecords();
+      for (const mode of ["standard", "endless"]) {
+        const section = document.createElement("section");
+        section.className = "records-section";
+        const heading = document.createElement("h2");
+        heading.textContent = mode === "standard" ? "STANDARD" : "ENDLESS";
+        section.append(heading);
+        for (const difficulty of ["easy", "normal", "nightmare"]) {
+          const record = normalizeModeRecord(records[mode]?.[difficulty]);
+          const line = document.createElement("p");
+          const formatted = `${Math.floor(record.survived / 60)}:${String(record.survived % 60).padStart(2, "0")}`;
+          line.textContent = `${difficulty.toUpperCase()} · Best ${formatted} · ${record.kills} kills · ${record.bosses} bosses${mode === "standard" ? ` · ${record.wins} wins` : ""}`;
+          section.append(line);
+        }
+        parent.append(section);
+      }
+      const top = document.createElement("section");
+      top.className = "records-section";
+      const heading = document.createElement("h2");
+      heading.textContent = "TOP RUNS";
+      top.append(heading);
+      for (const run of metaProgress.runs.slice(0, 10)) {
+        const line = document.createElement("p");
+        line.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills${run.victory ? " · VICTORY" : ""}`;
+        top.append(line);
+      }
+      if (!metaProgress.runs.length) {
+        const text = document.createElement("p");
+        text.textContent = "No runs recorded yet.";
+        top.append(text);
+      }
+      parent.append(top);
+      backButton(parent);
+    });
 }
 
 function showAchievements() {

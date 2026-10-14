@@ -68,7 +68,13 @@ let upgrades = {},
   menuDifficulty = ["easy", "normal", "nightmare"].includes(storageGet("shadowDifficulty", "normal")) ? storageGet("shadowDifficulty", "normal") : "normal",
   boss = null,
   bossShots = [],
+  bossHazards = [],
   nextBossTime = 180,
+  menuRunMode = "standard",
+  runMode = "standard",
+  endlessStartTime = 0,
+  finalBossDefeated = false,
+  victoryClaimed = false,
   bossNumber = 0,
   dashTimer = 0,
   dashCooldown = 0,
@@ -135,6 +141,12 @@ function reset() {
   touchMoveX = 0;
   touchMoveY = 0;
   difficulty = menuDifficulty;
+  runMode = menuRunMode === "endless" && metaProgress.endlessUnlocked ? "endless" : "standard";
+  endlessStartTime = 0;
+  finalBossDefeated = false;
+  victoryClaimed = false;
+  recordedRunId = null;
+  runRewardSettled = 0;
   bossesDefeated = 0;
   bossRewardPoints = 0;
   runDamageTaken = 0;
@@ -163,6 +175,7 @@ function reset() {
   bombs = [];
   explosions = [];
   bossShots = [];
+  bossHazards = [];
   boss = null;
   nextBossTime = 180;
   bossNumber = 0;
@@ -331,11 +344,16 @@ document.querySelectorAll("[data-speed]").forEach(
 );
 function hud() {
   const remaining = Math.max(0, nextBossTime - time);
+  const finalApproaching = runMode === "standard" && !finalBossDefeated && time >= FINAL_BOSS_TIME - 60;
+  const countdown = finalApproaching ? Math.max(0, FINAL_BOSS_TIME - time) : remaining;
   $("countText").textContent = boss
-    ? "BOSS ACTIVE"
-    : `BOSS IN ${Math.floor(remaining / 60)}:${String(Math.ceil(remaining % 60)).padStart(2, "0")}`;
-  $("countFill").style.width =
-    `${100 * Math.min(1, (time - (nextBossTime - 180)) / 180)}%`;
+    ? (boss.isFinalBoss ? "FINAL BOSS ACTIVE" : "BOSS ACTIVE")
+    : finalApproaching
+      ? `FINAL BOSS IN ${Math.floor(countdown / 60)}:${String(Math.ceil(countdown % 60)).padStart(2, "0")}`
+      : `${runMode === "endless" ? "ENDLESS " : ""}BOSS IN ${Math.floor(countdown / 60)}:${String(Math.ceil(countdown % 60)).padStart(2, "0")}`;
+  $("countFill").style.width = `${finalApproaching
+    ? Math.min(100, (1 - countdown / 60) * 100)
+    : Math.max(0, Math.min(100, (1 - remaining / 180) * 100))}%`;
   $("bossCountdown").style.display = boss ? "none" : "block";
   const dashStatus = $("dashStatus");
   dashStatus.textContent =
@@ -346,15 +364,17 @@ function hud() {
   const upcomingWave = waveNumber + 1;
   const waveClock = `${Math.floor(Math.max(0, waveTimer) / 60)}:${String(Math.ceil(Math.max(0, waveTimer) % 60)).padStart(2, "0")}`;
   const currentPattern = waveNumber ? wavePatternFor(waveNumber).name : "PREPARE";
-  $("waveText").textContent = boss ? `WAVE ${waveNumber || 1} · PAUSED DURING BOSS`
-    : `WAVE ${waveNumber || 1} · ${currentPattern} · NEXT ${upcomingWave} IN ${waveClock}`;
+  const endlessLabel = runMode === "endless"
+    ? `ENDLESS · TIER ${currentEndlessTier() + 1} · ` : "";
+  $("waveText").textContent = boss ? `${endlessLabel}WAVE ${waveNumber || 1} · PAUSED DURING BOSS`
+    : `${endlessLabel}WAVE ${waveNumber || 1} · ${currentPattern} · NEXT ${upcomingWave} IN ${waveClock}`;
   $("waveFill").style.width = `${Math.max(0, Math.min(100, (1 - waveTimer / waveDuration) * 100))}%`;
   $("healthText").textContent = Math.ceil(player.hp) + " / " + player.maxHp;
   $("hp").style.width = (100 * player.hp) / player.maxHp + "%";
   $("levelText").textContent = level;
   $("xp").style.width = (100 * xp) / needed + "%";
   $("stats").textContent =
-    `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
+    `${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
   const weaponNames = Object.fromEntries(weaponCatalog.map((weapon) => [weapon.key, weapon.name]));
   $("loadout").innerHTML = selectedWeapons
     .map((key, index) => {
@@ -377,6 +397,64 @@ function panel(title, body, buttons) {
   buttons($("choices"));
 }
 
+function showVictory() {
+  if (victoryClaimed || gameState === "victory" || !active) return false;
+  finalBossDefeated = true;
+  if (!grantFinalVictory()) return false;
+  paused = true;
+  choiceScreenOpen = true;
+  gameState = "victory";
+  bossShots = [];
+  bossHazards = [];
+  player.inv = Math.max(player.inv, 2.5);
+  const evolvedCount = Object.values(evolutions).filter(Boolean).length;
+  const currentNames = weaponCatalog.filter((w) => upgrades[w.key] > 0)
+    .map((w) => `${w.name}${weaponIsEvolved(w.key) ? " ★" : ""}`).join(", ");
+  const survived = `${Math.floor(time / 60)}m ${Math.floor(time % 60)}s`;
+  panel("VICTORY · THE NIGHT IS YOURS",
+    `You defeated THE LAST MEME!<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
+    (container) => {
+      const continueButton = document.createElement("button");
+      continueButton.className = "victory-continue";
+      continueButton.textContent = "CONTINUE IN ENDLESS MODE";
+      continueButton.onclick = continueEndlessAfterVictory;
+      container.append(continueButton);
+      const menuButton = document.createElement("button");
+      menuButton.textContent = "CLAIM VICTORY · MAIN MENU";
+      menuButton.onclick = showMainMenu;
+      container.append(menuButton);
+    });
+  $("bossHud").style.display = "none";
+  $("bossCountdown").style.display = "none";
+  $("pause").style.display = "none";
+  $("speedControls").style.display = "none";
+  return true;
+}
+
+function continueEndlessAfterVictory() {
+  if (gameState !== "victory" || !victoryClaimed) return false;
+  runMode = "endless";
+  menuRunMode = "endless";
+  endlessStartTime = time;
+  nextBossTime = time + 180;
+  boss = null;
+  bossShots = [];
+  bossHazards = [];
+  player.inv = Math.max(player.inv, 2.5);
+  // Resuming the same run preserves HP, XP, loadout and achievements.
+  paused = false;
+  choiceScreenOpen = false;
+  gameState = "playing";
+  $("overlay").style.display = "none";
+  $("pause").style.display = "block";
+  $("speedControls").style.display = "flex";
+  $("bossCountdown").style.display = "block";
+  notify("ENDLESS MODE · THE HORDE NEVER STOPS", "wave", 5);
+  hud();
+  if (pendingLevelUps > 0) choices();
+  return true;
+}
+
 function end() {
   if (!active) return;
   playSfx("gameover");
@@ -397,7 +475,7 @@ function end() {
   choiceScreenOpen = false;
   panel(
     "KKR SUKKEL",
-    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s, reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
+    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s in ${runMode.toUpperCase()} mode, reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.${victoryClaimed ? "<br>Standard victory completed · Endless unlocked." : ""}<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints + (victoryClaimed ? FINAL_VICTORY_BONUS : 0)}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
     (el) => {
       let b = document.createElement("button");
       b.textContent = "TRY AGAIN";
@@ -456,7 +534,13 @@ function update(dt) {
   if (upgrades.health) {
     player.hp = Math.min(player.maxHp, player.hp + upgrades.health * 0.8 * dt);
   }
-  if (!boss && time >= nextBossTime) spawnBoss();
+  // Final boss takes priority over the ordinary boss schedule at the 25-minute mark.
+  // If another boss is already alive, the final encounter starts after that fight.
+  if (!boss && runMode === "standard" && !finalBossDefeated && time >= FINAL_BOSS_TIME) {
+    spawnFinalBoss();
+  } else if (!boss && time >= nextBossTime) {
+    spawnBoss();
+  }
   player.inv = Math.max(0, player.inv - dt);
   damageFlash = Math.max(0, damageFlash - dt);
   novaFlash = Math.max(0, novaFlash - dt);
@@ -493,7 +577,8 @@ function update(dt) {
   }
   spawn -= dt;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
-  const gradualWavePressure = 1 + Math.min(0.24, waveNumber * 0.015);
+  const gradualWavePressure = 1 + Math.min(0.24, waveNumber * 0.015) +
+    Math.min(0.35, currentEndlessTier() * 0.025);
   let interval =
     (Math.max(0.14, 1.6 - growthTime * 0.0026) * (boss ? 2 : 1)) /
     (profile.spawnRate * gradualWavePressure);
@@ -639,7 +724,22 @@ function update(dt) {
       }
     }
     if (e === boss) {
-      if (!e.phaseTwo && e.hp <= e.maxHp * 0.5) {
+      if (e.isFinalBoss) {
+        const nextPhase = e.hp <= e.maxHp * 0.33 ? 3 : e.hp <= e.maxHp * 0.66 ? 2 : 1;
+        if (nextPhase > e.finalPhase) {
+          e.finalPhase = nextPhase;
+          e.phaseIntro = 1.25;
+          e.shotWarning = 0;
+          e.shootCooldown = Math.max(e.shootCooldown, 1.7);
+          e.chargeWarning = 0;
+          e.chargeCooldown = Math.max(e.chargeCooldown, 2.6);
+          $("bossName").textContent = `THE LAST MEME · PHASE ${["I", "II", "III"][nextPhase - 1]}`;
+          notify(`FINAL BOSS · PHASE ${nextPhase} / 3`, "boss", 4.5);
+          puff(e.x, e.y, "#ffb4fa", 30);
+        }
+        e.finalIntro = Math.max(0, (e.finalIntro || 0) - dt);
+      }
+      if (!e.isFinalBoss && !e.phaseTwo && e.hp <= e.maxHp * 0.5) {
         e.phaseTwo = true;
         e.phaseIntro = 0.95;
         e.shotWarning = 0;
@@ -660,17 +760,18 @@ function update(dt) {
         e.y += e.chargeY * e.chargeSpeed * dt;
       } else {
         e.chargeCooldown -= dt;
-        if (e.chargeCooldown <= 0 && !e.chargeWarning && e.phaseIntro <= 0 && visibleEnemy(e, -12)) {
+        if (e.chargeCooldown <= 0 && !e.chargeWarning && e.shotWarning <= 0 && e.phaseIntro <= 0 && visibleEnemy(e, -12)) {
           e.chargeX = Math.cos(a);
           e.chargeY = Math.sin(a);
-          e.chargeSpeed = (e.variant === 0 ? 360 : e.variant === 1 ? 310 : 395) * (e.phaseTwo ? 1.18 : 1);
-          e.chargeWarning = e.variant === 2 ? 1.05 : 0.9;
+          e.chargeSpeed = (e.isFinalBoss ? 375 + e.finalPhase * 17 : e.variant === 0 ? 360 : e.variant === 1 ? 310 : 395) * (e.phaseTwo ? 1.18 : 1);
+          e.chargeWarning = e.isFinalBoss ? 1.15 : e.variant === 2 ? 1.05 : 0.9;
         }
         if (e.chargeWarning > 0) {
           e.chargeWarning = Math.max(0, e.chargeWarning - dt);
           if (!e.chargeWarning) {
-            e.chargeActive = e.variant === 1 ? 0.54 : 0.42;
-            e.chargeCooldown = (e.variant === 1 ? 8.7 : e.variant === 2 ? 7.8 : 8) * (e.phaseTwo ? 0.77 : 1);
+            e.chargeActive = e.isFinalBoss ? 0.46 : e.variant === 1 ? 0.54 : 0.42;
+            e.chargeCooldown = e.isFinalBoss ? 8.7 - (e.finalPhase - 1) * 0.7
+              : (e.variant === 1 ? 8.7 : e.variant === 2 ? 7.8 : 8) * (e.phaseTwo ? 0.77 : 1);
           }
         }
         e.x += Math.cos(moveAngle) * moveSpeed * dt;
@@ -728,16 +829,25 @@ function update(dt) {
         if (e.shootCooldown <= 0 && visibleEnemy(e, -12)) {
           e.shootCooldown = 0;
           e.shotAngle = Math.atan2(player.y - e.y, player.x - e.x);
-          e.shotWarning = e.phaseTwo ? 0.95 : 1.05;
+          if (e.isFinalBoss) {
+            e.shotPattern = (e.volleyCount || 0) % 3;
+            e.shotRotation = time * 0.45;
+            e.warningX = player.x;
+            e.warningY = player.y;
+            e.shotWarning = [1.2, 1.05, 0.92][e.finalPhase - 1];
+          } else {
+            e.shotWarning = e.phaseTwo ? 0.95 : 1.05;
+          }
         }
       }
-      if (e.phaseTwo) {
+      if (e.phaseTwo || (e.isFinalBoss && e.finalPhase >= 2)) {
         e.minionCooldown = (e.minionCooldown ?? 8) - dt;
         if (e.minionCooldown <= 0 && enemies.length < 58) {
-          e.minionCooldown = e.variant === 1 ? 11 : 10;
-          const kind = e.variant === 1 ? 1 : e.variant === 2 ? 4 : 0;
-          for (let i = 0; i < 3; i++) {
-            const angle = (Math.PI * 2 * i) / 3 + time;
+          e.minionCooldown = e.isFinalBoss ? 13 : e.variant === 1 ? 11 : 10;
+          const kind = e.isFinalBoss ? (e.finalPhase === 3 ? 1 : 0) : e.variant === 1 ? 1 : e.variant === 2 ? 4 : 0;
+          const minionCount = e.isFinalBoss ? 2 : 3;
+          for (let i = 0; i < minionCount; i++) {
+            const angle = (Math.PI * 2 * i) / minionCount + time;
             enemies.push({
               x: e.x + Math.cos(angle) * 115,
               y: e.y + Math.sin(angle) * 115,
@@ -967,6 +1077,34 @@ function update(dt) {
   enemyShots = enemyShots.filter(
     (shot) => shot.life > 0 && !projectileOutsideArena(shot),
   );
+  // Ground attacks are announced before impact and cannot hit a player who
+  // has already moved outside the visible warning zone.
+  for (let i = bossHazards.length - 1; i >= 0; i--) {
+    const hazard = bossHazards[i];
+    hazard.warning -= dt;
+    if (hazard.warning > 0) continue;
+    bossHazards.splice(i, 1);
+    const dx = hazard.x - player.x, dy = hazard.y - player.y;
+    const reach = hazard.radius + player.r;
+    if (dx * dx + dy * dy <= reach * reach && player.inv <= 0 && !tryDodge()) {
+      player.hp -= hazard.damage;
+      runDamageTaken += hazard.damage;
+      player.inv = 0.8;
+      damageFlash = 0.5;
+      shake = Math.max(shake, 11);
+      puff(player.x, player.y, "#eb94ff", 12);
+      if (player.hp <= 0) {
+        end();
+        return;
+      }
+    }
+    explosions.push({
+      x: hazard.x, y: hazard.y, radius: hazard.radius,
+      life: 0.48, maxLife: 0.48, evolved: true,
+    });
+    puff(hazard.x, hazard.y, "#ed99ff", 14);
+    playSfx("bomb");
+  }
   for (const b of bossShots) {
     b.x += b.vx * dt;
     b.y += b.vy * dt;

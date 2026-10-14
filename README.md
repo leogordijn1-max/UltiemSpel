@@ -51,3 +51,22 @@ Every wave has a recognizable theme: Drifter Swarm, Runner Rush, Heavy Horde, Ra
 Ranged Shades must be on screen and within attack range before beginning an aimed 0.7-second warning; their projectile locks its direction at warning start and curves only moderately. Boss attacks now begin with visible warnings. Beau de Hond still fires MarioVis shotgun volleys, the Mourning Shade makes gapped radial rings and the Bell Tower fires aimed bell-bolt lanes. Each boss changes behavior below half HP and may summon different minions.
 
 Run all gameplay tests using `node --test tests/*.test.js`. These changes target desktop and should be tuned after full 20–30 minute playtests.
+
+
+## Update 6: Victory, Final Boss & Endless Mode
+
+**Standard Mode** starts with one selected weapon and two reserve weapons. Around **25 minutes of simulated play time**, the final boss **The Last Meme** appears. Its three phases trigger at approximately 66% and 33% remaining HP. It uses a telegraphed rift volley with a safe middle gap, a shadow ring with a safe opening and a ground circle locked to the player's position at the start of the warning. The final boss currently has original Canvas placeholder art; do not replace existing custom meme images.
+
+A final boss victory immediately grants **12 permanent points**, awards the **Nightbreaker** achievement and **permanently unlocks Endless Mode** on this device. The Victory screen offers **Claim Victory / Main Menu** or **Continue in Endless Mode**. Continuing preserves the player's weapons, XP, level, health, upgrades, evolutions and ongoing run record. Earned performance points are only added for the *difference* since the Victory checkpoint, not paid twice.
+
+Once unlocked, the main menu shows **Endless Mode · New Run**. New Endless runs start with the normal three-weapon loadout and scaling remains standard until minute 25; after that, every two minutes adds a bounded difficulty tier (higher enemy HP, damage and modest additional speed/spawn pressure). Existing bosses continue to recur in Endless Mode.
+
+Victory state, unlocks and records are in version-3 `localStorage`. Older version-2 saves are migrated without removing existing points, achievements or completed runs. Records are tracked separately for **Standard vs. Endless** and **Easy / Normal / Nightmare**. The game's automatic Node checks cover old saves, one-time rewards, final boss combat and Endless continuation.
+
+Run all gameplay checks with:
+
+```bash
+node --test tests/*.test.js
+```
+
+**Note:** A full 25-minute playtest is still recommended to verify the final boss challenge, visual telegraphs and late-game performance before merging this update.

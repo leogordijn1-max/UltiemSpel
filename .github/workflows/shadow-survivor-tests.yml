@@ -6,6 +6,7 @@ on:
       - main
       - feature/update-4-weapons-evolutions
       - feature/update-5-enemies-waves-bosses
+      - feature/update-6-final-boss-endless
   pull_request:
     branches:
       - main
