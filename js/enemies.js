@@ -212,6 +212,10 @@ function enemySpawn(preferredKind = null, forceElite = false) {
     makeEliteEnemy(e);
   }
   enemies.push(e);
+  if (typeof trackDiscovery === "function") {
+    const seen = typeof enemyDiscoveryId === "function" ? enemyDiscoveryId(e.kind) : null;
+    if (seen) trackDiscovery("enemies", seen);
+  }
   return e;
 }
 
@@ -368,7 +372,11 @@ function damage(e, d, origin = player, damageType = "direct") {
   const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
   const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
   const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense;
+  const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
   e.hp -= finalDamage;
+  if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
+    recordDamage(runStats, effectiveDamage, damageType, origin, critical);
+  }
   e.hit = 0.12;
 
   // Tanks and bosses resist knockback; regular enemies are easier to push away.
@@ -617,6 +625,7 @@ function spawnBoss() {
     phaseTwo: false,
   };
   enemies.push(boss);
+  if (typeof trackDiscovery === "function") trackDiscovery("bosses", ["beau", "mourning", "bell"][variant]);
   puff(boss.x, boss.y, "#cf7cff", 28);
   $("bossHud").style.display = "block";
   $("bossName").textContent = boss.bossName;
@@ -664,6 +673,7 @@ function spawnFinalBoss() {
     minionCooldown: 13,
   };
   enemies.push(boss);
+  if (typeof trackDiscovery === "function") trackDiscovery("bosses", "final");
   nextBossTime = Infinity;
   $("bossHud").style.display = "block";
   $("bossName").textContent = "THE LAST MEME · PHASE I";
