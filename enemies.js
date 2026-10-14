@@ -25,6 +25,13 @@ function enemySpawn() {
     e.hp *= 4;
     e.speed *= 0.7;
     e.damage = 14;
+  } else if (type > 0.88) {
+    e.kind = 4;
+    e.r = 15;
+    e.hp *= 1.25;
+    e.speed = rand(34, 42) + growthTime * 0.025;
+    e.damage = 6;
+    e.shootCooldown = rand(4.5, 7);
   }
   e.damage += growthTime * 0.004;
   enemies.push(e);
@@ -56,7 +63,9 @@ function damage(e, d) {
       const soulValue =
         e.kind === 3
           ? 14 + bossNumber * 18
-          : e.kind === 2
+          : e.kind === 4
+            ? 2
+            : e.kind === 2
             ? 5
             : e.kind === 1
               ? 0.8
@@ -125,6 +134,21 @@ function fire() {
       hit: new Set(),
     });
   }
+}
+function enemyFireOrb(e) {
+  const angle = Math.atan2(player.y - e.y, player.x - e.x);
+  enemyShots.push({
+    type: "enemyOrb",
+    x: e.x,
+    y: e.y,
+    vx: Math.cos(angle) * 105,
+    vy: Math.sin(angle) * 105,
+    speed: 105,
+    turnRate: 1.15,
+    life: 9,
+    r: 8,
+    damage: 9,
+  });
 }
 function spawnBoss() {
   bossNumber++;

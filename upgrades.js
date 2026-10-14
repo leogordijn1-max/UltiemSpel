@@ -15,6 +15,7 @@ const opts = [
   ],
   ["bladeSize", "Titan Blades", "Increase blade size by 30%."],
   ["pierce", "Phantom Shots", "Projectiles pierce additional enemies."],
+  ["bomb", "Grave Bomb", "Drop a heavy bomb every 12 seconds. Its blast deals huge area damage."],
   ["nova", "Death Pulse", "Release powerful damaging shockwaves periodically."],
   ["novaRange", "Expanding Aura", "Increase Death Pulse radius by 25%."],
   [
@@ -42,7 +43,7 @@ function choices() {
     pick.forEach((o) => {
       const b = document.createElement("button");
       b.className = "choice";
-      b.innerHTML = `${o[0] === "damage" ? '<img class="choice-art" src="EmmerMayo.png" alt="Pot mayonaise">' : ""}<b>${o[1]}</b><small>${o[2]}</small><small>Level ${(upgrades[o[0]] || 0) + 1}</small>`;
+      b.innerHTML = `${o[0] === "damage" ? '<img class="choice-art" src="img/EmmerMayo.png" alt="Pot mayonaise">' : ""}<b>${o[1]}</b><small>${o[2]}</small><small>Level ${(upgrades[o[0]] || 0) + 1}</small>`;
       b.onclick = () => {
         upgrades[o[0]] = (upgrades[o[0]] || 0) + 1;
         if (o[0] === "health") {
