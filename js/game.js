@@ -568,7 +568,7 @@ function fireBeauFishBarrage() {
     });
   }
   puff(player.x, player.y, "#ffccae", 9);
-  playSfx("shoot");
+  playSfx("fish");
   return true;
 }
 
@@ -806,6 +806,7 @@ function update(dt) {
           e.chargeCooldown = Math.max(e.chargeCooldown, 2.6);
           $("bossName").textContent = `THE LAST MEME · PHASE ${["I", "II", "III"][nextPhase - 1]}`;
           notify(`FINAL BOSS · PHASE ${nextPhase} / 3`, "boss", 4.5);
+          playSfx("boss-warn");
           puff(e.x, e.y, "#ffb4fa", 30);
         }
         e.finalIntro = Math.max(0, (e.finalIntro || 0) - dt);
