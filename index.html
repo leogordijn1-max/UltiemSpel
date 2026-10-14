@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Shadow Survivor</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="ui">
+      <div id="hud">
+        <div id="bars">
+          <div>HEALTH <span id="healthText"></span></div>
+          <div class="bar"><div id="hp" class="fill"></div></div>
+          <div>LEVEL <span id="levelText">1</span></div>
+          <div class="bar"><div id="xp" class="fill"></div></div>
+        </div>
+        <div id="stats"></div>
+      </div>
+      <button id="pause" style="display: none">Ⅱ Pause</button>
+      <div id="speedControls">
+        <button data-speed="1" class="selected">1×</button
+        ><button data-speed="2">2×</button><button data-speed="3">3×</button>
+      </div>
+      <div id="bossCountdown">
+        <span id="countText">BOSS IN 3:00</span>
+        <div id="countTrack"><div id="countFill"></div></div>
+      </div>
+      <div id="bossHud">
+        BEAU DE HOND
+        <div id="bossTrack"><div id="bossFill"></div></div>
+      </div>
+      <div id="hint">
+        WASD / Arrow keys to move · P to pause · Weapons attack automatically ·
+        1× / 2× / 3× speed
+      </div>
+      <div id="overlay">
+        <div id="panel">
+          <h1>SHADOW SURVIVOR</h1>
+          <p>
+            Survive the endless night. Slay monsters, collect souls, evolve your
+            power.
+          </p>
+          <p>
+            Move with WASD or arrow keys. Your weapons attack automatically.
+          </p>
+          <button id="start">ENTER THE NIGHT</button>
+        </div>
+      </div>
+    </div>
+    <script src="enemies.js"></script>
+    <script src="upgrades.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
