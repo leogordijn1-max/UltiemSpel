@@ -51,7 +51,11 @@ function currentUpgradeLevel(key) {
   return Math.min(maxUpgradeLevel(key), Math.max(0, Math.floor(rawLevel)));
 }
 function globalDamageMultiplier() {
-  return 1 + (upgrades.damage || 0) * 0.18 + (typeof permanentDamageBonus === "number" ? permanentDamageBonus : 0);
+  const raw = 1 + (upgrades.damage || 0) * 0.18 + (typeof permanentDamageBonus === "number" ? permanentDamageBonus : 0);
+  const characterBonus = typeof selectedCharacter !== "undefined" &&
+    typeof characterRuntime !== "undefined" && typeof player !== "undefined" && player
+    ? characterDamageMultiplier(selectedCharacter, characterRuntime, player.hp, player.maxHp) : 1;
+  return raw * characterBonus;
 }
 function calculateBombDamage(level, damageMultiplier, evolved = false, againstBoss = false) {
   return 85 * (1 + (level - 1) * 0.2) * damageMultiplier * (evolved ? 1.25 : 1) * (againstBoss ? 0.42 : 1);
@@ -319,7 +323,8 @@ function showBossReward() {
 
 function addXP(amount) {
   if (!Number.isFinite(amount) || amount <= 0) return;
-  xp += amount;
+  const multiplier = typeof metaProgress !== "undefined" ? 1 + (metaProgress.xpLevel || 0) * 0.02 : 1;
+  xp += amount * multiplier;
   while (xp >= needed) {
     xp -= needed;
     level++;

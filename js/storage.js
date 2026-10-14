@@ -93,6 +93,7 @@ function loadMetaProgress() {
       bosses: nonNegativeInteger(run.bosses),
       difficulty: ["easy", "normal", "nightmare"].includes(run.difficulty) ? run.difficulty : "normal",
       mode: run.mode === "endless" ? "endless" : "standard",
+      character: ["survivor", "zombieMike", "beau", "mayoMaster"].includes(run.character) ? run.character : "survivor",
       victory: run.victory === true,
       id: typeof run.id === "string" ? run.id.slice(0, 80) : "",
     })).sort((a, b) => b.survived - a.survived).slice(0, 30)
@@ -114,6 +115,18 @@ function loadMetaProgress() {
     }
   }
   const wins = nonNegativeInteger(totals.wins);
+  const statPurchaseCosts = {};
+  for (const [key, max, legacyCost] of [
+    ["hpLevel", 5, 2], ["damageLevel", 5, 3],
+    ["speedLevel", 3, 5], ["magnetLevel", 3, 4], ["xpLevel", 3, 5], ["dashLevel", 3, 5],
+  ]) {
+    const level = Math.min(max, nonNegativeInteger(saved[key]));
+    const savedPrices = Array.isArray(saved.statPurchaseCosts?.[key]) ? saved.statPurchaseCosts[key] : [];
+    statPurchaseCosts[key] = Array.from({ length: level }, (_, i) => {
+      const value = Number(savedPrices[i]);
+      return Number.isFinite(value) && value >= 0 ? Math.min(1000, Math.floor(value)) : legacyCost;
+    });
+  }
   return {
     version: SAVE_VERSION,
     points: nonNegativeInteger(saved.points),
@@ -123,6 +136,23 @@ function loadMetaProgress() {
     runs,
     records,
     endlessUnlocked: saved.endlessUnlocked === true || wins > 0,
+    statPurchaseCosts,
+    speedLevel: Math.min(3, nonNegativeInteger(saved.speedLevel)),
+    magnetLevel: Math.min(3, nonNegativeInteger(saved.magnetLevel)),
+    xpLevel: Math.min(3, nonNegativeInteger(saved.xpLevel)),
+    dashLevel: Math.min(3, nonNegativeInteger(saved.dashLevel)),
+    // Existing characters and weapons are never removed when saves are migrated.
+    ownedCharacters: [...new Set((Array.isArray(saved.ownedCharacters) ? saved.ownedCharacters : [])
+      .filter((id) => id === "mayoMaster"))],
+    weaponMasteries: [...new Set((Array.isArray(saved.weaponMasteries) ? saved.weaponMasteries : [])
+      .filter((id) => ["arcane", "orbit", "bomb", "chain", "boomerang", "flame", "frost", "nova"].includes(id)))],
+    bossLoot: [...new Set((Array.isArray(saved.bossLoot) ? saved.bossLoot : [])
+      .filter((id) => ["beau", "mourning", "bell", "final"].includes(id)))],
+    cosmetics: [...new Set(["classic", ...(Array.isArray(saved.cosmetics) ? saved.cosmetics : [])
+      .filter((id) => ["neon", "gold", "void"].includes(id))])],
+    selectedCosmetic: ["classic", "neon", "gold", "void"].includes(saved.selectedCosmetic) &&
+      (saved.selectedCosmetic === "classic" || (Array.isArray(saved.cosmetics) && saved.cosmetics.includes(saved.selectedCosmetic)))
+      ? saved.selectedCosmetic : "classic",
     bestFlawlessSurvival: nonNegativeInteger(saved.bestFlawlessSurvival),
     totals: {
       kills: nonNegativeInteger(totals.kills),

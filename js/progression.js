@@ -22,6 +22,8 @@ function checkRunAchievements() {
 
 function checkSavedAchievements() {
   if (metaProgress.totals.wins > 0) unlockAchievement("finalVictory", "Nightbreaker");
+  if (metaProgress.bossLoot?.includes("beau")) unlockAchievement("beauTrophy", "Good Dog");
+  if ((metaProgress.weaponMasteries || []).length >= 4) unlockAchievement("mastery4", "Master of Arms");
   if (metaProgress.totals.kills >= 100) unlockAchievement("kills100", "100 Kills");
   if (metaProgress.totals.kills >= 1000) unlockAchievement("kills1000", "1000 Kills");
   if (metaProgress.totals.bosses >= 1) unlockAchievement("boss1", "First Boss");
@@ -73,6 +75,7 @@ function recordRun(outcome = "defeat") {
     bosses: bossesDefeated,
     difficulty,
     mode,
+    character: typeof selectedCharacter !== "undefined" ? selectedCharacter : "survivor",
     victory: won,
   };
   if (!Array.isArray(metaProgress.runs)) metaProgress.runs = [];

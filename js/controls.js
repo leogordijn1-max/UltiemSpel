@@ -9,6 +9,8 @@ const achievementCatalog = [
   ["boss3", "Boss Hunter", "Defeat three bosses total (career)", (p) => `${Math.min(p.totals.bosses, 3)}/3`],
   ["evolution", "Evolutionary Leap", "Evolve a weapon (career)", (p) => `${p.achievements.some((a) => a.id === "evolution") ? 1 : 0}/1`],
   ["finalVictory", "Nightbreaker", "Defeat The Last Meme in Standard Mode to unlock Endless.", (p) => `${Math.min(p.totals.wins || 0, 1)}/1`],
+  ["beauTrophy", "Good Dog", "Defeat Beau de Hond to unlock the playable Beau.", (p) => `${p.bossLoot?.includes("beau") ? 1 : 0}/1`],
+  ["mastery4", "Master of Arms", "Unlock four weapon masteries in the permanent shop.", (p) => `${Math.min((p.weaponMasteries || []).length, 4)}/4`],
   ["flawless", "Untouched", "Complete a five-minute run without taking damage", (p) => `${Math.min(p.bestFlawlessSurvival, 300)}/300 sec`],
 ];
 
@@ -41,7 +43,7 @@ function bindMainMenu() {
   $("start").textContent = "STANDARD · CHOOSE YOUR WEAPONS";
   $("start").onclick = () => {
     menuRunMode = "standard";
-    showWeaponSelection();
+    showCharacterSelection();
   };
   $("start").onpointerdown = startAudio;
   // A new Endless run is only selectable after the first standard victory.
@@ -62,14 +64,50 @@ function bindMainMenu() {
   endlessButton.onclick = () => {
     if (!metaProgress.endlessUnlocked) return;
     menuRunMode = "endless";
-    showWeaponSelection();
+    showCharacterSelection();
   };
   $("settingsButton").onclick = showSettings;
   $("metaShop").textContent = `PERMANENT UPGRADES · ${metaProgress.points} PTS`;
-  $("metaShop").onclick = showMetaShop;
+  $("metaShop").onclick = () => showMetaShop("Stats");
   $("recordsButton").onclick = showRecords;
   $("achievementsButton").onclick = showAchievements;
   $("encyclopediaButton").onclick = () => showEncyclopedia();
+}
+
+function showCharacterSelection() {
+  const modeName = menuRunMode === "endless" ? "ENDLESS" : "STANDARD";
+  panel("CHOOSE YOUR SURVIVOR", `Select a playable character for your ${modeName} run. Each has one unique ability and still uses exactly three weapon slots.`, (parent) => {
+    const grid = document.createElement("div");
+    grid.className = "character-select-grid";
+    for (const character of characterCatalog) {
+      const available = isCharacterUnlocked(metaProgress, character.id);
+      const card = document.createElement("button");
+      card.className = `character-select-card${selectedCharacter === character.id && available ? " selected" : ""}`;
+      card.disabled = !available;
+      const artwork = character.image
+        ? `<img src="${character.image}" alt="">`
+        : '<span class="character-placeholder">✦</span>';
+      card.innerHTML = `${artwork}<b>${character.name}</b><small>${character.ability}</small><small>${character.description}</small><span class="character-unlock">${available ? selectedCharacter === character.id ? "✓ SELECTED" : "UNLOCKED · SELECT" : "LOCKED · " + character.unlock}</span>`;
+      if (available) card.onclick = () => {
+        selectedCharacter = character.id;
+        storageSet("shadowCharacter", selectedCharacter);
+        showCharacterSelection();
+      };
+      grid.append(card);
+    }
+    parent.append(grid);
+    const footer = document.createElement("div");
+    footer.className = "menu-footer";
+    const next = document.createElement("button");
+    next.textContent = "CONTINUE · CHOOSE YOUR WEAPONS";
+    next.onclick = showWeaponSelection;
+    footer.append(next);
+    const back = document.createElement("button");
+    back.textContent = "BACK";
+    back.onclick = showMainMenu;
+    footer.append(back);
+    parent.append(footer);
+  });
 }
 
 function showWeaponSelection() {
@@ -137,7 +175,7 @@ function showWeaponSelection() {
     footer.append(start);
     const back = document.createElement("button");
     back.textContent = "BACK";
-    back.onclick = showMainMenu;
+    back.onclick = showCharacterSelection;
     footer.append(back);
     parent.append(footer);
   });
@@ -161,23 +199,94 @@ function showSettings() {
   });
 }
 
-function showMetaShop() {
-  panel("PERMANENT UPGRADES", `${metaProgress.points} points available. Purchases apply next run.`, (parent) => {
-    for (const [key, label, cost] of [["hpLevel", "Starting health +8", 2], ["damageLevel", "Starting damage +10%", 3]]) {
-      const button = document.createElement("button");
-      button.className = "choice";
-      button.textContent = `${label} · ${cost} pts · Level ${metaProgress[key]}/5`;
-      button.disabled = metaProgress.points < cost || metaProgress[key] >= 5;
-      button.onclick = () => {
-        metaProgress.points -= cost;
-        metaProgress[key]++;
-        saveMetaProgress();
-        showMetaShop();
-      };
-      parent.append(button);
-    }
-    backButton(parent);
-  });
+function showMetaShop(category = "Stats") {
+  panel("PERMANENT SHOP", `${metaProgress.points} points · Build permanent progress with stats, weapon masteries, characters and cosmetics. Achievements and boss trophies unlock extra content.`,
+    (parent) => {
+      const tabs = document.createElement("div");
+      tabs.className = "shop-tabs";
+      for (const name of ["Stats", "Weapons", "Characters", "Cosmetics"]) {
+        const tab = document.createElement("button");
+        tab.textContent = name.toUpperCase();
+        tab.classList.toggle("selected", name === category);
+        tab.onclick = () => showMetaShop(name);
+        tabs.append(tab);
+      }
+      parent.append(tabs);
+      const grid = document.createElement("div");
+      grid.className = "shop-grid";
+      const entries = shopEntries(category);
+      for (const item of entries) {
+        const state = shopEntryStatus(metaProgress, item);
+        const button = document.createElement("button");
+        button.className = "shop-entry";
+        const eligible = state.state === "available" && metaProgress.points >= state.cost;
+        const selected = item.kind === "cosmetic" && metaProgress.selectedCosmetic === item.id;
+        button.disabled = state.state !== "available" && !(item.kind === "cosmetic" && state.state === "owned" && !selected);
+        if (state.state === "available" && !eligible) button.disabled = true;
+        let status = state.state === "available" ? `${state.cost} PTS` : state.state.toUpperCase();
+        if (item.kind === "stat") status += ` · LV ${state.level}/${item.max}`;
+        if (selected) status = "EQUIPPED";
+        button.innerHTML = `<b>${item.name}</b><small>${item.description}</small><strong>${status}</strong>`;
+        button.onclick = () => {
+          if (item.kind === "cosmetic" && state.state === "owned") {
+            if (equipCosmetic(metaProgress, item.id)) saveMetaProgress();
+          } else if (purchaseShopEntry(metaProgress, item)) {
+            if (item.kind === "mastery" && metaProgress.weaponMasteries.length >= 4) unlockAchievement("mastery4", "Master of Arms");
+            if (item.kind === "cosmetic") equipCosmetic(metaProgress, item.id);
+            saveMetaProgress();
+          }
+          showMetaShop(category);
+        };
+        grid.append(button);
+      }
+      if (category === "Characters") {
+        for (const character of characterCatalog.filter((item) => item.id !== "mayoMaster" && item.id !== "survivor")) {
+          const card = document.createElement("article");
+          card.className = "shop-earned";
+          const available = isCharacterUnlocked(metaProgress, character.id);
+          card.innerHTML = `<b>${character.name}</b><small>${character.unlock}</small><strong>${available ? "UNLOCKED" : "EARN THROUGH GAMEPLAY"}</strong>`;
+          grid.append(card);
+        }
+      }
+      if (category === "Cosmetics") {
+        const classic = document.createElement("button");
+        classic.className = "shop-entry";
+        classic.innerHTML = `<b>Classic</b><small>Original character colors.</small><strong>${metaProgress.selectedCosmetic === "classic" ? "EQUIPPED" : "OWNED · EQUIP"}</strong>`;
+        classic.disabled = metaProgress.selectedCosmetic === "classic";
+        classic.onclick = () => {
+          equipCosmetic(metaProgress, "classic");
+          saveMetaProgress();
+          showMetaShop(category);
+        };
+        grid.prepend(classic);
+      }
+      parent.append(grid);
+      if (category === "Stats") {
+        const reset = document.createElement("button");
+        reset.className = "shop-reset";
+        reset.textContent = "REFUND STAT UPGRADES";
+        reset.onclick = () => {
+          if (!confirm("Refund all permanent stat upgrades? Your characters, masteries and cosmetics will stay unlocked.")) return;
+          let refunded = 0;
+          for (const stat of statShopCatalog) {
+            const level = Math.max(0, Math.floor(metaProgress[stat.id] || 0));
+            const receipts = metaProgress.statPurchaseCosts?.[stat.id] || [];
+            // Refund what was actually paid, including legacy flat-cost upgrades.
+            for (let index = 0; index < Math.min(stat.max, level); index++) {
+              const legacyCost = stat.id === "hpLevel" ? 2 : stat.id === "damageLevel" ? 3 : stat.baseCost;
+              refunded += Number.isFinite(receipts[index]) ? receipts[index] : legacyCost;
+            }
+            metaProgress[stat.id] = 0;
+            if (metaProgress.statPurchaseCosts) metaProgress.statPurchaseCosts[stat.id] = [];
+          }
+          metaProgress.points += refunded;
+          saveMetaProgress();
+          showMetaShop("Stats");
+        };
+        parent.append(reset);
+      }
+      backButton(parent);
+    });
 }
 
 function showRecords() {
@@ -206,7 +315,7 @@ function showRecords() {
       top.append(heading);
       for (const run of metaProgress.runs.slice(0, 10)) {
         const line = document.createElement("p");
-        line.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills${run.victory ? " · VICTORY" : ""}`;
+        line.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${getCharacter(run.character).name} · ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills${run.victory ? " · VICTORY" : ""}`;
         top.append(line);
       }
       if (!metaProgress.runs.length) {
@@ -239,7 +348,7 @@ function showEncyclopedia(category = "Weapons") {
   panel("ENCYCLOPEDIA", "Field guide · values use current game definitions", (parent) => {
     const tabs = document.createElement("div");
     tabs.className = "encyclopedia-tabs";
-    for (const name of ["Weapons", "Upgrades", "Enemies", "Bosses"]) {
+    for (const name of ["Weapons", "Upgrades", "Enemies", "Bosses", "Characters"]) {
       const button = document.createElement("button");
       button.textContent = name;
       button.classList.toggle("selected", name === category);
@@ -253,7 +362,12 @@ function showEncyclopedia(category = "Weapons") {
         ? opts.map(([key, name, description]) => ({ name, image: upgradeImage(key), text: `${description} Max level ${maxUpgradeLevel(key)} · ${upgradeCategory(key)}.` }))
         : category === "Enemies"
           ? enemyCatalog.map((e) => ({ name: e.name, image: e.image, text: `HP ${e.hp} · damage ${e.damage} · speed ${e.speed}. ${e.ability} XP ${e.xp}.` }))
-          : bossCatalog.map((b) => ({ name: b.name, image: b.image, text: `${b.attacks} ${b.phase} Reward: rare build upgrade.` }));
+          : category === "Bosses"
+            ? bossCatalog.map((b) => ({ name: b.name, image: b.image, text: `${b.attacks} ${b.phase} Reward: rare build upgrade and unique trophy on first kill.` }))
+            : characterCatalog.map((ch) => ({
+              name: ch.name, image: ch.image,
+              text: `${ch.ability}. ${ch.description} Unlock: ${ch.unlock}. ${isCharacterUnlocked(metaProgress, ch.id) ? "UNLOCKED" : "LOCKED"}.`,
+            }));
     const list = document.createElement("div");
     list.className = "encyclopedia-list";
     for (const entry of entries) {
