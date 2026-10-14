@@ -24,14 +24,14 @@ function updateSpecialWeapons(dt) {
 
 function castChainLightning() {
   weaponTimers.chain = chainLightningCooldown(upgrades.chain);
-  const firstTarget = nearestEnemy(player.x, player.y, 820);
+  const firstTarget = nearestEnemy(player.x, player.y, 600, null, (enemy) => typeof visibleEnemy !== "function" || visibleEnemy(enemy, -24));
   if (!firstTarget) return;
   const evolved = evolutions.tempest;
   const chainDamage = (22 + upgrades.chain * 9) * globalDamageMultiplier();
   const hitByVolley = new Set();
   const attackCount = evolved ? 2 : 1;
   for (let attack = 0; attack < attackCount; attack++) {
-    const initial = nearestEnemy(player.x, player.y, 820, hitByVolley) || firstTarget;
+    const initial = nearestEnemy(player.x, player.y, 600, hitByVolley, (enemy) => typeof visibleEnemy !== "function" || visibleEnemy(enemy, -24)) || firstTarget;
     const visited = new Set();
     let source = player;
     let target = initial;
@@ -94,7 +94,12 @@ function castFlameBurst() {
   const evolved = evolutions.inferno;
   const spread = evolved ? 1.9 : 1.35;
   const radius = (165 + upgrades.flame * 28) * (evolved ? 1.2 : 1);
-  const facingX = player.facingX, facingY = player.facingY;
+  // Aim the cone at a nearby enemy, using facing direction if the arena is empty.
+  const flameTarget = nearestEnemy(player.x, player.y, radius + 55);
+  const targetDx = flameTarget ? flameTarget.x - player.x : player.facingX;
+  const targetDy = flameTarget ? flameTarget.y - player.y : player.facingY;
+  const targetLength = Math.hypot(targetDx, targetDy) || 1;
+  const facingX = targetDx / targetLength, facingY = targetDy / targetLength;
   const angle = Math.atan2(facingY, facingX);
   const coneThreshold = Math.cos(spread / 2);
   const damageValue = (42 + upgrades.flame * 13) * globalDamageMultiplier() * (evolved ? 1.35 : 1);
@@ -127,8 +132,8 @@ function fireFrostOrb() {
   for (const target of targets) {
     if (bullets.length >= 300) break;
     const angle = Math.atan2(target.y - player.y, target.x - player.x);
-    const speed = 205;
-    bullets.push({ type: "frost", evolved: evolutions.glacier, x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, speed, turnRate: 3.2, life: 7, r: 13, d: damagePerHit, pierce: 1 + Math.floor(upgrades.frost / 2), frostRadius: 90 + upgrades.frost * 18, hit: new Set() });
+    const speed = 245;
+    bullets.push({ type: "frost", evolved: evolutions.glacier, x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, speed, turnRate: 4.0, life: 7, r: 13, d: damagePerHit, pierce: 1 + Math.floor(upgrades.frost / 2), frostRadius: 90 + upgrades.frost * 18, hit: new Set() });
   }
 }
 
