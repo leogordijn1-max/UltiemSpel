@@ -653,6 +653,12 @@ addEventListener("keydown", (event) => {
     else document.documentElement.requestFullscreen?.().catch(() => {});
     return;
   }
+  if (key === "p" && !event.repeat && active) {
+    event.preventDefault();
+    if (gameState === "playing") showPauseMenu();
+    else if (gameState === "paused") resumePausedRun();
+    return;
+  }
   if (!active || paused || gameState !== "playing") return;
   keys[key] = true;
   keys[event.key] = true;
@@ -665,10 +671,6 @@ addEventListener("keydown", (event) => {
     updateSpeedButtons();
   }
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
-  if (key === "p" && !event.repeat) {
-    event.preventDefault();
-    showPauseMenu();
-  }
 });
 addEventListener("keyup", (event) => {
   keys[event.key.toLowerCase()] = false;
