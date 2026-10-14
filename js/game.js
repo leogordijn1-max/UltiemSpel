@@ -448,7 +448,7 @@ function showVictory() {
   const currentNames = weaponCatalog.filter((w) => upgrades[w.key] > 0)
     .map((w) => `${w.name}${weaponIsEvolved(w.key) ? " ★" : ""}`).join(", ");
   const survived = `${Math.floor(time / 60)}m ${Math.floor(time % 60)}s`;
-  playSfx("victory");
+  if (typeof playSfx === "function") playSfx("victory");
   panel("VICTORY · THE NIGHT IS YOURS",
     `You defeated THE LAST MEME!<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
     (container) => {
@@ -699,7 +699,7 @@ function update(dt) {
       (e.pulseSlowUntil > time ? 0.77 : 1);
     if (e.burnUntil > time && e.nextBurnTick <= time) {
       e.nextBurnTick = time + 0.5;
-      damage(e, e.burnDps * 0.5);
+      damage(e, e.burnDps * 0.5, player, "burn");
       if (e.dead) continue;
     }
     if (e.kind === 4) {
