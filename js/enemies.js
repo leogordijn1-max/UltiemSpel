@@ -30,12 +30,14 @@ const enemyCatalog = [
   { name: "Drifter", image: "", hp: "20 + time scaling", damage: "8 + time scaling", speed: "43–63 + time scaling", ability: "Moves toward the player.", xp: "1 soul" },
   { name: "Runner", image: "", hp: "55% of Drifter", damage: "6 + time scaling", speed: "1.85× Drifter", ability: "Fast, low-health melee attacker.", xp: "0.8 soul" },
   { name: "Zombie Mike", image: "img/ZombieMike.png", hp: "4× Drifter", damage: "14 + time scaling", speed: "0.7× Drifter", ability: "Large tank enemy.", xp: "5 souls" },
-  { name: "Ranged Shade", image: "", hp: "Drifter base", damage: "6 + ranged orb", speed: "34–42 + time scaling", ability: "Keeps distance and fires homing orbs.", xp: "2 souls" },
+  { name: "Ranged Shade", image: "", hp: "Drifter base", damage: "6 + ranged orb", speed: "34–42 + time scaling", ability: "Keeps distance, warns before shooting and fires moderately homing orbs.", xp: "2 souls" },
+  { name: "Burstling", image: "", hp: "70% of Drifter", damage: "Area blast on detonation", speed: "1.25× Drifter", ability: "Stops near the player, flashes a warning circle, then explodes. Can be killed first.", xp: "1.6 souls" },
+  { name: "Bulwark", image: "", hp: "3× Drifter", damage: "11 + time scaling", speed: "0.75× Drifter", ability: "Alternates between shielded and vulnerable phases.", xp: "3 souls" },
 ];
 const bossCatalog = [
-  { name: "Beau de Hond", image: "img/BeauDeHond.png", attacks: "Fish shotgun fan and a telegraphed charge.", phase: "Below half HP, adds radial shots and summons minions." },
-  { name: "The Mourning Shade", image: "", attacks: "Radial projectile rings and a charge.", phase: "Below half HP, increases ring size and summons minions." },
-  { name: "The Bell Tower", image: "", attacks: "Aimed projectile fan and a charge.", phase: "Below half HP, adds a radial volley and summons minions." },
+  { name: "Beau de Hond", image: "img/BeauDeHond.png", attacks: "Telegraphed MarioVis shotgun fan and charge.", phase: "Below half HP, fires a wider fish fan and occasional shadow rings; summons minions." },
+  { name: "The Mourning Shade", image: "", attacks: "Telegraphed radial shadow rings with a deliberate dodge gap.", phase: "Below half HP, creates larger, faster rotating rings and summons minions." },
+  { name: "The Bell Tower", image: "", attacks: "Telegraphed aimed bell-bolt fans with a narrow safe lane.", phase: "Below half HP, fires additional side-lane volleys and summons minions." },
 ];
 
 const ENEMY_GRID_SIZE = 140;
@@ -152,59 +154,100 @@ function nearestEnemies(x, y, radius, limit, include = null) {
   return closest;
 }
 
-function enemySpawn() {
-  let a = rand(0, Math.PI * 2),
-    r = Math.max(W, H) * 0.72;
+// Special waves can request a type; ordinary spawns retain a mixed distribution.
+function enemySpawn(preferredKind = null, forceElite = false) {
+  const angle = rand(0, Math.PI * 2);
+  const distance = Math.max(W, H) * 0.72;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
-  let type = Math.random(),
-    e = {
-      x: player.x + Math.cos(a) * r,
-      y: player.y + Math.sin(a) * r,
-      r: 13,
-      hp: (20 + growthTime * 0.08) * profile.enemyHealth,
-      speed: rand(43, 63) + growthTime * 0.06,
-      damage: 8,
-      kind: 0,
-      hit: 0,
-      knockbackX: 0,
-      knockbackY: 0,
-      noXp: !!boss,
-    };
-  if (type < Math.min(0.32, growthTime / 200)) {
-    e.kind = 1;
-    e.r = 10;
-    e.hp *= 0.55;
-    e.speed *= 1.85;
-    e.damage = 6;
-  } else if (type > 0.94) {
-    e.kind = 2;
-    e.r = 35;
-    e.hp *= 4;
-    e.speed *= 0.7;
-    e.damage = 14;
-  } else if (type > 0.88) {
-    e.kind = 4;
-    e.r = 15;
-    e.hp *= 1;
-    e.speed = rand(34, 42) + growthTime * 0.025;
-    e.damage = 6;
-    e.shootCooldown = rand(4.5, 7);
+  const roll = Math.random();
+  const kind = Number.isInteger(preferredKind) ? preferredKind
+    : roll < Math.min(0.32, growthTime / 200) ? 1
+    : roll > 0.96 ? 2
+    : roll > 0.89 ? 4
+    : growthTime >= 480 && roll > 0.85 ? 6
+    : growthTime >= 240 && roll > 0.81 ? 5 : 0;
+  const e = {
+    x: player.x + Math.cos(angle) * distance,
+    y: player.y + Math.sin(angle) * distance,
+    r: 13,
+    hp: (20 + growthTime * 0.08) * profile.enemyHealth,
+    speed: rand(43, 63) + growthTime * 0.06,
+    damage: 8,
+    kind,
+    hit: 0,
+    knockbackX: 0,
+    knockbackY: 0,
+    noXp: !!boss,
+  };
+  if (kind === 1) {
+    e.r = 10; e.hp *= 0.55; e.speed *= 1.85; e.damage = 6;
+  } else if (kind === 2) {
+    e.r = 35; e.hp *= 4; e.speed *= 0.7; e.damage = 14;
+  } else if (kind === 4) {
+    e.r = 15; e.speed = rand(34, 42) + growthTime * 0.025;
+    e.damage = 6; e.shootCooldown = rand(2.6, 4.2); e.shotWarning = 0;
+  } else if (kind === 5) {
+    e.r = 12; e.hp *= 0.7; e.speed *= 1.25; e.damage = 16;
+    e.burstWarning = 0; e.burstRadius = 86; e.armed = false;
+  } else if (kind === 6) {
+    e.r = 24; e.hp *= 3; e.speed *= 0.75; e.damage = 11;
+    e.guardTimer = 3; e.shieldActive = true;
   }
-  e.damage *= profile.enemyDamage;
-  e.damage += growthTime * 0.004 * profile.enemyDamage;
-
-  const eliteChance = Math.min(0.12, 0.02 + growthTime / 12000);
-  if (Math.random() < eliteChance) {
-    e.elite = true;
-    e.hp *= 2.2;
-    e.damage *= 1.45;
-    e.speed *= 1.08;
+  e.damage = (e.damage + growthTime * 0.004) * profile.enemyDamage;
+  if (forceElite || Math.random() < Math.min(0.12, 0.02 + growthTime / 12000)) {
+    makeEliteEnemy(e);
   }
-
   enemies.push(e);
+  return e;
 }
 
-const GEM_GRID_SIZE = 140;
+// Elites receive distinct gameplay traits, not just scaled stats.
+function makeEliteEnemy(e) {
+  if (e.elite) return e;
+  e.elite = true;
+  e.hp *= 2.0;
+  e.damage *= 1.28;
+  e.speed *= 1.06;
+  // Chargers only apply to melee enemies; ranged elites use armor or bursts.
+  const options = e.kind === 4 || e.kind === 5 ? ["armored", "swift"] : ["charger", "armored", "swift"];
+  e.eliteTrait = options[Math.floor(Math.random() * options.length)];
+  if (e.eliteTrait === "charger") {
+    e.eliteChargeCooldown = 5.5; e.eliteChargeWarning = 0; e.eliteChargeActive = 0;
+  } else if (e.eliteTrait === "swift") {
+    e.eliteSprintTimer = 2.2; e.eliteSprintActive = 0;
+  }
+  return e;
+}
+
+const wavePatterns = [
+  { name: "DRIFTER SWARM", kinds: [0, 0, 0, 1], unlocked: 1 },
+  { name: "RUNNER RUSH", kinds: [1, 1, 1, 0], unlocked: 2 },
+  { name: "HEAVY HORDE", kinds: [2, 0, 2, 0], unlocked: 3 },
+  { name: "RANGED RAID", kinds: [4, 0, 4, 1], unlocked: 4 },
+  { name: "ELITE AMBUSH", kinds: [0, 1, 2, 4], unlocked: 5, elite: true },
+  { name: "CHAOS MIX", kinds: [0, 1, 2, 4, 5, 6], unlocked: 6 },
+];
+function wavePatternFor(number) {
+  const available = wavePatterns.filter((pattern) => number >= pattern.unlocked);
+  const index = (Math.max(1, number) - 1) % available.length;
+  return available[index];
+}
+function spawnSpecialWave(number, cap = 300) {
+  const pattern = wavePatternFor(number);
+  const waveSize = Math.min(22, 7 + Math.floor(number * 1.15));
+  let spawned = 0;
+  for (let i = 0; i < waveSize && enemies.length < cap; i++) {
+    const roster = pattern.kinds.filter((kind) => kind !== 5 || growthTime >= 240).filter((kind) => kind !== 6 || growthTime >= 480);
+    const kind = roster[i % roster.length];
+    const e = enemySpawn(kind, !!pattern.elite && (i % 3 === 0));
+    const strength = 1 + Math.min(0.55, number * 0.025);
+    e.hp *= strength;
+    e.damage *= 1 + Math.min(0.3, number * 0.012);
+    spawned++;
+  }
+  return { name: pattern.name, spawned, pattern };
+}
+
 function gemCellKey(x, y) {
   return `${Math.floor(x / GEM_GRID_SIZE)},${Math.floor(y / GEM_GRID_SIZE)}`;
 }
@@ -306,7 +349,8 @@ function damage(e, d, origin = player, damageType = "direct") {
   const criticalMultiplier = 1.5 + (upgrades.critDamage || 0) * 0.25 + Math.max(0, (upgrades.critChance || 0) - 2) * 0.05;
   const slowedAreaBonus = e.impactSlowUntil > time && (damageType === "bomb" || damageType === "flame" || damageType === "frost" || damageType === "pulse") ? 1.15 : 1;
   const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
-  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus;
+  const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense;
   e.hp -= finalDamage;
   e.hit = 0.12;
 
@@ -348,13 +392,11 @@ function damage(e, d, origin = player, damageType = "direct") {
       const soulValue =
         e.kind === 3
           ? 14 + bossNumber * 18
-          : e.kind === 4
-            ? 2
-            : e.kind === 2
-              ? 5
-              : e.kind === 1
-                ? 0.8
-                : 1;
+          : e.kind === 4 ? 2
+            : e.kind === 6 ? 3
+              : e.kind === 5 ? 1.6
+                : e.kind === 2 ? 5
+                  : e.kind === 1 ? 0.8 : 1;
       dropGem({
         x: e.x,
         y: e.y,
@@ -419,6 +461,7 @@ function rangedEnemyMovementMode(enemy, playerDistance) {
 function enemyHitRadius(enemy) {
   if (enemy.kind === 3) return enemy.r * 1.4;
   if (enemy.kind === 4) return enemy.r * 1.5;
+  if (enemy.kind === 6) return enemy.r * 1.1;
   if (enemy.kind === 1) return enemy.r * 1.1;
   return enemy.r;
 }
@@ -489,9 +532,9 @@ function enemyFireOrb(e) {
     y: e.y,
     vx: Math.cos(angle) * 85,
     vy: Math.sin(angle) * 85,
-    speed: 85,
-    turnRate: 1.15,
-    life: 9,
+    speed: 105,
+    turnRate: 0.8,
+    life: 6.8,
     r: 8,
     damage: 9,
   });
@@ -524,6 +567,9 @@ function spawnBoss() {
     facing: 1,
     hit: 0,
     shootCooldown: 1.3,
+    shotWarning: 0,
+    volleyCount: 0,
+    phaseIntro: 0,
     shotAngle: 0,
     chargeCooldown: 4,
     chargeWarning: 0,
@@ -536,31 +582,55 @@ function spawnBoss() {
   $("bossName").textContent = boss.bossName;
   playSfx("boss");
   $("bossFill").style.width = "100%";
+  if (typeof notify === "function") notify(`BOSS INCOMING · ${boss.bossName}`, "boss", 4);
+}
+
+// Boss projectiles remember their variant so only Beau uses the original fish sprite.
+function addBossProjectile(e, angle, speed, damage = 13, type = "shadow") {
+  if (bossShots.length >= 180) return;
+  const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
+  bossShots.push({
+    x: e.x, y: e.y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    r: type === "fish" ? 8 : 7,
+    life: 4.5,
+    damage: damage * profile.enemyDamage,
+    visualType: type,
+  });
 }
 
 function bossFire(e) {
-  // Boss patterns rotate while preserving Beau's original fish-shotgun attack.
-  const angle = Math.atan2(player.y - e.y, player.x - e.x);
-  if (e.variant === 1 || e.phaseTwo) {
-    const count = e.phaseTwo ? 12 : 10;
+  const angle = Number.isFinite(e.shotAngle) ? e.shotAngle : Math.atan2(player.y - e.y, player.x - e.x);
+  e.volleyCount = (e.volleyCount || 0) + 1;
+  if (e.variant === 0) {
+    // Beau's trademark MarioVis shotgun. In phase two, add an occasional ring.
+    const offsets = e.phaseTwo ? [-0.48, -0.32, -0.16, 0, 0.16, 0.32, 0.48]
+      : [-0.3, -0.15, 0, 0.15, 0.3];
+    for (const offset of offsets) addBossProjectile(e, angle + offset, e.phaseTwo ? 182 : 165, 13, "fish");
+    if (e.phaseTwo && e.volleyCount % 2 === 0) {
+      for (let i = 0; i < 8; i++) addBossProjectile(e, i * Math.PI / 4 + time * 0.2, 128, 9, "shadow");
+    }
+  } else if (e.variant === 1) {
+    // Mourning Shade leaves a generous gap in the ring, facing the player.
+    const count = e.phaseTwo ? 14 : 10;
+    const offset = time * 0.34;
     for (let i = 0; i < count; i++) {
-      const a = (Math.PI * 2 * i) / count + time * 0.2;
-      if (bossShots.length < 180) bossShots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 125, vy: Math.sin(a) * 125, r: 7, life: 4.5 });
+      const shotAngle = offset + i * Math.PI * 2 / count;
+      const gap = Math.atan2(Math.sin(shotAngle - angle), Math.cos(shotAngle - angle));
+      if (Math.abs(gap) < Math.PI * 2 / count * 1.18) continue;
+      addBossProjectile(e, shotAngle, e.phaseTwo ? 155 : 126, e.phaseTwo ? 12 : 10, "shadow");
     }
   } else {
-    const offsets = e.variant === 2 ? [-0.3, -0.1, 0.1, 0.3] : [-0.24, -0.12, 0, 0.12, 0.24];
-    for (const offset of offsets) {
-      const a = angle + offset;
-      if (bossShots.length >= 180) break;
-      bossShots.push({
-        x: e.x,
-        y: e.y,
-        vx: Math.cos(a) * 165,
-        vy: Math.sin(a) * 165,
-        r: 7,
-        life: 4.5,
-      });
+    // Bell Tower's aimed lanes have a narrow safe opening down their center.
+    const offsets = e.phaseTwo ? [-0.68, -0.48, -0.27, 0.27, 0.48, 0.68]
+      : [-0.44, -0.25, 0.25, 0.44];
+    for (const offset of offsets) addBossProjectile(e, angle + offset, e.phaseTwo ? 190 : 168, 12, "bell");
+    if (e.phaseTwo && e.volleyCount % 2 === 0) {
+      addBossProjectile(e, angle - 1.05, 130, 9, "bell");
+      addBossProjectile(e, angle + 1.05, 130, 9, "bell");
     }
   }
-  e.shootCooldown = 2.4;
+  e.shotWarning = 0;
+  e.shootCooldown = e.phaseTwo ? 2.35 : 2.9;
 }
