@@ -43,7 +43,7 @@ test("Burstling and Bulwark initialize their abilities and elites receive a trai
     context,
   );
   load(context, "js/enemies.js");
-  vm.runInContext("enemySpawn(5); enemySpawn(6); enemySpawn(0,true);", context);
+  vm.runInContext("Math.random = () => 0; enemySpawn(5); enemySpawn(6); enemySpawn(0,true);", context);
   assert.deepEqual(JSON.parse(vm.runInContext(
     "JSON.stringify([enemies[0].burstWarning, enemies[0].armed, enemies[1].shieldActive, enemies[2].elite, enemies[2].eliteTrait])",
     context,
