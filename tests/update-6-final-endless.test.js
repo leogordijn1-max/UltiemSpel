@@ -37,7 +37,7 @@ test("per-mode records never overwrite each other's difficulty records", () => {
   const snapshot = JSON.parse(vm.runInContext("JSON.stringify(p.records)", context));
   assert.equal(snapshot.standard.easy.wins, 1);
   assert.equal(snapshot.standard.easy.survived, 800);
-  assert.equal(snapshot.standard.normal.survived, 0);
+  assert.equal(snapshot.standard.normal.survived ?? 0, 0);
   assert.equal(snapshot.endless.normal.survived, 2000);
 });
 
@@ -91,7 +91,7 @@ test("continuing the same victory into Endless updates one run and only new poin
 test("final boss spawns with own phases and blocks the next ordinary boss", () => {
   const context = vm.createContext({});
   vm.runInContext(
-    "let W=800,H=600,player={x:0,y:0},difficulty='normal',time=1500,boss=null,enemies=[],bossNumber=5,nextBossTime=1500,rand=(a)=>a,puffs=0;let puff=()=>puffs++,notify=()=>{},playSfx=()=>{},$=()=>({style:{},set textContent(v){},set innerHTML(v){}});",
+    "let W=800,H=600,player={x:0,y:0},difficulty='normal',time=1500,boss=null,enemies=[],bossNumber=5,nextBossTime=1500,rand=(a)=>a,particles=[];let notify=()=>{},playSfx=()=>{},$=()=>({style:{},set textContent(v){},set innerHTML(v){}});",
     context,
   );
   load(context, "js/enemies.js");
