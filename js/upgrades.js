@@ -168,7 +168,10 @@ function makeUpgradeChoice(option, { levels = 1, rare = false } = {}) {
   button.onclick = () => {
     if (button.disabled) return;
     button.disabled = true;
-    if (unlocking && !unlockedWeapons.includes(key)) unlockedWeapons.push(key);
+    if (unlocking && !unlockedWeapons.includes(key)) {
+      unlockedWeapons.push(key);
+      if (typeof trackDiscovery === "function") trackDiscovery("weapons", key);
+    }
     upgrades[key] = newLevel;
     if (key === "health") {
       const healthGain = 30 * (newLevel - oldLevel);
@@ -232,6 +235,8 @@ function showEvolutionOffer(recipes = eligibleEvolutions()) {
 function evolveWeapon(recipe, { rare = false, consumeLevel = true } = {}) {
   if (!eligibleEvolutions().some((entry) => entry.id === recipe.id)) return false;
   evolutions[recipe.id] = true;
+  if (typeof trackDiscovery === "function") trackDiscovery("evolutions", recipe.id);
+  playSfx("evolution");
   evolutionFlash = { name: recipe.name, started: time, until: time + 2.4 };
   notify(`WEAPON EVOLVED · ${recipe.name}`, "evolution", 5);
   unlockAchievement("evolution", "First Evolution");
@@ -324,7 +329,9 @@ function showBossReward() {
 function addXP(amount) {
   if (!Number.isFinite(amount) || amount <= 0) return;
   const multiplier = typeof metaProgress !== "undefined" ? 1 + (metaProgress.xpLevel || 0) * 0.02 : 1;
-  xp += amount * multiplier;
+  const collected = amount * multiplier;
+  if (typeof runStats !== "undefined" && runStats) runStats.xpCollected += collected;
+  xp += collected;
   while (xp >= needed) {
     xp -= needed;
     level++;
