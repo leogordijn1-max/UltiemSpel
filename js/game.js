@@ -29,9 +29,11 @@ let player,
   enemies = [],
   bullets = [],
   enemyShots = [],
+  gemGrid = new Map(),
   bombs = [],
   explosions = [],
   gems = [],
+  bladePositions = [],
   particles = [],
   texts = [],
   time = 0,
@@ -41,8 +43,11 @@ let player,
   xp = 0,
   needed = 10,
   pendingLevelUps = 0,
+  choiceScreenOpen = false,
   paused = true,
   active = false,
+  gameState = "main-menu",
+  runRecorded = false,
   spawn = 0,
   shot = 0,
   bombTimer = 0,
@@ -52,12 +57,12 @@ let player,
   novaFlash = 0,
   damageFlash = 0,
   last = 0,
-  highest = +(localStorage.getItem("shadowHigh") || 0);
+  highest = storageNumber("shadowHigh", 0, 0);
 const keys = {};
 let upgrades = {},
   gameSpeed = 1,
   difficulty = "normal",
-  menuDifficulty = localStorage.getItem("shadowDifficulty") || "normal",
+  menuDifficulty = ["easy", "normal", "nightmare"].includes(storageGet("shadowDifficulty", "normal")) ? storageGet("shadowDifficulty", "normal") : "normal",
   boss = null,
   bossShots = [],
   nextBossTime = 180,
@@ -79,6 +84,7 @@ let upgrades = {},
   touchMoveX = 0,
   touchMoveY = 0,
   bossesDefeated = 0,
+  bossRewardPoints = 0,
   permanentDamageBonus = 0,
   runDamageTaken = 0,
   metaProgress = loadMetaProgress(),
@@ -86,41 +92,19 @@ let upgrades = {},
   unlockableWeapons = [],
   unlockedWeapons = [],
   selectedWeapons = loadSelectedWeapons(),
-  showFps = localStorage.getItem("shadowShowFps") === "true",
+  showFps = storageGet("shadowShowFps", "false") === "true",
+  graphicsQuality = ["low", "medium", "high"].includes(storageGet("shadowGraphics", "high")) ? storageGet("shadowGraphics", "high") : "high",
   enemyGrid = new Map(),
   hudUpdateTimer = 0,
   fpsFrames = 0,
   fpsElapsed = 0,
-  currentFps = 0;
-let recentAchievements = [];
-
-function loadMetaProgress() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("shadowProgress") || "{}");
-    return {
-      points: Math.max(0, Number(saved.points) || 0),
-      hpLevel: Math.min(5, Math.max(0, Math.floor(Number(saved.hpLevel) || 0))),
-      damageLevel: Math.min(5, Math.max(0, Math.floor(Number(saved.damageLevel) || 0))),
-      achievements: Array.isArray(saved.achievements) ? saved.achievements : [],
-      runs: Array.isArray(saved.runs) ? saved.runs : [],
-      totals: {
-        kills: Number(saved.totals?.kills) || 0,
-        bosses: Number(saved.totals?.bosses) || 0,
-        runs: Number(saved.totals?.runs) || 0,
-      },
-    };
-  } catch {
-    return { points: 0, hpLevel: 0, damageLevel: 0, achievements: [], runs: [], totals: { kills: 0, bosses: 0, runs: 0 } };
-  }
-}
-
-function saveMetaProgress() {
-  localStorage.setItem("shadowProgress", JSON.stringify(metaProgress));
-}
-
+  currentFps = 0,
+  currentFrameMs = 0,
+  performanceMetrics = { enemyAI: 0, collisions: 0, render: 0 },
+  simulationAccumulator = 0;
 function loadSelectedWeapons() {
   try {
-    const saved = JSON.parse(localStorage.getItem("shadowWeapons") || "null");
+    const saved = JSON.parse(storageGet("shadowWeapons", "null") || "null");
     const savedList = Array.isArray(saved)
       ? saved
       : saved && typeof saved === "object"
@@ -142,34 +126,6 @@ function loadSelectedWeapons() {
   }
 }
 
-function unlockAchievement(id, title) {
-  if (metaProgress.achievements.some((item) => item.id === id)) return;
-  metaProgress.achievements.push({ id, title, date: new Date().toLocaleDateString() });
-  recentAchievements.push(title);
-  notify(`ACHIEVEMENT · ${title}`, "achievement", 5);
-  saveMetaProgress();
-}
-
-function recordRun() {
-  const survived = Math.floor(time);
-  const earned = Math.floor(kills / 100) + bossesDefeated * 3;
-  metaProgress.points += earned;
-  metaProgress.totals.kills += kills;
-  metaProgress.totals.bosses += bossesDefeated;
-  metaProgress.totals.runs += 1;
-  metaProgress.runs.push({ survived, kills, level, bosses: bossesDefeated, difficulty });
-  metaProgress.runs = metaProgress.runs.sort((a, b) => b.survived - a.survived).slice(0, 5);
-  if (kills >= 100) unlockAchievement("kills100", "100 Kills");
-  if (metaProgress.totals.kills >= 1000) unlockAchievement("kills1000", "1000 Kills");
-  if (survived >= 300) unlockAchievement("survive5", "Five Minutes");
-  if (survived >= 600) unlockAchievement("survive10", "Ten Minutes");
-  if (bossesDefeated >= 1) unlockAchievement("boss1", "First Boss");
-  if (bossesDefeated >= 3) unlockAchievement("boss3", "Boss Hunter");
-  if (Object.keys(evolutions).length) unlockAchievement("evolution", "First Evolution");
-  if (runDamageTaken === 0) unlockAchievement("flawless", "Untouched Run");
-  saveMetaProgress();
-}
-
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
   for (const key in keys) keys[key] = false;
@@ -177,7 +133,10 @@ function reset() {
   touchMoveY = 0;
   difficulty = menuDifficulty;
   bossesDefeated = 0;
+  bossRewardPoints = 0;
   runDamageTaken = 0;
+  runRecorded = false;
+  choiceScreenOpen = false;
   unlockedWeapons = [startWeapon];
   recentAchievements = [];
   player = {
@@ -193,8 +152,11 @@ function reset() {
   };
   enemies = [];
   enemyGrid.clear();
+  gemGrid.clear();
+  simulationAccumulator = 0;
   bullets = [];
   enemyShots = [];
+  bladePositions.length = 0;
   bombs = [];
   explosions = [];
   bossShots = [];
@@ -253,6 +215,7 @@ function reset() {
   permanentDamageBonus = metaProgress.damageLevel * 0.35 * 0.28;
   active = true;
   paused = false;
+  gameState = "playing";
   gameSpeed = 1;
   updateSpeedButtons();
   $("speedControls").style.display = "flex";
@@ -394,7 +357,7 @@ function hud() {
       return `<span class="weapon-slot ${locked ? "weapon-locked" : evolution ? "weapon-evolved" : ""}"><b>${role}</b><strong>${name}</strong><small>${state}</small></span>`;
     }).join("");
   $("fpsCounter").hidden = !showFps;
-  if (showFps) $("fpsCounter").textContent = `${currentFps} FPS · ${enemies.length} enemies · ${bullets.length + enemyShots.length + bossShots.length} shots`;
+  if (showFps) $("fpsCounter").textContent = `${currentFps} FPS · ${currentFrameMs.toFixed(1)} ms · AI ${performanceMetrics.enemyAI.toFixed(1)} / hit ${performanceMetrics.collisions.toFixed(1)} / draw ${performanceMetrics.render.toFixed(1)} ms · E ${enemies.length} · P ${bullets.length} · EP ${enemyShots.length + bossShots.length} · FX ${particles.length} · XP ${gems.length}`;
 }
 
 function panel(title, body, buttons) {
@@ -405,6 +368,7 @@ function panel(title, body, buttons) {
 }
 
 function end() {
+  if (!active) return;
   playSfx("gameover");
   recordRun();
   const activeWeapons = Object.entries({
@@ -419,9 +383,11 @@ function end() {
   }).filter(([, levelValue]) => levelValue > 0).map(([name]) => name).join(", ");
   active = false;
   paused = true;
+  gameState = "game-over";
+  choiceScreenOpen = false;
   panel(
     "KKR SUKKEL",
-    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s, reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
+    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s, reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
     (el) => {
       let b = document.createElement("button");
       b.textContent = "TRY AGAIN";
@@ -469,19 +435,22 @@ function update(dt) {
     }
   }
   if (upgrades.health) {
-    player.hp = Math.min(player.maxHp, player.hp + upgrades.health * 1.2 * dt);
+    player.hp = Math.min(player.maxHp, player.hp + upgrades.health * 0.8 * dt);
   }
   if (!boss && time >= nextBossTime) spawnBoss();
   player.inv = Math.max(0, player.inv - dt);
   damageFlash = Math.max(0, damageFlash - dt);
   novaFlash = Math.max(0, novaFlash - dt);
-  novaTimer += dt * (1 + upgrades.rate * 0.13);
+  novaTimer += dt / weaponCooldownMultiplier();
   if (upgrades.nova && novaTimer >= 2.5) {
     novaTimer %= 2.5;
     novaFlash = 0.18;
-    for (const target of nearbyEnemies(player.x, player.y, novaRadius() + 100)) {
-      if (dist(target, player) < novaRadius() + enemyHitRadius(target)) {
-        damage(target, 33 * upgrades.nova * globalDamageMultiplier());
+    const pulseRadius = novaRadius();
+    for (const target of nearbyEnemies(player.x, player.y, pulseRadius + 100)) {
+      const dx = target.x - player.x, dy = target.y - player.y;
+      const hitRadius = pulseRadius + enemyHitRadius(target);
+      if (dx * dx + dy * dy < hitRadius * hitRadius) {
+        damage(target, 33 * upgrades.nova * globalDamageMultiplier(), player, "pulse");
       }
     }
   }
@@ -489,7 +458,7 @@ function update(dt) {
       (keys.d || keys.ArrowRight ? 1 : 0) - (keys.a || keys.ArrowLeft ? 1 : 0) + touchMoveX,
     dy = (keys.s || keys.ArrowDown ? 1 : 0) - (keys.w || keys.ArrowUp ? 1 : 0) + touchMoveY,
     mag = Math.hypot(dx, dy) || 1;
-  const movementSpeed = player.speed * (1 + upgrades.speed * 0.12);
+  const movementSpeed = player.speed * (1 + upgrades.speed * 0.1);
   if (dx || dy) {
     player.facingX = dx / mag;
     player.facingY = dy / mag;
@@ -514,9 +483,18 @@ function update(dt) {
   shot -= dt;
   if (shot <= 0) {
     fire();
-    shot = 0.95 * Math.pow(0.87, upgrades.rate);
+    shot = 0.95 * weaponCooldownMultiplier();
   }
   orbitAngle += dt * 2.2;
+  bladePositions.length = upgrades.orbit * 2;
+  if (upgrades.orbit) {
+    for (let index = 0; index < upgrades.orbit; index++) {
+      const angle = orbitAngle + (index * Math.PI * 2) / upgrades.orbit;
+      bladePositions[index * 2] = player.x + Math.cos(angle) * 67;
+      bladePositions[index * 2 + 1] = player.y + Math.sin(angle) * 67;
+    }
+  }
+  const enemyAIStarted = performance.now();
   for (const e of enemies) {
     if (e.dead) continue;
 
@@ -525,8 +503,11 @@ function update(dt) {
     }
     const playerDx = player.x - e.x;
     const playerDy = player.y - e.y;
-    const playerDistance = Math.hypot(playerDx, playerDy);
-    let a = Math.atan2(playerDy, playerDx);
+    const playerDistanceSquared = playerDx * playerDx + playerDy * playerDy;
+    const needsPlayerDistance = e.kind === 4 || (upgrades.nova && upgrades.novaSlow);
+    const playerDistance = needsPlayerDistance ? Math.sqrt(playerDistanceSquared) : 0;
+    const onScreen = e === boss || visibleEnemy(e, 160);
+    let a = onScreen ? Math.atan2(playerDy, playerDx) : 0;
     const insidePulse =
       upgrades.nova &&
       upgrades.novaSlow &&
@@ -580,6 +561,11 @@ function update(dt) {
         e.y += Math.sin(moveAngle) * moveSpeed * dt;
       }
       e.phaseTwo = e.hp < e.maxHp * 0.5;
+    } else if (!onScreen) {
+      // Offscreen normal enemies keep their exact pursuit speed without angle/trig work.
+      const distance = Math.sqrt(playerDx * playerDx + playerDy * playerDy) || 1;
+      e.x += (playerDx / distance) * moveSpeed * dt;
+      e.y += (playerDy / distance) * moveSpeed * dt;
     } else {
       e.x += Math.cos(moveAngle) * moveSpeed * dt;
       e.y += Math.sin(moveAngle) * moveSpeed * dt;
@@ -627,7 +613,9 @@ function update(dt) {
         }
       }
     }
-    if (dist(e, player) < enemyHitRadius(e) + player.r && player.inv <= 0) {
+    const playerHitRadius = enemyHitRadius(e) + player.r;
+    const collisionDx = player.x - e.x, collisionDy = player.y - e.y;
+    if (collisionDx * collisionDx + collisionDy * collisionDy < playerHitRadius * playerHitRadius && player.inv <= 0) {
       if (tryDodge()) continue;
       player.hp -= e.damage;
       runDamageTaken += e.damage;
@@ -641,14 +629,10 @@ function update(dt) {
       }
     }
     if (upgrades.orbit) {
-      for (let i = 0; i < upgrades.orbit; i++) {
-        let a = orbitAngle + (i * Math.PI * 2) / upgrades.orbit,
-          ox = player.x + Math.cos(a) * 67,
-          oy = player.y + Math.sin(a) * 67;
-        if (
-          Math.hypot(e.x - ox, e.y - oy) < enemyHitRadius(e) + 12 * bladeScale() &&
-          (!e.bladeHit || time - e.bladeHit > 0.35)
-        ) {
+      const bladeRadius = enemyHitRadius(e) + 12 * bladeScale();
+      for (let index = 0; index < upgrades.orbit; index++) {
+        const bladeDx = e.x - bladePositions[index * 2], bladeDy = e.y - bladePositions[index * 2 + 1];
+        if (bladeDx * bladeDx + bladeDy * bladeDy < bladeRadius * bladeRadius && (!e.bladeHit || time - e.bladeHit > 0.35)) {
           damage(e, 38 * globalDamageMultiplier());
           e.bladeHit = time;
         }
@@ -657,6 +641,8 @@ function update(dt) {
   }
   enemies = enemies.filter((e) => !e.dead);
   rebuildEnemyGrid();
+  performanceMetrics.enemyAI += performance.now() - enemyAIStarted;
+  const collisionStarted = performance.now();
   for (const b of bullets) {
     if (b.type === "orb" || b.type === "frost") {
       if (!b.target || b.target.dead) {
@@ -691,7 +677,9 @@ function update(dt) {
         Math.max(-b.turnRate * dt, Math.min(b.turnRate * dt, difference));
       b.vx = Math.cos(angle) * b.speed;
       b.vy = Math.sin(angle) * b.speed;
-      if (b.returning && dist(b, player) < player.r + b.r) {
+      const returnDx = b.x - player.x, returnDy = b.y - player.y;
+      const returnRadius = player.r + b.r;
+      if (b.returning && returnDx * returnDx + returnDy * returnDy < returnRadius * returnRadius) {
         b.life = 0;
         continue;
       }
@@ -705,7 +693,8 @@ function update(dt) {
     }
 
     for (const e of nearbyEnemies(b.x, b.y, b.r + 280)) {
-      if (!b.hit.has(e) && Math.hypot(e.x - b.x, e.y - b.y) < enemyHitRadius(e) + b.r) {
+      const dx = e.x - b.x, dy = e.y - b.y, hitRadius = enemyHitRadius(e) + b.r;
+      if (!b.hit.has(e) && dx * dx + dy * dy < hitRadius * hitRadius) {
         damage(e, b.d, b);
         b.hit.add(e);
         if (b.type === "frost") {
@@ -728,7 +717,7 @@ function update(dt) {
   }
   bullets = bullets.filter((b) => b.life > 0 && !projectileOutsideArena(b));
   if (upgrades.bomb) {
-    bombTimer -= dt * (1 + upgrades.rate * 0.13);
+    bombTimer -= dt / weaponCooldownMultiplier();
     if (bombTimer <= 0) {
       bombs.push({
         x: player.x,
@@ -749,8 +738,10 @@ function update(dt) {
       continue;
     }
     for (const target of nearbyEnemies(bomb.x, bomb.y, bomb.radius + 280)) {
-      if (dist(target, bomb) < bomb.radius + enemyHitRadius(target)) {
-        damage(target, bomb.damage * (target === boss ? 0.42 : 1), bomb);
+      const dx = target.x - bomb.x, dy = target.y - bomb.y;
+      const hitRadius = bomb.radius + enemyHitRadius(target);
+      if (dx * dx + dy * dy < hitRadius * hitRadius) {
+        damage(target, bomb.damage * (target === boss ? 0.42 : 1), bomb, "bomb");
       }
     }
     puff(bomb.x, bomb.y, "#e6a96a", 26);
@@ -788,10 +779,9 @@ function update(dt) {
       continue;
     }
 
-    if (
-      Math.hypot(shot.x - player.x, shot.y - player.y) < shot.r + player.r &&
-      player.inv <= 0
-    ) {
+    const hitDx = shot.x - player.x, hitDy = shot.y - player.y;
+    const hitRadius = shot.r + player.r;
+    if (hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius && player.inv <= 0) {
       if (tryDodge()) { shot.life = 0; continue; }
       player.hp -= shot.damage;
       runDamageTaken += shot.damage;
@@ -818,10 +808,9 @@ function update(dt) {
       b.life = 0;
       continue;
     }
-    if (
-      Math.hypot(b.x - player.x, b.y - player.y) < b.r + player.r &&
-      player.inv <= 0
-    ) {
+    const hitDx = b.x - player.x, hitDy = b.y - player.y;
+    const hitRadius = b.r + player.r;
+    if (hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius && player.inv <= 0) {
       if (tryDodge()) { b.life = 0; continue; }
       player.hp -= 13;
       runDamageTaken += 13;
@@ -839,28 +828,35 @@ function update(dt) {
   bossShots = bossShots.filter(
     (b) => b.life > 0 && !projectileOutsideArena(b),
   );
-  enemies = enemies.filter((e) => !e.dead);
-  rebuildEnemyGrid();
-  for (const g of gems) {
-    let d = dist(g, player),
-      range = 90 + upgrades.magnet * 55;
-    if (d < range) {
-      let speed = Math.max(180, 650 * (1 - d / range));
-      g.x += ((player.x - g.x) / (d || 1)) * speed * dt;
-      g.y += ((player.y - g.y) / (d || 1)) * speed * dt;
+  let collectedGem = false;
+  for (const g of nearbyGems(player.x, player.y, 90 + upgrades.magnet * 55)) {
+    const oldX = g.x, oldY = g.y;
+    const dx = player.x - g.x, dy = player.y - g.y;
+    const distanceSquared = dx * dx + dy * dy;
+    const range = 90 + upgrades.magnet * 55;
+    if (distanceSquared < range * range) {
+      const distance = Math.sqrt(distanceSquared) || 1;
+      const speed = Math.max(180, 650 * (1 - distance / range));
+      g.x += (dx / distance) * speed * dt;
+      g.y += (dy / distance) * speed * dt;
+      updateGemGridPosition(g, oldX, oldY);
     }
-    if (d < player.r + g.r + 5) {
+    const pickupRadius = player.r + g.r + 5;
+    if (distanceSquared < pickupRadius * pickupRadius) {
       g.dead = true;
+      removeGemFromGrid(g);
+      collectedGem = true;
       if (g.kind === "health") {
         player.hp = Math.min(player.maxHp, player.hp + g.value);
       } else {
         playSfx("xp");
-        addXP(g.value * (g.kind === "health" ? 1 : 1 + Math.max(0, upgrades.magnet - 2) * 0.06));
+        addXP(g.value * (g.kind === "health" ? 1 : 1 + Math.max(0, upgrades.magnet - 2) * 0.05));
         if (paused) break;
       }
     }
   }
-  gems = gems.filter((g) => !g.dead);
+  performanceMetrics.collisions += performance.now() - collisionStarted;
+  if (collectedGem) gems = gems.filter((g) => !g.dead);
   for (const p of particles) {
     p.x += p.vx * dt;
     p.y += p.vy * dt;
@@ -873,6 +869,7 @@ function update(dt) {
   }
   texts = texts.filter((t) => t.life > 0);
   shake = Math.max(0, shake - 35 * dt);
+  checkRunAchievements();
   if (hudUpdateTimer >= 0.12) {
     hudUpdateTimer = 0;
     hud();
@@ -882,7 +879,7 @@ function update(dt) {
 // Keep the game loop running; simulation pauses while menus are open.
 function loop(t) {
   const elapsed = (t - last) / 1000 || 0;
-  let dt = Math.min(elapsed, 0.035);
+  currentFrameMs = elapsed * 1000;
   last = t;
   fpsElapsed += elapsed;
   fpsFrames++;
@@ -893,9 +890,18 @@ function loop(t) {
     if (showFps && player) hud();
   }
   if (active && !paused) {
-    for (let i = 0; i < gameSpeed; i++) {
-      if (active && !paused) update(dt);
+    performanceMetrics.enemyAI = 0;
+    performanceMetrics.collisions = 0;
+    simulationAccumulator += Math.min(elapsed, 0.1) * gameSpeed;
+    const fixedStep = 1 / 60;
+    let steps = 0;
+    while (simulationAccumulator >= fixedStep && steps < 8 && active && !paused) {
+      update(fixedStep);
+      simulationAccumulator -= fixedStep;
+      steps++;
     }
+  } else {
+    simulationAccumulator = 0;
   }
   draw();
   requestAnimationFrame(loop);

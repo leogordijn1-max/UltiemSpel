@@ -5,7 +5,7 @@ function chainLightningCooldown(level) {
 
 function updateSpecialWeapons(dt) {
   for (const weapon of Object.keys(weaponTimers)) {
-    weaponTimers[weapon] = Math.max(0, weaponTimers[weapon] - dt * (1 + upgrades.rate * 0.13));
+    weaponTimers[weapon] = Math.max(0, weaponTimers[weapon] - dt / weaponCooldownMultiplier());
   }
 
   for (const segment of lightningSegments) segment.life -= dt;
@@ -24,15 +24,14 @@ function updateSpecialWeapons(dt) {
 
 function castChainLightning() {
   weaponTimers.chain = chainLightningCooldown(upgrades.chain);
-  const initialTargets = nearbyEnemies(player.x, player.y, 820)
-    .sort((a, b) => dist(a, player) - dist(b, player));
-  if (!initialTargets.length) return;
+  const firstTarget = nearestEnemy(player.x, player.y, 820);
+  if (!firstTarget) return;
   const evolved = evolutions.tempest;
   const chainDamage = (22 + upgrades.chain * 9) * globalDamageMultiplier();
   const hitByVolley = new Set();
   const attackCount = evolved ? 2 : 1;
   for (let attack = 0; attack < attackCount; attack++) {
-    const initial = initialTargets.find((enemy) => !hitByVolley.has(enemy)) || initialTargets[0];
+    const initial = nearestEnemy(player.x, player.y, 820, hitByVolley) || firstTarget;
     const visited = new Set();
     let source = player;
     let target = initial;
@@ -43,17 +42,19 @@ function castChainLightning() {
       lightningSegments.push({ x1: source.x, y1: source.y, x2: target.x, y2: target.y, life: 0.24, evolved });
       damage(target, chainDamage, source);
       source = target;
-      target = nearbyEnemies(source.x, source.y, evolved ? 295 : 220)
-        .filter((enemy) => !visited.has(enemy) && (!hitByVolley.has(enemy) || initialTargets.length === 1))
-        .sort((a, b) => dist(a, source) - dist(b, source))[0];
+      target = nearestEnemy(
+        source.x,
+        source.y,
+        evolved ? 295 : 220,
+        visited,
+        (enemy) => !hitByVolley.has(enemy) || enemy === firstTarget,
+      );
     }
   }
 }
 
 function throwBoomerangs() {
-  const target = enemies
-    .filter((enemy) => !enemy.dead && dist(enemy, player) < 1100)
-    .sort((a, b) => dist(a, player) - dist(b, player))[0];
+  const target = nearestEnemy(player.x, player.y, 1100);
   weaponTimers.boomerang = Math.max(2.5, 6 - upgrades.boomerang * 0.5);
   if (!target) return;
 
@@ -93,25 +94,21 @@ function castFlameBurst() {
   const evolved = evolutions.inferno;
   const spread = evolved ? 1.9 : 1.35;
   const radius = (165 + upgrades.flame * 28) * (evolved ? 1.2 : 1);
-  const angle = Math.atan2(player.facingY, player.facingX);
+  const facingX = player.facingX, facingY = player.facingY;
+  const angle = Math.atan2(facingY, facingX);
+  const coneThreshold = Math.cos(spread / 2);
   const damageValue = (42 + upgrades.flame * 13) * globalDamageMultiplier() * (evolved ? 1.35 : 1);
   const burnDps = 8 + upgrades.flame * 5;
   const burnDuration = evolved ? 3.6 : 2.6 + upgrades.flame * 0.18;
   flameBursts.push({ x: player.x, y: player.y, angle, spread, radius, life: 0.42, evolved, lobes: evolved ? 3 : 1 });
 
   for (const enemy of nearbyEnemies(player.x, player.y, radius + 50)) {
-    if (dist(enemy, player) > radius + enemyHitRadius(enemy)) continue;
-    const direction = Math.atan2(enemy.y - player.y, enemy.x - player.x);
-    const difference = Math.atan2(
-      Math.sin(direction - angle),
-      Math.cos(direction - angle),
-    );
-    if (Math.abs(difference) <= spread / 2) {
-      damage(
-        enemy,
-        damageValue,
-        player,
-      );
+    const dx = enemy.x - player.x, dy = enemy.y - player.y;
+    const hitRadius = radius + enemyHitRadius(enemy);
+    const distanceSquared = dx * dx + dy * dy;
+    if (distanceSquared > hitRadius * hitRadius) continue;
+    if (distanceSquared === 0 || dx * facingX + dy * facingY >= coneThreshold * Math.sqrt(distanceSquared)) {
+      damage(enemy, damageValue, player, "flame");
       if (!enemy.dead) {
         enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + burnDuration);
         enemy.burnDps = Math.max(enemy.burnDps || 0, burnDps);
@@ -124,10 +121,10 @@ function castFlameBurst() {
 
 function fireFrostOrb() {
   weaponTimers.frost = Math.max(1.5, 4.2 - upgrades.frost * 0.45);
-  const targets = nearbyEnemies(player.x, player.y, 1300).sort((a, b) => dist(a, player) - dist(b, player));
   const count = 1 + Math.floor((upgrades.frost - 1) / 2);
+  const targets = nearestEnemies(player.x, player.y, 1300, count);
   const damagePerHit = (28 + upgrades.frost * 12) * globalDamageMultiplier();
-  for (const target of targets.slice(0, count)) {
+  for (const target of targets) {
     if (bullets.length >= 300) break;
     const angle = Math.atan2(target.y - player.y, target.x - player.x);
     const speed = 205;
@@ -139,8 +136,10 @@ function applyFrostBurst(x, y, projectile) {
   const radius = projectile.frostRadius * (evolutions.glacier ? 1.25 : 1);
   frostZones.push({ x, y, radius, life: 1.4, evolved: !!evolutions.glacier });
   for (const enemy of nearbyEnemies(x, y, radius + 70)) {
-    if (dist(enemy, { x, y }) > radius + enemyHitRadius(enemy)) continue;
+    const dx = enemy.x - x, dy = enemy.y - y;
+    const hitRadius = radius + enemyHitRadius(enemy);
+    if (dx * dx + dy * dy > hitRadius * hitRadius) continue;
     enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + (evolutions.glacier ? 5.2 : 3.5 + upgrades.frost * 0.25));
-    if (enemy !== projectile.hitTarget) damage(enemy, projectile.d * 0.45, projectile);
+    if (enemy !== projectile.hitTarget) damage(enemy, projectile.d * 0.45, projectile, "frost");
   }
 }

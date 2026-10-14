@@ -53,11 +53,19 @@ function rebuildEnemyGrid() {
 
 function nearbyEnemies(x, y, radius) {
   const found = [];
+  const radiusSquared = radius * radius;
+  if (radius > ENEMY_GRID_SIZE * 3) {
+    for (const enemy of enemies) {
+      if (enemy.dead) continue;
+      const dx = enemy.x - x, dy = enemy.y - y;
+      if (dx * dx + dy * dy <= radiusSquared) found.push(enemy);
+    }
+    return found;
+  }
   const minX = Math.floor((x - radius) / ENEMY_GRID_SIZE);
   const maxX = Math.floor((x + radius) / ENEMY_GRID_SIZE);
   const minY = Math.floor((y - radius) / ENEMY_GRID_SIZE);
   const maxY = Math.floor((y + radius) / ENEMY_GRID_SIZE);
-  const radiusSquared = radius * radius;
   for (let cellX = minX; cellX <= maxX; cellX++) {
     for (let cellY = minY; cellY <= maxY; cellY++) {
       for (const enemy of enemyGrid.get(`${cellX},${cellY}`) || []) {
@@ -70,14 +78,76 @@ function nearbyEnemies(x, y, radius) {
   return found;
 }
 
-function nearestEnemy(x, y, radius = 1500) {
+// Select nearest targets without allocating or sorting a full candidate list.
+function nearestEnemy(x, y, radius = 1500, excluded = null, include = null) {
   let closest = null;
   let closestSquared = radius * radius;
-  for (const enemy of nearbyEnemies(x, y, radius)) {
-    const dx = enemy.x - x;
-    const dy = enemy.y - y;
-    const distanceSquared = dx * dx + dy * dy;
-    if (distanceSquared < closestSquared) { closest = enemy; closestSquared = distanceSquared; }
+  if (radius > ENEMY_GRID_SIZE * 3) {
+    for (const enemy of enemies) {
+      if (enemy.dead || excluded?.has(enemy) || (include && !include(enemy))) continue;
+      const dx = enemy.x - x, dy = enemy.y - y;
+      const distanceSquared = dx * dx + dy * dy;
+      if (distanceSquared < closestSquared) { closest = enemy; closestSquared = distanceSquared; }
+    }
+    return closest;
+  }
+  const minX = Math.floor((x - radius) / ENEMY_GRID_SIZE);
+  const maxX = Math.floor((x + radius) / ENEMY_GRID_SIZE);
+  const minY = Math.floor((y - radius) / ENEMY_GRID_SIZE);
+  const maxY = Math.floor((y + radius) / ENEMY_GRID_SIZE);
+  for (let cellX = minX; cellX <= maxX; cellX++) {
+    for (let cellY = minY; cellY <= maxY; cellY++) {
+      for (const enemy of enemyGrid.get(`${cellX},${cellY}`) || []) {
+        if (enemy.dead || excluded?.has(enemy) || (include && !include(enemy))) continue;
+        const dx = enemy.x - x;
+        const dy = enemy.y - y;
+        const distanceSquared = dx * dx + dy * dy;
+        if (distanceSquared < closestSquared) { closest = enemy; closestSquared = distanceSquared; }
+      }
+    }
+  }
+  return closest;
+}
+
+function nearestEnemies(x, y, radius, limit, include = null) {
+  const closest = [];
+  const distances = [];
+  const radiusSquared = radius * radius;
+  const minX = Math.floor((x - radius) / ENEMY_GRID_SIZE);
+  const maxX = Math.floor((x + radius) / ENEMY_GRID_SIZE);
+  const minY = Math.floor((y - radius) / ENEMY_GRID_SIZE);
+  const maxY = Math.floor((y + radius) / ENEMY_GRID_SIZE);
+  if (radius > ENEMY_GRID_SIZE * 3) {
+    for (const enemy of enemies) {
+      if (enemy.dead || (include && !include(enemy))) continue;
+      const dx = enemy.x - x, dy = enemy.y - y;
+      const distanceSquared = dx * dx + dy * dy;
+      if (distanceSquared > radiusSquared) continue;
+      let index = 0;
+      while (index < distances.length && distances[index] <= distanceSquared) index++;
+      if (index >= limit) continue;
+      distances.splice(index, 0, distanceSquared);
+      closest.splice(index, 0, enemy);
+      if (closest.length > limit) { closest.pop(); distances.pop(); }
+    }
+    return closest;
+  }
+  for (let cellX = minX; cellX <= maxX; cellX++) {
+    for (let cellY = minY; cellY <= maxY; cellY++) {
+      for (const enemy of enemyGrid.get(`${cellX},${cellY}`) || []) {
+        if (enemy.dead || (include && !include(enemy))) continue;
+        const dx = enemy.x - x;
+        const dy = enemy.y - y;
+        const distanceSquared = dx * dx + dy * dy;
+        if (distanceSquared > radiusSquared) continue;
+        let index = 0;
+        while (index < distances.length && distances[index] <= distanceSquared) index++;
+        if (index >= limit) continue;
+        distances.splice(index, 0, distanceSquared);
+        closest.splice(index, 0, enemy);
+        if (closest.length > limit) { closest.pop(); distances.pop(); }
+      }
+    }
   }
   return closest;
 }
@@ -134,8 +204,85 @@ function enemySpawn() {
   enemies.push(e);
 }
 
+const GEM_GRID_SIZE = 140;
+function gemCellKey(x, y) {
+  return `${Math.floor(x / GEM_GRID_SIZE)},${Math.floor(y / GEM_GRID_SIZE)}`;
+}
+
+function addGemToGrid(gem) {
+  const key = gemCellKey(gem.x, gem.y);
+  let cell = gemGrid.get(key);
+  if (!cell) gemGrid.set(key, (cell = []));
+  cell.push(gem);
+  gem.gridKey = key;
+}
+
+function removeGemFromGrid(gem) {
+  const cell = gemGrid.get(gem.gridKey || gemCellKey(gem.x, gem.y));
+  if (!cell) return;
+  const index = cell.indexOf(gem);
+  if (index >= 0) {
+    const last = cell.pop();
+    if (index < cell.length) cell[index] = last;
+  }
+  if (!cell.length) gemGrid.delete(gem.gridKey);
+  gem.gridKey = null;
+}
+
+function updateGemGridPosition(gem, oldX, oldY) {
+  const nextKey = gemCellKey(gem.x, gem.y);
+  if (nextKey === (gem.gridKey || gemCellKey(oldX, oldY))) return;
+  removeGemFromGrid(gem);
+  addGemToGrid(gem);
+}
+
+function nearbyGems(x, y, radius) {
+  const found = [];
+  const minX = Math.floor((x - radius) / GEM_GRID_SIZE), maxX = Math.floor((x + radius) / GEM_GRID_SIZE);
+  const minY = Math.floor((y - radius) / GEM_GRID_SIZE), maxY = Math.floor((y + radius) / GEM_GRID_SIZE);
+  const radiusSquared = radius * radius;
+  for (let cellX = minX; cellX <= maxX; cellX++) {
+    for (let cellY = minY; cellY <= maxY; cellY++) {
+      for (const gem of gemGrid.get(`${cellX},${cellY}`) || []) {
+        const dx = gem.x - x, dy = gem.y - y;
+        if (!gem.dead && dx * dx + dy * dy <= radiusSquared) found.push(gem);
+      }
+    }
+  }
+  return found;
+}
+
+function dropGem(gem) {
+  // Merge nearby XP of the same tier; summed value remains exact, health drops stay separate.
+  if (gem.kind !== "health") {
+    const mergeRadiusSquared = 34 * 34;
+    const cellX = Math.floor(gem.x / GEM_GRID_SIZE), cellY = Math.floor(gem.y / GEM_GRID_SIZE);
+    for (let x = cellX - 1; x <= cellX + 1; x++) {
+      for (let y = cellY - 1; y <= cellY + 1; y++) {
+        for (const existing of gemGrid.get(`${x},${y}`) || []) {
+          if (existing.dead || existing.kind !== gem.kind) continue;
+          const dx = existing.x - gem.x, dy = existing.y - gem.y;
+          if (dx * dx + dy * dy > mergeRadiusSquared) continue;
+          const oldX = existing.x, oldY = existing.y;
+          const combinedValue = existing.value + gem.value;
+          existing.x = (existing.x * existing.value + gem.x * gem.value) / combinedValue;
+          existing.y = (existing.y * existing.value + gem.y * gem.value) / combinedValue;
+          existing.value = combinedValue;
+          existing.r = Math.min(18, Math.sqrt(existing.r * existing.r + gem.r * gem.r * 0.32));
+          updateGemGridPosition(existing, oldX, oldY);
+          return existing;
+        }
+      }
+    }
+  }
+  gems.push(gem);
+  addGemToGrid(gem);
+  return gem;
+}
+
 function puff(x, y, color, n = 8) {
-  const particleLimit = 600;
+  const quality = typeof graphicsQuality === "undefined" ? "high" : graphicsQuality;
+  const particleLimit = quality === "low" ? 260 : quality === "medium" ? 420 : 600;
   const particleCount = Math.min(n, Math.max(0, particleLimit - particles.length));
   for (let i = 0; i < particleCount; i++)
     particles.push({
@@ -150,14 +297,16 @@ function puff(x, y, color, n = 8) {
     });
 }
 
-function damage(e, d, origin = player) {
+function damage(e, d, origin = player, damageType = "direct") {
   if (!e || e.dead) return;
 
   const critical =
     (upgrades.critChance || 0) > 0 &&
     Math.random() < (upgrades.critChance || 0) * 0.05;
   const criticalMultiplier = 1.5 + (upgrades.critDamage || 0) * 0.25 + Math.max(0, (upgrades.critChance || 0) - 2) * 0.05;
-  const finalDamage = d * (critical ? criticalMultiplier : 1);
+  const slowedAreaBonus = e.impactSlowUntil > time && (damageType === "bomb" || damageType === "flame" || damageType === "frost" || damageType === "pulse") ? 1.15 : 1;
+  const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus;
   e.hp -= finalDamage;
   e.hit = 0.12;
 
@@ -168,7 +317,7 @@ function damage(e, d, origin = player) {
   if (knockbackLength > 0) {
     const resistance =
       e.kind === 3 ? 0.12 : e.kind === 2 ? 0.45 : e.elite ? 0.6 : 1;
-    const force = 145 * resistance * (1 + (upgrades.knockback || 0) * 0.2);
+    const force = 145 * resistance * (1 + (upgrades.knockback || 0) * 0.25);
     e.knockbackX = (e.knockbackX || 0) + (knockbackX / knockbackLength) * force;
     e.knockbackY = (e.knockbackY || 0) + (knockbackY / knockbackLength) * force;
     if (upgrades.knockback >= 3 && e.kind !== 3) {
@@ -206,7 +355,7 @@ function damage(e, d, origin = player) {
               : e.kind === 1
                 ? 0.8
                 : 1;
-      gems.push({
+      dropGem({
         x: e.x,
         y: e.y,
         r: e.kind === 3 ? 10 : e.kind === 2 ? 8 : e.kind === 1 ? 4 : 6,
@@ -218,7 +367,7 @@ function damage(e, d, origin = player) {
     }
     const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
     if (e.kind === 1 && Math.random() < profile.healthDropChance) {
-      gems.push({ x: e.x, y: e.y, r: 7, kind: "health", value: 2 });
+      dropGem({ x: e.x, y: e.y, r: 7, kind: "health", value: 2 });
     }
     if (e === boss) {
       bossesDefeated++;
@@ -230,7 +379,17 @@ function damage(e, d, origin = player) {
     }
     if (kills > highest) {
       highest = kills;
-      localStorage.setItem("shadowHigh", highest);
+      storageSet("shadowHigh", highest);
+    }
+    metaProgress.totals.kills++;
+    if (metaProgress.totals.kills >= 100) unlockAchievement("kills100", "100 Kills");
+    if (metaProgress.totals.kills >= 1000) unlockAchievement("kills1000", "1000 Kills");
+    if (kills % 10 === 0) saveMetaProgress();
+    if (e.kind === 3) {
+      metaProgress.totals.bosses++;
+      if (metaProgress.totals.bosses >= 1) unlockAchievement("boss1", "First Boss");
+      if (metaProgress.totals.bosses >= 3) unlockAchievement("boss3", "Boss Hunter");
+      saveMetaProgress();
     }
   }
 }
@@ -266,23 +425,29 @@ function enemyHitRadius(enemy) {
 // Player weapons choose visible targets and create projectiles.
 function fire() {
   if (!upgrades.arcane) return;
-  const targets = nearbyEnemies(player.x, player.y, Math.hypot(W, H) * 0.65)
-    .filter((e) => !e.dead && visibleEnemy(e, 18))
-    .sort((a, b) => dist(a, player) - dist(b, player));
-  if (!targets.length) return;
+  const range = Math.hypot(W, H) * 0.65;
+  const candidates = nearbyEnemies(player.x, player.y, range);
+  let visibleCount = 0;
+  for (const enemy of candidates) {
+    if (visibleEnemy(enemy, 18)) candidates[visibleCount++] = enemy;
+  }
+  candidates.length = visibleCount;
   const missileCount = Math.min(Math.max(1, upgrades.arcane) + (evolutions.splitDimension ? 2 : 0), 7);
+  const targets = visibleCount > missileCount
+    ? candidates
+    : nearestEnemies(player.x, player.y, range, missileCount, (enemy) => visibleEnemy(enemy, 18));
+  if (!targets.length) return;
   const missilesPerTarget = Math.floor(missileCount / targets.length);
   const extraMissiles = missileCount % targets.length;
-  const bonusTargets = [...targets]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, extraMissiles);
-  const assignments = targets.flatMap((target) =>
-    Array(missilesPerTarget + (bonusTargets.includes(target) ? 1 : 0)).fill(
-      target,
-    ),
-  );
-  for (const target of assignments) {
-    if (bullets.length >= 300) break;
+  // Partial Fisher–Yates shuffle selects the uneven bonus targets without sorting.
+  for (let i = 0; i < extraMissiles; i++) {
+    const pick = i + Math.floor(Math.random() * (targets.length - i));
+    [targets[i], targets[pick]] = [targets[pick], targets[i]];
+  }
+  for (let index = 0; index < targets.length; index++) {
+    const target = targets[index];
+    const assignedCount = missilesPerTarget + (index < extraMissiles ? 1 : 0);
+    for (let missile = 0; missile < assignedCount && bullets.length < 300; missile++) {
     const lead = Math.min(0.35, dist(target, player) / 560),
       tx =
         target.x +
@@ -311,6 +476,7 @@ function fire() {
       pierce: upgrades.pierce + 1,
       hit: new Set(),
     });
+    }
   }
 }
 // Enemy and boss projectile attacks.

@@ -1,8 +1,8 @@
 // Small synthesized sound layer; browsers start it only after the first gesture.
 let audioContext = null;
-let effectVolume = Number(localStorage.getItem("shadowSfx") || 0.25);
-let musicVolume = Number(localStorage.getItem("shadowMusic") || 0.08);
-let audioMuted = localStorage.getItem("shadowMuted") === "true";
+let effectVolume = storageNumber("shadowSfx", 0.25, 0, 0.6);
+let musicVolume = storageNumber("shadowMusic", 0.08, 0, 0.5);
+let audioMuted = storageGet("shadowMuted", "false") === "true";
 let musicOscillators = [];
 let lastSfxAt = 0;
 let activeSoundVoices = 0;
@@ -69,7 +69,7 @@ function configureAudio() {
   effects.value = effectVolume;
   music.value = musicVolume;
   mute.checked = audioMuted;
-  effects.oninput = () => { effectVolume = Number(effects.value); localStorage.setItem("shadowSfx", effectVolume); };
-  music.oninput = () => { musicVolume = Number(music.value); localStorage.setItem("shadowMusic", musicVolume); updateMusicGain(); };
-  mute.onchange = () => { audioMuted = mute.checked; localStorage.setItem("shadowMuted", audioMuted); updateMusicGain(); };
+  effects.oninput = () => { effectVolume = Number(effects.value); storageSet("shadowSfx", effectVolume); };
+  music.oninput = () => { musicVolume = Number(music.value); storageSet("shadowMusic", musicVolume); updateMusicGain(); };
+  mute.onchange = () => { audioMuted = mute.checked; storageSet("shadowMuted", audioMuted); updateMusicGain(); };
 }

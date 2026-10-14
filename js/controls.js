@@ -1,14 +1,14 @@
 // Menus, keyboard input, and touch controls.
 const mainMenuMarkup = $("panel").innerHTML;
 const achievementCatalog = [
-  ["kills100", "First Blood", "Defeat 100 enemies", (p) => `${Math.min(p.totals.kills, 100)}/100`],
-  ["kills1000", "Monster Hunter", "Defeat 1,000 enemies", (p) => `${Math.min(p.totals.kills, 1000)}/1,000`],
-  ["survive5", "Five Minutes", "Survive for five minutes", (p) => `${Math.min(bestSurvival(p), 300)}/300 sec`],
-  ["survive10", "Ten Minutes", "Survive for ten minutes", (p) => `${Math.min(bestSurvival(p), 600)}/600 sec`],
-  ["boss1", "First Boss", "Defeat a boss", (p) => `${Math.min(p.totals.bosses, 1)}/1`],
-  ["boss3", "Boss Hunter", "Defeat three bosses", (p) => `${Math.min(p.totals.bosses, 3)}/3`],
-  ["evolution", "Evolutionary Leap", "Evolve a weapon", (p) => `${p.achievements.some((a) => a.id === "evolution") ? 1 : 0}/1`],
-  ["flawless", "Untouched", "Finish a run without taking damage", (p) => `${p.achievements.some((a) => a.id === "flawless") ? 1 : 0}/1`],
+  ["kills100", "First Blood", "Defeat 100 enemies total (career)", (p) => `${Math.min(p.totals.kills, 100)}/100`],
+  ["kills1000", "Monster Hunter", "Defeat 1,000 enemies total (career)", (p) => `${Math.min(p.totals.kills, 1000)}/1,000`],
+  ["survive5", "Five Minutes", "Survive for five minutes in one run", (p) => `${Math.min(bestSurvival(p), 300)}/300 sec`],
+  ["survive10", "Ten Minutes", "Survive for ten minutes in one run", (p) => `${Math.min(bestSurvival(p), 600)}/600 sec`],
+  ["boss1", "First Boss", "Defeat one boss total (career)", (p) => `${Math.min(p.totals.bosses, 1)}/1`],
+  ["boss3", "Boss Hunter", "Defeat three bosses total (career)", (p) => `${Math.min(p.totals.bosses, 3)}/3`],
+  ["evolution", "Evolutionary Leap", "Evolve a weapon (career)", (p) => `${p.achievements.some((a) => a.id === "evolution") ? 1 : 0}/1`],
+  ["flawless", "Untouched", "Complete a five-minute run without taking damage", (p) => `${Math.min(p.bestFlawlessSurvival, 300)}/300 sec`],
 ];
 
 function bestSurvival(progress) { return Math.max(0, ...progress.runs.map((run) => run.survived)); }
@@ -19,6 +19,11 @@ function backButton(parent) {
   parent.append(button);
 }
 function showMainMenu() {
+  active = false;
+  paused = true;
+  pendingLevelUps = 0;
+  choiceScreenOpen = false;
+  gameState = "main-menu";
   $("panel").innerHTML = mainMenuMarkup;
   $("overlay").style.display = "flex";
   bindMainMenu();
@@ -28,7 +33,7 @@ function bindMainMenu() {
   difficultySelect.value = menuDifficulty;
   difficultySelect.onchange = () => {
     menuDifficulty = difficultySelect.value;
-    localStorage.setItem("shadowDifficulty", menuDifficulty);
+    storageSet("shadowDifficulty", menuDifficulty);
   };
   configureAudio();
   $("start").onclick = showWeaponSelection;
@@ -97,7 +102,7 @@ function showWeaponSelection() {
     start.textContent = `START RUN · ${weaponCatalog.find((weapon) => weapon.key === startWeapon).name} + 2 UNLOCKS`;
     start.disabled = new Set(selectedWeapons).size !== 3;
     start.onclick = () => {
-      localStorage.setItem("shadowWeapons", JSON.stringify({ startWeapon, unlockableWeapons }));
+      storageSet("shadowWeapons", JSON.stringify({ startWeapon, unlockableWeapons }));
       startAudio();
       reset();
     };
@@ -111,13 +116,18 @@ function showWeaponSelection() {
 }
 
 function showSettings() {
-  panel("SETTINGS", "Audio and performance options", (parent) => {
-    parent.innerHTML = `<fieldset id="audioSettings"><legend>Sound settings</legend><label>Effects <input id="effectVolume" type="range" min="0" max="0.6" step="0.01"></label><label>Ambient music <input id="musicVolume" type="range" min="0" max="0.5" step="0.01"></label><label><input id="muteAudio" type="checkbox"> Mute all sound</label><label><input id="showFps" type="checkbox"> Show FPS and object counts</label></fieldset>`;
+  panel("SETTINGS", "Audio, graphics quality, and performance options", (parent) => {
+    parent.innerHTML = `<fieldset id="audioSettings"><legend>Sound settings</legend><label>Effects <input id="effectVolume" type="range" min="0" max="0.6" step="0.01"></label><label>Ambient music <input id="musicVolume" type="range" min="0" max="0.5" step="0.01"></label><label><input id="muteAudio" type="checkbox"> Mute all sound</label><label><input id="showFps" type="checkbox"> Show FPS, frametime and object timings</label><label>Graphics quality <select id="graphicsQuality"><option value="low">Low · reduced glow and particles</option><option value="medium">Medium</option><option value="high">High</option></select></label></fieldset>`;
     configureAudio();
     $("showFps").checked = showFps;
     $("showFps").onchange = () => {
       showFps = $("showFps").checked;
-      localStorage.setItem("shadowShowFps", showFps);
+      storageSet("shadowShowFps", showFps);
+    };
+    $("graphicsQuality").value = graphicsQuality;
+    $("graphicsQuality").onchange = () => {
+      graphicsQuality = $("graphicsQuality").value;
+      storageSet("shadowGraphics", graphicsQuality);
     };
     backButton(parent);
   });
@@ -196,17 +206,20 @@ function showEncyclopedia(category = "Weapons") {
 }
 
 bindMainMenu();
+checkSavedAchievements();
 
 $("pause").onclick = () => {
-  if (!active) return;
+  if (!active || !["playing", "paused"].includes(gameState)) return;
   paused = !paused;
-  if (paused) panel("PAUSED", "The night waits for no one.", (parent) => {
+  if (paused) {
+    gameState = "paused";
+    panel("PAUSED", "The night waits for no one.", (parent) => {
     const resume = document.createElement("button");
     resume.textContent = "RESUME";
-    resume.onclick = () => { paused = false; $("overlay").style.display = "none"; };
+    resume.onclick = () => { paused = false; gameState = "playing"; $("overlay").style.display = "none"; };
     parent.append(resume);
-  });
-  else $("overlay").style.display = "none";
+    });
+  } else { gameState = "playing"; $("overlay").style.display = "none"; }
 };
 
 addEventListener("keydown", (event) => {

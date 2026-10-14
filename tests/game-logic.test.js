@@ -27,7 +27,7 @@ test("one XP pickup queues a separate choice for every level gained", () => {
         context,
       ),
     ),
-    [3, 1, 19, 2, 1],
+    [3, 0, 21, 2, 1],
   );
 });
 
@@ -41,10 +41,12 @@ test("a defeated enemy can only award damage results and rewards once", () => {
   vm.runInContext(
     [
       "let boss = null, bossNumber = 0, time = 0, nextBossTime = 180, difficulty = 'normal';",
-      "let enemies = [], bossShots = [], gems = [], texts = [], particles = [];",
+      "let enemies = [], bossShots = [], gems = [], gemGrid = new Map(), texts = [], particles = [];",
       "let player = { x: 0, y: 0 }, upgrades = {};",
       "let kills = 0, highest = 0;",
       "let rand = (min) => min;",
+      "let achievementUnlocks = []; let metaProgress = { totals: { kills: 99, bosses: 0, runs: 0 }, achievements: [], points: 0, hpLevel: 0, damageLevel: 0, runs: [], bestFlawlessSurvival: 0 };",
+      "let storageSet = () => {}, saveMetaProgress = () => {}, unlockAchievement = (id,title) => achievementUnlocks.push([id,title]);",
       "let $ = () => ({ style: {} });",
       "let playSfx = () => {};",
     ].join("\n"),
@@ -69,6 +71,8 @@ test("a defeated enemy can only award damage results and rewards once", () => {
     ),
     [1, 1, 1],
   );
+  assert.equal(vm.runInContext("metaProgress.totals.kills", context), 100);
+  assert.equal(vm.runInContext("achievementUnlocks[0][0]", context), "kills100");
 });
 
 test("the game resumes when every upgrade is capped", () => {
@@ -80,7 +84,7 @@ test("the game resumes when every upgrade is capped", () => {
       "  bladeBlock: 5, bladeSize: 5, pierce: 5, bomb: 5, speed: 5, magnet: 5, knockback: 5,",
       "  nova: 1, novaRange: 5, novaSlow: 5, critChance: 5, critDamage: 5",
       "};",
-      "let paused = true, pendingLevelUps = 1, level = 6;",
+      "let paused = true, pendingLevelUps = 1, level = 6, choiceScreenOpen = false, active = true, gameState = 'level-up';",
       "let overlay = { style: { display: 'flex' } };",
       "let $ = () => overlay;",
       "let panel = () => { throw new Error('No choices should be displayed.'); };",
@@ -118,7 +122,7 @@ test("critical hits apply bonus damage and use a distinct damage-text color", ()
   vm.runInContext(
     [
       "let boss = null, bossNumber = 0, time = 0, nextBossTime = 180;",
-      "let enemies = [], bossShots = [], gems = [], texts = [], particles = [];",
+      "let enemies = [], bossShots = [], gems = [], gemGrid = new Map(), texts = [], particles = [];",
       "let player = { x: 0, y: 0 }, upgrades = { critChance: 1, critDamage: 0 };",
       "let kills = 0, highest = 0, rand = (min) => min;",
       "let $ = () => ({ style: {} });",
@@ -160,10 +164,31 @@ test("bosses spawn with health scaling and telegraphed charge state", () => {
   assert.equal(vm.runInContext("enemies.includes(boss)", context), true);
 });
 
+test("boss defeat updates career progress and grants its achievement immediately", () => {
+  const context = vm.createContext({ localStorage: { getItem: () => "0", setItem: () => {} } });
+  vm.runInContext(
+    [
+      "let boss = null, bossNumber = 1, bossesDefeated = 0, time = 180, nextBossTime = 180, difficulty = 'normal';",
+      "let enemies = [], bossShots = [], gems = [], gemGrid = new Map(), texts = [], particles = [];",
+      "let player = { x: 0, y: 0 }, upgrades = {}, kills = 0, highest = 0;",
+      "let metaProgress = { totals: { kills: 0, bosses: 0, runs: 0 }, achievements: [], points: 0, hpLevel: 0, damageLevel: 0, runs: [], bestFlawlessSurvival: 0 };",
+      "let unlocked = [], storageSet = () => {}, saveMetaProgress = () => {}, unlockAchievement = (id) => unlocked.push(id);",
+      "let rand = (min) => min, $ = () => ({ style: {} }), playSfx = () => {}, showBossReward = () => {};",
+      "boss = { x: 10, y: 0, hp: 1, maxHp: 1, kind: 3, noXp: false }; enemies.push(boss);",
+    ].join("\n"),
+    context,
+  );
+  loadScript(context, "js/enemies.js");
+  vm.runInContext("damage(boss, 1)", context);
+  assert.equal(vm.runInContext("metaProgress.totals.bosses", context), 1);
+  assert.equal(vm.runInContext("bossesDefeated", context), 1);
+  assert.equal(vm.runInContext("unlocked.includes('boss1')", context), true);
+});
+
 test("weapon evolutions require level 5, support level 3, and a defeated boss", () => {
   const context = vm.createContext({});
   vm.runInContext(
-    "let upgrades = { chain: 5, damage: 3 }, evolutions = {}, selectedWeapons = ['chain'], unlockedWeapons = ['chain'], bossesDefeated = 0;",
+    "let upgrades = { chain: 5, damage: 3 }, evolutions = {}, selectedWeapons = ['chain'], unlockedWeapons = ['chain'], bossesDefeated = 0, time = 0;",
     context,
   );
   loadScript(context, "js/upgrades.js");
@@ -175,6 +200,8 @@ test("weapon evolutions require level 5, support level 3, and a defeated boss", 
   vm.runInContext("upgrades.damage = 3; bossesDefeated = 0", context);
   assert.equal(vm.runInContext("eligibleEvolutions().length", context), 0);
   vm.runInContext("bossesDefeated = 1", context);
+  assert.equal(vm.runInContext("eligibleEvolutions().length", context), 0);
+  vm.runInContext("time = 600", context);
   assert.equal(vm.runInContext("eligibleEvolutions()[0].name", context), "Tempest");
   assert.equal(vm.runInContext("eligibleUpgrade('chain')", context), false);
   vm.runInContext("evolutions.tempest = true", context);
@@ -204,7 +231,7 @@ test("a run unlocks only its two reserves and lets one weapon reach its final ev
     unlockAchievement: () => {},
   });
   vm.runInContext(
-    "let upgrades = { arcane: 1, orbit: 0, bomb: 0, chain: 0, boomerang: 0, flame: 0, frost: 0, nova: 0, damage: 0, pierce: 0, bladeBlock: 0, bladeSize: 0, critDamage: 0 }; let selectedWeapons = ['arcane', 'orbit', 'bomb']; let unlockedWeapons = ['arcane']; let evolutions = {}; let bossesDefeated = 0, paused = true, pendingLevelUps = 1, level = 1, time = 200, evolutionFlash = null; let player = { maxHp: 140 }; let $overlay = { style: { display: 'flex' } }; let $ = () => $overlay;",
+    "let upgrades = { arcane: 1, orbit: 0, bomb: 0, chain: 0, boomerang: 0, flame: 0, frost: 0, nova: 0, damage: 0, pierce: 0, bladeBlock: 0, bladeSize: 0, critDamage: 0 }; let selectedWeapons = ['arcane', 'orbit', 'bomb']; let unlockedWeapons = ['arcane']; let evolutions = {}; let bossesDefeated = 0, paused = true, active = true, gameState = 'level-up', choiceScreenOpen = false, pendingLevelUps = 1, level = 1, time = 600, evolutionFlash = null; let player = { maxHp: 140 }; let $overlay = { style: { display: 'flex' } }; let $ = () => $overlay;",
     context,
   );
   loadScript(context, "js/upgrades.js");
@@ -254,8 +281,34 @@ test("permanent Mayo bonus stays separate from integer upgrade levels", () => {
   const context = vm.createContext({});
   vm.runInContext("let upgrades = { damage: 3 }; let permanentDamageBonus = 0.49;", context);
   loadScript(context, "js/upgrades.js");
-  assert.ok(Math.abs(vm.runInContext("globalDamageMultiplier()", context) - 2.15) < 1e-10);
+  assert.ok(Math.abs(vm.runInContext("globalDamageMultiplier()", context) - 2.03) < 1e-10);
   assert.equal(vm.runInContext("upgrades.damage", context), 3);
+});
+
+test("XP curve grows steadily and keeps higher-level thresholds below runaway growth", () => {
+  const context = vm.createContext({});
+  loadScript(context, "js/upgrades.js");
+  const thresholds = JSON.parse(vm.runInContext(`JSON.stringify((() => {
+    let need = 10, total = 0, result = {};
+    for (let level = 1; level <= 25; level++) {
+      result[level] = total;
+      total += need;
+      need = nextLevelXpRequirement(need, level + 1);
+    }
+    return result;
+  })())`, context));
+  assert.deepEqual([thresholds[1], thresholds[5], thresholds[10], thresholds[15], thresholds[20], thresholds[25]], [0, 74, 334, 872, 1809, 3325]);
+  assert.equal(vm.runInContext("nextLevelXpRequirement(406, 26)", context), 444);
+});
+
+test("Rapid Casting applies one shared multiplicative cooldown modifier", () => {
+  const context = vm.createContext({});
+  vm.runInContext("let upgrades = { rate: 3 }; let weaponTimers = { chain: 1, flame: 1, frost: 1, boomerang: 1 }; let lightningSegments = [], flameBursts = [], frostZones = [];", context);
+  loadScript(context, "js/upgrades.js");
+  loadScript(context, "js/weapons.js");
+  vm.runInContext("updateSpecialWeapons(0.1)", context);
+  assert.ok(Math.abs(vm.runInContext("weaponTimers.chain", context) - (1 - 0.1 / Math.pow(0.9, 3))) < 1e-10);
+  assert.ok(Math.abs(vm.runInContext("weaponCooldownMultiplier()", context) - Math.pow(0.9, 3)) < 1e-10);
 });
 
 test("Eiad Bom scales gently and deals less than two-bomb lethal damage to a boss", () => {
@@ -274,7 +327,7 @@ test("Tempest launches two independently chained attacks with separate first tar
       "let upgrades = { chain: 5, damage: 0, rate: 0 }, evolutions = { tempest: true };",
       "let player = { x: 0, y: 0 }, weaponTimers = { chain: 0 }, lightningSegments = [];",
       "let targets = Array.from({length: 12}, (_, i) => ({ x: (i + 1) * 10 * (i % 2 ? -1 : 1), y: 0 }));",
-      "let dist = (a,b) => Math.hypot(a.x-b.x,a.y-b.y), nearbyEnemies = (x,y,r) => targets.filter(e => Math.hypot(e.x-x,e.y-y) <= r);",
+      "let dist = (a,b) => Math.hypot(a.x-b.x,a.y-b.y), nearbyEnemies = (x,y,r) => targets.filter(e => Math.hypot(e.x-x,e.y-y) <= r), nearestEnemy = (x,y,r,excluded,include) => nearbyEnemies(x,y,r).filter(e => !excluded?.has(e) && (!include || include(e))).sort((a,b) => (a.x-x)**2+(a.y-y)**2-((b.x-x)**2+(b.y-y)**2))[0] || null;",
       "let damage = (target) => {};",
     ].join("\n"),
     context,
@@ -294,7 +347,7 @@ test("Tempest launches two independently chained attacks with separate first tar
 test("Chain Lightning's opening target range is limited to 820 pixels", () => {
   const context = vm.createContext({});
   vm.runInContext(
-    "let upgrades = { chain: 1, damage: 0, rate: 0 }, evolutions = {}; let player = { x: 0, y: 0 }, weaponTimers = { chain: 0 }, lightningSegments = []; let enemy = { x: 900, y: 0 }; let dist = (a,b) => Math.hypot(a.x-b.x,a.y-b.y), nearbyEnemies = (x,y,r) => Math.hypot(enemy.x-x,enemy.y-y) <= r ? [enemy] : [], damage = () => {};",
+    "let upgrades = { chain: 1, damage: 0, rate: 0 }, evolutions = {}; let player = { x: 0, y: 0 }, weaponTimers = { chain: 0 }, lightningSegments = []; let enemy = { x: 900, y: 0 }; let dist = (a,b) => Math.hypot(a.x-b.x,a.y-b.y), nearbyEnemies = (x,y,r) => Math.hypot(enemy.x-x,enemy.y-y) <= r ? [enemy] : [], nearestEnemy = (x,y,r) => Math.hypot(enemy.x-x,enemy.y-y) <= r ? enemy : null, damage = () => {};",
     context,
   );
   loadScript(context, "js/upgrades.js");
@@ -323,4 +376,160 @@ test("Ranged Shades approach before attacking and only fire visibly inside their
   assert.equal(vm.runInContext("rangedEnemyMovementMode({x:340,y:0,r:15}, 340)", context), "hold");
   assert.equal(vm.runInContext("rangedEnemyMovementMode({x:250,y:0,r:15}, 250)", context), "retreat");
   assert.equal(vm.runInContext("rangedEnemyCanAttack({x:450,y:0,r:15}, 450)", context), false);
+});
+
+test("spatial targeting returns nearest live enemies and refreshes after movement", () => {
+  const context = vm.createContext({});
+  vm.runInContext("let enemies = [], enemyGrid = new Map();", context);
+  loadScript(context, "js/enemies.js");
+  vm.runInContext("enemies = [{x:20,y:0},{x:80,y:0},{x:500,y:0}]; rebuildEnemyGrid();", context);
+  assert.equal(vm.runInContext("nearestEnemy(0,0,150).x", context), 20);
+  assert.deepEqual(JSON.parse(vm.runInContext("JSON.stringify(nearestEnemies(0,0,150,2).map(e => e.x))", context)), [20, 80]);
+  vm.runInContext("enemies[0].x = 900; rebuildEnemyGrid();", context);
+  assert.equal(vm.runInContext("nearestEnemy(0,0,150).x", context), 80);
+  vm.runInContext("enemies[1].dead = true;", context);
+  assert.equal(vm.runInContext("nearestEnemy(0,0,150)", context), null);
+});
+
+test("nearby XP gems merge without losing value and health drops remain separate", () => {
+  const context = vm.createContext({});
+  vm.runInContext("let gems = [], gemGrid = new Map();", context);
+  loadScript(context, "js/enemies.js");
+  vm.runInContext("dropGem({x:0,y:0,r:6,value:1}); dropGem({x:12,y:0,r:6,value:5}); dropGem({x:8,y:0,r:7,kind:'health',value:2});", context);
+  assert.equal(vm.runInContext("gems.length", context), 2);
+  assert.equal(vm.runInContext("gems.find(g => g.kind !== 'health').value", context), 6);
+  assert.equal(vm.runInContext("gems.find(g => g.kind === 'health').value", context), 2);
+  assert.equal(vm.runInContext("nearbyGems(0,0,100).length", context), 2);
+  vm.runInContext("const gem = gems.find(g => g.kind !== 'health'), oldX = gem.x, oldY = gem.y; gem.x = 220; updateGemGridPosition(gem, oldX, oldY);", context);
+  assert.equal(vm.runInContext("nearbyGems(0,0,100).length", context), 1);
+  assert.equal(vm.runInContext("nearbyGems(220,0,100).length", context), 1);
+});
+
+test("legacy progress loads with normalized values and keeps existing totals", () => {
+  const stored = JSON.stringify({
+    points: 14,
+    hpLevel: 3.8,
+    damageLevel: 4.9,
+    achievements: [{ id: "kills100", title: "First Blood" }, { id: "kills100", title: "duplicate" }],
+    runs: [{ survived: 320.8, kills: 100.7, level: 8, bosses: 1, difficulty: "normal" }],
+    totals: { kills: 840, bosses: 2, runs: 9 },
+  });
+  const context = vm.createContext({ localStorage: { getItem: () => stored, setItem: () => {} } });
+  loadScript(context, "js/storage.js");
+  const progress = JSON.parse(vm.runInContext("JSON.stringify(loadMetaProgress())", context));
+  assert.deepEqual(progress.hpLevel, 3);
+  assert.deepEqual(progress.damageLevel, 4);
+  assert.deepEqual(progress.totals, { kills: 840, bosses: 2, runs: 9 });
+  assert.equal(progress.version, 2);
+  assert.equal(progress.achievements.length, 1);
+  assert.equal(progress.runs[0].survived, 320);
+});
+
+test("achievement grants are idempotent", () => {
+  const context = vm.createContext({});
+  loadScript(context, "js/storage.js");
+  vm.runInContext("let progress = { achievements: [] }; grantAchievement(progress, 'boss1', 'First Boss', 'today'); grantAchievement(progress, 'boss1', 'First Boss', 'tomorrow');", context);
+  assert.equal(vm.runInContext("progress.achievements.length", context), 1);
+  assert.equal(vm.runInContext("progress.achievements[0].date", context), "today");
+});
+
+test("unavailable localStorage safely falls back to defaults", () => {
+  const context = vm.createContext({});
+  loadScript(context, "js/storage.js");
+  const progress = JSON.parse(vm.runInContext("JSON.stringify(loadMetaProgress())", context));
+  assert.equal(progress.version, 2);
+  assert.deepEqual(progress.totals, { kills: 0, bosses: 0, runs: 0 });
+  assert.equal(vm.runInContext("storageSet('key', 'value')", context), false);
+});
+
+test("run records are once-only and Untouched requires a five-minute no-damage run", () => {
+  const context = vm.createContext({ notify: () => {}, localStorage: { getItem: () => null, setItem: () => {} } });
+  loadScript(context, "js/storage.js");
+  vm.runInContext(
+    "let metaProgress = { points: 0, achievements: [], runs: [], bestFlawlessSurvival: 0, totals: { kills: 0, bosses: 0, runs: 0 } }; let runRecorded = false, time = 240, kills = 10, level = 4, bossesDefeated = 0, difficulty = 'normal', runDamageTaken = 0;",
+    context,
+  );
+  loadScript(context, "js/progression.js");
+  vm.runInContext("recordRun(); recordRun();", context);
+  assert.equal(vm.runInContext("metaProgress.totals.runs", context), 1);
+  assert.equal(vm.runInContext("metaProgress.achievements.some(a => a.id === 'flawless')", context), false);
+  vm.runInContext("runRecorded = false; time = 320; recordRun();", context);
+  assert.equal(vm.runInContext("metaProgress.totals.runs", context), 2);
+  assert.equal(vm.runInContext("metaProgress.bestFlawlessSurvival", context), 320);
+  assert.equal(vm.runInContext("metaProgress.achievements.some(a => a.id === 'flawless')", context), true);
+});
+
+test("survival achievements unlock as soon as their run-time threshold is reached", () => {
+  const writes = [];
+  const context = vm.createContext({ notify: () => {}, localStorage: { getItem: () => null, setItem: (...args) => writes.push(args) } });
+  loadScript(context, "js/storage.js");
+  vm.runInContext("let metaProgress = { achievements: [], points: 0, hpLevel: 0, damageLevel: 0, runs: [], bestFlawlessSurvival: 0, totals: { kills: 0, bosses: 0, runs: 0 } }; let time = 300, runDamageTaken = 0;", context);
+  loadScript(context, "js/progression.js");
+  vm.runInContext("checkRunAchievements(); checkRunAchievements();", context);
+  assert.equal(vm.runInContext("metaProgress.achievements.filter(a => a.id === 'survive5').length", context), 1);
+  assert.equal(vm.runInContext("metaProgress.achievements.filter(a => a.id === 'flawless').length", context), 1);
+  assert.equal(vm.runInContext("recentAchievements.filter(title => title === 'Five Minutes').length", context), 1);
+  assert.equal(writes.length, 2);
+});
+
+test("boss reward at level 4 applies its remaining level and converts overflow", () => {
+  const context = vm.createContext({
+    document: { createElement: () => ({}) },
+    notify: () => {},
+    localStorage: { getItem: () => null, setItem: () => {} },
+  });
+  loadScript(context, "js/storage.js");
+  vm.runInContext(
+    "let upgrades = { damage: 4 }, selectedWeapons = [], unlockedWeapons = [], evolutions = {}, bossesDefeated = 1, active = true, gameState = 'boss-reward', choiceScreenOpen = true, pendingLevelUps = 0, paused = true, level = 1, time = 300, evolutionFlash = null; let metaProgress = { points: 2, achievements: [], totals: { kills: 0, bosses: 1, runs: 1 }, runs: [], bestFlawlessSurvival: 0 }; let bossRewardPoints = 0, player = { hp: 50, maxHp: 100 }; let overlay = { style: { display: 'flex' } }, $ = () => overlay;",
+    context,
+  );
+  loadScript(context, "js/upgrades.js");
+  vm.runInContext("let saved = 0; const originalSave = saveMetaProgress; saveMetaProgress = () => { saved++; return originalSave(); };", context);
+  const button = vm.runInContext("makeUpgradeChoice(opts.find(([key]) => key === 'damage'), { levels: 2, rare: true })", context);
+  assert.match(button.innerHTML, /Level 4 → Level 5 \(\+1; overflow → \+1 permanent point\)/);
+  button.onclick();
+  assert.equal(vm.runInContext("upgrades.damage", context), 5);
+  assert.equal(vm.runInContext("metaProgress.points", context), 3);
+  assert.equal(vm.runInContext("bossRewardPoints", context), 1);
+  assert.equal(vm.runInContext("saved", context), 1);
+});
+
+test("a level-up screen stays open once and keeps exactly three valid choices", () => {
+  const context = vm.createContext({
+    document: { createElement: () => ({}) },
+  });
+  vm.runInContext(
+    "let upgrades = { arcane: 0, orbit: 0, bomb: 0, chain: 0, boomerang: 0, flame: 0, frost: 0, nova: 0, damage: 0, speed: 0, rate: 0, magnet: 0, health: 0, critChance: 0, critDamage: 0, knockback: 0 }; let selectedWeapons = [], unlockedWeapons = [], evolutions = {}, bossesDefeated = 0, active = true, gameState = 'playing', choiceScreenOpen = false, paused = false, pendingLevelUps = 1, level = 3; let panelCalls = 0, renderedChoices = 0, playSfx = () => {}, panel = (title, body, render) => { panelCalls++; const children = []; render({ append: (item) => children.push(item) }); renderedChoices = children.length; };",
+    context,
+  );
+  loadScript(context, "js/upgrades.js");
+  vm.runInContext("choices(); choices();", context);
+  assert.equal(vm.runInContext("panelCalls", context), 1);
+  assert.equal(vm.runInContext("renderedChoices", context), 3);
+  assert.equal(vm.runInContext("paused && choiceScreenOpen && gameState === 'level-up'", context), true);
+});
+
+test("level-up choices guarantee one selected locked weapon and contain no duplicates", () => {
+  const context = vm.createContext({ document: { createElement: () => ({}) } });
+  vm.runInContext(
+    "let upgrades = { arcane: 1, orbit: 0, bomb: 0, chain: 0, boomerang: 0, flame: 0, frost: 0, nova: 0, damage: 0, speed: 0, rate: 0, magnet: 0, health: 0, critChance: 0, critDamage: 0, knockback: 0, pierce: 0, bladeBlock: 0, bladeSize: 0, novaRange: 0, novaSlow: 0 }; let selectedWeapons = ['arcane', 'orbit', 'bomb']; let unlockedWeapons = ['arcane']; let evolutions = {}, bossesDefeated = 0, time = 0, active = true, gameState = 'playing', choiceScreenOpen = false, paused = false, pendingLevelUps = 1, level = 2; let chosen = []; let panel = (_title, _body, render) => render({ append: (item) => chosen.push(item) }); let playSfx = () => {};",
+    context,
+  );
+  loadScript(context, "js/upgrades.js");
+  vm.runInContext("choices()", context);
+  const html = JSON.parse(vm.runInContext("JSON.stringify(chosen.map(choice => choice.innerHTML))", context));
+  assert.equal(html.length, 3);
+  assert.equal(new Set(html).size, 3);
+  assert.equal(html.filter((choice) => choice.includes("WEAPON UNLOCK") && choice.includes("LOCKED → UNLOCKED")).length, 1);
+  assert.equal(html.some((choice) => choice.includes("<b>Orbiting Spirit Blades</b>") || choice.includes("<b>Spirit Blades</b>")), true);
+});
+
+test("upgrade levels clamp at zero and five", () => {
+  const context = vm.createContext({});
+  vm.runInContext("let upgrades = { damage: -2, chain: 7, nova: 3 };", context);
+  loadScript(context, "js/upgrades.js");
+  assert.deepEqual(
+    JSON.parse(vm.runInContext("JSON.stringify([currentUpgradeLevel('damage'), currentUpgradeLevel('chain'), currentUpgradeLevel('nova')])", context)),
+    [0, 5, 1],
+  );
 });

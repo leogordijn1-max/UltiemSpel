@@ -1,6 +1,9 @@
 // Draw the scene in layers, from the arena backdrop to the visual effects.
 let backgroundPaintCache = null;
 let ambientTileCache = null;
+function glow(blur) {
+  return graphicsQuality === "low" ? 0 : graphicsQuality === "medium" ? blur * 0.65 : blur;
+}
 
 function drawSnowflake(x, y, radius) {
   ctx.save();
@@ -63,13 +66,14 @@ function getAmbientTiles() {
 }
 
 function draw() {
+  const renderStarted = performance.now();
   ctx.clearRect(0, 0, W, H);
   const { backdrop, ambient } = getBackgroundPaints();
   ctx.fillStyle = backdrop;
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = ambient;
   ctx.fillRect(0, 0, W, H);
-  if (!player) return;
+  if (!player) { performanceMetrics.render = performance.now() - renderStarted; return; }
   ctx.save();
   const visibleShake = active && !paused ? shake : 0;
   ctx.translate(
@@ -80,7 +84,7 @@ function draw() {
   // Ambient background details.
   const left = player.x - W / 2,
     top = player.y - H / 2,
-    fieldStep = 620;
+    fieldStep = graphicsQuality === "low" ? 1240 : graphicsQuality === "medium" ? 900 : 620;
   const ambientTiles = getAmbientTiles();
   // Soft, irregular nebula pools and sparse drifting motes replace the old grid.
   for (
@@ -103,15 +107,15 @@ function draw() {
       const twinkle = 0.08 + (Math.sin(time * 0.8 + seed * 30) + 1) * 0.08;
       ctx.fillStyle = `rgba(219, 197, 132, ${twinkle})`;
       ctx.shadowColor = "#a18b56";
-      ctx.shadowBlur = 2;
+      ctx.shadowBlur = glow(2);
       ctx.beginPath();
       ctx.arc(moteX, moteY, 1 + seed * 1.2, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = glow(0);
     }
   }
   // XP and health pickups.
-  for (const g of gems) {
+  for (const g of nearbyGems(player.x, player.y, Math.hypot(W, H) * 0.65)) {
     if (!visibleEnemy(g, -30)) continue;
     ctx.fillStyle =
       g.kind === "health"
@@ -123,7 +127,7 @@ function draw() {
             : g.value <= 1
               ? "#8ad9a1"
               : "#5be4fa";
-    ctx.shadowBlur = 7;
+    ctx.shadowBlur = glow(7);
     ctx.shadowColor = ctx.fillStyle;
     ctx.beginPath();
     ctx.moveTo(g.x, g.y - g.r - 2);
@@ -131,7 +135,7 @@ function draw() {
     ctx.lineTo(g.x, g.y + g.r + 2);
     ctx.lineTo(g.x - g.r, g.y);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = glow(0);
   }
   
   // Player bombs.
@@ -144,13 +148,13 @@ function draw() {
       const size = 52 * (1 + Math.max(0, upgrades.bomb - 1) * 0.18);
       const imageWidth = size * 1.386;
       ctx.shadowColor = blink ? "#ff7145" : "#8a6942";
-      ctx.shadowBlur = blink ? 16 : 5;
+      ctx.shadowBlur = glow(blink ? 16 : 5);
       ctx.drawImage(bombImage, -imageWidth / 2, -size / 2, imageWidth, size);
       if (bomb.evolved) {
         ctx.strokeStyle = "#d6a7ff";
         ctx.lineWidth = 3;
         ctx.shadowColor = "#b46dff";
-        ctx.shadowBlur = blink ? 26 : 14;
+        ctx.shadowBlur = glow(blink ? 26 : 14);
         ctx.beginPath();
         ctx.arc(0, 0, size * 0.72, 0, Math.PI * 2);
         ctx.stroke();
@@ -162,7 +166,7 @@ function draw() {
     ctx.strokeStyle = blink ? "#ffb45f" : "#927451";
     ctx.lineWidth = 2;
     ctx.shadowColor = blink ? "#ff7145" : "#8a6942";
-    ctx.shadowBlur = blink ? 16 : 5;
+    ctx.shadowBlur = glow(blink ? 16 : 5);
     ctx.beginPath();
     ctx.arc(0, 0, 11, 0, Math.PI * 2);
     ctx.fill();
@@ -181,7 +185,7 @@ function draw() {
       ctx.strokeStyle = "#d6a7ff";
       ctx.lineWidth = 3;
       ctx.shadowColor = "#b46dff";
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = glow(18);
       ctx.beginPath();
       ctx.arc(0, 0, 19, 0, Math.PI * 2);
       ctx.stroke();
@@ -206,7 +210,7 @@ function draw() {
       ctx.save();
       ctx.fillStyle = "rgba(255, 124, 55, 0.85)";
       ctx.shadowColor = "#ff763e";
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = glow(8);
       ctx.beginPath();
       ctx.arc(e.x, e.y - enemyHitRadius(e) - 4, 3 + Math.sin(time * 16 + e.x) * 1.5, 0, Math.PI * 2);
       ctx.fill();
@@ -246,7 +250,7 @@ function draw() {
       ctx.strokeStyle = "rgba(190, 148, 255, 0.88)";
       ctx.lineWidth = 2.5;
       ctx.shadowColor = "#b58aff";
-      ctx.shadowBlur = 13;
+      ctx.shadowBlur = glow(13);
       ctx.beginPath();
       ctx.arc(
         e.x,
@@ -270,7 +274,7 @@ function draw() {
       const imageWidth =
         imageHeight *
         (redEnemyImage.naturalWidth / redEnemyImage.naturalHeight);
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = glow(8);
       ctx.shadowColor = e.hit ? "#fff" : "#91b84c";
       ctx.drawImage(
         redEnemyImage,
@@ -289,7 +293,7 @@ function draw() {
       ctx.save();
       ctx.translate(e.x, e.y);
       ctx.scale(e.facing || 1, 1);
-      ctx.shadowBlur = 22;
+      ctx.shadowBlur = glow(22);
       ctx.shadowColor = e.hit ? "#fff" : "#c36aff";
       ctx.drawImage(
         bossImage,
@@ -323,7 +327,7 @@ function draw() {
           : e.kind === 1
             ? "#9f824e"
             : "#79617a";
-    ctx.shadowBlur = e.kind === 4 ? 6 : e.kind === 2 ? 7 : 4;
+    ctx.shadowBlur = glow(e.kind === 4 ? 6 : e.kind === 2 ? 7 : 4);
     ctx.fillStyle = bodyColor;
     ctx.strokeStyle =
       e.kind === 4
@@ -361,11 +365,11 @@ function draw() {
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = glow(0);
     if (e.kind === 4) {
       ctx.fillStyle = "#d7c27b";
       ctx.shadowColor = "#e5ca70";
-      ctx.shadowBlur = 5;
+      ctx.shadowBlur = glow(5);
       ctx.beginPath();
       ctx.ellipse(-4, -2, 3.2, 4.3, -0.15, 0, Math.PI * 2);
       ctx.ellipse(4, -2, 3.2, 4.3, 0.15, 0, Math.PI * 2);
@@ -394,7 +398,7 @@ function draw() {
     } else {
       ctx.fillStyle = "#f2e3bd";
       ctx.shadowColor = "#dfc782";
-      ctx.shadowBlur = 3;
+      ctx.shadowBlur = glow(3);
       ctx.beginPath();
       ctx.arc(-e.r * 0.28, -e.r * 0.1, e.r * 0.17, 0, Math.PI * 2);
       ctx.arc(e.r * 0.28, -e.r * 0.22, e.r * 0.13, 0, Math.PI * 2);
@@ -423,7 +427,7 @@ function draw() {
     } else {
       ctx.fillStyle = "#ff69bb";
       ctx.shadowColor = "#ff3d9e";
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = glow(12);
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
         const angle = (i * Math.PI) / 4;
@@ -435,7 +439,7 @@ function draw() {
       }
       ctx.closePath();
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = glow(0);
     }
   }
   for (const shot of enemyShots) {
@@ -443,7 +447,7 @@ function draw() {
     ctx.save();
     ctx.translate(shot.x, shot.y);
     ctx.shadowColor = "#f4d36e";
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = glow(18);
     ctx.fillStyle = "rgba(247, 213, 112, 0.4)";
     ctx.beginPath();
     ctx.arc(0, 0, shot.r * 2, 0, Math.PI * 2);
@@ -488,7 +492,7 @@ function draw() {
     ctx.strokeStyle = segment.evolved ? "#e5a8ff" : "#9cecff";
     ctx.lineWidth = segment.evolved ? 5 : 4;
     ctx.shadowColor = segment.evolved ? "#c35cff" : "#69bfff";
-    ctx.shadowBlur = segment.evolved ? 25 : 18;
+    ctx.shadowBlur = glow(segment.evolved ? 25 : 18);
     ctx.beginPath();
     ctx.moveTo(segment.x1, segment.y1);
     ctx.lineTo(
@@ -517,7 +521,7 @@ function draw() {
     ctx.strokeStyle = burst.evolved ? "#ffb4a3" : "#ffc17e";
     ctx.lineWidth = 3;
     ctx.shadowColor = burst.evolved ? "#ff334e" : "#ff6b3d";
-    ctx.shadowBlur = burst.evolved ? 30 : 22;
+    ctx.shadowBlur = glow(burst.evolved ? 30 : 22);
     for (let lobe = 0; lobe < burst.lobes; lobe++) {
       const offset = burst.evolved ? (lobe - 1) * 0.34 : 0;
       ctx.beginPath();
@@ -538,7 +542,7 @@ function draw() {
       ctx.translate(b.x, b.y);
       ctx.rotate(Math.atan2(b.vy, b.vx));
       ctx.shadowColor = "#70f6ff";
-      ctx.shadowBlur = 24;
+      ctx.shadowBlur = glow(24);
       ctx.fillStyle = "rgba(89, 240, 255, 0.42)";
       ctx.beginPath();
       ctx.moveTo(b.r * 2.1, 0);
@@ -561,7 +565,7 @@ function draw() {
       ctx.lineWidth = b.evolved ? 6 : 4;
       ctx.lineCap = "round";
       ctx.shadowColor = b.evolved ? "#32ead4" : "#a78bfa";
-      ctx.shadowBlur = b.evolved ? 25 : 14;
+      ctx.shadowBlur = glow(b.evolved ? 25 : 14);
       ctx.beginPath();
       ctx.arc(0, 0, b.r, -0.85, 0.85);
       ctx.stroke();
@@ -578,7 +582,7 @@ function draw() {
       ctx.save();
       ctx.translate(b.x, b.y);
       ctx.shadowColor = b.evolved ? "#e7fbff" : "#72e4ff";
-      ctx.shadowBlur = b.evolved ? 28 : 19;
+      ctx.shadowBlur = glow(b.evolved ? 28 : 19);
       ctx.fillStyle = b.evolved ? "rgba(202, 246, 255, 0.52)" : "rgba(111, 218, 255, 0.35)";
       ctx.beginPath();
       ctx.arc(0, 0, b.r * 1.7, 0, Math.PI * 2);
@@ -595,7 +599,7 @@ function draw() {
       ctx.save();
       ctx.translate(b.x, b.y);
       ctx.shadowColor = "#d2a4ff";
-      ctx.shadowBlur = 14;
+      ctx.shadowBlur = glow(14);
       ctx.fillStyle = "rgba(95, 49, 140, 0.36)";
       ctx.beginPath();
       ctx.arc(0, 0, b.r * 1.55, 0, Math.PI * 2);
@@ -616,7 +620,7 @@ function draw() {
     ctx.translate(b.x, b.y);
     ctx.rotate(Math.atan2(b.vy, b.vx));
     ctx.shadowColor = "#9d88ff";
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = glow(15);
     const trail = ctx.createLinearGradient(-b.r * 4, 0, b.r, 0);
     trail.addColorStop(0, "rgba(126, 113, 255, 0)");
     trail.addColorStop(1, "rgba(173, 160, 255, 0.8)");
@@ -647,7 +651,7 @@ function draw() {
       ctx.scale(bladeScale(), bladeScale());
       ctx.fillStyle = evolutions.aegisRing ? "#bafcff" : "#e2ccff";
       ctx.shadowColor = evolutions.aegisRing ? "#36f0ef" : "#aa77ff";
-      ctx.shadowBlur = evolutions.aegisRing ? 29 : 17;
+      ctx.shadowBlur = glow(evolutions.aegisRing ? 29 : 17);
       ctx.beginPath();
       ctx.moveTo(17, 0);
       ctx.lineTo(-7, -9);
@@ -655,14 +659,14 @@ function draw() {
       ctx.lineTo(-7, 9);
       ctx.fill();
       ctx.restore();
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = glow(0);
     }
   if (evolutions.aegisRing) {
     ctx.save();
     ctx.strokeStyle = "rgba(92, 247, 239, 0.66)";
     ctx.lineWidth = 3;
     ctx.shadowColor = "#36f0ef";
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = glow(20);
     ctx.beginPath();
     ctx.arc(player.x, player.y, 67, time * 0.7, time * 0.7 + Math.PI * 1.86);
     ctx.stroke();
@@ -672,12 +676,12 @@ function draw() {
     const pulse = novaFlash > 0;
     ctx.strokeStyle = pulse ? "rgba(180,152,245,.52)" : "rgba(175,108,255,.17)";
     ctx.lineWidth = pulse ? 4 : 2;
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = glow(0);
     ctx.shadowColor = "#9778c7";
     ctx.beginPath();
     ctx.arc(player.x, player.y, novaRadius(), 0, 7);
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = glow(0);
   }
   for (const explosion of explosions) {
     const progress = 1 - explosion.life / explosion.maxLife;
@@ -687,7 +691,7 @@ function draw() {
     ctx.strokeStyle = explosion.evolved ? "#e3bdff" : "#ffd18a";
     ctx.lineWidth = 5 * (1 - progress) + 1;
     ctx.shadowColor = explosion.evolved ? "#a44cff" : "#ff9b4d";
-    ctx.shadowBlur = explosion.evolved ? 38 : 25;
+    ctx.shadowBlur = glow(explosion.evolved ? 38 : 25);
     ctx.beginPath();
     ctx.arc(
       explosion.x,
@@ -720,7 +724,7 @@ function draw() {
     ctx.lineWidth = 8;
     ctx.lineCap = "round";
     ctx.shadowColor = "#75f4ee";
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = glow(18);
     ctx.beginPath();
     ctx.moveTo(player.x, player.y + 3);
     ctx.lineTo(
@@ -748,7 +752,7 @@ function draw() {
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
     ctx.shadowColor = "#d7c49b";
-    ctx.shadowBlur = 5;
+    ctx.shadowBlur = glow(5);
     ctx.beginPath();
     ctx.arc(0, -11, 5, 0, Math.PI * 2);
     ctx.fill();
@@ -792,7 +796,7 @@ function draw() {
     ctx.strokeStyle = "#ffe896";
     ctx.lineWidth = 5;
     ctx.shadowColor = "#ffcf5a";
-    ctx.shadowBlur = 24;
+    ctx.shadowBlur = glow(24);
     ctx.beginPath();
     ctx.arc(W / 2, H / 2, radius, 0, Math.PI * 2);
     ctx.stroke();
@@ -823,4 +827,5 @@ function draw() {
   v.addColorStop(1, "#030310aa");
   ctx.fillStyle = v;
   ctx.fillRect(0, 0, W, H);
+  performanceMetrics.render = performance.now() - renderStarted;
 }
