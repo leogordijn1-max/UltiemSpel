@@ -271,7 +271,13 @@ function draw() {
       ctx.setLineDash([12, 7]);
       ctx.beginPath();
       if (e.variant === 1) {
-        ctx.arc(e.x, e.y, 135, 0, Math.PI * 2);
+        // Leave the same opening indicated by the actual Mourning Shade ring.
+        const gapHalf = Math.PI * 2 / (e.phaseTwo ? 14 : 10) * 1.18;
+        const start = e.shotAngle + gapHalf;
+        const end = e.shotAngle + Math.PI * 2 - gapHalf;
+        ctx.moveTo(e.x, e.y);
+        ctx.arc(e.x, e.y, 135, start, end);
+        ctx.closePath();
         ctx.fill();
       } else {
         const facing = e.shotAngle || 0;
