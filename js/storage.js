@@ -93,6 +93,7 @@ function loadMetaProgress() {
       bosses: nonNegativeInteger(run.bosses),
       difficulty: ["easy", "normal", "nightmare"].includes(run.difficulty) ? run.difficulty : "normal",
       mode: run.mode === "endless" ? "endless" : "standard",
+      character: ["survivor", "zombieMike", "beau", "mayoMaster"].includes(run.character) ? run.character : "survivor",
       victory: run.victory === true,
       id: typeof run.id === "string" ? run.id.slice(0, 80) : "",
     })).sort((a, b) => b.survived - a.survived).slice(0, 30)
