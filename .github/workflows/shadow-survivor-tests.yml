@@ -1,0 +1,31 @@
+name: Shadow Survivor gameplay tests
+
+on:
+  push:
+    branches:
+      - main
+      - feature/update-4-weapons-evolutions
+      - feature/update-5-enemies-waves-bosses
+  pull_request:
+    branches:
+      - main
+      - feature/update-4-weapons-evolutions
+
+permissions:
+  contents: read
+
+jobs:
+  gameplay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          for file in js/*.js tests/*.test.js; do
+            node --check "$file"
+          done
+      - name: Run gameplay regression tests
+        run: node --test tests/*.test.js
