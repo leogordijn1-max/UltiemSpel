@@ -70,3 +70,25 @@ node --test tests/*.test.js
 ```
 
 **Note:** A full 25-minute playtest is still recommended to verify the final boss challenge, visual telegraphs and late-game performance before merging this update.
+
+
+## Update 7: playable characters and long-term progression
+
+Select a survivor before the existing three-weapon loadout. All **eight original weapons** remain available, with no additional slot introduced by abilities. Four characters have different gameplay effects:
+
+- **The Survivor** (free): Soul Rush grants 25% extra movement for three seconds after 20 kills, with a cooldown.
+- **Zombie Mike** (Boss Hunter achievement / 3 lifetime boss kills): Undead Rage gives +17% damage below 45% HP. Starts with +20 HP and moves 3% slower.
+- **Beau de Hond** (first-kill trophy from Beau boss): Fish Barrage automatically launches three MarioVis projectiles every 12 seconds near enemies. Starts 5% faster; Fish Barrage is an ability, not an extra weapon.
+- **The Mayo Master** (24 permanent points): Mayo Madness grants 15% more damage for four seconds after 25 kills, with a cooldown. Starts with 15 less HP.
+
+The **Permanent Shop** now has four sections:
+1. **Stats**: the original HP and damage upgrades plus capped small movement, XP, pickup radius and dash cooldown improvements.
+2. **Weapons**: optional masteries for all eight existing weapons. A purchased mastery starts that weapon at level 2 **only when chosen as the start weapon**. Weapons still level normally to 5 and require the same evolution support/passive/boss rules.
+3. **Characters**: buy The Mayo Master with points. Earn Zombie Mike through Boss Hunter and Beau through the Beau boss trophy.
+4. **Cosmetics**: Classic, Neon Mayhem, Golden Survivor and Void Walker (the latter requires the Nightbreaker victory achievement). Cosmetics only affect visual appearance, never gameplay power.
+
+The **first kill** of each ordinary boss awards a permanent named trophy and two bonus points, **only once per boss**, while the final boss awards its collectible trophy without an extra point bonus. Character unlocks, cosmetics, shop receipts and weapon masteries are saved locally in the existing version-3 save format; existing progress and assets remain intact. The stats refund button reimburses the **amount originally paid**, including the older flat costs, without deleting cosmetics, masteries or characters.
+
+**New achievements:** Good Dog (defeat Beau) and Master of Arms (purchase four masteries). Player records now also remember the selected character. The UI and gameplay are desktop-first.
+
+Run tests using `node --test tests/*.test.js`; use a browser to verify character artwork, power cooldowns, selection and responsive layout before merging.
