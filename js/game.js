@@ -343,8 +343,12 @@ function hud() {
       ? "DASH READY · SHIFT"
       : `DASH ${dashCooldown.toFixed(1)}s · SHIFT`;
   dashStatus.classList.toggle("ready", dashCooldown <= 0);
-  $("waveText").textContent = `WAVE ${waveNumber || 1} · NEXT IN ${Math.floor(waveTimer / 60)}:${String(Math.ceil(waveTimer % 60)).padStart(2, "0")}`;
-  $("waveFill").style.width = `${Math.min(100, (1 - waveTimer / waveDuration) * 100)}%`;
+  const upcomingWave = waveNumber + 1;
+  const waveClock = `${Math.floor(Math.max(0, waveTimer) / 60)}:${String(Math.ceil(Math.max(0, waveTimer) % 60)).padStart(2, "0")}`;
+  const currentPattern = waveNumber ? wavePatternFor(waveNumber).name : "PREPARE";
+  $("waveText").textContent = boss ? `WAVE ${waveNumber || 1} · PAUSED DURING BOSS`
+    : `WAVE ${waveNumber || 1} · ${currentPattern} · NEXT ${upcomingWave} IN ${waveClock}`;
+  $("waveFill").style.width = `${Math.max(0, Math.min(100, (1 - waveTimer / waveDuration) * 100))}%`;
   $("healthText").textContent = Math.ceil(player.hp) + " / " + player.maxHp;
   $("hp").style.width = (100 * player.hp) / player.maxHp + "%";
   $("levelText").textContent = level;
@@ -444,18 +448,9 @@ function update(dt) {
     if (waveTimer <= 0) {
       waveNumber++;
       waveDuration = Math.max(45, 80 - waveNumber * 2);
-      waveTimer = waveDuration;
-      notify(`WAVE ${waveNumber} · ENEMIES INCOMING`, "wave", 4);
-
-      const waveSize = Math.min(6 + waveNumber, 16);
-      const firstWaveEnemy = enemies.length;
-      for (let i = 0; i < waveSize && enemies.length < 300; i++) enemySpawn();
-
-      const wavePower = 1 + waveNumber * 0.025;
-      for (const enemy of enemies.slice(firstWaveEnemy)) {
-        enemy.hp *= wavePower;
-        enemy.damage *= 1 + waveNumber * 0.01;
-      }
+      waveTimer += waveDuration;
+      const wave = spawnSpecialWave(waveNumber);
+      notify(`WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES`, "wave", 4);
     }
   }
   if (upgrades.health) {
@@ -498,9 +493,10 @@ function update(dt) {
   }
   spawn -= dt;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
+  const gradualWavePressure = 1 + Math.min(0.24, waveNumber * 0.015);
   let interval =
-    (Math.max(0.12, 1.6 - growthTime * 0.0026) * (boss ? 2 : 1)) /
-    profile.spawnRate;
+    (Math.max(0.14, 1.6 - growthTime * 0.0026) * (boss ? 2 : 1)) /
+    (profile.spawnRate * gradualWavePressure);
   const enemyLimit = boss ? 60 : 300;
   while (spawn <= 0 && enemies.length < enemyLimit) {
     enemySpawn();
@@ -530,7 +526,7 @@ function update(dt) {
     const playerDx = player.x - e.x;
     const playerDy = player.y - e.y;
     const playerDistanceSquared = playerDx * playerDx + playerDy * playerDy;
-    const needsPlayerDistance = e.kind === 4 || (upgrades.nova && upgrades.novaSlow);
+    const needsPlayerDistance = e.kind === 4 || e.kind === 5 || e.eliteTrait === "charger" || (upgrades.nova && upgrades.novaSlow);
     const playerDistance = needsPlayerDistance ? Math.sqrt(playerDistanceSquared) : 0;
     const onScreen = e === boss || visibleEnemy(e, 160);
     let a = onScreen ? Math.atan2(playerDy, playerDx) : 0;
@@ -557,37 +553,129 @@ function update(dt) {
       else moveSpeed *= 0.65;
 
       if (rangedEnemyCanAttack(e, playerDistance)) {
-        e.shootCooldown -= dt;
-        if (e.shootCooldown <= 0) {
-          enemyFireOrb(e);
-          e.shootCooldown = rand(4.5, 7);
+        if (e.shotWarning > 0) {
+          e.shotWarning = Math.max(0, e.shotWarning - dt);
+          moveSpeed = 0;
+          if (e.shotWarning === 0) {
+            enemyFireOrb(e);
+            e.shootCooldown = rand(4.5, 6.2);
+          }
+        } else {
+          e.shootCooldown -= dt;
+          if (e.shootCooldown <= 0) {
+            e.shootCooldown = 0;
+            e.aimAngle = Math.atan2(player.y - e.y, player.x - e.x);
+            e.shotWarning = 0.7;
+          }
+        }
+      } else if (e.shotWarning > 0) {
+        // An enemy leaving the visible attack area cannot finish a hidden shot.
+        e.shotWarning = 0;
+        e.shootCooldown = 0.9;
+      }
+    }
+    if (e.kind === 6) {
+      e.guardTimer = (e.guardTimer ?? 3) - dt;
+      if (e.guardTimer <= 0) {
+        e.shieldActive = !e.shieldActive;
+        e.guardTimer = e.shieldActive ? 3 : 2;
+      }
+    }
+    if (e.kind === 5) {
+      if (!e.armed && onScreen && playerDistanceSquared < 115 * 115) {
+        e.armed = true;
+        e.burstWarning = 0.95;
+      }
+      if (e.armed) {
+        moveSpeed = 0;
+        e.burstWarning = Math.max(0, e.burstWarning - dt);
+        if (e.burstWarning === 0) {
+          e.dead = true;
+          const radius = e.burstRadius || 86;
+          if (playerDistanceSquared < (radius + player.r) * (radius + player.r) && player.inv <= 0 && !tryDodge()) {
+            player.hp -= e.damage;
+            runDamageTaken += e.damage;
+            player.inv = 0.75;
+            damageFlash = 0.42;
+            shake = Math.max(shake, 8);
+            if (player.hp <= 0) { end(); return; }
+          }
+          explosions.push({ x: e.x, y: e.y, radius, life: 0.5, maxLife: 0.5, evolved: false });
+          puff(e.x, e.y, "#ff985b", 11);
+          continue;
+        }
+      }
+    }
+    if (e.eliteTrait === "swift") {
+      e.eliteSprintTimer = (e.eliteSprintTimer ?? 2.2) - dt;
+      e.eliteSprintActive = Math.max(0, (e.eliteSprintActive || 0) - dt);
+      if (e.eliteSprintTimer <= 0 && onScreen) {
+        e.eliteSprintActive = 1.1;
+        e.eliteSprintTimer = 5.4;
+      }
+      if (e.eliteSprintActive > 0) moveSpeed *= 1.5;
+    } else if (e.eliteTrait === "charger") {
+      if (e.eliteChargeActive > 0) {
+        e.eliteChargeActive = Math.max(0, e.eliteChargeActive - dt);
+        e.x += e.eliteChargeX * 300 * dt;
+        e.y += e.eliteChargeY * 300 * dt;
+        moveSpeed = 0;
+      } else if (e.eliteChargeWarning > 0) {
+        e.eliteChargeWarning = Math.max(0, e.eliteChargeWarning - dt);
+        moveSpeed = 0;
+        if (e.eliteChargeWarning === 0) {
+          e.eliteChargeActive = 0.34;
+          e.eliteChargeCooldown = 6;
+        }
+      } else {
+        e.eliteChargeCooldown = (e.eliteChargeCooldown ?? 5.5) - dt;
+        if (e.eliteChargeCooldown <= 0 && onScreen && playerDistanceSquared < 350 * 350) {
+          const length = Math.sqrt(playerDistanceSquared) || 1;
+          e.eliteChargeX = playerDx / length;
+          e.eliteChargeY = playerDy / length;
+          e.eliteChargeWarning = 0.75;
+          moveSpeed = 0;
         }
       }
     }
     if (e === boss) {
+      if (!e.phaseTwo && e.hp <= e.maxHp * 0.5) {
+        e.phaseTwo = true;
+        e.phaseIntro = 0.95;
+        e.shotWarning = 0;
+        e.shootCooldown = Math.max(1.4, e.shootCooldown);
+        e.chargeWarning = 0;
+        e.chargeCooldown = Math.max(2, e.chargeCooldown);
+        $("bossName").textContent = `${e.bossName} · PHASE II`;
+        notify(`PHASE TWO · ${e.bossName}`, "boss", 4);
+        puff(e.x, e.y, "#e09aff", 23);
+      }
+      if (e.phaseIntro > 0) {
+        e.phaseIntro = Math.max(0, e.phaseIntro - dt);
+        moveSpeed *= 0.4;
+      }
       if (e.chargeActive > 0) {
         e.chargeActive = Math.max(0, e.chargeActive - dt);
         e.x += e.chargeX * e.chargeSpeed * dt;
         e.y += e.chargeY * e.chargeSpeed * dt;
       } else {
         e.chargeCooldown -= dt;
-        if (e.chargeCooldown <= 0 && !e.chargeWarning) {
+        if (e.chargeCooldown <= 0 && !e.chargeWarning && e.phaseIntro <= 0 && visibleEnemy(e, -12)) {
           e.chargeX = Math.cos(a);
           e.chargeY = Math.sin(a);
-          e.chargeSpeed = e.phaseTwo ? 430 : 350;
-          e.chargeWarning = 0.8;
+          e.chargeSpeed = (e.variant === 0 ? 360 : e.variant === 1 ? 310 : 395) * (e.phaseTwo ? 1.18 : 1);
+          e.chargeWarning = e.variant === 2 ? 1.05 : 0.9;
         }
         if (e.chargeWarning > 0) {
           e.chargeWarning = Math.max(0, e.chargeWarning - dt);
           if (!e.chargeWarning) {
-            e.chargeActive = 0.42;
-            e.chargeCooldown = e.phaseTwo ? 5.5 : 8;
+            e.chargeActive = e.variant === 1 ? 0.54 : 0.42;
+            e.chargeCooldown = (e.variant === 1 ? 8.7 : e.variant === 2 ? 7.8 : 8) * (e.phaseTwo ? 0.77 : 1);
           }
         }
         e.x += Math.cos(moveAngle) * moveSpeed * dt;
         e.y += Math.sin(moveAngle) * moveSpeed * dt;
       }
-      e.phaseTwo = e.hp < e.maxHp * 0.5;
     } else if (!onScreen) {
       // Offscreen normal enemies keep their exact pursuit speed without angle/trig work.
       const distance = Math.sqrt(playerDx * playerDx + playerDy * playerDy) || 1;
@@ -608,24 +696,58 @@ function update(dt) {
       if (Math.abs(e.knockbackY) < 2) e.knockbackY = 0;
     }
 
+    // Sparse, local separation stops normal enemies stacking into one silhouette.
+    // Only visible non-bosses take part to limit grid queries in large hordes.
+    if (onScreen && e !== boss && e.kind !== 5) {
+      e.separationCooldown = (e.separationCooldown ?? 0) - dt;
+      if (e.separationCooldown <= 0) {
+        e.separationCooldown = 0.14 + Math.random() * 0.08;
+        let count = 0;
+        for (const other of nearbyEnemies(e.x, e.y, e.r * 2 + 22)) {
+          if (other === e || other === boss || other.dead) continue;
+          const dx = e.x - other.x, dy = e.y - other.y;
+          const lengthSquared = dx * dx + dy * dy;
+          const ideal = e.r + other.r;
+          if (lengthSquared > 1 && lengthSquared < ideal * ideal) {
+            const push = Math.min(2.5, (ideal - Math.sqrt(lengthSquared)) * 0.12);
+            e.x += dx / Math.sqrt(lengthSquared) * push;
+            e.y += dy / Math.sqrt(lengthSquared) * push;
+          }
+          if (++count >= 5) break;
+        }
+      }
+    }
+
     e.hit = Math.max(0, e.hit - dt);
     if (e === boss) {
-      e.shootCooldown -= dt;
-      if (e.shootCooldown <= 0) bossFire(e);
+      if (e.shotWarning > 0) {
+        e.shotWarning = Math.max(0, e.shotWarning - dt);
+        if (e.shotWarning === 0 && visibleEnemy(e, -12) && e.phaseIntro <= 0) bossFire(e);
+      } else if (e.phaseIntro <= 0 && e.chargeActive <= 0 && e.chargeWarning <= 0) {
+        e.shootCooldown -= dt;
+        if (e.shootCooldown <= 0 && visibleEnemy(e, -12)) {
+          e.shootCooldown = 0;
+          e.shotAngle = Math.atan2(player.y - e.y, player.x - e.x);
+          e.shotWarning = e.phaseTwo ? 0.95 : 1.05;
+        }
+      }
       if (e.phaseTwo) {
         e.minionCooldown = (e.minionCooldown ?? 8) - dt;
         if (e.minionCooldown <= 0 && enemies.length < 58) {
-          e.minionCooldown = 10;
+          e.minionCooldown = e.variant === 1 ? 11 : 10;
+          const kind = e.variant === 1 ? 1 : e.variant === 2 ? 4 : 0;
           for (let i = 0; i < 3; i++) {
             const angle = (Math.PI * 2 * i) / 3 + time;
             enemies.push({
               x: e.x + Math.cos(angle) * 115,
               y: e.y + Math.sin(angle) * 115,
-              r: 11,
-              hp: (20 + growthTime * 0.08) * (difficultyProfiles[difficulty]?.enemyHealth || 1),
-              speed: 66 + growthTime * 0.05,
-              damage: 8 + growthTime * 0.004,
-              kind: 0,
+              r: kind === 4 ? 15 : 11,
+              hp: (20 + growthTime * 0.08) * (difficultyProfiles[difficulty]?.enemyHealth || 1) * (kind === 1 ? 0.65 : 1),
+              speed: (kind === 1 ? 115 : kind === 4 ? 40 : 66) + growthTime * 0.05,
+              damage: (kind === 4 ? 6 : 8) + growthTime * 0.004,
+              kind,
+              shootCooldown: kind === 4 ? 3.2 : undefined,
+              shotWarning: 0,
               hit: 0,
               noXp: true,
               summoned: true,
@@ -858,8 +980,9 @@ function update(dt) {
     const hitRadius = b.r + player.r;
     if (hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius && player.inv <= 0) {
       if (tryDodge()) { b.life = 0; continue; }
-      player.hp -= 13;
-      runDamageTaken += 13;
+      const projectileDamage = b.damage ?? 13;
+      player.hp -= projectileDamage;
+      runDamageTaken += projectileDamage;
       player.inv = 0.7;
       damageFlash = 0.55;
       shake = 13;

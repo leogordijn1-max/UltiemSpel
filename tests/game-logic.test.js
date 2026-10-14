@@ -521,7 +521,7 @@ test("level-up choices guarantee one selected locked weapon and contain no dupli
   assert.equal(html.length, 3);
   assert.equal(new Set(html).size, 3);
   assert.equal(html.filter((choice) => choice.includes("WEAPON UNLOCK") && choice.includes("LOCKED → UNLOCKED")).length, 1);
-  assert.equal(html.some((choice) => choice.includes("<b>Orbiting Spirit Blades</b>") || choice.includes("<b>Spirit Blades</b>")), true);
+  assert.equal(html.some((choice) => choice.includes("<b>Spirit Blades</b>") || choice.includes("<b>Eiad Bom</b>")), true);
 });
 
 test("upgrade levels clamp at zero and five", () => {
