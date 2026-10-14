@@ -782,3 +782,154 @@ button:focus-visible {
   .character-select-grid, .shop-grid { grid-template-columns: 1fr; }
   .character-select-card img { height: 70px; }
 }
+
+/* Update 8 — final desktop UI polish, discoverables and readable results. */
+#panel {
+  max-height: calc(100dvh - 34px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #9675d2 #231c3d;
+}
+#panel:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #e8d9ff;
+  outline-offset: 3px;
+}
+#panel .encyclopedia-tabs {
+  position: relative;
+  gap: 4px;
+  justify-content: center;
+}
+#panel .encyclopedia-tabs button {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.collection-progress {
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  color: #ead3ff !important;
+}
+.encyclopedia-card.collection-unseen {
+  border: 1px dashed #91739b70;
+  background: #131020bb;
+}
+.encyclopedia-card.collection-unseen .weapon-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #d7bbff;
+  background: #47326999;
+  font-size: 28px;
+  font-weight: 900;
+}
+.encyclopedia-card.collection-unseen b { color: #cab8e3; letter-spacing: .12em; }
+#panel .run-summary {
+  margin: 12px 0 16px;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #a57af580;
+  border-radius: 13px;
+  background: #120f26ee;
+}
+#panel .run-summary h2,
+#panel .build-details h2 {
+  margin: 6px 0 10px;
+  font: 900 15px "Oxanium", "Rajdhani", system-ui, sans-serif;
+  letter-spacing: .07em;
+  color: #f3d6ff;
+}
+#panel .run-summary h3 {
+  margin: 14px 0 7px;
+  color: #ffddab;
+  font-size: 13px;
+}
+.run-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.run-summary-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 10px;
+  background: #292043bd;
+  border-radius: 8px;
+}
+.run-summary-grid small { color: #bbaed1; font-size: 11px; }
+.run-summary-grid strong { color: #fff0c4; font-size: 16px; font-variant-numeric: tabular-nums; }
+.run-damage-list {
+  display: grid;
+  gap: 3px;
+}
+.run-damage-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #9575c53d;
+  color: #d9cce9;
+  font-size: 13px;
+}
+.run-damage-list strong { color: #ffdfae; font-variant-numeric: tabular-nums; }
+.record-details {
+  margin: 8px 0;
+  padding: 10px;
+  border: 1px solid #9d80d269;
+  border-radius: 9px;
+  background: #241b3da8;
+}
+.record-details summary {
+  cursor: pointer;
+  color: #ffdeba;
+  font: 700 13px "Rajdhani", system-ui, sans-serif;
+}
+#panel .build-details {
+  max-height: 45vh;
+  overflow-y: auto;
+  padding: 10px 15px;
+  border-radius: 10px;
+  background: #120f25b5;
+  border: 1px solid #9e83d360;
+  text-align: left;
+}
+#panel .build-details p {
+  max-width: none;
+  margin: 7px 0;
+  font-size: 14px;
+}
+.danger-action {
+  border-color: #ff978caf;
+  background: linear-gradient(130deg, #873d65, #53315d);
+}
+#choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+#choices > .encyclopedia-tabs,
+#choices > .encyclopedia-list,
+#choices > .collection-progress,
+#choices > .run-summary,
+#choices > .build-details { flex: 1 1 100%; }
+#choices > .encyclopedia-list { width: 100%; }
+#panel .encyclopedia-list .encyclopedia-card { min-width: 0; }
+#panel .encyclopedia-card small { overflow-wrap: anywhere; }
+.toast-boss { border-color: #ed87d8; box-shadow: 0 5px 23px #d264c332; }
+.toast-achievement { box-shadow: 0 5px 22px #e9c86c32; }
+.toast-evolution { border-color: #f8dc81; background: #302142e9; }
+@media (max-width: 740px) {
+  .run-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #choices > .encyclopedia-tabs button { padding: 7px 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #panel, .toast, .toast-leaving { animation: none !important; transition-duration: .01ms !important; }
+}
