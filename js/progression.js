@@ -21,6 +21,7 @@ function checkRunAchievements() {
 }
 
 function checkSavedAchievements() {
+  if (metaProgress.totals.wins > 0) unlockAchievement("finalVictory", "Nightbreaker");
   if (metaProgress.totals.kills >= 100) unlockAchievement("kills100", "100 Kills");
   if (metaProgress.totals.kills >= 1000) unlockAchievement("kills1000", "1000 Kills");
   if (metaProgress.totals.bosses >= 1) unlockAchievement("boss1", "First Boss");
