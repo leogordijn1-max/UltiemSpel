@@ -9,6 +9,8 @@ const redEnemyImage = new Image();
 redEnemyImage.src = "img/ZombieMike.png";
 const bombImage = new Image();
 bombImage.src = "img/EiadBom.png";
+const mayoCharacterImage = new Image();
+mayoCharacterImage.src = "img/EmmerMayo.png";
 let W, H, dpr;
 function resize() {
   dpr = Math.min(devicePixelRatio || 1, 2);
@@ -101,6 +103,11 @@ let upgrades = {},
   unlockableWeapons = [],
   unlockedWeapons = [],
   selectedWeapons = loadSelectedWeapons(),
+  selectedCharacter = (() => {
+    const choice = storageGet("shadowCharacter", "survivor");
+    return isCharacterUnlocked(metaProgress, choice) ? choice : "survivor";
+  })(),
+  characterRuntime = makeCharacterRuntime(),
   showFps = storageGet("shadowShowFps", "false") === "true",
   graphicsQuality = ["low", "medium", "high"].includes(storageGet("shadowGraphics", "high")) ? storageGet("shadowGraphics", "high") : "high",
   enemyGrid = new Map(),
@@ -151,6 +158,8 @@ function reset() {
   bossRewardPoints = 0;
   runDamageTaken = 0;
   runRecorded = false;
+  if (!isCharacterUnlocked(metaProgress, selectedCharacter)) selectedCharacter = "survivor";
+  characterRuntime = makeCharacterRuntime();
   choiceScreenOpen = false;
   unlockedWeapons = [startWeapon];
   recentAchievements = [];
@@ -158,9 +167,11 @@ function reset() {
     x: 0,
     y: 0,
     r: 15,
-    hp: 140 + metaProgress.hpLevel * 8,
-    maxHp: 140 + metaProgress.hpLevel * 8,
-    speed: 235,
+    hp: 140 + metaProgress.hpLevel * 8 +
+      (selectedCharacter === "zombieMike" ? 20 : selectedCharacter === "mayoMaster" ? -15 : 0),
+    maxHp: 140 + metaProgress.hpLevel * 8 +
+      (selectedCharacter === "zombieMike" ? 20 : selectedCharacter === "mayoMaster" ? -15 : 0),
+    speed: 235 * (1 + (metaProgress.speedLevel || 0) * 0.02),
     inv: 0,
     facingX: 1,
     facingY: 0,
@@ -231,6 +242,8 @@ function reset() {
     critDamage: 0,
     knockback: 0,
   };
+  // Weapon Mastery applies only to a chosen START weapon and never adds a slot.
+  if (isMasteryOwned(metaProgress, startWeapon)) upgrades[startWeapon] = 2;
   permanentDamageBonus = metaProgress.damageLevel * 0.35 * 0.28;
   active = true;
   paused = false;
@@ -323,7 +336,7 @@ function startDash() {
   dashDirectionX = dx;
   dashDirectionY = dy;
   dashTimer = 0.28;
-  dashCooldown = 4.5;
+  dashCooldown = Math.max(3.6, 4.5 - (metaProgress.dashLevel || 0) * 0.2);
   player.inv = Math.max(player.inv, 0.2);
 }
 
@@ -375,6 +388,9 @@ function hud() {
   $("xp").style.width = (100 * xp) / needed + "%";
   $("stats").textContent =
     `${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
+  const character = getCharacter(selectedCharacter);
+  const boost = characterRuntime.activeBoost > 0 ? ` · ACTIVE ${characterRuntime.activeBoost.toFixed(1)}s` : "";
+  $("characterHud").textContent = `${character.name} · ${character.ability}${boost}`;
   const weaponNames = Object.fromEntries(weaponCatalog.map((weapon) => [weapon.key, weapon.name]));
   $("loadout").innerHTML = selectedWeapons
     .map((key, index) => {
@@ -512,8 +528,36 @@ function emitDeathPulse(isEcho = false) {
 }
 
 // Advance the simulation by one frame.
+// Automatic character abilities are independent of the three weapon slots.
+function fireBeauFishBarrage() {
+  const target = nearestEnemy(player.x, player.y, 550);
+  if (!target) return false;
+  const angle = Math.atan2(target.y - player.y, target.x - player.x);
+  for (const offset of [-0.2, 0, 0.2]) {
+    const direction = angle + offset;
+    const speed = 340;
+    bullets.push({
+      type: "fish", x: player.x, y: player.y,
+      vx: Math.cos(direction) * speed, vy: Math.sin(direction) * speed,
+      speed, r: 10, d: 34 * globalDamageMultiplier(),
+      pierce: 1, life: 2, hit: new Set(),
+    });
+  }
+  puff(player.x, player.y, "#ffccae", 9);
+  playSfx("shoot");
+  return true;
+}
+
+function updateCharacterAbility(dt) {
+  updateCharacterTimers(characterRuntime, dt);
+  if (selectedCharacter === "beau" && characterRuntime.fishCooldown <= 0) {
+    if (fireBeauFishBarrage()) characterRuntime.fishCooldown = 12;
+  }
+}
+
 function update(dt) {
   time += dt;
+  updateCharacterAbility(dt);
   hudUpdateTimer += dt;
   if (!boss) growthTime += dt;
   updateSpecialWeapons(dt);
@@ -563,7 +607,8 @@ function update(dt) {
       (keys.d || keys.ArrowRight ? 1 : 0) - (keys.a || keys.ArrowLeft ? 1 : 0) + touchMoveX,
     dy = (keys.s || keys.ArrowDown ? 1 : 0) - (keys.w || keys.ArrowUp ? 1 : 0) + touchMoveY,
     mag = Math.hypot(dx, dy) || 1;
-  const movementSpeed = player.speed * (1 + upgrades.speed * 0.1);
+  const movementSpeed = player.speed * (1 + upgrades.speed * 0.1) *
+    characterMovementMultiplier(selectedCharacter, characterRuntime, player.hp, player.maxHp);
   if (dx || dy) {
     player.facingX = dx / mag;
     player.facingY = dy / mag;
@@ -957,7 +1002,7 @@ function update(dt) {
     for (const e of nearbyEnemies(b.x, b.y, b.r + 280)) {
       const dx = e.x - b.x, dy = e.y - b.y, hitRadius = enemyHitRadius(e) + b.r;
       if (!b.hit.has(e) && dx * dx + dy * dy < hitRadius * hitRadius) {
-        damage(e, b.d, b);
+        damage(e, b.type === "fish" && e === boss ? b.d * 0.55 : b.d, b);
         b.hit.add(e);
         if (b.type === "frost") {
           b.hitTarget = e;
@@ -1136,11 +1181,12 @@ function update(dt) {
     (b) => b.life > 0 && !projectileOutsideArena(b),
   );
   let collectedGem = false;
-  for (const g of nearbyGems(player.x, player.y, 90 + upgrades.magnet * 55)) {
+  const pickupRange = 90 + upgrades.magnet * 55 + (metaProgress.magnetLevel || 0) * 12;
+  for (const g of nearbyGems(player.x, player.y, pickupRange)) {
     const oldX = g.x, oldY = g.y;
     const dx = player.x - g.x, dy = player.y - g.y;
     const distanceSquared = dx * dx + dy * dy;
-    const range = 90 + upgrades.magnet * 55;
+    const range = pickupRange;
     if (distanceSquared < range * range) {
       const distance = Math.sqrt(distanceSquared) || 1;
       const speed = Math.max(180, 650 * (1 - distance / range));
