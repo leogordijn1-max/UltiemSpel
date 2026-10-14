@@ -114,6 +114,18 @@ function loadMetaProgress() {
     }
   }
   const wins = nonNegativeInteger(totals.wins);
+  const statPurchaseCosts = {};
+  for (const [key, max, legacyCost] of [
+    ["hpLevel", 5, 2], ["damageLevel", 5, 3],
+    ["speedLevel", 3, 5], ["magnetLevel", 3, 4], ["xpLevel", 3, 5], ["dashLevel", 3, 5],
+  ]) {
+    const level = Math.min(max, nonNegativeInteger(saved[key]));
+    const savedPrices = Array.isArray(saved.statPurchaseCosts?.[key]) ? saved.statPurchaseCosts[key] : [];
+    statPurchaseCosts[key] = Array.from({ length: level }, (_, i) => {
+      const value = Number(savedPrices[i]);
+      return Number.isFinite(value) && value >= 0 ? Math.min(1000, Math.floor(value)) : legacyCost;
+    });
+  }
   return {
     version: SAVE_VERSION,
     points: nonNegativeInteger(saved.points),
@@ -123,6 +135,7 @@ function loadMetaProgress() {
     runs,
     records,
     endlessUnlocked: saved.endlessUnlocked === true || wins > 0,
+    statPurchaseCosts,
     speedLevel: Math.min(3, nonNegativeInteger(saved.speedLevel)),
     magnetLevel: Math.min(3, nonNegativeInteger(saved.magnetLevel)),
     xpLevel: Math.min(3, nonNegativeInteger(saved.xpLevel)),
