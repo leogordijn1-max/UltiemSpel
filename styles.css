@@ -640,3 +640,38 @@ button:focus-visible {
   .weapon-slot strong { font-size: 9px; }
   .weapon-slot small { font-size: 7px; }
 }
+
+
+/* Update 6: final victory and unlockable Endless Mode. */
+.endless-menu-button {
+  border-color: rgba(222, 144, 255, 0.85);
+  background: linear-gradient(120deg, #592785, #992f91, #442d82);
+}
+.endless-menu-button:disabled {
+  opacity: 0.54;
+  filter: grayscale(0.45);
+  cursor: not-allowed;
+}
+.victory-continue {
+  border-color: #f5c5ff;
+  background: linear-gradient(120deg, #913eca, #cc4fc4);
+  box-shadow: 0 5px 26px #c451de55;
+}
+.records-section {
+  padding: 12px 14px;
+  margin: 13px 0;
+  border: 1px solid #a98bfa55;
+  border-radius: 11px;
+  background: #150e30b0;
+  text-align: left;
+}
+.records-section h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #e5c6ff;
+}
+#panel .records-section p {
+  margin: 5px 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
