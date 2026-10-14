@@ -112,7 +112,7 @@ test("three final boss projectile patterns are distinct and telegraphed ground a
   const counts = [];
   for (let pattern = 0; pattern < 3; pattern++) {
     vm.runInContext(
-      `bossShots=[]; bossHazards=[]; let target = {x:120,y:0,isFinalBoss:true,shotAngle:Math.PI,shotRotation:0.4,shotPattern:${pattern},warningX:45,warningY:30,finalPhase:2,volleyCount:1}; finalBossFire(target);`,
+      `bossShots=[]; bossHazards=[]; var target = {x:120,y:0,isFinalBoss:true,shotAngle:Math.PI,shotRotation:0.4,shotPattern:${pattern},warningX:45,warningY:30,finalPhase:2,volleyCount:1}; finalBossFire(target);`,
       context,
     );
     counts.push(JSON.parse(vm.runInContext("JSON.stringify({shots:bossShots.length,hazards:bossHazards.length,visual:bossShots[0]?.visualType,warning:bossHazards[0]?.warning})", context)));
