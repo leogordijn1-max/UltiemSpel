@@ -150,7 +150,7 @@ canvas {
 
 #waveHud { margin-top: 8px; color: #d7caff; font-size: 10px; letter-spacing: .08em; }
 #waveHud .bar { height: 7px; margin: 4px 0 0; }
-#waveFill { background: linear-gradient(90deg, #7268de, #c07cff, #7ce5df); box-shadow: 0 0 10px #9c63ff88; }
+#waveText { display: block; overflow-wrap: anywhere; line-height: 1.4; }\n#waveFill { background: linear-gradient(90deg, #7268de, #c07cff, #7ce5df); box-shadow: 0 0 10px #9c63ff88; }
 #notifications { position: absolute; top: 106px; right: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 7px; width: min(310px, 34vw); pointer-events: none; }
 .toast { max-width: 100%; padding: 8px 12px; border: 1px solid #a78bfa88; border-radius: 9px; background: #110e20e8; color: #e9ddff; text-align: right; font-size: 12px; font-weight: 800; text-shadow: 0 1px 5px #000; box-shadow: 0 5px 18px #0007; animation: toast-in .18s ease-out both; transition: opacity .25s, transform .25s; }
 .toast-wave { border-color: #8f7cff; color: #d6caff; }
