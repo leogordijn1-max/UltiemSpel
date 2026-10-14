@@ -472,7 +472,7 @@ function fire() {
       vy: Math.sin(a) * 560,
       life: 1.8,
       r: 5,
-      d: 14 * globalDamageMultiplier() * (evolutions.splitDimension ? 1.25 : 1),
+      d: (12 + upgrades.arcane * 2) * globalDamageMultiplier() * (evolutions.splitDimension ? 1.25 : 1),
       pierce: upgrades.pierce + 1,
       hit: new Set(),
     });
