@@ -248,6 +248,9 @@ function spawnSpecialWave(number, cap = 300) {
   return { name: pattern.name, spawned, pattern };
 }
 
+// Shared spatial hash resolution for pickup storage and merging.
+const GEM_GRID_SIZE = 120;
+
 function gemCellKey(x, y) {
   return `${Math.floor(x / GEM_GRID_SIZE)},${Math.floor(y / GEM_GRID_SIZE)}`;
 }
