@@ -444,7 +444,10 @@ function damage(e, d, origin = player, damageType = "direct") {
         const trophy = awardBossLoot(metaProgress, lootKey);
         if (trophy.first && typeof notify === "function") {
           notify(`BOSS TROPHY · ${e.bossName || lootKey.toUpperCase()} · ${trophy.points ? "+" + trophy.points + " PTS" : "COLLECTED"}`, "achievement", 4);
-          if (trophy.characterUnlocked) notify("NEW CHARACTER · BEAU DE HOND UNLOCKED", "achievement", 5);
+          if (trophy.characterUnlocked) {
+            notify("NEW CHARACTER · BEAU DE HOND UNLOCKED", "achievement", 5);
+            if (typeof unlockAchievement === "function") unlockAchievement("beauTrophy", "Good Dog");
+          }
         }
         if (trophy.first && typeof saveMetaProgress === "function") saveMetaProgress();
       }
