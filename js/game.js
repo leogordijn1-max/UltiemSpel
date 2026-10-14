@@ -434,6 +434,7 @@ function showVictory() {
 function continueEndlessAfterVictory() {
   if (gameState !== "victory" || !victoryClaimed) return false;
   runMode = "endless";
+  menuRunMode = "endless";
   endlessStartTime = time;
   nextBossTime = time + 180;
   boss = null;
@@ -474,7 +475,7 @@ function end() {
   choiceScreenOpen = false;
   panel(
     "KKR SUKKEL",
-    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s, reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
+    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s in ${runMode.toUpperCase()} mode, reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.${victoryClaimed ? "<br>Standard victory completed · Endless unlocked." : ""}<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints + (victoryClaimed ? FINAL_VICTORY_BONUS : 0)}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
     (el) => {
       let b = document.createElement("button");
       b.textContent = "TRY AGAIN";
