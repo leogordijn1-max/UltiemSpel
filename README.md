@@ -92,3 +92,35 @@ The **first kill** of each ordinary boss awards a permanent named trophy and two
 **New achievements:** Good Dog (defeat Beau) and Master of Arms (purchase four masteries). Player records now also remember the selected character. The UI and gameplay are desktop-first.
 
 Run tests using `node --test tests/*.test.js`; use a browser to verify character artwork, power cooldowns, selection and responsive layout before merging.
+
+
+## Update 8 — Final UI Polish, Collection, Run Analytics and Audio
+
+### Screen improvements
+- Desktop-first **pause menu**: resume, current build, controls reference, settings, restart (with confirmation), or main menu (with confirmation). Back from settings returns to pause instead of abandoning the run. Esc/P pause and resume when gameplay is active.
+- Fullscreen toggles with **F**. Navigating between menu screens does not exit fullscreen; changing fullscreen requires a dedicated action.
+- Keyboard shortcuts are ignored while editing a field or while level-up / reward screens are active. Movement keys reset when the browser loses focus.
+- The existing HUD, level-up choices and three-weapon loadout remain intact, with added keyboard help, clearer layouts, scrollable large panels and accessible focus outlines.
+
+### Encyclopedia vs Collection
+- The encyclopedia always provides the information needed to choose weapons and plan evolutions.
+- The **Collection** is a separate main-menu destination that hides undiscovered weapons, evolutions, enemies, bosses and characters behind a question mark with a discovery hint. New entries appear as they are encountered, equipped, evolved or played. Passive descriptions remain public.
+- Six information categories: Weapons, Evolutions, Upgrades, Enemies, Bosses, Characters.
+- Discoveries are saved in the existing localStorage progression file; older saves migrate safely and keep prior purchases/achievements.
+
+### Run statistics
+- Accurate central outgoing-damage tracking by weapon (Arcane Bolt, Spirit Blades, Eiad Bom, Chain Lightning, Boomerang, Flame Cone, Frost Orb, Death Pulse and Beau's Fish Barrage).
+- Damage attribution counts effective damage only, not overkill. Burn damage counts toward Flame Cone, and lightning jumps toward Chain Lightning.
+- Run records now also include incoming damage, healing, dodges, projectile blocks, critical hits, XP and collected souls plus evolution count and selected weapons.
+- Victory and Game Over show a readable run breakdown; Records offers expandable details for the five most recent top runs.
+- Old runs without analytics display an honest 'not recorded' note instead of zero values.
+
+### Audio and effects
+- Added synthesized SFX for victory, evolution, lightning, flame, frost, fish shots, boomerangs, dash and boss warnings; important cues no longer depend on a global cooldown used for ordinary hits.
+- Throttle repeated hits/XP/kills and limit simultaneous sounds to avoid deafening audio. Audio volume and mute settings remain in the existing Settings screen.
+- Existing custom meme images and boss/projectile identities are preserved.
+
+### Validation
+- **Run automated tests:** `node --test tests/*.test.js`
+- **Manual browser test:** check main menu, Collection updates after first encounters, settings while paused, fullscreen through multiple screens, weapon damage accounting, extended run/Game Over/Victory stats and the final-boss / Endless transition.
+- **Desktop-first:** the user prioritizes laptop and desktop play. This update does not intentionally remove existing touch support.

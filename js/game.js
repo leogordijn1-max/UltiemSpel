@@ -98,6 +98,7 @@ let upgrades = {},
   bossRewardPoints = 0,
   permanentDamageBonus = 0,
   runDamageTaken = 0,
+  runStats = createRunStats(),
   metaProgress = loadMetaProgress(),
   startWeapon = "arcane",
   unlockableWeapons = [],
@@ -157,9 +158,12 @@ function reset() {
   bossesDefeated = 0;
   bossRewardPoints = 0;
   runDamageTaken = 0;
+  runStats = createRunStats();
   runRecorded = false;
   if (!isCharacterUnlocked(metaProgress, selectedCharacter)) selectedCharacter = "survivor";
   characterRuntime = makeCharacterRuntime();
+  trackDiscovery("characters", selectedCharacter);
+  trackDiscovery("weapons", startWeapon);
   choiceScreenOpen = false;
   unlockedWeapons = [startWeapon];
   recentAchievements = [];
@@ -258,6 +262,20 @@ function reset() {
   hud();
 }
 
+// Persist only first-time discoveries; repeated spawns do not cause storage writes.
+function trackDiscovery(group, key) {
+  if (typeof discover !== "function" || !metaProgress) return false;
+  if (!discover(metaProgress, group, key)) return false;
+  saveMetaProgress();
+  return true;
+}
+
+// Account for blocked hits and dodges separately from HP lost.
+function recordPlayerHit(amount) {
+  runDamageTaken += amount;
+  if (runStats) runStats.damageTaken += Math.max(0, amount);
+}
+
 function notify(message, type = "info", duration = 3.5) {
   const container = $("notifications");
   if (!container) return;
@@ -297,6 +315,7 @@ function tryBladeBlock(projectile) {
     if (dx * dx + dy * dy < radius * radius && Math.random() < baseChance) {
       projectile.blocked = true;
       projectile.life = 0;
+      if (runStats) runStats.blocks++;
       puff(projectile.x, projectile.y, "#d4e8ff", 4);
       playSfx("block");
       return true;
@@ -309,6 +328,7 @@ function tryDodge() {
   const chance = Math.min(0.12, Math.max(0, upgrades.speed - 2) * 0.03);
   if (!chance || Math.random() >= chance) return false;
   player.inv = 0.32;
+  if (runStats) runStats.dodges++;
   puff(player.x, player.y, "#c7f3e2", 7);
   return true;
 }
@@ -336,6 +356,7 @@ function startDash() {
   dashDirectionX = dx;
   dashDirectionY = dy;
   dashTimer = 0.28;
+  playSfx("dash");
   dashCooldown = Math.max(3.6, 4.5 - (metaProgress.dashLevel || 0) * 0.2);
   player.inv = Math.max(player.inv, 0.2);
 }
@@ -427,6 +448,7 @@ function showVictory() {
   const currentNames = weaponCatalog.filter((w) => upgrades[w.key] > 0)
     .map((w) => `${w.name}${weaponIsEvolved(w.key) ? " ★" : ""}`).join(", ");
   const survived = `${Math.floor(time / 60)}m ${Math.floor(time % 60)}s`;
+  if (typeof playSfx === "function") playSfx("victory");
   panel("VICTORY · THE NIGHT IS YOURS",
     `You defeated THE LAST MEME!<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
     (container) => {
@@ -440,6 +462,7 @@ function showVictory() {
       menuButton.onclick = showMainMenu;
       container.append(menuButton);
     });
+  if (typeof renderRunSummaryPanel === "function") renderRunSummaryPanel();
   $("bossHud").style.display = "none";
   $("bossCountdown").style.display = "none";
   $("pause").style.display = "none";
@@ -503,6 +526,7 @@ function end() {
       el.append(menuButton);
     },
   );
+  if (typeof renderRunSummaryPanel === "function") renderRunSummaryPanel();
   $("pause").style.display = "none";
   $("speedControls").style.display = "none";
   $("bossHud").style.display = "none";
@@ -544,7 +568,7 @@ function fireBeauFishBarrage() {
     });
   }
   puff(player.x, player.y, "#ffccae", 9);
-  playSfx("shoot");
+  playSfx("fish");
   return true;
 }
 
@@ -576,7 +600,9 @@ function update(dt) {
     }
   }
   if (upgrades.health) {
+    const beforeHeal = player.hp;
     player.hp = Math.min(player.maxHp, player.hp + upgrades.health * 0.8 * dt);
+    if (runStats) runStats.healing += Math.max(0, player.hp - beforeHeal);
   }
   // Final boss takes priority over the ordinary boss schedule at the 25-minute mark.
   // If another boss is already alive, the final encounter starts after that fight.
@@ -673,7 +699,7 @@ function update(dt) {
       (e.pulseSlowUntil > time ? 0.77 : 1);
     if (e.burnUntil > time && e.nextBurnTick <= time) {
       e.nextBurnTick = time + 0.5;
-      damage(e, e.burnDps * 0.5);
+      damage(e, e.burnDps * 0.5, player, "burn");
       if (e.dead) continue;
     }
     if (e.kind === 4) {
@@ -724,7 +750,7 @@ function update(dt) {
           const radius = e.burstRadius || 86;
           if (playerDistanceSquared < (radius + player.r) * (radius + player.r) && player.inv <= 0 && !tryDodge()) {
             player.hp -= e.damage;
-            runDamageTaken += e.damage;
+            recordPlayerHit(e.damage);
             player.inv = 0.75;
             damageFlash = 0.42;
             shake = Math.max(shake, 8);
@@ -780,6 +806,7 @@ function update(dt) {
           e.chargeCooldown = Math.max(e.chargeCooldown, 2.6);
           $("bossName").textContent = `THE LAST MEME · PHASE ${["I", "II", "III"][nextPhase - 1]}`;
           notify(`FINAL BOSS · PHASE ${nextPhase} / 3`, "boss", 4.5);
+          playSfx("boss-warn");
           puff(e.x, e.y, "#ffb4fa", 30);
         }
         e.finalIntro = Math.max(0, (e.finalIntro || 0) - dt);
@@ -922,7 +949,7 @@ function update(dt) {
     if (collisionDx * collisionDx + collisionDy * collisionDy < playerHitRadius * playerHitRadius && player.inv <= 0) {
       if (tryDodge()) continue;
       player.hp -= e.damage;
-      runDamageTaken += e.damage;
+      recordPlayerHit(e.damage);
       player.inv = 0.85;
       damageFlash = 0.55;
       shake = 13;
@@ -1107,7 +1134,7 @@ function update(dt) {
     if (hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius && player.inv <= 0) {
       if (tryDodge()) { shot.life = 0; continue; }
       player.hp -= shot.damage;
-      runDamageTaken += shot.damage;
+      recordPlayerHit(shot.damage);
       player.inv = 0.7;
       damageFlash = 0.4;
       shake = 8;
@@ -1133,7 +1160,7 @@ function update(dt) {
     const reach = hazard.radius + player.r;
     if (dx * dx + dy * dy <= reach * reach && player.inv <= 0 && !tryDodge()) {
       player.hp -= hazard.damage;
-      runDamageTaken += hazard.damage;
+      recordPlayerHit(hazard.damage);
       player.inv = 0.8;
       damageFlash = 0.5;
       shake = Math.max(shake, 11);
@@ -1165,7 +1192,7 @@ function update(dt) {
       if (tryDodge()) { b.life = 0; continue; }
       const projectileDamage = b.damage ?? 13;
       player.hp -= projectileDamage;
-      runDamageTaken += projectileDamage;
+      recordPlayerHit(projectileDamage);
       player.inv = 0.7;
       damageFlash = 0.55;
       shake = 13;
@@ -1200,8 +1227,11 @@ function update(dt) {
       removeGemFromGrid(g);
       collectedGem = true;
       if (g.kind === "health") {
+        const beforeHeal = player.hp;
         player.hp = Math.min(player.maxHp, player.hp + g.value);
+        if (runStats) runStats.healing += Math.max(0, player.hp - beforeHeal);
       } else {
+        if (runStats) runStats.soulsCollected++;
         playSfx("xp");
         addXP(g.value * (g.kind === "health" ? 1 : 1 + Math.max(0, upgrades.magnet - 2) * 0.05));
         if (paused) break;

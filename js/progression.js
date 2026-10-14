@@ -77,6 +77,9 @@ function recordRun(outcome = "defeat") {
     mode,
     character: typeof selectedCharacter !== "undefined" ? selectedCharacter : "survivor",
     victory: won,
+    evolutionCount: typeof evolutions !== "undefined" ? Object.values(evolutions).filter(Boolean).length : 0,
+    weapons: typeof selectedWeapons !== "undefined" ? [...selectedWeapons] : [],
+    stats: typeof runStats !== "undefined" && typeof normalizeRunStats === "function" ? normalizeRunStats(runStats) : null,
   };
   if (!Array.isArray(metaProgress.runs)) metaProgress.runs = [];
   const previousIndex = metaProgress.runs.findIndex((run) => run.id === recordedRunId);

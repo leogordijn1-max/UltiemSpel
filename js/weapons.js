@@ -26,6 +26,7 @@ function castChainLightning() {
   weaponTimers.chain = chainLightningCooldown(upgrades.chain);
   const firstTarget = nearestEnemy(player.x, player.y, 600, null, (enemy) => typeof visibleEnemy !== "function" || visibleEnemy(enemy, -24));
   if (!firstTarget) return;
+  if (typeof playSfx === "function") playSfx("lightning");
   const evolved = evolutions.tempest;
   const chainDamage = (22 + upgrades.chain * 9) * globalDamageMultiplier();
   const hitByVolley = new Set();
@@ -40,7 +41,7 @@ function castChainLightning() {
       visited.add(target);
       hitByVolley.add(target);
       lightningSegments.push({ x1: source.x, y1: source.y, x2: target.x, y2: target.y, life: 0.24, evolved });
-      damage(target, chainDamage, source);
+      damage(target, chainDamage, source, "lightning");
       source = target;
       target = nearestEnemy(
         source.x,
@@ -57,6 +58,7 @@ function throwBoomerangs() {
   const target = nearestEnemy(player.x, player.y, 1100);
   weaponTimers.boomerang = Math.max(2.5, 6 - upgrades.boomerang * 0.5);
   if (!target) return;
+  if (typeof playSfx === "function") playSfx("boomerang");
 
   const evolved = evolutions.returningStorm;
   const count = 1 + (upgrades.boomerang >= 4 ? 1 : 0) + (evolved ? 1 : 0);
@@ -91,6 +93,7 @@ function throwBoomerangs() {
 }
 
 function castFlameBurst() {
+  if (typeof playSfx === "function") playSfx("flame");
   const evolved = evolutions.inferno;
   const spread = evolved ? 1.9 : 1.35;
   const radius = (165 + upgrades.flame * 28) * (evolved ? 1.2 : 1);
@@ -128,6 +131,7 @@ function fireFrostOrb() {
   weaponTimers.frost = Math.max(1.5, 4.2 - upgrades.frost * 0.45);
   const count = 1 + Math.floor((upgrades.frost - 1) / 2);
   const targets = nearestEnemies(player.x, player.y, 1300, count);
+  if (targets.length) if (typeof playSfx === "function") playSfx("frost");
   const damagePerHit = (28 + upgrades.frost * 12) * globalDamageMultiplier();
   for (const target of targets) {
     if (bullets.length >= 300) break;

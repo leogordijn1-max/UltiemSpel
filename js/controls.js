@@ -66,12 +66,14 @@ function bindMainMenu() {
     menuRunMode = "endless";
     showCharacterSelection();
   };
-  $("settingsButton").onclick = showSettings;
+  $("settingsButton").onclick = () => showSettings(false);
   $("metaShop").textContent = `PERMANENT UPGRADES · ${metaProgress.points} PTS`;
   $("metaShop").onclick = () => showMetaShop("Stats");
   $("recordsButton").onclick = showRecords;
   $("achievementsButton").onclick = showAchievements;
   $("encyclopediaButton").onclick = () => showEncyclopedia();
+  $("collectionButton").onclick = () => showCollection();
+  $("controlsButton").onclick = () => showControlsHelp(false);
 }
 
 function showCharacterSelection() {
@@ -181,7 +183,7 @@ function showWeaponSelection() {
   });
 }
 
-function showSettings() {
+function showSettings(fromPause = false) {
   panel("SETTINGS", "Audio, graphics quality, and performance options", (parent) => {
     parent.innerHTML = `<fieldset id="audioSettings"><legend>Sound settings</legend><label>Effects <input id="effectVolume" type="range" min="0" max="0.6" step="0.01"></label><label>Ambient music <input id="musicVolume" type="range" min="0" max="0.5" step="0.01"></label><label><input id="muteAudio" type="checkbox"> Mute all sound</label><label><input id="showFps" type="checkbox"> Show FPS, frametime and object timings</label><label>Graphics quality <select id="graphicsQuality"><option value="low">Low · reduced glow and particles</option><option value="medium">Medium</option><option value="high">High</option></select></label></fieldset>`;
     configureAudio();
@@ -195,7 +197,8 @@ function showSettings() {
       graphicsQuality = $("graphicsQuality").value;
       storageSet("shadowGraphics", graphicsQuality);
     };
-    backButton(parent);
+    if (fromPause) appendMenuButton(parent, "BACK TO PAUSE", showPauseMenu);
+    else backButton(parent);
   });
 }
 
@@ -323,6 +326,15 @@ function showRecords() {
         text.textContent = "No runs recorded yet.";
         top.append(text);
       }
+      for (const run of metaProgress.runs.slice(0, 5)) {
+        const details = document.createElement("details");
+        details.className = "record-details";
+        const summary = document.createElement("summary");
+        summary.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${formatGameTime(run.survived)} · ${getCharacter(run.character).name}`;
+        details.append(summary);
+        appendRunStatistics(details, run, { compact: true });
+        top.append(details);
+      }
       parent.append(top);
       backButton(parent);
     });
@@ -344,36 +356,103 @@ function showAchievements() {
   });
 }
 
+// A shared field guide keeps essential information readable, even before collection
+// unlocks. Collection mode masks undiscovered entries and exposes unlock hints.
+function fieldGuideEntries(category) {
+  if (category === "Weapons") return weaponCatalog.map((weapon) => ({
+    group: "weapons", id: weapon.key, name: weapon.name, image: weapon.image,
+    text: `${weapon.description} Damage: ${weapon.damage}. Cooldown: ${weapon.cooldown}. Evolution: ${weapon.evolution}.`,
+    hint: "Equip this weapon during a run.",
+  }));
+  if (category === "Evolutions") return evolutionRecipes.map((recipe) => ({
+    group: "evolutions", id: recipe.id, name: recipe.name,
+    image: weaponCatalog.find((weapon) => weapon.key === recipe.weapon)?.image || "",
+    text: `${weaponCatalog.find((weapon) => weapon.key === recipe.weapon)?.name || recipe.weapon} · ${recipe.visual} Requirement: weapon level ${recipe.level}, ${recipe.supportName} level ${recipe.supportLevel}, boss defeated and evolution time milestone.`,
+    hint: "Fulfill a weapon's evolution requirements during a run.",
+  }));
+  if (category === "Upgrades") return opts.filter(([key]) => !isWeaponKey(key)).map(([key, name, description]) => ({
+    group: null, id: key, name, image: upgradeImage(key),
+    text: `${description} Maximum level: ${maxUpgradeLevel(key)}. Category: ${upgradeCategory(key)}.`,
+    hint: "Available as a passive upgrade.",
+  }));
+  if (category === "Enemies") return enemyCatalog.map((enemy, i) => ({
+    group: "enemies",
+    id: ["drifter", "runner", "zombieMike", "shade", "burstling", "bulwark"][i],
+    name: enemy.name, image: enemy.image,
+    text: `HP: ${enemy.hp}. Damage: ${enemy.damage}. Speed: ${enemy.speed}. ${enemy.ability} XP: ${enemy.xp}.`,
+    hint: "Encounter this enemy in the arena.",
+  }));
+  if (category === "Bosses") return bossCatalog.map((boss, i) => ({
+    group: "bosses", id: ["beau", "mourning", "bell", "final"][i],
+    name: boss.name, image: boss.image,
+    text: `${boss.attacks} ${boss.phase} Reward: unique trophy on first defeat.`,
+    hint: i === 3 ? "Reach the end of Standard Mode." : "Encounter this boss during a run.",
+  }));
+  return characterCatalog.map((character) => ({
+    group: "characters", id: character.id, name: character.name, image: character.image,
+    text: `${character.ability}. ${character.description} Unlock: ${character.unlock}. ${isCharacterUnlocked(metaProgress, character.id) ? "UNLOCKED" : "LOCKED"}.`,
+    hint: character.unlock,
+  }));
+}
+
 function showEncyclopedia(category = "Weapons") {
-  panel("ENCYCLOPEDIA", "Field guide · values use current game definitions", (parent) => {
+  showFieldGuide(category, false);
+}
+function showCollection(category = "Weapons") {
+  showFieldGuide(category, true);
+}
+function showFieldGuide(category = "Weapons", collectionMode = false) {
+  const title = collectionMode ? "THE COLLECTION" : "ENCYCLOPEDIA";
+  panel(title, collectionMode
+    ? "Discover creatures, bosses, evolutions and playable characters. Undiscovered entries reveal hints."
+    : "Field guide · Current mechanics and evolution conditions", (parent) => {
     const tabs = document.createElement("div");
     tabs.className = "encyclopedia-tabs";
-    for (const name of ["Weapons", "Upgrades", "Enemies", "Bosses", "Characters"]) {
+    for (const name of ["Weapons", "Evolutions", "Upgrades", "Enemies", "Bosses", "Characters"]) {
       const button = document.createElement("button");
       button.textContent = name;
       button.classList.toggle("selected", name === category);
-      button.onclick = () => showEncyclopedia(name);
+      button.onclick = () => showFieldGuide(name, collectionMode);
       tabs.append(button);
     }
     parent.append(tabs);
-    const entries = category === "Weapons"
-      ? weaponCatalog.map((w) => ({ name: w.name, image: w.image, text: `${w.description} Damage: ${w.damage}. Cooldown: ${w.cooldown}. Evolution: ${w.evolution}.` }))
-      : category === "Upgrades"
-        ? opts.map(([key, name, description]) => ({ name, image: upgradeImage(key), text: `${description} Max level ${maxUpgradeLevel(key)} · ${upgradeCategory(key)}.` }))
-        : category === "Enemies"
-          ? enemyCatalog.map((e) => ({ name: e.name, image: e.image, text: `HP ${e.hp} · damage ${e.damage} · speed ${e.speed}. ${e.ability} XP ${e.xp}.` }))
-          : category === "Bosses"
-            ? bossCatalog.map((b) => ({ name: b.name, image: b.image, text: `${b.attacks} ${b.phase} Reward: rare build upgrade and unique trophy on first kill.` }))
-            : characterCatalog.map((ch) => ({
-              name: ch.name, image: ch.image,
-              text: `${ch.ability}. ${ch.description} Unlock: ${ch.unlock}. ${isCharacterUnlocked(metaProgress, ch.id) ? "UNLOCKED" : "LOCKED"}.`,
-            }));
+    const entries = fieldGuideEntries(category);
+    const unlocked = (entry) => !entry.group ||
+      isDiscovered(metaProgress, entry.group, entry.id) ||
+      (entry.group === "characters" && isCharacterUnlocked(metaProgress, entry.id)) ||
+      (entry.group === "weapons" && (selectedWeapons || []).includes(entry.id));
+    if (collectionMode) {
+      const discovered = entries.filter(unlocked).length;
+      const progress = document.createElement("p");
+      progress.className = "collection-progress";
+      progress.textContent = `${discovered} / ${entries.length} discovered · ${category}`;
+      parent.append(progress);
+    }
     const list = document.createElement("div");
     list.className = "encyclopedia-list";
     for (const entry of entries) {
+      const seen = !collectionMode || unlocked(entry);
       const card = document.createElement("article");
-      card.className = "encyclopedia-card";
-      card.innerHTML = `${entry.image ? `<img src="${entry.image}" alt="">` : "<span class='weapon-icon'>✦</span>"}<div><b>${entry.name}</b><small>${entry.text}</small></div>`;
+      card.className = `encyclopedia-card ${seen ? "collection-seen" : "collection-unseen"}`;
+      if (seen && entry.image) {
+        const picture = document.createElement("img");
+        picture.src = entry.image;
+        picture.alt = "";
+        picture.loading = "lazy";
+        card.append(picture);
+      } else {
+        const icon = document.createElement("span");
+        icon.className = "weapon-icon";
+        icon.textContent = seen ? "✦" : "?";
+        card.append(icon);
+      }
+      const copy = document.createElement("div");
+      const heading = document.createElement("b");
+      heading.textContent = seen ? entry.name : "??? · UNKNOWN";
+      const description = document.createElement("small");
+      description.textContent = seen ? entry.text : entry.hint;
+      copy.append(heading, description);
+      card.append(copy);
       list.append(card);
     }
     parent.append(list);
@@ -381,41 +460,222 @@ function showEncyclopedia(category = "Weapons") {
   });
 }
 
+function appendRunStatistics(parent, run, { compact = false } = {}) {
+  const hasRecordedStats = run.stats && typeof run.stats === "object";
+  const summary = runSummaryRows(run, weaponCatalog);
+  const section = document.createElement("section");
+  section.className = "run-summary";
+  const heading = document.createElement("h2");
+  heading.textContent = compact ? "DETAILED RUN STATS" : "YOUR RUN IN NUMBERS";
+  section.append(heading);
+  if (!hasRecordedStats) {
+    const message = document.createElement("p");
+    message.textContent = "Detailed damage stats were not recorded for this earlier run.";
+    section.append(message);
+    parent.append(section);
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "run-summary-grid";
+  for (const [label, value] of summary.info) {
+    const cell = document.createElement("div");
+    const name = document.createElement("small");
+    name.textContent = label;
+    const number = document.createElement("strong");
+    number.textContent = value;
+    cell.append(name, number);
+    grid.append(cell);
+  }
+  section.append(grid);
+  const subtitle = document.createElement("h3");
+  subtitle.textContent = "DAMAGE BY WEAPON";
+  section.append(subtitle);
+  const list = document.createElement("div");
+  list.className = "run-damage-list";
+  if (summary.damage.length) {
+    for (const entry of summary.damage) {
+      const line = document.createElement("div");
+      const name = document.createElement("span");
+      name.textContent = entry.name;
+      const value = document.createElement("strong");
+      value.textContent = numberForDisplay(entry.damage);
+      line.append(name, value);
+      list.append(line);
+    }
+  } else {
+    const note = document.createElement("p");
+    note.textContent = "No outgoing weapon damage recorded.";
+    list.append(note);
+  }
+  section.append(list);
+  parent.append(section);
+}
+
+// Called by the existing Victory/Game Over handlers, never during gameplay.
+function renderRunSummaryPanel() {
+  const panelNode = $("panel");
+  const choicesNode = $("choices");
+  if (!panelNode || !choicesNode || typeof runStats === "undefined") return;
+  const holder = document.createElement("div");
+  appendRunStatistics(holder, {
+    survived: time, level, kills, bosses: bossesDefeated,
+    evolutionCount: Object.values(evolutions).filter(Boolean).length,
+    stats: runStats,
+  });
+  panelNode.insertBefore(holder, choicesNode);
+}
+
 bindMainMenu();
 checkSavedAchievements();
 
+// Buttons and panels created here do not reset fullscreen.
+function appendMenuButton(parent, label, action, className = "") {
+  const button = document.createElement("button");
+  button.textContent = label;
+  if (className) button.className = className;
+  button.onclick = action;
+  parent.append(button);
+  return button;
+}
+
+function resumePausedRun() {
+  if (!active || gameState !== "paused") return false;
+  paused = false;
+  choiceScreenOpen = false;
+  gameState = "playing";
+  $("overlay").style.display = "none";
+  clearMovementKeys();
+  return true;
+}
+
+function showPauseMenu() {
+  if (!active || !["playing", "paused"].includes(gameState)) return false;
+  paused = true;
+  gameState = "paused";
+  clearMovementKeys();
+  panel("PAUSED", "Your run is safe while the game is paused.", (parent) => {
+    appendMenuButton(parent, "RESUME · P", resumePausedRun);
+    appendMenuButton(parent, "CURRENT BUILD", showCurrentBuild);
+    appendMenuButton(parent, "CONTROLS", () => showControlsHelp(true));
+    appendMenuButton(parent, "SETTINGS", () => showSettings(true));
+    appendMenuButton(parent, "RESTART RUN", () => {
+      if (!window.confirm("Restart this run? Unsaved run rewards will be lost.")) return;
+      reset();
+    }, "danger-action");
+    appendMenuButton(parent, "MAIN MENU", () => {
+      if (!window.confirm("Leave your current run? This run will end without completion rewards.")) return;
+      showMainMenu();
+    }, "danger-action");
+  });
+  return true;
+}
+
+function showCurrentBuild() {
+  if (!active || gameState !== "paused") return;
+  panel("CURRENT BUILD", `${getCharacter(selectedCharacter).name} · Level ${level} · ${formatGameTime(time)}`, (parent) => {
+    const section = document.createElement("div");
+    section.className = "build-details";
+    const weapons = selectedWeapons.map((key) => {
+      const weapon = weaponCatalog.find((w) => w.key === key);
+      const evolved = evolutionRecipes.find((r) => r.weapon === key && evolutions[r.id]);
+      const status = unlockedWeapons.includes(key)
+        ? `Level ${currentUpgradeLevel(key)} / 5${evolved ? " · " + evolved.name + " EVOLVED" : ""}`
+        : "LOCKED · unlock in a level-up";
+      return [weapon?.name || key, status];
+    });
+    const passives = opts.filter(([key]) => !isWeaponKey(key) && currentUpgradeLevel(key) > 0)
+      .map(([key, name]) => [name, `Level ${currentUpgradeLevel(key)}/${maxUpgradeLevel(key)} · ${upgradeEffectAtLevel(key, currentUpgradeLevel(key))}`]);
+    for (const [heading, entries] of [["WEAPONS", weapons], ["PASSIVES", passives]]) {
+      const subtitle = document.createElement("h2");
+      subtitle.textContent = heading;
+      section.append(subtitle);
+      for (const [name, description] of entries) {
+        const row = document.createElement("p");
+        row.textContent = `${name} · ${description}`;
+        section.append(row);
+      }
+      if (!entries.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "None unlocked yet.";
+        section.append(empty);
+      }
+    }
+    parent.append(section);
+    appendMenuButton(parent, "BACK TO PAUSE", showPauseMenu);
+  });
+}
+
+function showControlsHelp(fromPause = false) {
+  panel("CONTROLS", "Desktop-first keyboard controls", (parent) => {
+    const list = document.createElement("div");
+    list.className = "build-details";
+    for (const [label, description] of [
+      ["WASD / Arrow keys", "Move through the arena."],
+      ["Shift", "Dash in the current movement direction."],
+      ["P / Escape", "Pause or resume during normal gameplay."],
+      ["1 / 2 / 3", "Choose simulation speed during gameplay."],
+      ["F", "Toggle fullscreen without leaving your current screen."],
+      ["Level-up", "Choose from three upgrades when a choice appears."],
+    ]) {
+      const line = document.createElement("p");
+      const strong = document.createElement("strong");
+      strong.textContent = label + " — ";
+      line.append(strong, document.createTextNode(description));
+      list.append(line);
+    }
+    parent.append(list);
+    appendMenuButton(parent, fromPause ? "BACK TO PAUSE" : "BACK TO MAIN MENU",
+      fromPause ? showPauseMenu : showMainMenu);
+  });
+}
+
 $("pause").onclick = () => {
   if (!active || !["playing", "paused"].includes(gameState)) return;
-  paused = !paused;
-  if (paused) {
-    gameState = "paused";
-    panel("PAUSED", "The night waits for no one.", (parent) => {
-    const resume = document.createElement("button");
-    resume.textContent = "RESUME";
-    resume.onclick = () => { paused = false; gameState = "playing"; $("overlay").style.display = "none"; };
-    parent.append(resume);
-    });
-  } else { gameState = "playing"; $("overlay").style.display = "none"; }
+  if (gameState === "paused") resumePausedRun();
+  else showPauseMenu();
 };
 
 addEventListener("keydown", (event) => {
-  keys[event.key.toLowerCase()] = true;
-  keys[event.key] = true;
+  const editable = ["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) ||
+    event.target?.isContentEditable;
+  if (editable) return;
+  const key = event.key.toLowerCase();
   if (event.key === "Escape") {
-    if (!active) showMainMenu();
     event.preventDefault();
+    if (active && gameState === "playing") showPauseMenu();
+    else if (active && gameState === "paused") resumePausedRun();
+    else if (!active && gameState !== "main-menu") showMainMenu();
+    return;
   }
-  if (event.key.toLowerCase() === "f") {
+  if (key === "f" && !event.repeat) {
     event.preventDefault();
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     else document.documentElement.requestFullscreen?.().catch(() => {});
+    return;
   }
-  if (event.key === "Shift") { event.preventDefault(); startDash(); }
-  if (active && ["1", "2", "3"].includes(event.key)) { gameSpeed = Number(event.key); updateSpeedButtons(); }
+  if (key === "p" && !event.repeat && active) {
+    event.preventDefault();
+    if (gameState === "playing") showPauseMenu();
+    else if (gameState === "paused") resumePausedRun();
+    return;
+  }
+  if (!active || paused || gameState !== "playing") return;
+  keys[key] = true;
+  keys[event.key] = true;
+  if (event.key === "Shift") {
+    event.preventDefault();
+    if (!event.repeat) startDash();
+  }
+  if (["1", "2", "3"].includes(event.key)) {
+    gameSpeed = Number(event.key);
+    updateSpeedButtons();
+  }
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
-  if (event.key.toLowerCase() === "p" && active && (!paused || $("panel").querySelector("h1")?.textContent === "PAUSED")) $("pause").click();
 });
-addEventListener("keyup", (event) => { keys[event.key.toLowerCase()] = false; keys[event.key] = false; });
+addEventListener("keyup", (event) => {
+  keys[event.key.toLowerCase()] = false;
+  keys[event.key] = false;
+});
 
 function clearMovementKeys() {
   for (const key in keys) keys[key] = false;

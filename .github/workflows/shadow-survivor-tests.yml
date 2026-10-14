@@ -8,6 +8,7 @@ on:
       - feature/update-5-enemies-waves-bosses
       - feature/update-6-final-boss-endless
       - feature/update-7-characters-progression
+      - feature/update-8-ui-polish-statistics
   pull_request:
     branches:
       - main
