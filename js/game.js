@@ -646,6 +646,7 @@ function update(dt) {
         e.shootCooldown = Math.max(1.4, e.shootCooldown);
         e.chargeWarning = 0;
         e.chargeCooldown = Math.max(2, e.chargeCooldown);
+        $("bossName").textContent = `${e.bossName} · PHASE II`;
         notify(`PHASE TWO · ${e.bossName}`, "boss", 4);
         puff(e.x, e.y, "#e09aff", 23);
       }
@@ -662,14 +663,14 @@ function update(dt) {
         if (e.chargeCooldown <= 0 && !e.chargeWarning && e.phaseIntro <= 0 && visibleEnemy(e, -12)) {
           e.chargeX = Math.cos(a);
           e.chargeY = Math.sin(a);
-          e.chargeSpeed = e.phaseTwo ? 430 : 350;
-          e.chargeWarning = 0.8;
+          e.chargeSpeed = (e.variant === 0 ? 360 : e.variant === 1 ? 310 : 395) * (e.phaseTwo ? 1.18 : 1);
+          e.chargeWarning = e.variant === 2 ? 1.05 : 0.9;
         }
         if (e.chargeWarning > 0) {
           e.chargeWarning = Math.max(0, e.chargeWarning - dt);
           if (!e.chargeWarning) {
-            e.chargeActive = 0.42;
-            e.chargeCooldown = e.phaseTwo ? 5.5 : 8;
+            e.chargeActive = e.variant === 1 ? 0.54 : 0.42;
+            e.chargeCooldown = (e.variant === 1 ? 8.7 : e.variant === 2 ? 7.8 : 8) * (e.phaseTwo ? 0.77 : 1);
           }
         }
         e.x += Math.cos(moveAngle) * moveSpeed * dt;
@@ -733,17 +734,20 @@ function update(dt) {
       if (e.phaseTwo) {
         e.minionCooldown = (e.minionCooldown ?? 8) - dt;
         if (e.minionCooldown <= 0 && enemies.length < 58) {
-          e.minionCooldown = 10;
+          e.minionCooldown = e.variant === 1 ? 11 : 10;
+          const kind = e.variant === 1 ? 1 : e.variant === 2 ? 4 : 0;
           for (let i = 0; i < 3; i++) {
             const angle = (Math.PI * 2 * i) / 3 + time;
             enemies.push({
               x: e.x + Math.cos(angle) * 115,
               y: e.y + Math.sin(angle) * 115,
-              r: 11,
-              hp: (20 + growthTime * 0.08) * (difficultyProfiles[difficulty]?.enemyHealth || 1),
-              speed: 66 + growthTime * 0.05,
-              damage: 8 + growthTime * 0.004,
-              kind: 0,
+              r: kind === 4 ? 15 : 11,
+              hp: (20 + growthTime * 0.08) * (difficultyProfiles[difficulty]?.enemyHealth || 1) * (kind === 1 ? 0.65 : 1),
+              speed: (kind === 1 ? 115 : kind === 4 ? 40 : 66) + growthTime * 0.05,
+              damage: (kind === 4 ? 6 : 8) + growthTime * 0.004,
+              kind,
+              shootCooldown: kind === 4 ? 3.2 : undefined,
+              shotWarning: 0,
               hit: 0,
               noXp: true,
               summoned: true,
