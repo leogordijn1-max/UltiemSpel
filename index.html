@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Shadow Survivor</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=shadow-survivor-update-4" />
   </head>
   <body>
     <canvas id="game"></canvas>
@@ -17,8 +17,20 @@
           <div class="bar"><div id="xp" class="fill"></div></div>
         </div>
         <div id="stats"></div>
+        <div id="loadout" aria-label="Current weapons"></div>
+        <div id="waveHud" aria-live="polite">
+          <span id="waveText">WAVE 1 · NEXT IN 1:10</span>
+          <div class="bar"><div id="waveFill" class="fill"></div></div>
+        </div>
       </div>
+      <div id="dashStatus">DASH READY · SHIFT</div>
+      <div id="notifications" aria-live="polite"></div>
+      <div id="fpsCounter" aria-live="off"></div>
       <button id="pause" style="display: none">Ⅱ Pause</button>
+      <div id="touchControls" aria-label="Touch controls">
+        <div id="virtualStick" aria-label="Move joystick"><span></span></div>
+        <button id="dashButton" aria-label="Dash">DASH</button>
+      </div>
       <div id="speedControls">
         <button data-speed="1" class="selected">1×</button
         ><button data-speed="2">2×</button><button data-speed="3">3×</button>
@@ -28,7 +40,7 @@
         <div id="countTrack"><div id="countFill"></div></div>
       </div>
       <div id="bossHud">
-        BEAU DE HOND
+        <span id="bossName">BEAU DE HOND</span>
         <div id="bossTrack"><div id="bossFill"></div></div>
       </div>
       <div id="hint">
@@ -45,12 +57,31 @@
           <p>
             Move with WASD or arrow keys. Your weapons attack automatically.
           </p>
-          <button id="start">ENTER THE NIGHT</button>
+          <label id="difficultyPicker" for="difficulty">
+            Difficulty
+            <select id="difficulty" name="difficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="nightmare">Nightmare</option>
+            </select>
+          </label>
+          <div id="menuActions">
+            <button id="settingsButton">SETTINGS</button>
+            <button id="metaShop">PERMANENT UPGRADES</button>
+            <button id="recordsButton">RECORDS</button>
+            <button id="achievementsButton">ACHIEVEMENTS</button>
+            <button id="encyclopediaButton">ENCYCLOPEDIA</button>
+          </div>
+          <button id="start">CHOOSE YOUR WEAPONS</button>
         </div>
       </div>
     </div>
-    <script src="enemies.js"></script>
-    <script src="upgrades.js"></script>
-    <script src="game.js?v=grave-bomb-sprite-fuse"></script>
+    <script src="js/enemies.js?v=shadow-survivor-update-4"></script>
+    <script src="js/audio.js?v=shadow-survivor-update-4"></script>
+    <script src="js/weapons.js?v=shadow-survivor-update-4"></script>
+    <script src="js/upgrades.js?v=shadow-survivor-update-4"></script>
+    <script src="js/render.js?v=shadow-survivor-update-4"></script>
+    <script src="js/game.js?v=shadow-survivor-update-4"></script>
+    <script src="js/controls.js?v=shadow-survivor-update-4"></script>
   </body>
 </html>
