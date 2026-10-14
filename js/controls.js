@@ -68,7 +68,7 @@ function bindMainMenu() {
   };
   $("settingsButton").onclick = showSettings;
   $("metaShop").textContent = `PERMANENT UPGRADES · ${metaProgress.points} PTS`;
-  $("metaShop").onclick = showMetaShop;
+  $("metaShop").onclick = () => showMetaShop("Stats");
   $("recordsButton").onclick = showRecords;
   $("achievementsButton").onclick = showAchievements;
   $("encyclopediaButton").onclick = () => showEncyclopedia();
