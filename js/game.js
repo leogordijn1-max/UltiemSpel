@@ -55,6 +55,9 @@ let player,
   shake = 0,
   novaTimer = 0,
   novaFlash = 0,
+  novaEchoFlash = 0,
+  pulseEchoes = [],
+  bombAftershocks = [],
   damageFlash = 0,
   last = 0,
   highest = storageNumber("shadowHigh", 0, 0);
@@ -180,6 +183,9 @@ function reset() {
   shake = 0;
   novaTimer = 0;
   novaFlash = 0;
+  novaEchoFlash = 0;
+  pulseEchoes = [];
+  bombAftershocks = [];
   damageFlash = 0;
   dashTimer = 0;
   dashCooldown = 0;
@@ -405,6 +411,24 @@ function end() {
   $("bossCountdown").style.display = "none";
 }
 
+// A levelled Death Pulse; Eclipse repeats at reduced power and applies a brief slow.
+function emitDeathPulse(isEcho = false) {
+  if (!upgrades.nova) return;
+  const radius = novaRadius();
+  const amount = (25 + upgrades.nova * 9) * globalDamageMultiplier() * (isEcho ? 0.62 : 1);
+  if (isEcho) novaEchoFlash = 0.3;
+  else novaFlash = 0.2;
+  for (const target of nearbyEnemies(player.x, player.y, radius + 100)) {
+    const dx = target.x - player.x, dy = target.y - player.y;
+    const hitRadius = radius + enemyHitRadius(target);
+    if (dx * dx + dy * dy >= hitRadius * hitRadius) continue;
+    damage(target, amount, player, "pulse");
+    if (evolutions.eclipse && !target.dead) {
+      target.pulseSlowUntil = Math.max(target.pulseSlowUntil || 0, time + 0.9);
+    }
+  }
+}
+
 // Advance the simulation by one frame.
 function update(dt) {
   time += dt;
@@ -441,18 +465,20 @@ function update(dt) {
   player.inv = Math.max(0, player.inv - dt);
   damageFlash = Math.max(0, damageFlash - dt);
   novaFlash = Math.max(0, novaFlash - dt);
-  novaTimer += dt / weaponCooldownMultiplier();
-  if (upgrades.nova && novaTimer >= 2.5) {
-    novaTimer %= 2.5;
-    novaFlash = 0.18;
-    const pulseRadius = novaRadius();
-    for (const target of nearbyEnemies(player.x, player.y, pulseRadius + 100)) {
-      const dx = target.x - player.x, dy = target.y - player.y;
-      const hitRadius = pulseRadius + enemyHitRadius(target);
-      if (dx * dx + dy * dy < hitRadius * hitRadius) {
-        damage(target, 33 * upgrades.nova * globalDamageMultiplier(), player, "pulse");
-      }
+  novaEchoFlash = Math.max(0, novaEchoFlash - dt);
+  for (let i = pulseEchoes.length - 1; i >= 0; i--) {
+    pulseEchoes[i] -= dt;
+    if (pulseEchoes[i] <= 0) {
+      pulseEchoes.splice(i, 1);
+      emitDeathPulse(true);
     }
+  }
+  novaTimer += dt / weaponCooldownMultiplier();
+  const pulseCooldown = Math.max(1.95, 2.9 - upgrades.nova * 0.19);
+  if (upgrades.nova && novaTimer >= pulseCooldown) {
+    novaTimer %= pulseCooldown;
+    emitDeathPulse(false);
+    if (evolutions.eclipse) pulseEchoes.push(0.38);
   }
   let dx =
       (keys.d || keys.ArrowRight ? 1 : 0) - (keys.a || keys.ArrowLeft ? 1 : 0) + touchMoveX,
@@ -517,7 +543,8 @@ function update(dt) {
       e.speed *
       (e.impactSlowUntil > time ? Math.max(0.58, 0.82 - (upgrades.knockback - 3) * 0.06) : 1) *
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
-      (e.frostUntil > time ? 0.48 : 1);
+      (e.frostUntil > time ? 0.48 : 1) *
+      (e.pulseSlowUntil > time ? 0.77 : 1);
     if (e.burnUntil > time && e.nextBurnTick <= time) {
       e.nextBurnTick = time + 0.5;
       damage(e, e.burnDps * 0.5);
@@ -633,7 +660,7 @@ function update(dt) {
       for (let index = 0; index < upgrades.orbit; index++) {
         const bladeDx = e.x - bladePositions[index * 2], bladeDy = e.y - bladePositions[index * 2 + 1];
         if (bladeDx * bladeDx + bladeDy * bladeDy < bladeRadius * bladeRadius && (!e.bladeHit || time - e.bladeHit > 0.35)) {
-          damage(e, 38 * globalDamageMultiplier());
+          damage(e, (35 + upgrades.orbit * 3) * globalDamageMultiplier(), player, "blade");
           e.bladeHit = time;
         }
       }
@@ -664,7 +691,10 @@ function update(dt) {
     }
     if (b.type === "boomerang") {
       b.age += dt;
-      if (b.age >= 0.8 || b.target?.dead) b.returning = true;
+      if (!b.returning && (b.age >= 0.8 || b.target?.dead)) {
+        b.returning = true;
+        b.hit.clear();
+      }
       const aim = b.returning ? player : b.target || player;
       const desired = Math.atan2(aim.y - b.y, aim.x - b.x);
       const current = Math.atan2(b.vy, b.vx);
@@ -744,6 +774,7 @@ function update(dt) {
         damage(target, bomb.damage * (target === boss ? 0.42 : 1), bomb, "bomb");
       }
     }
+    if (bomb.evolved) bombAftershocks.push({ x: bomb.x, y: bomb.y, delay: 0.42, radius: bomb.radius * 0.72, damage: bomb.damage * 0.3 });
     puff(bomb.x, bomb.y, "#e6a96a", 26);
     playSfx("bomb");
     explosions.push({
@@ -756,6 +787,21 @@ function update(dt) {
     });
   }
   bombs = waitingBombs;
+  for (let i = bombAftershocks.length - 1; i >= 0; i--) {
+    const aftershock = bombAftershocks[i];
+    aftershock.delay -= dt;
+    if (aftershock.delay > 0) continue;
+    bombAftershocks.splice(i, 1);
+    for (const target of nearbyEnemies(aftershock.x, aftershock.y, aftershock.radius + 280)) {
+      const dx = target.x - aftershock.x, dy = target.y - aftershock.y;
+      const hitRadius = aftershock.radius + enemyHitRadius(target);
+      if (dx * dx + dy * dy < hitRadius * hitRadius) {
+        damage(target, aftershock.damage * (target === boss ? 0.42 : 1), aftershock, "bomb");
+      }
+    }
+    explosions.push({ x: aftershock.x, y: aftershock.y, radius: aftershock.radius, life: 0.45, maxLife: 0.45, evolved: true, aftershock: true });
+    puff(aftershock.x, aftershock.y, "#c18bff", 12);
+  }
   for (const explosion of explosions) explosion.life -= dt;
   explosions = explosions.filter((explosion) => explosion.life > 0);
   for (const shot of enemyShots) {
