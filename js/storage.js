@@ -96,7 +96,9 @@ function loadMetaProgress() {
       character: ["survivor", "zombieMike", "beau", "mayoMaster"].includes(run.character) ? run.character : "survivor",
       victory: run.victory === true,
       evolutionCount: Math.min(3, nonNegativeInteger(run.evolutionCount)),
-      stats: typeof normalizeRunStats === "function" ? normalizeRunStats(run.stats) : (run.stats || null),
+      stats: run.stats && typeof run.stats === "object"
+        ? (typeof normalizeRunStats === "function" ? normalizeRunStats(run.stats) : run.stats)
+        : null,
       weapons: Array.isArray(run.weapons) ? run.weapons.filter((key) => ["arcane","orbit","bomb","chain","boomerang","flame","frost","nova"].includes(key)).slice(0, 3) : [],
       id: typeof run.id === "string" ? run.id.slice(0, 80) : "",
     })).sort((a, b) => b.survived - a.survived).slice(0, 30)
