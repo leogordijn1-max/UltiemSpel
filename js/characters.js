@@ -118,7 +118,12 @@ function purchaseShopEntry(progress, item) {
   const status = shopEntryStatus(progress, item);
   if (status.state !== "available") return false;
   if (!Number.isFinite(status.cost) || progress.points < status.cost) return false;
-  if (item.kind === "stat") progress[item.id] = (status.level || 0) + 1;
+  if (item.kind === "stat") {
+    progress[item.id] = (status.level || 0) + 1;
+    if (!progress.statPurchaseCosts) progress.statPurchaseCosts = {};
+    if (!Array.isArray(progress.statPurchaseCosts[item.id])) progress.statPurchaseCosts[item.id] = [];
+    progress.statPurchaseCosts[item.id].push(status.cost);
+  }
   else {
     const key = item.kind === "character" ? "ownedCharacters"
       : item.kind === "mastery" ? "weaponMasteries" : "cosmetics";
