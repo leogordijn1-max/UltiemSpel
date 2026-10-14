@@ -236,7 +236,7 @@ function evolveWeapon(recipe, { rare = false, consumeLevel = true } = {}) {
   if (!eligibleEvolutions().some((entry) => entry.id === recipe.id)) return false;
   evolutions[recipe.id] = true;
   if (typeof trackDiscovery === "function") trackDiscovery("evolutions", recipe.id);
-  playSfx("evolution");
+  if (typeof playSfx === "function") playSfx("evolution");
   evolutionFlash = { name: recipe.name, started: time, until: time + 2.4 };
   notify(`WEAPON EVOLVED · ${recipe.name}`, "evolution", 5);
   unlockAchievement("evolution", "First Evolution");
