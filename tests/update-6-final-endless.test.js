@@ -156,3 +156,49 @@ test("the final boss death opens Victory instead of a standard boss trophy", () 
   assert.equal(vm.runInContext("bossesDefeated", context), 7);
   assert.equal(vm.runInContext("metaProgress.totals.bosses", context), 7);
 });
+
+test("Victory UI can be claimed once, then Continue preserves the same build", () => {
+  const buttons = [];
+  const elements = new Map();
+  const context = vm.createContext({
+    document: { createElement: () => ({}) },
+    notify: () => {},
+  });
+  const source = fs.readFileSync(path.join(root, "js/game.js"), "utf8");
+  const start = source.indexOf("function showVictory() {");
+  const finish = source.indexOf("function end() {", start);
+  assert.ok(start >= 0 && finish > start, "Victory functions exist");
+  vm.runInContext(
+    `let player={hp:111,maxHp:140,inv:0},time=1512,kills=250,level=27,bossesDefeated=8;
+     let active=true,paused=false,choiceScreenOpen=false,gameState='playing';
+     let runMode='standard',menuRunMode='standard',endlessStartTime=0,nextBossTime=Infinity,finalBossDefeated=false,victoryClaimed=false;
+     let bossShots=[{life:4}],bossHazards=[{warning:1}],boss=null,pendingLevelUps=0,upgrades={arcane:5,nova:5},evolutions={splitDimension:true};
+     let recentAchievements=[],FINAL_VICTORY_BONUS=12;
+     let weaponCatalog=[{key:'arcane',name:'Arcane Bolt'},{key:'nova',name:'Death Pulse'}];
+     let weaponIsEvolved=(key)=>key==='arcane',panel=(title,body,paint)=>paint({append:(button)=>buttons.push(button)});
+     let grantCalls=0,grantFinalVictory=()=>{grantCalls++;victoryClaimed=true;return true;};
+     let hudCalls=0,hud=()=>hudCalls++,choices=()=>{},notify=()=>{},showMainMenu=()=>{};
+     let $=(id)=>{if(!elements.has(id))elements.set(id,{style:{display:'none'}});return elements.get(id);};`,
+    context,
+  );
+  // Expose only the explicit test UI nodes, not a browser or whole game boot.
+  context.buttons = buttons;
+  context.elements = elements;
+  vm.runInContext(source.slice(start, finish), context, { filename: "victory-functions.js" });
+  vm.runInContext("showVictory(); showVictory();", context);
+  assert.equal(vm.runInContext("grantCalls", context), 1);
+  assert.equal(vm.runInContext("gameState", context), "victory");
+  assert.equal(buttons.length, 2);
+  assert.match(buttons[0].textContent, /ENDLESS/);
+  const before = JSON.parse(vm.runInContext("JSON.stringify({hp:player.hp,time,kills,level,upgrades,evolutions})", context));
+  buttons[0].onclick();
+  const after = JSON.parse(vm.runInContext("JSON.stringify({hp:player.hp,time,kills,level,upgrades,evolutions})", context));
+  assert.deepEqual(after, before);
+  assert.equal(vm.runInContext("runMode", context), "endless");
+  assert.equal(vm.runInContext("gameState", context), "playing");
+  assert.equal(vm.runInContext("paused", context), false);
+  assert.equal(vm.runInContext("endlessStartTime", context), 1512);
+  assert.equal(vm.runInContext("nextBossTime", context), 1512 + 180);
+  assert.equal(vm.runInContext("bossShots.length + bossHazards.length", context), 0);
+  assert.equal(vm.runInContext("player.inv >= 2.5", context), true);
+});
