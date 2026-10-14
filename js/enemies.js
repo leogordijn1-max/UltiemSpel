@@ -525,7 +525,7 @@ function fire() {
 // Enemy and boss projectile attacks.
 function enemyFireOrb(e) {
   if (enemyShots.length >= 320) return;
-  const angle = Math.atan2(player.y - e.y, player.x - e.x);
+  const angle = Number.isFinite(e.aimAngle) ? e.aimAngle : Math.atan2(player.y - e.y, player.x - e.x);
   enemyShots.push({
     type: "enemyOrb",
     x: e.x,
