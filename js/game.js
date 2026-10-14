@@ -564,6 +564,7 @@ function update(dt) {
           e.shootCooldown -= dt;
           if (e.shootCooldown <= 0) {
             e.shootCooldown = 0;
+            e.aimAngle = Math.atan2(player.y - e.y, player.x - e.x);
             e.shotWarning = 0.7;
           }
         }
