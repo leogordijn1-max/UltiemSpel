@@ -95,6 +95,9 @@ function loadMetaProgress() {
       mode: run.mode === "endless" ? "endless" : "standard",
       character: ["survivor", "zombieMike", "beau", "mayoMaster"].includes(run.character) ? run.character : "survivor",
       victory: run.victory === true,
+      evolutionCount: Math.min(3, nonNegativeInteger(run.evolutionCount)),
+      stats: typeof normalizeRunStats === "function" ? normalizeRunStats(run.stats) : (run.stats || null),
+      weapons: Array.isArray(run.weapons) ? run.weapons.filter((key) => ["arcane","orbit","bomb","chain","boomerang","flame","frost","nova"].includes(key)).slice(0, 3) : [],
       id: typeof run.id === "string" ? run.id.slice(0, 80) : "",
     })).sort((a, b) => b.survived - a.survived).slice(0, 30)
     : [];
@@ -134,6 +137,9 @@ function loadMetaProgress() {
     damageLevel: Math.min(5, nonNegativeInteger(saved.damageLevel)),
     achievements,
     runs,
+    discovered: typeof normalizeDiscoveries === "function"
+      ? normalizeDiscoveries(saved.discovered)
+      : (saved.discovered && typeof saved.discovered === "object" ? saved.discovered : {}),
     records,
     endlessUnlocked: saved.endlessUnlocked === true || wins > 0,
     statPurchaseCosts,
