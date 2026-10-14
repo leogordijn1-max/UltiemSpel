@@ -123,6 +123,22 @@ function loadMetaProgress() {
     runs,
     records,
     endlessUnlocked: saved.endlessUnlocked === true || wins > 0,
+    speedLevel: Math.min(3, nonNegativeInteger(saved.speedLevel)),
+    magnetLevel: Math.min(3, nonNegativeInteger(saved.magnetLevel)),
+    xpLevel: Math.min(3, nonNegativeInteger(saved.xpLevel)),
+    dashLevel: Math.min(3, nonNegativeInteger(saved.dashLevel)),
+    // Existing characters and weapons are never removed when saves are migrated.
+    ownedCharacters: [...new Set((Array.isArray(saved.ownedCharacters) ? saved.ownedCharacters : [])
+      .filter((id) => id === "mayoMaster"))],
+    weaponMasteries: [...new Set((Array.isArray(saved.weaponMasteries) ? saved.weaponMasteries : [])
+      .filter((id) => ["arcane", "orbit", "bomb", "chain", "boomerang", "flame", "frost", "nova"].includes(id)))],
+    bossLoot: [...new Set((Array.isArray(saved.bossLoot) ? saved.bossLoot : [])
+      .filter((id) => ["beau", "mourning", "bell", "final"].includes(id)))],
+    cosmetics: [...new Set(["classic", ...(Array.isArray(saved.cosmetics) ? saved.cosmetics : [])
+      .filter((id) => ["neon", "gold", "void"].includes(id))])],
+    selectedCosmetic: ["classic", "neon", "gold", "void"].includes(saved.selectedCosmetic) &&
+      (saved.selectedCosmetic === "classic" || (Array.isArray(saved.cosmetics) && saved.cosmetics.includes(saved.selectedCosmetic)))
+      ? saved.selectedCosmetic : "classic",
     bestFlawlessSurvival: nonNegativeInteger(saved.bestFlawlessSurvival),
     totals: {
       kills: nonNegativeInteger(totals.kills),
