@@ -315,7 +315,7 @@ function showRecords() {
       top.append(heading);
       for (const run of metaProgress.runs.slice(0, 10)) {
         const line = document.createElement("p");
-        line.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills${run.victory ? " · VICTORY" : ""}`;
+        line.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${getCharacter(run.character).name} · ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills${run.victory ? " · VICTORY" : ""}`;
         top.append(line);
       }
       if (!metaProgress.runs.length) {
