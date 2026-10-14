@@ -798,6 +798,22 @@ function draw() {
       ctx.restore();
       continue;
     }
+    if (b.type === "fish") {
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.rotate(Math.atan2(b.vy, b.vx));
+      if (fishBulletImage.complete && fishBulletImage.naturalWidth > 0) {
+        ctx.drawImage(fishBulletImage, -19, -19, 38, 38);
+      } else {
+        ctx.fillStyle = "#ffb7a0";
+        ctx.shadowColor = "#ffbe8a";
+        ctx.shadowBlur = glow(10);
+        ctx.beginPath(); ctx.ellipse(0, 0, 13, 7, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(-17, -8); ctx.lineTo(-17, 8); ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+      continue;
+    }
     if (b.type === "boomerang") {
       ctx.save();
       ctx.translate(b.x, b.y);
@@ -995,29 +1011,51 @@ function draw() {
       keys.ArrowUp ||
       keys.ArrowDown;
     const swing = moving ? Math.sin(time * 15) * 4 : 0;
+    const cosmetic = cosmeticCatalog.find((entry) => entry.id === metaProgress.selectedCosmetic) || cosmeticCatalog[0];
+    const character = getCharacter(selectedCharacter);
+    const bodyColor = flashing ? "#fff" : cosmetic.id === "classic" ? character.accent : cosmetic.color;
     ctx.save();
     ctx.translate(player.x, player.y);
-    ctx.strokeStyle = flashing ? "#fff" : "#f1e6cb";
-    ctx.fillStyle = flashing ? "#fff" : "#f1e6cb";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
-    ctx.shadowColor = "#d7c49b";
-    ctx.shadowBlur = glow(5);
-    ctx.beginPath();
-    ctx.arc(0, -11, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(0, -6);
-    ctx.lineTo(0, 5);
-    ctx.moveTo(-1, -2);
-    ctx.lineTo(-8, swing);
-    ctx.moveTo(1, -2);
-    ctx.lineTo(8, -swing);
-    ctx.moveTo(0, 5);
-    ctx.lineTo(-6, 13 + swing * 0.5);
-    ctx.moveTo(0, 5);
-    ctx.lineTo(6, 13 - swing * 0.5);
-    ctx.stroke();
+    const art = selectedCharacter === "zombieMike" ? redEnemyImage
+      : selectedCharacter === "beau" ? bossImage
+        : selectedCharacter === "mayoMaster" ? mayoCharacterImage : null;
+    if (art && art.complete && art.naturalWidth > 0) {
+      ctx.shadowColor = cosmetic.glow;
+      ctx.shadowBlur = glow(characterRuntime.activeBoost > 0 ? 20 : 9);
+      ctx.drawImage(art, -22, -24 + swing * 0.2, 44, 45);
+    } else {
+      ctx.strokeStyle = bodyColor;
+      ctx.fillStyle = bodyColor;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.shadowColor = cosmetic.glow;
+      ctx.shadowBlur = glow(characterRuntime.activeBoost > 0 ? 17 : 5);
+      ctx.beginPath();
+      ctx.arc(0, -11, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(0, -6);
+      ctx.lineTo(0, 5);
+      ctx.moveTo(-1, -2);
+      ctx.lineTo(-8, swing);
+      ctx.moveTo(1, -2);
+      ctx.lineTo(8, -swing);
+      ctx.moveTo(0, 5);
+      ctx.lineTo(-6, 13 + swing * 0.5);
+      ctx.moveTo(0, 5);
+      ctx.lineTo(6, 13 - swing * 0.5);
+      ctx.stroke();
+    }
+    // Cosmetics are visual only, and temporary character procs are recognizable.
+    if (cosmetic.id !== "classic" || characterRuntime.activeBoost > 0) {
+      ctx.strokeStyle = characterRuntime.activeBoost > 0 ? "#f7ed9e" : cosmetic.glow;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = cosmetic.glow;
+      ctx.shadowBlur = glow(12);
+      ctx.beginPath();
+      ctx.arc(0, -2, 23 + Math.sin(time * 6) * 1.7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     ctx.restore();
   }
   for (const p of particles) {
