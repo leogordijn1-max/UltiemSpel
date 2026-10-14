@@ -40,7 +40,7 @@ function castChainLightning() {
       visited.add(target);
       hitByVolley.add(target);
       lightningSegments.push({ x1: source.x, y1: source.y, x2: target.x, y2: target.y, life: 0.24, evolved });
-      damage(target, chainDamage, source);
+      damage(target, chainDamage, source, "lightning");
       source = target;
       target = nearestEnemy(
         source.x,
