@@ -225,19 +225,71 @@ function draw() {
       ctx.fill();
       ctx.restore();
     }
-    if (e.kind === 3 && e.shootCooldown > 0 && e.shootCooldown < 0.75) {
+    // Ranged attack wind-up is aimed and locked before the projectile fires.
+    if (e.kind === 4 && e.shotWarning > 0) {
+      const angle = e.aimAngle ?? Math.atan2(player.y - e.y, player.x - e.x);
       ctx.save();
-      ctx.strokeStyle = "rgba(255, 96, 132, 0.65)";
-      ctx.lineWidth = 3;
-      ctx.setLineDash([8, 9]);
+      ctx.strokeStyle = "rgba(255, 222, 114, 0.82)";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 5]);
       ctx.beginPath();
-      if (e.variant === 1 || e.phaseTwo) {
-        ctx.arc(e.x, e.y, 115 + (0.75 - e.shootCooldown) * 70, 0, Math.PI * 2);
+      ctx.moveTo(e.x, e.y);
+      ctx.lineTo(e.x + Math.cos(angle) * 240, e.y + Math.sin(angle) * 240);
+      ctx.stroke();
+      ctx.restore();
+    }
+    // Burstlings always telegraph their actual explosion radius.
+    if (e.kind === 5 && e.armed && e.burstWarning > 0) {
+      ctx.save();
+      ctx.fillStyle = "rgba(255, 88, 53, 0.11)";
+      ctx.strokeStyle = "rgba(255, 145, 62, 0.92)";
+      ctx.lineWidth = 3 + (1 - e.burstWarning / 0.95) * 2;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.burstRadius || 86, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    // Elite charges lock direction and provide enough warning to dodge.
+    if (e.eliteChargeWarning > 0) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 153, 101, 0.84)";
+      ctx.lineWidth = 4;
+      ctx.setLineDash([11, 8]);
+      ctx.beginPath();
+      ctx.moveTo(e.x, e.y);
+      ctx.lineTo(e.x + (e.eliteChargeX || 1) * 290, e.y + (e.eliteChargeY || 0) * 290);
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (e.kind === 3 && e.shotWarning > 0) {
+      ctx.save();
+      const intensity = 0.5 + Math.sin(time * 13) * 0.15;
+      ctx.fillStyle = `rgba(250, 75, 105, ${0.08 + intensity * 0.08})`;
+      ctx.strokeStyle = "rgba(255, 92, 141, 0.9)";
+      ctx.lineWidth = 3.5;
+      ctx.setLineDash([12, 7]);
+      ctx.beginPath();
+      if (e.variant === 1) {
+        ctx.arc(e.x, e.y, 135, 0, Math.PI * 2);
+        ctx.fill();
       } else {
-        const attackAngle = Math.atan2(player.y - e.y, player.x - e.x);
+        const facing = e.shotAngle || 0;
+        const halfCone = e.variant === 2 ? 0.72 : e.phaseTwo ? 0.55 : 0.38;
         ctx.moveTo(e.x, e.y);
-        ctx.lineTo(e.x + Math.cos(attackAngle) * 440, e.y + Math.sin(attackAngle) * 440);
+        ctx.arc(e.x, e.y, e.variant === 2 ? 285 : 270, facing - halfCone, facing + halfCone);
+        ctx.closePath();
+        ctx.fill();
       }
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (e.kind === 3 && e.phaseIntro > 0) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(246, 170, 255, 0.95)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r * (1.5 + Math.sin(time * 14) * 0.12), 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
@@ -311,6 +363,87 @@ function draw() {
         imageWidth,
         imageHeight,
       );
+      ctx.restore();
+      continue;
+    }
+    // Additional enemy types receive their own clear silhouettes.
+    if (e.kind === 5) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate(time * 1.5);
+      ctx.shadowColor = e.armed ? "#ff413e" : "#ff9b42";
+      ctx.shadowBlur = glow(e.armed ? 19 : 8);
+      ctx.fillStyle = e.armed ? "#ff615d" : "#e78d46";
+      ctx.strokeStyle = "#66331f";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const angle = i * Math.PI / 5;
+        const radius = e.r * (i % 2 ? 0.7 : 1.35);
+        if (i === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#ffecc0";
+      ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      continue;
+    }
+    if (e.kind === 6) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.fillStyle = e.hit ? "#ffffff" : "#667a94";
+      ctx.strokeStyle = e.shieldActive ? "#8be9fa" : "#48536c";
+      ctx.lineWidth = e.shieldActive ? 5 : 2;
+      ctx.shadowColor = e.shieldActive ? "#62d9ff" : "#596d8c";
+      ctx.shadowBlur = glow(e.shieldActive ? 15 : 5);
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = i * Math.PI / 3 - Math.PI / 2;
+        const px = Math.cos(angle) * e.r, py = Math.sin(angle) * e.r;
+        if (!i) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#d5eeff";
+      ctx.fillRect(-4, -11, 8, 22);
+      ctx.fillRect(-12, -3, 24, 6);
+      ctx.restore();
+      continue;
+    }
+    // Only Beau de Hond uses the original dog sprite.
+    if (e.kind === 3 && e.variant !== 0) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.shadowBlur = glow(22);
+      if (e.variant === 1) {
+        ctx.fillStyle = e.hit ? "#fff" : "#4a315c";
+        ctx.shadowColor = "#b674ff";
+        ctx.beginPath();
+        ctx.moveTo(0, -e.r * 1.6);
+        ctx.bezierCurveTo(e.r * 1.2, -e.r * 1.3, e.r * 1.35, e.r * 0.35, e.r * 0.78, e.r * 1.2);
+        ctx.lineTo(0, e.r * 0.8);
+        ctx.lineTo(-e.r * 0.78, e.r * 1.2);
+        ctx.bezierCurveTo(-e.r * 1.35, e.r * 0.35, -e.r * 1.2, -e.r * 1.3, 0, -e.r * 1.6);
+        ctx.fill();
+        ctx.fillStyle = "#d2aaff";
+        ctx.beginPath();
+        ctx.ellipse(-e.r * 0.33, -e.r * 0.3, 5, 9, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(e.r * 0.33, -e.r * 0.3, 5, 9, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = e.hit ? "#fff" : "#8d7580";
+        ctx.shadowColor = "#e8b987";
+        ctx.fillRect(-e.r * 0.58, -e.r * 1.3, e.r * 1.16, e.r * 2.25);
+        ctx.fillStyle = "#e2b988";
+        ctx.beginPath();
+        ctx.arc(0, e.r * 0.3, e.r * 0.46, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3e2a40";
+        ctx.beginPath(); ctx.arc(0, e.r * 0.72, e.r * 0.16, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#eac99b"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(-e.r * 0.73, -e.r * 1.3); ctx.lineTo(e.r * 0.73, -e.r * 1.3); ctx.stroke();
+      }
       ctx.restore();
       continue;
     }
@@ -427,15 +560,15 @@ function draw() {
   }
   for (const b of bossShots) {
     if (!visibleEnemy(b, -b.r * 2)) continue;
-    if (fishBulletImage.complete && fishBulletImage.naturalWidth > 0) {
+    if (b.visualType === "fish" && fishBulletImage.complete && fishBulletImage.naturalWidth > 0) {
       ctx.save();
       ctx.translate(b.x, b.y);
       ctx.rotate(Math.atan2(b.vy, b.vx));
       ctx.drawImage(fishBulletImage, -28, -28, 56, 56);
       ctx.restore();
     } else {
-      ctx.fillStyle = "#ff69bb";
-      ctx.shadowColor = "#ff3d9e";
+      ctx.fillStyle = b.visualType === "bell" ? "#ffd58b" : "#ad79f0";
+      ctx.shadowColor = b.visualType === "bell" ? "#e9b15a" : "#8a4dd6";
       ctx.shadowBlur = glow(12);
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
