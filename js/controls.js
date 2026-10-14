@@ -66,7 +66,7 @@ function bindMainMenu() {
     menuRunMode = "endless";
     showCharacterSelection();
   };
-  $("settingsButton").onclick = showSettings;
+  $("settingsButton").onclick = () => showSettings(false);
   $("metaShop").textContent = `PERMANENT UPGRADES · ${metaProgress.points} PTS`;
   $("metaShop").onclick = () => showMetaShop("Stats");
   $("recordsButton").onclick = showRecords;
@@ -326,6 +326,15 @@ function showRecords() {
         text.textContent = "No runs recorded yet.";
         top.append(text);
       }
+      for (const run of metaProgress.runs.slice(0, 5)) {
+        const details = document.createElement("details");
+        details.className = "record-details";
+        const summary = document.createElement("summary");
+        summary.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${formatGameTime(run.survived)} · ${getCharacter(run.character).name}`;
+        details.append(summary);
+        appendRunStatistics(details, run, { compact: true });
+        top.append(details);
+      }
       parent.append(top);
       backButton(parent);
     });
@@ -347,41 +356,173 @@ function showAchievements() {
   });
 }
 
+// A shared field guide keeps essential information readable, even before collection
+// unlocks. Collection mode masks undiscovered entries and exposes unlock hints.
+function fieldGuideEntries(category) {
+  if (category === "Weapons") return weaponCatalog.map((weapon) => ({
+    group: "weapons", id: weapon.key, name: weapon.name, image: weapon.image,
+    text: `${weapon.description} Damage: ${weapon.damage}. Cooldown: ${weapon.cooldown}. Evolution: ${weapon.evolution}.`,
+    hint: "Equip this weapon during a run.",
+  }));
+  if (category === "Evolutions") return evolutionRecipes.map((recipe) => ({
+    group: "evolutions", id: recipe.id, name: recipe.name,
+    image: weaponCatalog.find((weapon) => weapon.key === recipe.weapon)?.image || "",
+    text: `${weaponCatalog.find((weapon) => weapon.key === recipe.weapon)?.name || recipe.weapon} · ${recipe.visual} Requirement: weapon level ${recipe.level}, ${recipe.supportName} level ${recipe.supportLevel}, boss defeated and evolution time milestone.`,
+    hint: "Fulfill a weapon's evolution requirements during a run.",
+  }));
+  if (category === "Upgrades") return opts.filter(([key]) => !isWeaponKey(key)).map(([key, name, description]) => ({
+    group: null, id: key, name, image: upgradeImage(key),
+    text: `${description} Maximum level: ${maxUpgradeLevel(key)}. Category: ${upgradeCategory(key)}.`,
+    hint: "Available as a passive upgrade.",
+  }));
+  if (category === "Enemies") return enemyCatalog.map((enemy, i) => ({
+    group: "enemies",
+    id: ["drifter", "runner", "zombieMike", "shade", "burstling", "bulwark"][i],
+    name: enemy.name, image: enemy.image,
+    text: `HP: ${enemy.hp}. Damage: ${enemy.damage}. Speed: ${enemy.speed}. ${enemy.ability} XP: ${enemy.xp}.`,
+    hint: "Encounter this enemy in the arena.",
+  }));
+  if (category === "Bosses") return bossCatalog.map((boss, i) => ({
+    group: "bosses", id: ["beau", "mourning", "bell", "final"][i],
+    name: boss.name, image: boss.image,
+    text: `${boss.attacks} ${boss.phase} Reward: unique trophy on first defeat.`,
+    hint: i === 3 ? "Reach the end of Standard Mode." : "Encounter this boss during a run.",
+  }));
+  return characterCatalog.map((character) => ({
+    group: "characters", id: character.id, name: character.name, image: character.image,
+    text: `${character.ability}. ${character.description} Unlock: ${character.unlock}. ${isCharacterUnlocked(metaProgress, character.id) ? "UNLOCKED" : "LOCKED"}.`,
+    hint: character.unlock,
+  }));
+}
+
 function showEncyclopedia(category = "Weapons") {
-  panel("ENCYCLOPEDIA", "Field guide · values use current game definitions", (parent) => {
+  showFieldGuide(category, false);
+}
+function showCollection(category = "Weapons") {
+  showFieldGuide(category, true);
+}
+function showFieldGuide(category = "Weapons", collectionMode = false) {
+  const title = collectionMode ? "THE COLLECTION" : "ENCYCLOPEDIA";
+  panel(title, collectionMode
+    ? "Discover creatures, bosses, evolutions and playable characters. Undiscovered entries reveal hints."
+    : "Field guide · Current mechanics and evolution conditions", (parent) => {
     const tabs = document.createElement("div");
     tabs.className = "encyclopedia-tabs";
-    for (const name of ["Weapons", "Upgrades", "Enemies", "Bosses", "Characters"]) {
+    for (const name of ["Weapons", "Evolutions", "Upgrades", "Enemies", "Bosses", "Characters"]) {
       const button = document.createElement("button");
       button.textContent = name;
       button.classList.toggle("selected", name === category);
-      button.onclick = () => showEncyclopedia(name);
+      button.onclick = () => showFieldGuide(name, collectionMode);
       tabs.append(button);
     }
     parent.append(tabs);
-    const entries = category === "Weapons"
-      ? weaponCatalog.map((w) => ({ name: w.name, image: w.image, text: `${w.description} Damage: ${w.damage}. Cooldown: ${w.cooldown}. Evolution: ${w.evolution}.` }))
-      : category === "Upgrades"
-        ? opts.map(([key, name, description]) => ({ name, image: upgradeImage(key), text: `${description} Max level ${maxUpgradeLevel(key)} · ${upgradeCategory(key)}.` }))
-        : category === "Enemies"
-          ? enemyCatalog.map((e) => ({ name: e.name, image: e.image, text: `HP ${e.hp} · damage ${e.damage} · speed ${e.speed}. ${e.ability} XP ${e.xp}.` }))
-          : category === "Bosses"
-            ? bossCatalog.map((b) => ({ name: b.name, image: b.image, text: `${b.attacks} ${b.phase} Reward: rare build upgrade and unique trophy on first kill.` }))
-            : characterCatalog.map((ch) => ({
-              name: ch.name, image: ch.image,
-              text: `${ch.ability}. ${ch.description} Unlock: ${ch.unlock}. ${isCharacterUnlocked(metaProgress, ch.id) ? "UNLOCKED" : "LOCKED"}.`,
-            }));
+    const entries = fieldGuideEntries(category);
+    const unlocked = (entry) => !entry.group ||
+      isDiscovered(metaProgress, entry.group, entry.id) ||
+      (entry.group === "characters" && isCharacterUnlocked(metaProgress, entry.id)) ||
+      (entry.group === "weapons" && (selectedWeapons || []).includes(entry.id));
+    if (collectionMode) {
+      const discovered = entries.filter(unlocked).length;
+      const progress = document.createElement("p");
+      progress.className = "collection-progress";
+      progress.textContent = `${discovered} / ${entries.length} discovered · ${category}`;
+      parent.append(progress);
+    }
     const list = document.createElement("div");
     list.className = "encyclopedia-list";
     for (const entry of entries) {
+      const seen = !collectionMode || unlocked(entry);
       const card = document.createElement("article");
-      card.className = "encyclopedia-card";
-      card.innerHTML = `${entry.image ? `<img src="${entry.image}" alt="">` : "<span class='weapon-icon'>✦</span>"}<div><b>${entry.name}</b><small>${entry.text}</small></div>`;
+      card.className = `encyclopedia-card ${seen ? "collection-seen" : "collection-unseen"}`;
+      if (seen && entry.image) {
+        const picture = document.createElement("img");
+        picture.src = entry.image;
+        picture.alt = "";
+        picture.loading = "lazy";
+        card.append(picture);
+      } else {
+        const icon = document.createElement("span");
+        icon.className = "weapon-icon";
+        icon.textContent = seen ? "✦" : "?";
+        card.append(icon);
+      }
+      const copy = document.createElement("div");
+      const heading = document.createElement("b");
+      heading.textContent = seen ? entry.name : "??? · UNKNOWN";
+      const description = document.createElement("small");
+      description.textContent = seen ? entry.text : entry.hint;
+      copy.append(heading, description);
+      card.append(copy);
       list.append(card);
     }
     parent.append(list);
     backButton(parent);
   });
+}
+
+function appendRunStatistics(parent, run, { compact = false } = {}) {
+  const hasRecordedStats = run.stats && typeof run.stats === "object";
+  const summary = runSummaryRows(run, weaponCatalog);
+  const section = document.createElement("section");
+  section.className = "run-summary";
+  const heading = document.createElement("h2");
+  heading.textContent = compact ? "DETAILED RUN STATS" : "YOUR RUN IN NUMBERS";
+  section.append(heading);
+  if (!hasRecordedStats) {
+    const message = document.createElement("p");
+    message.textContent = "Detailed damage stats were not recorded for this earlier run.";
+    section.append(message);
+    parent.append(section);
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "run-summary-grid";
+  for (const [label, value] of summary.info) {
+    const cell = document.createElement("div");
+    const name = document.createElement("small");
+    name.textContent = label;
+    const number = document.createElement("strong");
+    number.textContent = value;
+    cell.append(name, number);
+    grid.append(cell);
+  }
+  section.append(grid);
+  const subtitle = document.createElement("h3");
+  subtitle.textContent = "DAMAGE BY WEAPON";
+  section.append(subtitle);
+  const list = document.createElement("div");
+  list.className = "run-damage-list";
+  if (summary.damage.length) {
+    for (const entry of summary.damage) {
+      const line = document.createElement("div");
+      const name = document.createElement("span");
+      name.textContent = entry.name;
+      const value = document.createElement("strong");
+      value.textContent = numberForDisplay(entry.damage);
+      line.append(name, value);
+      list.append(line);
+    }
+  } else {
+    const note = document.createElement("p");
+    note.textContent = "No outgoing weapon damage recorded.";
+    list.append(note);
+  }
+  section.append(list);
+  parent.append(section);
+}
+
+// Called by the existing Victory/Game Over handlers, never during gameplay.
+function renderRunSummaryPanel() {
+  const panelNode = $("panel");
+  const choicesNode = $("choices");
+  if (!panelNode || !choicesNode || typeof runStats === "undefined") return;
+  const holder = document.createElement("div");
+  appendRunStatistics(holder, {
+    survived: time, level, kills, bosses: bossesDefeated,
+    evolutionCount: Object.values(evolutions).filter(Boolean).length,
+    stats: runStats,
+  });
+  panelNode.insertBefore(holder, choicesNode);
 }
 
 bindMainMenu();
