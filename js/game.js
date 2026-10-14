@@ -22,7 +22,7 @@ function resize() {
 }
 addEventListener("resize", resize);
 resize();
- 
+
 // Shared game state. Other scripts use these values for enemies, upgrades, and drawing.
 const $ = (id) => document.getElementById(id),
   rand = (a, b) => a + Math.random() * (b - a),
@@ -67,7 +67,11 @@ const keys = {};
 let upgrades = {},
   gameSpeed = 1,
   difficulty = "normal",
-  menuDifficulty = ["easy", "normal", "nightmare"].includes(storageGet("shadowDifficulty", "normal")) ? storageGet("shadowDifficulty", "normal") : "normal",
+  menuDifficulty = ["easy", "normal", "nightmare"].includes(
+    storageGet("shadowDifficulty", "normal"),
+  )
+    ? storageGet("shadowDifficulty", "normal")
+    : "normal",
   boss = null,
   bossShots = [],
   bossHazards = [],
@@ -110,7 +114,11 @@ let upgrades = {},
   })(),
   characterRuntime = makeCharacterRuntime(),
   showFps = storageGet("shadowShowFps", "false") === "true",
-  graphicsQuality = ["low", "medium", "high"].includes(storageGet("shadowGraphics", "high")) ? storageGet("shadowGraphics", "high") : "high",
+  graphicsQuality = ["low", "medium", "high"].includes(
+    storageGet("shadowGraphics", "high"),
+  )
+    ? storageGet("shadowGraphics", "high")
+    : "high",
   enemyGrid = new Map(),
   hudUpdateTimer = 0,
   fpsFrames = 0,
@@ -125,13 +133,27 @@ function loadSelectedWeapons() {
     const savedList = Array.isArray(saved)
       ? saved
       : saved && typeof saved === "object"
-        ? [saved.startWeapon, ...(Array.isArray(saved.unlockableWeapons) ? saved.unlockableWeapons : [])]
+        ? [
+            saved.startWeapon,
+            ...(Array.isArray(saved.unlockableWeapons)
+              ? saved.unlockableWeapons
+              : []),
+          ]
         : [];
-    const valid = [...new Set(savedList.filter((key) => weaponCatalog.some((weapon) => weapon.key === key)))].slice(0, 3);
+    const valid = [
+      ...new Set(
+        savedList.filter((key) =>
+          weaponCatalog.some((weapon) => weapon.key === key),
+        ),
+      ),
+    ].slice(0, 3);
     startWeapon = valid[0] || "arcane";
     unlockableWeapons = valid.slice(1);
     while (unlockableWeapons.length < 2) {
-      const next = weaponCatalog.find((weapon) => weapon.key !== startWeapon && !unlockableWeapons.includes(weapon.key));
+      const next = weaponCatalog.find(
+        (weapon) =>
+          weapon.key !== startWeapon && !unlockableWeapons.includes(weapon.key),
+      );
       if (!next) break;
       unlockableWeapons.push(next.key);
     }
@@ -149,7 +171,10 @@ function reset() {
   touchMoveX = 0;
   touchMoveY = 0;
   difficulty = menuDifficulty;
-  runMode = menuRunMode === "endless" && metaProgress.endlessUnlocked ? "endless" : "standard";
+  runMode =
+    menuRunMode === "endless" && metaProgress.endlessUnlocked
+      ? "endless"
+      : "standard";
   endlessStartTime = 0;
   finalBossDefeated = false;
   victoryClaimed = false;
@@ -160,7 +185,8 @@ function reset() {
   runDamageTaken = 0;
   runStats = createRunStats();
   runRecorded = false;
-  if (!isCharacterUnlocked(metaProgress, selectedCharacter)) selectedCharacter = "survivor";
+  if (!isCharacterUnlocked(metaProgress, selectedCharacter))
+    selectedCharacter = "survivor";
   characterRuntime = makeCharacterRuntime();
   trackDiscovery("characters", selectedCharacter);
   trackDiscovery("weapons", startWeapon);
@@ -171,10 +197,22 @@ function reset() {
     x: 0,
     y: 0,
     r: 15,
-    hp: 140 + metaProgress.hpLevel * 8 +
-      (selectedCharacter === "zombieMike" ? 20 : selectedCharacter === "mayoMaster" ? -15 : 0),
-    maxHp: 140 + metaProgress.hpLevel * 8 +
-      (selectedCharacter === "zombieMike" ? 20 : selectedCharacter === "mayoMaster" ? -15 : 0),
+    hp:
+      140 +
+      metaProgress.hpLevel * 8 +
+      (selectedCharacter === "zombieMike"
+        ? 20
+        : selectedCharacter === "mayoMaster"
+          ? -15
+          : 0),
+    maxHp:
+      140 +
+      metaProgress.hpLevel * 8 +
+      (selectedCharacter === "zombieMike"
+        ? 20
+        : selectedCharacter === "mayoMaster"
+          ? -15
+          : 0),
     speed: 235 * (1 + (metaProgress.speedLevel || 0) * 0.02),
     inv: 0,
     facingX: 1,
@@ -303,8 +341,14 @@ function projectileOutsideArena(projectile) {
 }
 
 function tryBladeBlock(projectile) {
-  if (!upgrades.orbit || !upgrades.bladeBlock || projectile.blocked) return false;
-  const baseChance = Math.min(0.95, upgrades.bladeBlock * 0.16 + Math.max(0, upgrades.bladeBlock - 2) * 0.04 + (evolutions.aegisRing ? 0.08 : 0));
+  if (!upgrades.orbit || !upgrades.bladeBlock || projectile.blocked)
+    return false;
+  const baseChance = Math.min(
+    0.95,
+    upgrades.bladeBlock * 0.16 +
+      Math.max(0, upgrades.bladeBlock - 2) * 0.04 +
+      (evolutions.aegisRing ? 0.08 : 0),
+  );
   for (let index = 0; index < upgrades.orbit; index++) {
     const angle = orbitAngle + (index * Math.PI * 2) / upgrades.orbit;
     const bladeX = player.x + Math.cos(angle) * 67;
@@ -339,10 +383,12 @@ function startDash() {
 
   let dx =
     (keys.d || keys.ArrowRight ? 1 : 0) -
-    (keys.a || keys.ArrowLeft ? 1 : 0) + touchMoveX;
+    (keys.a || keys.ArrowLeft ? 1 : 0) +
+    touchMoveX;
   let dy =
     (keys.s || keys.ArrowDown ? 1 : 0) -
-    (keys.w || keys.ArrowUp ? 1 : 0) + touchMoveY;
+    (keys.w || keys.ArrowUp ? 1 : 0) +
+    touchMoveY;
   const length = Math.hypot(dx, dy);
 
   if (length) {
@@ -378,16 +424,25 @@ document.querySelectorAll("[data-speed]").forEach(
 );
 function hud() {
   const remaining = Math.max(0, nextBossTime - time);
-  const finalApproaching = runMode === "standard" && !finalBossDefeated && time >= FINAL_BOSS_TIME - 60;
-  const countdown = finalApproaching ? Math.max(0, FINAL_BOSS_TIME - time) : remaining;
+  const finalApproaching =
+    runMode === "standard" &&
+    !finalBossDefeated &&
+    time >= FINAL_BOSS_TIME - 60;
+  const countdown = finalApproaching
+    ? Math.max(0, FINAL_BOSS_TIME - time)
+    : remaining;
   $("countText").textContent = boss
-    ? (boss.isFinalBoss ? "FINAL BOSS ACTIVE" : "BOSS ACTIVE")
+    ? boss.isFinalBoss
+      ? "FINAL BOSS ACTIVE"
+      : "BOSS ACTIVE"
     : finalApproaching
       ? `FINAL BOSS IN ${Math.floor(countdown / 60)}:${String(Math.ceil(countdown % 60)).padStart(2, "0")}`
       : `${runMode === "endless" ? "ENDLESS " : ""}BOSS IN ${Math.floor(countdown / 60)}:${String(Math.ceil(countdown % 60)).padStart(2, "0")}`;
-  $("countFill").style.width = `${finalApproaching
-    ? Math.min(100, (1 - countdown / 60) * 100)
-    : Math.max(0, Math.min(100, (1 - remaining / 180) * 100))}%`;
+  $("countFill").style.width = `${
+    finalApproaching
+      ? Math.min(100, (1 - countdown / 60) * 100)
+      : Math.max(0, Math.min(100, (1 - remaining / 180) * 100))
+  }%`;
   $("bossCountdown").style.display = boss ? "none" : "block";
   const dashStatus = $("dashStatus");
   dashStatus.textContent =
@@ -397,12 +452,18 @@ function hud() {
   dashStatus.classList.toggle("ready", dashCooldown <= 0);
   const upcomingWave = waveNumber + 1;
   const waveClock = `${Math.floor(Math.max(0, waveTimer) / 60)}:${String(Math.ceil(Math.max(0, waveTimer) % 60)).padStart(2, "0")}`;
-  const currentPattern = waveNumber ? wavePatternFor(waveNumber).name : "PREPARE";
-  const endlessLabel = runMode === "endless"
-    ? `ENDLESS · TIER ${currentEndlessTier() + 1} · ` : "";
-  $("waveText").textContent = boss ? `${endlessLabel}WAVE ${waveNumber || 1} · PAUSED DURING BOSS`
+  const currentPattern = waveNumber
+    ? wavePatternFor(waveNumber).name
+    : "PREPARE";
+  const endlessLabel =
+    runMode === "endless"
+      ? `ENDLESS · TIER ${currentEndlessTier() + 1} · `
+      : "";
+  $("waveText").textContent = boss
+    ? `${endlessLabel}WAVE ${waveNumber || 1} · PAUSED DURING BOSS`
     : `${endlessLabel}WAVE ${waveNumber || 1} · ${currentPattern} · NEXT ${upcomingWave} IN ${waveClock}`;
-  $("waveFill").style.width = `${Math.max(0, Math.min(100, (1 - waveTimer / waveDuration) * 100))}%`;
+  $("waveFill").style.width =
+    `${Math.max(0, Math.min(100, (1 - waveTimer / waveDuration) * 100))}%`;
   $("healthText").textContent = Math.ceil(player.hp) + " / " + player.maxHp;
   $("hp").style.width = (100 * player.hp) / player.maxHp + "%";
   $("levelText").textContent = level;
@@ -410,21 +471,41 @@ function hud() {
   $("stats").textContent =
     `${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
   const character = getCharacter(selectedCharacter);
-  const boost = characterRuntime.activeBoost > 0 ? ` · ACTIVE ${characterRuntime.activeBoost.toFixed(1)}s` : "";
-  $("characterHud").textContent = `${character.name} · ${character.ability}${boost}`;
-  const weaponNames = Object.fromEntries(weaponCatalog.map((weapon) => [weapon.key, weapon.name]));
+  const boost =
+    characterRuntime.activeBoost > 0
+      ? ` · ACTIVE ${characterRuntime.activeBoost.toFixed(1)}s`
+      : "";
+  $("characterHud").textContent =
+    `${character.name} · ${character.ability}${boost}`;
+  const weaponNames = Object.fromEntries(
+    weaponCatalog.map((weapon) => [weapon.key, weapon.name]),
+  );
   $("loadout").innerHTML = selectedWeapons
     .map((key, index) => {
       const name = weaponNames[key];
       const locked = !unlockedWeapons.includes(key);
-      const evolution = evolutionRecipes.find((recipe) => recipe.weapon === key && evolutions[recipe.id]);
+      const evolution = evolutionRecipes.find(
+        (recipe) => recipe.weapon === key && evolutions[recipe.id],
+      );
       const cap = maxUpgradeLevel(key);
-      const state = locked ? "LOCKED · LEVEL-UP TO UNLOCK" : evolution ? `MAX ${upgrades[key]}/${cap} · EVOLVED` : `LEVEL ${upgrades[key]}/${cap}`;
-      const role = index === 0 ? "START WEAPON" : locked ? `UNLOCKABLE ${index}` : `WEAPON SLOT ${index + 1}`;
+      const state = locked
+        ? "LOCKED · LEVEL-UP TO UNLOCK"
+        : evolution
+          ? `MAX ${upgrades[key]}/${cap} · EVOLVED`
+          : `LEVEL ${upgrades[key]}/${cap}`;
+      const role =
+        index === 0
+          ? "START WEAPON"
+          : locked
+            ? `UNLOCKABLE ${index}`
+            : `WEAPON SLOT ${index + 1}`;
       return `<span class="weapon-slot ${locked ? "weapon-locked" : evolution ? "weapon-evolved" : ""}"><b>${role}</b><strong>${name}</strong><small>${state}</small></span>`;
-    }).join("");
+    })
+    .join("");
   $("fpsCounter").hidden = !showFps;
-  if (showFps) $("fpsCounter").textContent = `${currentFps} FPS · ${currentFrameMs.toFixed(1)} ms · AI ${performanceMetrics.enemyAI.toFixed(1)} / hit ${performanceMetrics.collisions.toFixed(1)} / draw ${performanceMetrics.render.toFixed(1)} ms · E ${enemies.length} · P ${bullets.length} · EP ${enemyShots.length + bossShots.length} · FX ${particles.length} · XP ${gems.length}`;
+  if (showFps)
+    $("fpsCounter").textContent =
+      `${currentFps} FPS · ${currentFrameMs.toFixed(1)} ms · AI ${performanceMetrics.enemyAI.toFixed(1)} / hit ${performanceMetrics.collisions.toFixed(1)} / draw ${performanceMetrics.render.toFixed(1)} ms · E ${enemies.length} · P ${bullets.length} · EP ${enemyShots.length + bossShots.length} · FX ${particles.length} · XP ${gems.length}`;
 }
 
 function panel(title, body, buttons) {
@@ -445,11 +526,14 @@ function showVictory() {
   bossHazards = [];
   player.inv = Math.max(player.inv, 2.5);
   const evolvedCount = Object.values(evolutions).filter(Boolean).length;
-  const currentNames = weaponCatalog.filter((w) => upgrades[w.key] > 0)
-    .map((w) => `${w.name}${weaponIsEvolved(w.key) ? " ★" : ""}`).join(", ");
+  const currentNames = weaponCatalog
+    .filter((w) => upgrades[w.key] > 0)
+    .map((w) => `${w.name}${weaponIsEvolved(w.key) ? " ★" : ""}`)
+    .join(", ");
   const survived = `${Math.floor(time / 60)}m ${Math.floor(time % 60)}s`;
   if (typeof playSfx === "function") playSfx("victory");
-  panel("VICTORY · THE NIGHT IS YOURS",
+  panel(
+    "VICTORY · THE NIGHT IS YOURS",
     `You defeated THE LAST MEME!<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
     (container) => {
       const continueButton = document.createElement("button");
@@ -461,7 +545,8 @@ function showVictory() {
       menuButton.textContent = "CLAIM VICTORY · MAIN MENU";
       menuButton.onclick = showMainMenu;
       container.append(menuButton);
-    });
+    },
+  );
   if (typeof renderRunSummaryPanel === "function") renderRunSummaryPanel();
   $("bossHud").style.display = "none";
   $("bossCountdown").style.display = "none";
@@ -507,7 +592,10 @@ function end() {
     Boomerang: upgrades.boomerang,
     "Flame Cone": upgrades.flame,
     "Frost Orb": upgrades.frost,
-  }).filter(([, levelValue]) => levelValue > 0).map(([name]) => name).join(", ");
+  })
+    .filter(([, levelValue]) => levelValue > 0)
+    .map(([name]) => name)
+    .join(", ");
   active = false;
   paused = true;
   gameState = "game-over";
@@ -537,11 +625,13 @@ function end() {
 function emitDeathPulse(isEcho = false) {
   if (!upgrades.nova) return;
   const radius = novaRadius();
-  const amount = (25 + upgrades.nova * 9) * globalDamageMultiplier() * (isEcho ? 0.62 : 1);
+  const amount =
+    (25 + upgrades.nova * 9) * globalDamageMultiplier() * (isEcho ? 0.62 : 1);
   if (isEcho) novaEchoFlash = 0.3;
   else novaFlash = 0.2;
   for (const target of nearbyEnemies(player.x, player.y, radius + 100)) {
-    const dx = target.x - player.x, dy = target.y - player.y;
+    const dx = target.x - player.x,
+      dy = target.y - player.y;
     const hitRadius = radius + enemyHitRadius(target);
     if (dx * dx + dy * dy >= hitRadius * hitRadius) continue;
     damage(target, amount, player, "pulse");
@@ -561,10 +651,17 @@ function fireBeauFishBarrage() {
     const direction = angle + offset;
     const speed = 340;
     bullets.push({
-      type: "fish", x: player.x, y: player.y,
-      vx: Math.cos(direction) * speed, vy: Math.sin(direction) * speed,
-      speed, r: 10, d: 34 * globalDamageMultiplier(),
-      pierce: 1, life: 2, hit: new Set(),
+      type: "fish",
+      x: player.x,
+      y: player.y,
+      vx: Math.cos(direction) * speed,
+      vy: Math.sin(direction) * speed,
+      speed,
+      r: 10,
+      d: 34 * globalDamageMultiplier(),
+      pierce: 1,
+      life: 2,
+      hit: new Set(),
     });
   }
   puff(player.x, player.y, "#ffccae", 9);
@@ -596,7 +693,11 @@ function update(dt) {
       waveDuration = Math.max(45, 80 - waveNumber * 2);
       waveTimer += waveDuration;
       const wave = spawnSpecialWave(waveNumber);
-      notify(`WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES`, "wave", 4);
+      notify(
+        `WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES`,
+        "wave",
+        4,
+      );
     }
   }
   if (upgrades.health) {
@@ -606,7 +707,12 @@ function update(dt) {
   }
   // Final boss takes priority over the ordinary boss schedule at the 25-minute mark.
   // If another boss is already alive, the final encounter starts after that fight.
-  if (!boss && runMode === "standard" && !finalBossDefeated && time >= FINAL_BOSS_TIME) {
+  if (
+    !boss &&
+    runMode === "standard" &&
+    !finalBossDefeated &&
+    time >= FINAL_BOSS_TIME
+  ) {
     spawnFinalBoss();
   } else if (!boss && time >= nextBossTime) {
     spawnBoss();
@@ -630,14 +736,32 @@ function update(dt) {
     if (evolutions.eclipse) pulseEchoes.push(0.38);
   }
   let dx =
-      (keys.d || keys.ArrowRight ? 1 : 0) - (keys.a || keys.ArrowLeft ? 1 : 0) + touchMoveX,
-    dy = (keys.s || keys.ArrowDown ? 1 : 0) - (keys.w || keys.ArrowUp ? 1 : 0) + touchMoveY,
+      (keys.d || keys.ArrowRight ? 1 : 0) -
+      (keys.a || keys.ArrowLeft ? 1 : 0) +
+      touchMoveX,
+    dy =
+      (keys.s || keys.ArrowDown ? 1 : 0) -
+      (keys.w || keys.ArrowUp ? 1 : 0) +
+      touchMoveY,
     mag = Math.hypot(dx, dy) || 1;
-  const movementSpeed = player.speed * (1 + upgrades.speed * 0.1) *
-    characterMovementMultiplier(selectedCharacter, characterRuntime, player.hp, player.maxHp);
+  const movementSpeed =
+    player.speed *
+    (1 + upgrades.speed * 0.1) *
+    characterMovementMultiplier(
+      selectedCharacter,
+      characterRuntime,
+      player.hp,
+      player.maxHp,
+    );
   if (dx || dy) {
     player.facingX = dx / mag;
     player.facingY = dy / mag;
+
+    if (dx < 0) {
+      player.spriteFacing = -1;
+    } else if (dx > 0) {
+      player.spriteFacing = 1;
+    }
   }
   if (dashTimer > 0) {
     player.x += dashDirectionX * movementSpeed * 4 * dt;
@@ -648,7 +772,9 @@ function update(dt) {
   }
   spawn -= dt;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
-  const gradualWavePressure = 1 + Math.min(0.24, waveNumber * 0.015) +
+  const gradualWavePressure =
+    1 +
+    Math.min(0.24, waveNumber * 0.015) +
     Math.min(0.35, currentEndlessTier() * 0.025);
   let interval =
     (Math.max(0.14, 1.6 - growthTime * 0.0026) * (boss ? 2 : 1)) /
@@ -682,8 +808,14 @@ function update(dt) {
     const playerDx = player.x - e.x;
     const playerDy = player.y - e.y;
     const playerDistanceSquared = playerDx * playerDx + playerDy * playerDy;
-    const needsPlayerDistance = e.kind === 4 || e.kind === 5 || e.eliteTrait === "charger" || (upgrades.nova && upgrades.novaSlow);
-    const playerDistance = needsPlayerDistance ? Math.sqrt(playerDistanceSquared) : 0;
+    const needsPlayerDistance =
+      e.kind === 4 ||
+      e.kind === 5 ||
+      e.eliteTrait === "charger" ||
+      (upgrades.nova && upgrades.novaSlow);
+    const playerDistance = needsPlayerDistance
+      ? Math.sqrt(playerDistanceSquared)
+      : 0;
     const onScreen = e === boss || visibleEnemy(e, 160);
     let a = onScreen ? Math.atan2(playerDy, playerDx) : 0;
     const insidePulse =
@@ -693,7 +825,9 @@ function update(dt) {
     let moveAngle = a;
     let moveSpeed =
       e.speed *
-      (e.impactSlowUntil > time ? Math.max(0.58, 0.82 - (upgrades.knockback - 3) * 0.06) : 1) *
+      (e.impactSlowUntil > time
+        ? Math.max(0.58, 0.82 - (upgrades.knockback - 3) * 0.06)
+        : 1) *
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
       (e.frostUntil > time ? 0.48 : 1) *
       (e.pulseSlowUntil > time ? 0.77 : 1);
@@ -748,15 +882,29 @@ function update(dt) {
         if (e.burstWarning === 0) {
           e.dead = true;
           const radius = e.burstRadius || 86;
-          if (playerDistanceSquared < (radius + player.r) * (radius + player.r) && player.inv <= 0 && !tryDodge()) {
+          if (
+            playerDistanceSquared < (radius + player.r) * (radius + player.r) &&
+            player.inv <= 0 &&
+            !tryDodge()
+          ) {
             player.hp -= e.damage;
             recordPlayerHit(e.damage);
             player.inv = 0.75;
             damageFlash = 0.42;
             shake = Math.max(shake, 8);
-            if (player.hp <= 0) { end(); return; }
+            if (player.hp <= 0) {
+              end();
+              return;
+            }
           }
-          explosions.push({ x: e.x, y: e.y, radius, life: 0.5, maxLife: 0.5, evolved: false });
+          explosions.push({
+            x: e.x,
+            y: e.y,
+            radius,
+            life: 0.5,
+            maxLife: 0.5,
+            evolved: false,
+          });
           puff(e.x, e.y, "#ff985b", 11);
           continue;
         }
@@ -785,7 +933,11 @@ function update(dt) {
         }
       } else {
         e.eliteChargeCooldown = (e.eliteChargeCooldown ?? 5.5) - dt;
-        if (e.eliteChargeCooldown <= 0 && onScreen && playerDistanceSquared < 350 * 350) {
+        if (
+          e.eliteChargeCooldown <= 0 &&
+          onScreen &&
+          playerDistanceSquared < 350 * 350
+        ) {
           const length = Math.sqrt(playerDistanceSquared) || 1;
           e.eliteChargeX = playerDx / length;
           e.eliteChargeY = playerDy / length;
@@ -796,7 +948,8 @@ function update(dt) {
     }
     if (e === boss) {
       if (e.isFinalBoss) {
-        const nextPhase = e.hp <= e.maxHp * 0.33 ? 3 : e.hp <= e.maxHp * 0.66 ? 2 : 1;
+        const nextPhase =
+          e.hp <= e.maxHp * 0.33 ? 3 : e.hp <= e.maxHp * 0.66 ? 2 : 1;
         if (nextPhase > e.finalPhase) {
           e.finalPhase = nextPhase;
           e.phaseIntro = 1.25;
@@ -804,7 +957,8 @@ function update(dt) {
           e.shootCooldown = Math.max(e.shootCooldown, 1.7);
           e.chargeWarning = 0;
           e.chargeCooldown = Math.max(e.chargeCooldown, 2.6);
-          $("bossName").textContent = `THE LAST MEME · PHASE ${["I", "II", "III"][nextPhase - 1]}`;
+          $("bossName").textContent =
+            `THE LAST MEME · PHASE ${["I", "II", "III"][nextPhase - 1]}`;
           notify(`FINAL BOSS · PHASE ${nextPhase} / 3`, "boss", 4.5);
           playSfx("boss-warn");
           puff(e.x, e.y, "#ffb4fa", 30);
@@ -832,18 +986,37 @@ function update(dt) {
         e.y += e.chargeY * e.chargeSpeed * dt;
       } else {
         e.chargeCooldown -= dt;
-        if (e.chargeCooldown <= 0 && !e.chargeWarning && e.shotWarning <= 0 && e.phaseIntro <= 0 && visibleEnemy(e, -12)) {
+        if (
+          e.chargeCooldown <= 0 &&
+          !e.chargeWarning &&
+          e.shotWarning <= 0 &&
+          e.phaseIntro <= 0 &&
+          visibleEnemy(e, -12)
+        ) {
           e.chargeX = Math.cos(a);
           e.chargeY = Math.sin(a);
-          e.chargeSpeed = (e.isFinalBoss ? 375 + e.finalPhase * 17 : e.variant === 0 ? 360 : e.variant === 1 ? 310 : 395) * (e.phaseTwo ? 1.18 : 1);
+          e.chargeSpeed =
+            (e.isFinalBoss
+              ? 375 + e.finalPhase * 17
+              : e.variant === 0
+                ? 360
+                : e.variant === 1
+                  ? 310
+                  : 395) * (e.phaseTwo ? 1.18 : 1);
           e.chargeWarning = e.isFinalBoss ? 1.15 : e.variant === 2 ? 1.05 : 0.9;
         }
         if (e.chargeWarning > 0) {
           e.chargeWarning = Math.max(0, e.chargeWarning - dt);
           if (!e.chargeWarning) {
-            e.chargeActive = e.isFinalBoss ? 0.46 : e.variant === 1 ? 0.54 : 0.42;
-            e.chargeCooldown = e.isFinalBoss ? 8.7 - (e.finalPhase - 1) * 0.7
-              : (e.variant === 1 ? 8.7 : e.variant === 2 ? 7.8 : 8) * (e.phaseTwo ? 0.77 : 1);
+            e.chargeActive = e.isFinalBoss
+              ? 0.46
+              : e.variant === 1
+                ? 0.54
+                : 0.42;
+            e.chargeCooldown = e.isFinalBoss
+              ? 8.7 - (e.finalPhase - 1) * 0.7
+              : (e.variant === 1 ? 8.7 : e.variant === 2 ? 7.8 : 8) *
+                (e.phaseTwo ? 0.77 : 1);
           }
         }
         e.x += Math.cos(moveAngle) * moveSpeed * dt;
@@ -851,7 +1024,8 @@ function update(dt) {
       }
     } else if (!onScreen) {
       // Offscreen normal enemies keep their exact pursuit speed without angle/trig work.
-      const distance = Math.sqrt(playerDx * playerDx + playerDy * playerDy) || 1;
+      const distance =
+        Math.sqrt(playerDx * playerDx + playerDy * playerDy) || 1;
       e.x += (playerDx / distance) * moveSpeed * dt;
       e.y += (playerDy / distance) * moveSpeed * dt;
     } else {
@@ -878,13 +1052,17 @@ function update(dt) {
         let count = 0;
         for (const other of nearbyEnemies(e.x, e.y, e.r * 2 + 22)) {
           if (other === e || other === boss || other.dead) continue;
-          const dx = e.x - other.x, dy = e.y - other.y;
+          const dx = e.x - other.x,
+            dy = e.y - other.y;
           const lengthSquared = dx * dx + dy * dy;
           const ideal = e.r + other.r;
           if (lengthSquared > 1 && lengthSquared < ideal * ideal) {
-            const push = Math.min(2.5, (ideal - Math.sqrt(lengthSquared)) * 0.12);
-            e.x += dx / Math.sqrt(lengthSquared) * push;
-            e.y += dy / Math.sqrt(lengthSquared) * push;
+            const push = Math.min(
+              2.5,
+              (ideal - Math.sqrt(lengthSquared)) * 0.12,
+            );
+            e.x += (dx / Math.sqrt(lengthSquared)) * push;
+            e.y += (dy / Math.sqrt(lengthSquared)) * push;
           }
           if (++count >= 5) break;
         }
@@ -895,8 +1073,13 @@ function update(dt) {
     if (e === boss) {
       if (e.shotWarning > 0) {
         e.shotWarning = Math.max(0, e.shotWarning - dt);
-        if (e.shotWarning === 0 && visibleEnemy(e, -12) && e.phaseIntro <= 0) bossFire(e);
-      } else if (e.phaseIntro <= 0 && e.chargeActive <= 0 && e.chargeWarning <= 0) {
+        if (e.shotWarning === 0 && visibleEnemy(e, -12) && e.phaseIntro <= 0)
+          bossFire(e);
+      } else if (
+        e.phaseIntro <= 0 &&
+        e.chargeActive <= 0 &&
+        e.chargeWarning <= 0
+      ) {
         e.shootCooldown -= dt;
         if (e.shootCooldown <= 0 && visibleEnemy(e, -12)) {
           e.shootCooldown = 0;
@@ -916,7 +1099,15 @@ function update(dt) {
         e.minionCooldown = (e.minionCooldown ?? 8) - dt;
         if (e.minionCooldown <= 0 && enemies.length < 58) {
           e.minionCooldown = e.isFinalBoss ? 13 : e.variant === 1 ? 11 : 10;
-          const kind = e.isFinalBoss ? (e.finalPhase === 3 ? 1 : 0) : e.variant === 1 ? 1 : e.variant === 2 ? 4 : 0;
+          const kind = e.isFinalBoss
+            ? e.finalPhase === 3
+              ? 1
+              : 0
+            : e.variant === 1
+              ? 1
+              : e.variant === 2
+                ? 4
+                : 0;
           const minionCount = e.isFinalBoss ? 2 : 3;
           for (let i = 0; i < minionCount; i++) {
             const angle = (Math.PI * 2 * i) / minionCount + time;
@@ -924,8 +1115,12 @@ function update(dt) {
               x: e.x + Math.cos(angle) * 115,
               y: e.y + Math.sin(angle) * 115,
               r: kind === 4 ? 15 : 11,
-              hp: (20 + growthTime * 0.08) * (difficultyProfiles[difficulty]?.enemyHealth || 1) * (kind === 1 ? 0.65 : 1),
-              speed: (kind === 1 ? 115 : kind === 4 ? 40 : 66) + growthTime * 0.05,
+              hp:
+                (20 + growthTime * 0.08) *
+                (difficultyProfiles[difficulty]?.enemyHealth || 1) *
+                (kind === 1 ? 0.65 : 1),
+              speed:
+                (kind === 1 ? 115 : kind === 4 ? 40 : 66) + growthTime * 0.05,
               damage: (kind === 4 ? 6 : 8) + growthTime * 0.004,
               kind,
               shootCooldown: kind === 4 ? 3.2 : undefined,
@@ -945,8 +1140,13 @@ function update(dt) {
       }
     }
     const playerHitRadius = enemyHitRadius(e) + player.r;
-    const collisionDx = player.x - e.x, collisionDy = player.y - e.y;
-    if (collisionDx * collisionDx + collisionDy * collisionDy < playerHitRadius * playerHitRadius && player.inv <= 0) {
+    const collisionDx = player.x - e.x,
+      collisionDy = player.y - e.y;
+    if (
+      collisionDx * collisionDx + collisionDy * collisionDy <
+        playerHitRadius * playerHitRadius &&
+      player.inv <= 0
+    ) {
       if (tryDodge()) continue;
       player.hp -= e.damage;
       recordPlayerHit(e.damage);
@@ -962,9 +1162,18 @@ function update(dt) {
     if (upgrades.orbit) {
       const bladeRadius = enemyHitRadius(e) + 12 * bladeScale();
       for (let index = 0; index < upgrades.orbit; index++) {
-        const bladeDx = e.x - bladePositions[index * 2], bladeDy = e.y - bladePositions[index * 2 + 1];
-        if (bladeDx * bladeDx + bladeDy * bladeDy < bladeRadius * bladeRadius && (!e.bladeHit || time - e.bladeHit > 0.35)) {
-          damage(e, (35 + upgrades.orbit * 3) * globalDamageMultiplier(), player, "blade");
+        const bladeDx = e.x - bladePositions[index * 2],
+          bladeDy = e.y - bladePositions[index * 2 + 1];
+        if (
+          bladeDx * bladeDx + bladeDy * bladeDy < bladeRadius * bladeRadius &&
+          (!e.bladeHit || time - e.bladeHit > 0.35)
+        ) {
+          damage(
+            e,
+            (35 + upgrades.orbit * 3) * globalDamageMultiplier(),
+            player,
+            "blade",
+          );
           e.bladeHit = time;
         }
       }
@@ -1011,9 +1220,13 @@ function update(dt) {
         Math.max(-b.turnRate * dt, Math.min(b.turnRate * dt, difference));
       b.vx = Math.cos(angle) * b.speed;
       b.vy = Math.sin(angle) * b.speed;
-      const returnDx = b.x - player.x, returnDy = b.y - player.y;
+      const returnDx = b.x - player.x,
+        returnDy = b.y - player.y;
       const returnRadius = player.r + b.r;
-      if (b.returning && returnDx * returnDx + returnDy * returnDy < returnRadius * returnRadius) {
+      if (
+        b.returning &&
+        returnDx * returnDx + returnDy * returnDy < returnRadius * returnRadius
+      ) {
         b.life = 0;
         continue;
       }
@@ -1027,7 +1240,9 @@ function update(dt) {
     }
 
     for (const e of nearbyEnemies(b.x, b.y, b.r + 280)) {
-      const dx = e.x - b.x, dy = e.y - b.y, hitRadius = enemyHitRadius(e) + b.r;
+      const dx = e.x - b.x,
+        dy = e.y - b.y,
+        hitRadius = enemyHitRadius(e) + b.r;
       if (!b.hit.has(e) && dx * dx + dy * dy < hitRadius * hitRadius) {
         damage(e, b.type === "fish" && e === boss ? b.d * 0.55 : b.d, b);
         b.hit.add(e);
@@ -1059,7 +1274,11 @@ function update(dt) {
         fuse: 1.5,
         evolved: !!evolutions.megaEiad,
         radius: 150 + upgrades.bomb * 24 + (evolutions.megaEiad ? 40 : 0),
-        damage: calculateBombDamage(upgrades.bomb, globalDamageMultiplier(), !!evolutions.megaEiad),
+        damage: calculateBombDamage(
+          upgrades.bomb,
+          globalDamageMultiplier(),
+          !!evolutions.megaEiad,
+        ),
       });
       bombTimer = 12;
     }
@@ -1072,13 +1291,26 @@ function update(dt) {
       continue;
     }
     for (const target of nearbyEnemies(bomb.x, bomb.y, bomb.radius + 280)) {
-      const dx = target.x - bomb.x, dy = target.y - bomb.y;
+      const dx = target.x - bomb.x,
+        dy = target.y - bomb.y;
       const hitRadius = bomb.radius + enemyHitRadius(target);
       if (dx * dx + dy * dy < hitRadius * hitRadius) {
-        damage(target, bomb.damage * (target === boss ? 0.42 : 1), bomb, "bomb");
+        damage(
+          target,
+          bomb.damage * (target === boss ? 0.42 : 1),
+          bomb,
+          "bomb",
+        );
       }
     }
-    if (bomb.evolved) bombAftershocks.push({ x: bomb.x, y: bomb.y, delay: 0.42, radius: bomb.radius * 0.72, damage: bomb.damage * 0.3 });
+    if (bomb.evolved)
+      bombAftershocks.push({
+        x: bomb.x,
+        y: bomb.y,
+        delay: 0.42,
+        radius: bomb.radius * 0.72,
+        damage: bomb.damage * 0.3,
+      });
     puff(bomb.x, bomb.y, "#e6a96a", 26);
     playSfx("bomb");
     explosions.push({
@@ -1096,14 +1328,32 @@ function update(dt) {
     aftershock.delay -= dt;
     if (aftershock.delay > 0) continue;
     bombAftershocks.splice(i, 1);
-    for (const target of nearbyEnemies(aftershock.x, aftershock.y, aftershock.radius + 280)) {
-      const dx = target.x - aftershock.x, dy = target.y - aftershock.y;
+    for (const target of nearbyEnemies(
+      aftershock.x,
+      aftershock.y,
+      aftershock.radius + 280,
+    )) {
+      const dx = target.x - aftershock.x,
+        dy = target.y - aftershock.y;
       const hitRadius = aftershock.radius + enemyHitRadius(target);
       if (dx * dx + dy * dy < hitRadius * hitRadius) {
-        damage(target, aftershock.damage * (target === boss ? 0.42 : 1), aftershock, "bomb");
+        damage(
+          target,
+          aftershock.damage * (target === boss ? 0.42 : 1),
+          aftershock,
+          "bomb",
+        );
       }
     }
-    explosions.push({ x: aftershock.x, y: aftershock.y, radius: aftershock.radius, life: 0.45, maxLife: 0.45, evolved: true, aftershock: true });
+    explosions.push({
+      x: aftershock.x,
+      y: aftershock.y,
+      radius: aftershock.radius,
+      life: 0.45,
+      maxLife: 0.45,
+      evolved: true,
+      aftershock: true,
+    });
     puff(aftershock.x, aftershock.y, "#c18bff", 12);
   }
   for (const explosion of explosions) explosion.life -= dt;
@@ -1129,10 +1379,17 @@ function update(dt) {
       continue;
     }
 
-    const hitDx = shot.x - player.x, hitDy = shot.y - player.y;
+    const hitDx = shot.x - player.x,
+      hitDy = shot.y - player.y;
     const hitRadius = shot.r + player.r;
-    if (hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius && player.inv <= 0) {
-      if (tryDodge()) { shot.life = 0; continue; }
+    if (
+      hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius &&
+      player.inv <= 0
+    ) {
+      if (tryDodge()) {
+        shot.life = 0;
+        continue;
+      }
       player.hp -= shot.damage;
       recordPlayerHit(shot.damage);
       player.inv = 0.7;
@@ -1156,7 +1413,8 @@ function update(dt) {
     hazard.warning -= dt;
     if (hazard.warning > 0) continue;
     bossHazards.splice(i, 1);
-    const dx = hazard.x - player.x, dy = hazard.y - player.y;
+    const dx = hazard.x - player.x,
+      dy = hazard.y - player.y;
     const reach = hazard.radius + player.r;
     if (dx * dx + dy * dy <= reach * reach && player.inv <= 0 && !tryDodge()) {
       player.hp -= hazard.damage;
@@ -1171,8 +1429,12 @@ function update(dt) {
       }
     }
     explosions.push({
-      x: hazard.x, y: hazard.y, radius: hazard.radius,
-      life: 0.48, maxLife: 0.48, evolved: true,
+      x: hazard.x,
+      y: hazard.y,
+      radius: hazard.radius,
+      life: 0.48,
+      maxLife: 0.48,
+      evolved: true,
     });
     puff(hazard.x, hazard.y, "#ed99ff", 14);
     playSfx("bomb");
@@ -1186,10 +1448,17 @@ function update(dt) {
       b.life = 0;
       continue;
     }
-    const hitDx = b.x - player.x, hitDy = b.y - player.y;
+    const hitDx = b.x - player.x,
+      hitDy = b.y - player.y;
     const hitRadius = b.r + player.r;
-    if (hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius && player.inv <= 0) {
-      if (tryDodge()) { b.life = 0; continue; }
+    if (
+      hitDx * hitDx + hitDy * hitDy < hitRadius * hitRadius &&
+      player.inv <= 0
+    ) {
+      if (tryDodge()) {
+        b.life = 0;
+        continue;
+      }
       const projectileDamage = b.damage ?? 13;
       player.hp -= projectileDamage;
       recordPlayerHit(projectileDamage);
@@ -1204,14 +1473,15 @@ function update(dt) {
       }
     }
   }
-  bossShots = bossShots.filter(
-    (b) => b.life > 0 && !projectileOutsideArena(b),
-  );
+  bossShots = bossShots.filter((b) => b.life > 0 && !projectileOutsideArena(b));
   let collectedGem = false;
-  const pickupRange = 90 + upgrades.magnet * 55 + (metaProgress.magnetLevel || 0) * 12;
+  const pickupRange =
+    90 + upgrades.magnet * 55 + (metaProgress.magnetLevel || 0) * 12;
   for (const g of nearbyGems(player.x, player.y, pickupRange)) {
-    const oldX = g.x, oldY = g.y;
-    const dx = player.x - g.x, dy = player.y - g.y;
+    const oldX = g.x,
+      oldY = g.y;
+    const dx = player.x - g.x,
+      dy = player.y - g.y;
     const distanceSquared = dx * dx + dy * dy;
     const range = pickupRange;
     if (distanceSquared < range * range) {
@@ -1233,7 +1503,12 @@ function update(dt) {
       } else {
         if (runStats) runStats.soulsCollected++;
         playSfx("xp");
-        addXP(g.value * (g.kind === "health" ? 1 : 1 + Math.max(0, upgrades.magnet - 2) * 0.05));
+        addXP(
+          g.value *
+            (g.kind === "health"
+              ? 1
+              : 1 + Math.max(0, upgrades.magnet - 2) * 0.05),
+        );
         if (paused) break;
       }
     }
@@ -1278,7 +1553,12 @@ function loop(t) {
     simulationAccumulator += Math.min(elapsed, 0.1) * gameSpeed;
     const fixedStep = 1 / 60;
     let steps = 0;
-    while (simulationAccumulator >= fixedStep && steps < 8 && active && !paused) {
+    while (
+      simulationAccumulator >= fixedStep &&
+      steps < 8 &&
+      active &&
+      !paused
+    ) {
       update(fixedStep);
       simulationAccumulator -= fixedStep;
       steps++;
