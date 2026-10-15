@@ -6,7 +6,7 @@ const weaponCatalog = [
   { key: "chain", name: "Chain Lightning", image: "", description: "Lightning jumps between enemies within a shorter range.", damage: "31 base", cooldown: "~5.6s", evolution: "Level 5 + Emmer Mayo level 3 + one boss defeated → Tempest" },
   { key: "boomerang", name: "Boomerang", image: "", description: "A returning blade pierces enemies on its outbound and return path.", damage: "36 base", cooldown: "5.5s", evolution: "Level 5 + Phantom Shots level 3 + one boss defeated → Returning Storm" },
   { key: "flame", name: "Flame Cone", image: "", description: "A close-range cone burns groups of enemies and applies damage over time.", damage: "55 base + burn", cooldown: "4.45s", evolution: "Level 5 + Emmer Mayo level 3 + one boss defeated → Inferno" },
-  { key: "frost", name: "Frost Orb", image: "", description: "One homing orb detonates on impact, chilling nearby enemies without piercing.", damage: "28–44 direct + light AoE", cooldown: "3.92s → 3.20s", evolution: "Level 5 + Critical Force level 3 + one boss defeated → Glacier" },
+  { key: "frost", name: "Frost Orb", image: "", description: "One homing orb detonates on impact, slowing nearby enemies without piercing.", damage: "28–44 direct + light AoE", cooldown: "3.92s → 3.20s", evolution: "Level 5 + Critical Force level 3 + one boss defeated → Glacier" },
   { key: "nova", name: "Death Pulse", image: "", description: "Releases a damaging circular shockwave; evolves into a double-pulse eclipse.", damage: "34–70 base by level", cooldown: "2.9s → 1.95s", evolution: "Level 5 + Expanding Aura level 3 + one boss defeated → Eclipse" },
 ];
 
