@@ -65,3 +65,22 @@
   background-position:center 48%;
   background-size:cover;
 }
+
+/* Background art must be a clean landscape (no baked-in UI).
+   Anchor it to the bottom edge so it never exposes a gap. */
+#overlay.cinematic-overlay .cinematic-menu::before{
+  inset:0;
+  background-image:url('../img/menu-background.webp'),url('../img/menu-landscape.svg');
+  background-repeat:no-repeat;
+  background-position:center bottom;
+  background-size:cover;
+  transform-origin:center bottom;
+  animation:cinematic-background-breathe 32s ease-in-out infinite alternate;
+}
+@keyframes cinematic-background-breathe{
+  from{transform:scale(1)}
+  to{transform:scale(1.025)}
+}
+@media(prefers-reduced-motion:reduce){
+  #overlay.cinematic-overlay .cinematic-menu::before{animation:none}
+}
