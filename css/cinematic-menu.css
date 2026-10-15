@@ -57,3 +57,11 @@
   .cinematic-world{padding:5px 9px}
   .cinematic-world strong{font-size:12px;margin-top:3px}
 }
+
+/* The final cinematic illustration can replace the SVG without changing UI markup.
+   Keep the vector fallback until img/menu-background.webp is committed. */
+.cinematic-menu::before{
+  background-image:url('../img/menu-background.webp'),url('../img/menu-landscape.svg');
+  background-position:center 48%;
+  background-size:cover;
+}
