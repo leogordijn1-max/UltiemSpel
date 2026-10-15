@@ -6,7 +6,7 @@ const weaponCatalog = [
   { key: "chain", name: "Chain Lightning", image: "", description: "Lightning jumps between enemies within a shorter range.", damage: "31 base", cooldown: "~5.6s", evolution: "Level 5 + Emmer Mayo level 3 + one boss defeated → Tempest" },
   { key: "boomerang", name: "Boomerang", image: "", description: "A returning blade pierces enemies on its outbound and return path.", damage: "36 base", cooldown: "5.5s", evolution: "Level 5 + Phantom Shots level 3 + one boss defeated → Returning Storm" },
   { key: "flame", name: "Flame Cone", image: "", description: "A close-range cone burns groups of enemies and applies damage over time.", damage: "55 base + burn", cooldown: "4.45s", evolution: "Level 5 + Emmer Mayo level 3 + one boss defeated → Inferno" },
-  { key: "frost", name: "Frost Orb", image: "", description: "Homing orbs burst into a chilling area that slows groups.", damage: "40 + area burst", cooldown: "3.75s", evolution: "Level 5 + Critical Force level 3 + one boss defeated → Glacier" },
+  { key: "frost", name: "Frost Orb", image: "", description: "One homing orb detonates on impact, chilling nearby enemies without piercing.", damage: "28–44 direct + light AoE", cooldown: "3.92s → 3.20s", evolution: "Level 5 + Critical Force level 3 + one boss defeated → Glacier" },
   { key: "nova", name: "Death Pulse", image: "", description: "Releases a damaging circular shockwave; evolves into a double-pulse eclipse.", damage: "34–70 base by level", cooldown: "2.9s → 1.95s", evolution: "Level 5 + Expanding Aura level 3 + one boss defeated → Eclipse" },
 ];
 
@@ -17,7 +17,7 @@ const opts = [
   ["chain", "Chain Lightning", "Lightning hits up to 2 + half your level in nearby targets. Attacks faster, but chains over a shorter range."],
   ["boomerang", "Boomerang", "A returning blade pierces enemies along its path."],
   ["flame", "Flame Cone", "Blast a wide close-range cone and burn enemies for extra damage."],
-  ["frost", "Frost Orb", "Homing orbs damage and chill a group, slowing them for several seconds."],
+  ["frost", "Frost Orb", "One homing orb chills a wider area with each level and fires slightly faster."],
   ["nova", "Death Pulse", "Strengthen the expanding pulse: more damage and shorter cooldown with each level."],
   ["damage", "Emmer Mayo", "Increase damage dealt by every weapon by 18% per level."],
   ["speed", "Quickstep", "Move and dash 10% faster per level; levels 3–5 also grant a small dodge chance."],
@@ -125,7 +125,7 @@ function upgradeEffectAtLevel(key, value) {
     chain: `${22 + value * 9} base lightning damage · ${2 + Math.floor(value / 2)} jumps · 600 targeting range`,
     boomerang: `${28 + value * 8} base damage${value >= 4 ? " · 2 blades" : ""}`,
     flame: `${42 + value * 13} base flame damage · ${8 + value * 5} burn DPS`,
-    frost: `${28 + value * 12} base orb damage · ${1 + Math.floor(value / 2)} pierce`,
+    frost: `${24 + value * 4} base damage · ${88 + value * 12}px chill radius · ${(4.1 - value * 0.18).toFixed(2)}s cooldown · no pierce`,
     nova: `${25 + value * 9} base area damage · ${(2.9 - value * 0.19).toFixed(2)}s cooldown`,
   };
   if (key === "speed") return `${value * 10}% movement and dash speed${value >= 3 ? ` · ${Math.min(12, (value - 2) * 3)}% dodge chance` : ""}`;
