@@ -26,3 +26,34 @@
 @keyframes cinematic-drift{from{transform:scale(1)}to{transform:scale(1.045) translateX(-.8%)}}
 @media(max-width:680px){.cinematic-top{padding:20px}.cinematic-mode{gap:5px;font-size:9px}.cinematic-mode button{padding:9px}.cinematic-content{justify-content:flex-start;padding:70px 22px 35px}.cinematic-menu::after{background:linear-gradient(90deg,#05090eea,#05090e77),linear-gradient(0deg,#05090edc,transparent 60%)}#panel .cinematic-title{font-size:clamp(46px,12vw,78px)}#panel .cinematic-subtitle{font-size:10px;letter-spacing:.17em;margin-bottom:28px}.cinematic-nav button{font-size:14px;min-height:44px}.cinematic-footer{padding:20px;align-items:flex-start}.cinematic-world strong{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.cinematic-menu::before{animation:none}}
+
+/* The title screen is a single viewport, not a scrolling web page. */
+#overlay.cinematic-overlay{height:100vh;height:100dvh;overflow:hidden}
+#overlay.cinematic-overlay #panel{height:100%;min-height:0;overflow:hidden}
+.cinematic-menu{height:100%;min-height:0;overflow:hidden}
+.cinematic-content{min-height:0;padding-top:12px;padding-bottom:12px}
+.cinematic-top{flex-shrink:0}
+.cinematic-footer{flex-shrink:0}
+@media(max-height:780px){
+  .cinematic-top{padding-top:12px;padding-bottom:6px}
+  #panel .cinematic-title{font-size:clamp(40px,9vh,80px)}
+  #panel .cinematic-subtitle{margin:14px 0 18px}
+  .cinematic-nav{gap:0}
+  .cinematic-nav button{min-height:38px;padding-top:7px;padding-bottom:7px;font-size:14px}
+  .cinematic-content{padding-top:5px;padding-bottom:5px}
+  .cinematic-note{margin-top:7px}
+  .cinematic-footer{padding-top:6px;padding-bottom:12px}
+}
+@media(max-width:680px){
+  .cinematic-content{justify-content:center;padding:8px 22px}
+}
+@media(max-height:570px){
+  .cinematic-top{padding-top:6px;padding-bottom:0}
+  #panel .cinematic-title{font-size:clamp(34px,8vh,58px)}
+  #panel .cinematic-subtitle{margin:7px 0 9px}
+  .cinematic-nav button{min-height:31px;padding-top:4px;padding-bottom:4px;font-size:12px}
+  .cinematic-note{display:none}
+  .cinematic-footer{padding-top:4px;padding-bottom:6px}
+  .cinematic-world{padding:5px 9px}
+  .cinematic-world strong{font-size:12px;margin-top:3px}
+}
