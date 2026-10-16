@@ -95,9 +95,9 @@ function updateElementalCombat(dt) {
     }
   }
   if (upgrades.tidalWave && !elementalTimers.tidalWave) {
-    const aim = elementalAim(400);
+    const radius = 180 + upgrades.tidalWave * 17;
+    const aim = elementalAim(radius + 20);
     if (aim.target) {
-      const radius = 180 + upgrades.tidalWave * 17;
       const spread = 1.7;
       elementalAreas.push({ type: "tidalWave", x: player.x, y: player.y, radius, angle: aim.angle, spread, life: 0.58, maxLife: 0.58 });
       for (const enemy of nearbyEnemies(player.x, player.y, radius + 90)) {
@@ -194,7 +194,7 @@ function updateElementalCombat(dt) {
       const dx = area.x - enemy.x, dy = area.y - enemy.y;
       const distance = Math.hypot(dx, dy) || 1;
       if (distance > area.radius + enemyHitRadius(enemy)) continue;
-      const force = enemy === boss ? 12 : 110;
+      const force = enemy === boss ? 60 : 680;
       enemy.knockbackX = (enemy.knockbackX || 0) + dx / distance * force * dt;
       enemy.knockbackY = (enemy.knockbackY || 0) + dy / distance * force * dt;
       enemy.soakedUntil = Math.max(enemy.soakedUntil || 0, time + 0.6);
