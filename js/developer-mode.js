@@ -7,6 +7,7 @@
   let enabled = storageGet(PREF, "false") === "true";
   let sandbox = false;
   let invincible = false;
+  let testElement = null;
   let open = false;
   let wasPlaying = false;
   let panelNode = null;
@@ -14,6 +15,7 @@
 
   const isSandbox = () => sandbox;
   window.isDeveloperRun = isSandbox;
+  window.developerRunElement = () => sandbox ? testElement : null;
   window.developerModeEnabled = () => enabled;
   function setEnabled(value) {
     // Don't allow turning protection off in the middle of an active run.
@@ -47,6 +49,7 @@
     }
     sandbox = enabled;
     invincible = false;
+    testElement = null;
     updateBadge();
   }
   function endRun() {
@@ -57,6 +60,7 @@
     }
     sandbox = false;
     invincible = false;
+    testElement = null;
     updateBadge();
   }
   window.developerBeginRun = beginRun;
@@ -161,6 +165,27 @@
     updateBadge();
     updateHud();
   }
+  function changeRunElement(nextElement) {
+    if (!available() || !isLivingWorldElement(nextElement)) return;
+    if (!window.developerChangeRunElement?.(nextElement)) return;
+    testElement = nextElement;
+    const loadout = elementalLoadout(nextElement);
+    selectedWeapons = [...loadout];
+    startWeapon = loadout[0];
+    unlockableWeapons = loadout.slice(1);
+    unlockedWeapons = [startWeapon];
+    upgrades = { ...upgrades, ...makeStartingWeaponLevels(startWeapon) };
+    evolutions = {};
+    resetElementalCombat();
+    bullets = [];
+    lightningSegments = [];
+    flameBursts = [];
+    frostZones = [];
+    weaponTimers = { chain: 0, boomerang: 0, flame: 0, frost: 0 };
+    window.resetWorldScars?.();
+    notify("DEV · CHANGED TO " + nextElement.toUpperCase(), "wave", 2);
+    updateHud();
+  }
   function startWorldState(original) {
     if (!available() || !window.developerChangeWorld) return;
     window.developerChangeWorld(original);
@@ -193,6 +218,9 @@
     addButton(s, "MAX ALL 3 WEAPONS", () => maxLoadout(false));
     addButton(s, "EVOLVE ALL 3 WEAPONS", () => maxLoadout(true));
 
+    s = section(root, "SWITCH ELEMENT · SAME RUN");
+    for (const id of ["fire", "water", "frost"])
+      addButton(s, id.toUpperCase() + " LOADOUT", () => changeRunElement(id));
     s = section(root, "BOSS QUICK TESTS");
     addButton(s, "SPAWN NORMAL BOSS", () => spawnTestBoss(false), !!boss);
     addButton(s, "SPAWN FINAL BOSS", () => spawnTestBoss(true),
