@@ -526,6 +526,10 @@ function renderRunSummaryPanel() {
   appendRunStatistics(holder, {
     survived: time, level, kills, bosses: bossesDefeated,
     evolutionCount: Object.values(evolutions).filter(Boolean).length,
+    worldBefore: window.getWorldConquest?.().original,
+    runElement: typeof currentLivingWorldElement === "function" ? currentLivingWorldElement() : "fire",
+    worldImpact: victoryClaimed ? 100 : (window.getWorldConquest?.().restorationPeak || window.getWorldConquest?.().target || 0),
+    worldAfter: victoryClaimed ? window.getWorldConquest?.().invading : window.getWorldConquest?.().original,
     stats: runStats,
   });
   panelNode.insertBefore(holder, choicesNode);
