@@ -22,6 +22,7 @@ function backButton(parent) {
   parent.append(button);
 }
 function showMainMenu() {
+  window.developerEndRun?.();
   window.abandonWorldRun?.();
   window.clearWorldScars?.();
   menuRunMode = "standard";
@@ -203,6 +204,7 @@ function showSettings(fromPause = false) {
       graphicsQuality = $("graphicsQuality").value;
       storageSet("shadowGraphics", graphicsQuality);
     };
+    window.appendDeveloperSettings?.(parent);
     if (fromPause) appendMenuButton(parent, "BACK TO PAUSE", showPauseMenu);
     else backButton(parent);
   });
@@ -568,6 +570,8 @@ function showPauseMenu() {
     appendMenuButton(parent, "CURRENT BUILD", showCurrentBuild);
     appendMenuButton(parent, "CONTROLS", () => showControlsHelp(true));
     appendMenuButton(parent, "SETTINGS", () => showSettings(true));
+    if (window.isDeveloperRun?.())
+      appendMenuButton(parent, "DEVELOPER MODE · F9", () => window.openDeveloperPanel?.());
     appendMenuButton(parent, "RESTART RUN", () => {
       if (!window.confirm("Restart this run? Unsaved run rewards will be lost.")) return;
       reset();
@@ -625,6 +629,7 @@ function showControlsHelp(fromPause = false) {
       ["P / Escape", "Pause or resume during normal gameplay."],
       ["1 / 2 / 3", "Choose simulation speed during gameplay."],
       ["F", "Toggle fullscreen without leaving your current screen."],
+      ["F9", "Developer tools, when enabled in Settings."],
       ["Level-up", "Choose from three upgrades when a choice appears."],
     ]) {
       const line = document.createElement("p");
