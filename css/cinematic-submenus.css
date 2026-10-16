@@ -344,3 +344,6 @@
   margin:0 0 8px 12px;padding:9px 16px;
   border:1px solid #d5ad72;background:#25231f;color:#f3e1c2;
 }
+
+/* Field guides use the fixed upper back control; hide the redundant lower button. */
+#overlay.cinematic-submenu .cinematic-guide-panel #choices > button:last-child { display:none; }
