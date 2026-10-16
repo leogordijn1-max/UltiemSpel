@@ -1,83 +1,146 @@
-// Stage 2: visual-only world scars, capped to protect performance.
-// All positions are in arena/world coordinates; no combat stats are changed.
+// Living World 3A — painterly arena scars, entirely visual and sprite-cached.
+// The player can leave at most 140 marks; older worlds seed subtle repeatable scars.
 (() => {
-  const MAX_SCARS = 120;
-  const liveScars = [];
-  const palette = {
-    frost: ["#83d9e6", "#bbf6ff"],
-    fire: ["#8a503c", "#d27940"],
-    ruin: ["#4c4646", "#75665c"],
+  const KEY = "shadowLivingWorldV1";
+  const MAX_SCARS = 140;
+  const scars = [];
+  const cachedSprites = new Map();
+  const types = ["frost", "fire", "ruin"];
+  const hash = (x,y) => {
+    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return n - Math.floor(n);
   };
-  const hash = (x, y) => {
-    const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-    return value - Math.floor(value);
+  const rngFrom = seed => {
+    let n = ((seed * 4294967295) >>> 0) || 1;
+    return () => { n ^= n << 13; n ^= n >>> 17; n ^= n << 5; return (n >>> 0) / 4294967296; };
   };
-  window.resetWorldScars = () => { liveScars.length = 0; };
-  window.addWorldScar = (type, x, y, radius) => {
-    if (!palette[type] || !Number.isFinite(x) || !Number.isFinite(y)) return;
-    if (graphicsQuality === "low") return;
-    const size = Math.max(12, Math.min(90, radius * 0.32));
-    // Skip nearly identical overlapping marks.
-    if (liveScars.some(s => s.type === type && (s.x-x)**2 + (s.y-y)**2 < 24**2)) return;
-    liveScars.push({type, x, y, size, seed:hash(x,y)});
-    if (liveScars.length > MAX_SCARS) liveScars.shift();
-  };
-  const strokeScar = (s, alpha) => {
-    const colors = palette[s.type];
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(s.x,s.y);
-    ctx.rotate(s.seed*Math.PI*2);
-    if (s.type === "frost") {
-      ctx.strokeStyle = colors[0];
-      ctx.lineWidth = 1.3;
-      for (let arm=0; arm<5; arm++) {
-        const angle = arm*Math.PI*2/5;
-        ctx.beginPath();ctx.moveTo(0,0);
-        ctx.lineTo(Math.cos(angle)*s.size,Math.sin(angle)*s.size);
-        ctx.stroke();
+  function sprite(type, variant) {
+    const key = type + variant;
+    if (cachedSprites.has(key)) return cachedSprites.get(key);
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 256;
+    const g = canvas.getContext("2d");
+    const random = rngFrom(hash(variant + types.indexOf(type) * 17, 9));
+    const mid = 128, r = 102;
+    const disk = (radius, fill, scaleY=1) => {
+      g.save();g.translate(mid,mid);g.scale(1,scaleY);
+      g.fillStyle=fill;g.beginPath();g.arc(0,0,radius,0,Math.PI*2);g.fill();g.restore();
+    };
+    const grad = (inner, outer) => {
+      const v=g.createRadialGradient(mid,mid,8,mid,mid,r);
+      v.addColorStop(0,inner);v.addColorStop(.58,outer);v.addColorStop(1,"#00000000");return v;
+    };
+    if (type === "frost") {
+      disk(r,grad("#73e4ff54","#358bae21"),.75);
+      g.save();g.translate(mid,mid);
+      for(let i=0;i<8;i++){
+        const a=i*Math.PI/4+variant*.29;
+        const length=(42+random()*45);
+        g.save();g.rotate(a);g.strokeStyle=i%2?"#8ef0ffb3":"#cefaffb5";
+        g.lineWidth=1.5+random()*2;g.beginPath();g.moveTo(0,0);
+        g.lineTo(length,random()*9-4);g.stroke();
+        for(let j=1;j<4;j++){
+          const x=length*j/4;
+          g.beginPath();g.moveTo(x,0);g.lineTo(x-11, -8-j*2);g.moveTo(x,0);g.lineTo(x-12,8+j*2);g.stroke();
+        }g.restore();
       }
-    } else if (s.type === "fire") {
-      ctx.fillStyle = colors[0];
-      ctx.beginPath();ctx.ellipse(0,0,s.size*1.2,s.size*.55,0,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle=colors[1];ctx.lineWidth=1;
-      ctx.beginPath();ctx.arc(0,0,s.size*.75,.2,2.5);ctx.stroke();
+      for(let i=0;i<20;i++){
+        const a=random()*Math.PI*2, d=16+random()*72, x=Math.cos(a)*d,y=Math.sin(a)*d*.72;
+        const w=3+random()*9,h=5+random()*15;
+        g.fillStyle=i%2?"#b6f6ffad":"#5bd3f1a6";
+        g.beginPath();g.moveTo(x,y-h);g.lineTo(x+w,y+1);g.lineTo(x,y+h*.3);g.lineTo(x-w,y+1);g.closePath();g.fill();
+        g.strokeStyle="#e5fcffb0";g.lineWidth=.8;g.stroke();
+      }g.restore();
+    } else if(type === "fire") {
+      disk(r,grad("#08090abd","#25160f7a"),.82);
+      disk(80,grad("#180c09ad","#54200f42"),.74);
+      g.save();g.translate(mid,mid);g.scale(1,.8);
+      for(let i=0;i<34;i++){
+        const a=random()*Math.PI*2,d=20+random()*90;
+        const x=Math.cos(a)*d,y=Math.sin(a)*d;
+        g.fillStyle=i%4===0?"#bd593966":"#030608b3";
+        g.beginPath();g.ellipse(x,y,2+random()*11,1+random()*7,a,0,Math.PI*2);g.fill();
+      }
+      for(let i=0;i<12;i++){
+        const a=random()*Math.PI*2,d=24+random()*72,x=Math.cos(a)*d,y=Math.sin(a)*d;
+        g.fillStyle=i%3===0?"#ffbc6899":"#dd643e91";
+        g.beginPath();g.arc(x,y,1.2+random()*2.2,0,Math.PI*2);g.fill();
+      }g.restore();
     } else {
-      ctx.strokeStyle=colors[1];ctx.lineWidth=2;
-      for (let i=0;i<4;i++){
-        const a=i*Math.PI/2+s.seed;
-        ctx.beginPath();ctx.moveTo(0,0);
-        ctx.lineTo(Math.cos(a)*s.size*(.7+i*.12),Math.sin(a)*s.size*(.7+i*.12));
-        ctx.stroke();
+      disk(r,grad("#111113a8","#45383250"),.82);
+      g.save();g.translate(mid,mid);
+      g.strokeStyle="#74665ca1";g.lineWidth=3;
+      for(let i=0;i<9;i++){
+        const a=i*Math.PI*2/9+variant*.13;
+        g.beginPath();g.moveTo(random()*10-5,random()*10-5);
+        let x=0,y=0;
+        for(let j=0;j<4;j++){
+          const length=15+j*15+random()*12;
+          x=Math.cos(a)*length+(random()-.5)*13;
+          y=Math.sin(a)*length*.72+(random()-.5)*13;
+          g.lineTo(x,y);
+        }g.stroke();
+        g.strokeStyle="#090b0caa";g.lineWidth=1.5;g.stroke();
+        g.strokeStyle="#74665ca1";g.lineWidth=3;
       }
+      for(let i=0;i<17;i++){
+        const a=random()*Math.PI*2,d=25+random()*70,x=Math.cos(a)*d,y=Math.sin(a)*d*.75,size=3+random()*8;
+        g.fillStyle=i%3===0?"#a093798c":"#484440bb";
+        g.beginPath();g.moveTo(x-size,y-size*.5);g.lineTo(x+size*.7,y-size);g.lineTo(x+size,y+size*.5);g.lineTo(x-size*.5,y+size);g.closePath();g.fill();
+        g.strokeStyle="#1a1b1dbb";g.lineWidth=1;g.stroke();
+      }g.restore();
     }
-    ctx.restore();
+    cachedSprites.set(key,canvas);return canvas;
+  }
+  window.resetWorldScars=()=>{scars.length=0};
+  window.addWorldScar=(type,x,y,radius)=>{
+    if(!types.includes(type)||!Number.isFinite(x)||!Number.isFinite(y))return;
+    if(typeof graphicsQuality!=="undefined"&&graphicsQuality==="low")return;
+    if(scars.some(s=>s.type===type&&(s.x-x)**2+(s.y-y)**2<48**2))return;
+    const size=Math.max(48,Math.min(152,(radius||80)*.83));
+    scars.push({type,x,y,size,variant:Math.floor(hash(x,y)*4)});
+    if(scars.length>MAX_SCARS)scars.shift();
   };
-  window.drawWorldScars = (left, top) => {
-    if (graphicsQuality === "low") return;
-    const right=left+W, bottom=top+H;
-    // Historical scars are deterministic and sparse; old runs change the terrain.
-    let world;
-    try { world=JSON.parse(storageGet("shadowLivingWorldV1","null")); } catch { world=null; }
-    if (world && world.runs > 0) {
-      const types = ["frost","fire","ruin"];
-      for (let i=0;i<types.length;i++) {
-        const type=types[i], strength=Math.min(18,Math.floor(Number(world[type])||0));
-        if (!strength) continue;
-        const step=540;
-        const startX=Math.floor(left/step)-1, endX=Math.ceil(right/step)+1;
-        const startY=Math.floor(top/step)-1, endY=Math.ceil(bottom/step)+1;
-        for(let gx=startX;gx<=endX;gx++) for(let gy=startY;gy<=endY;gy++){
-          const n=hash(gx+i*47,gy-i*21);
-          if(n>Math.min(.42,strength*.028))continue;
-          const s={type,x:(gx+n*.8)*step,y:(gy+hash(gy,gx)*.8)*step,size:20+n*40,seed:n};
-          strokeScar(s,.17);
+  let lastSave="",world=null,lastCheck=0;
+  function historicalWorld(){
+    const now=Date.now();
+    if(now-lastCheck<4000)return world;
+    lastCheck=now;
+    try{
+      const data=storageGet(KEY,"null");
+      if(data!==lastSave){lastSave=data;world=JSON.parse(data);}
+    }catch{world=null}
+    return world;
+  }
+  function drawMark(mark,alpha){
+    const tile=sprite(mark.type,mark.variant);
+    ctx.globalAlpha=alpha;
+    ctx.drawImage(tile,mark.x-mark.size,mark.y-mark.size,mark.size*2,mark.size*2);
+  }
+  window.drawWorldScars=(left,top)=>{
+    if(typeof graphicsQuality!=="undefined"&&graphicsQuality==="low")return;
+    const right=left+W,bottom=top+H;
+    const history=historicalWorld();
+    const fullQuality=graphicsQuality==="high";
+    ctx.save();
+    if(history&&history.runs>0){
+      const step=480;
+      for(let i=0;i<types.length;i++){
+        const type=types[i],power=Math.min(40,Math.max(0,Number(history[type])||0));
+        if(power<1)continue;
+        for(let gx=Math.floor(left/step)-1;gx<=Math.ceil(right/step)+1;gx++){
+          for(let gy=Math.floor(top/step)-1;gy<=Math.ceil(bottom/step)+1;gy++){
+            const n=hash(gx+i*31,gy-i*47);
+            if(n>Math.min(.50,power*.021))continue;
+            const x=(gx+.15+n*.72)*step,y=(gy+.1+hash(gy,gx)*.75)*step;
+            const size=70+n*48;
+            drawMark({type,x,y,size,variant:Math.floor(n*4)},fullQuality?.42:.28);
+          }
         }
       }
     }
-    for(const scar of liveScars) {
-      if(scar.x+scar.size<left||scar.x-scar.size>right||scar.y+scar.size<top||scar.y-scar.size>bottom)continue;
-      strokeScar(scar,.43);
-    }
+    const visible=scars.filter(s=>s.x+s.size>left&&s.x-s.size<right&&s.y+s.size>top&&s.y-s.size<bottom);
+    for(const s of visible)drawMark(s,fullQuality?.85:.60);
+    ctx.restore();
   };
 })();
