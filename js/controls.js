@@ -136,17 +136,18 @@ function showWeaponSelection() {
         const option = document.createElement("option");
         option.value = weapon.key;
         option.textContent = weapon.name;
-        const selectedElsewhere = selectedWeapons.some((key, index) => index !== slot.index && key === weapon.key);
-        option.disabled = selectedElsewhere;
         option.selected = slot.key === weapon.key;
         select.append(option);
       }
       const info = document.createElement("small");
-      info.textContent = slot.description;
+      info.textContent = slot.index === 0 ? "Choose your starter. The other two weapons unlock by leveling up." : slot.description;
+      select.disabled = slot.index !== 0;
       select.onchange = () => {
-        if (slot.index === 0) startWeapon = select.value;
-        else unlockableWeapons[slot.index - 1] = select.value;
-        selectedWeapons = [startWeapon, ...unlockableWeapons];
+        const chosen = select.value;
+        const remaining = selectedWeapons.filter((key) => key !== chosen);
+        selectedWeapons = [chosen, ...remaining];
+        startWeapon = chosen;
+        unlockableWeapons = remaining;
         saveElementalLoadout(currentLivingWorldElement(), selectedWeapons);
         showWeaponSelection();
       };
