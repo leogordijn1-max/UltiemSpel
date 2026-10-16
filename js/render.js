@@ -30,7 +30,7 @@ function drawSnowflake(x, y, radius) {
 }
 
 function getBackgroundPaints() {
-  const world = window.getDominantWorld?.() || "frozen";
+  const world = window.getVisibleWorld?.() || window.getDominantWorld?.() || "frozen";
   if (backgroundPaintCache?.width === W && backgroundPaintCache?.height === H &&
       backgroundPaintCache.world === world)
     return backgroundPaintCache;
