@@ -186,52 +186,137 @@ function updateElementalCombat(dt) {
     }
   }
 
-  // Own light projectiles; they do not interfere with legacy projectiles.
+  // Elemental projectiles and terrain. Effects are bounded to protect horde FPS.
+  const shardFragments = [];
   for (const shot of elementalShots) {
-    const steps = Math.max(1, Math.ceil(Math.hypot(shot.vx, shot.vy) * dt / 18));
+    const steps = Math.max(1, Math.ceil(Math.hypot(shot.vx, shot.vy) * dt / 16));
     for (let step = 0; step < steps && shot.life > 0; step++) {
-      shot.x += shot.vx * dt / steps;
-      shot.y += shot.vy * dt / steps;
-      for (const enemy of nearbyEnemies(shot.x, shot.y, shot.r + 35)) {
+      const vx = shot.vx * dt / steps, vy = shot.vy * dt / steps;
+      shot.x += vx;
+      shot.y += vy;
+      shot.distance += Math.hypot(vx, vy);
+      if (shot.type === "waterBolt" && shot.distance >= (shot.nextWaterMark || 155)) {
+        markWetGround(shot.x, shot.y, evolutions.riptideLance ? 104 : 70);
+        shot.nextWaterMark = (shot.nextWaterMark || 155) + 210;
+      }
+      for (const enemy of nearbyEnemies(shot.x, shot.y, shot.r + 40)) {
         if (enemy.dead || shot.hit.has(enemy)) continue;
         const dx = enemy.x - shot.x, dy = enemy.y - shot.y;
         if (dx * dx + dy * dy > (enemyHitRadius(enemy) + shot.r) ** 2) continue;
         shot.hit.add(enemy);
         if (shot.type === "fireball") {
           elementalCircle(shot.x, shot.y, 65 + upgrades.fireball * 9, shot.damage, "fire");
+          if (evolutions.meteorRain) {
+            for (let i = 0; i < 3 && elementalAreas.length < 52; i++) {
+              const angle = time * 2 + i * Math.PI * 2 / 3;
+              const distance = 48 + i * 30;
+              elementalAreas.push({
+                type:"meteorWarning", x:shot.x+Math.cos(angle)*distance,
+                y:shot.y+Math.sin(angle)*distance, radius:72,
+                life:0.25+i*0.17, maxLife:0.25+i*0.17,
+                damage:shot.damage*0.65,
+              });
+            }
+          }
           shot.life = 0;
         } else {
           const kind = shot.type === "iceShards" ? "frost" : "water";
-          damageEnemyElemental(enemy, shot.damage, kind, shot.x - shot.vx * dt, shot.y - shot.vy * dt, shot.type);
+          damageEnemyElemental(enemy, shot.damage, kind,
+            shot.x - vx, shot.y - vy, shot.type);
           if (shot.type === "waterBolt") {
-            elementalAreas.push({ type: "water", x: shot.x, y: shot.y, radius: 37, life: 0.36, maxLife: 0.36 });
-            shot.life = 0;
-          } else if (shot.hit.size >= 2) shot.life = 0;
+            markWetGround(shot.x, shot.y, evolutions.riptideLance ? 100 : 65);
+            elementalAreas.push({ type: "water", x: shot.x, y: shot.y,
+              radius: 34, life: 0.27, maxLife: 0.27 });
+            if (elementalAreas.length > 55) elementalAreas.shift();
+            if (shot.hit.size >= (shot.pierce || 2)) shot.life = 0;
+          } else {
+            window.addWorldScar?.("frost", shot.x, shot.y, 55);
+            // Crystal Storm fragments fork in two directions, once per main shard.
+            if (evolutions.crystalStorm && !shot.fragment && shardFragments.length < 30) {
+              const base = Math.atan2(shot.vy, shot.vx);
+              for (const dir of [-1, 1]) shardFragments.push({
+                x:shot.x,y:shot.y,angle:base+dir*.68,damage:shot.damage*.48,
+              });
+            }
+            if (shot.hit.size >= (shot.fragment ? 1 : 2)) shot.life = 0;
+          }
         }
         if (!shot.life) break;
       }
     }
     shot.life -= dt;
-    if (Math.abs(shot.x - player.x) > W / 2 + 260 || Math.abs(shot.y - player.y) > H / 2 + 260) shot.life = 0;
+    if (Math.abs(shot.x - player.x) > W / 2 + 260 ||
+        Math.abs(shot.y - player.y) > H / 2 + 260) shot.life = 0;
   }
   elementalShots = elementalShots.filter((shot) => shot.life > 0);
+  for (const s of shardFragments) {
+    const child = elementalShot("iceShards", s.x, s.y, s.angle, 410, 5, s.damage, .65);
+    if (child) child.fragment = true;
+  }
 
   for (const area of elementalAreas) {
+    if ((area.delay || 0) > 0) {
+      area.delay -= dt;
+      if (area.delay > 0) continue;
+    }
     area.life -= dt;
-    if (area.type !== "whirlpool" || area.life <= 0) continue;
+    if (area.type === "meteorWarning") {
+      if (area.life <= 0) {
+        elementalCircle(area.x,area.y,area.radius,area.damage,"fire",.38);
+      }
+      continue;
+    }
+    if (area.type === "frostEcho") {
+      if (area.life <= 0)
+        elementalCircle(area.x,area.y,area.radius,area.damage,"frost",.85);
+      continue;
+    }
+    if (area.life <= 0) continue;
+    if (area.type === "tidalWave") {
+      const progress = 1 - area.life / area.maxLife;
+      area.radius = area.maxRadius * Math.max(0,progress);
+      area.scarClock = (area.scarClock || 0) - dt;
+      if (area.scarClock <= 0 && area.radius > 40) {
+        area.scarClock = .23;
+        for (const offset of [-.65,0,.65]) {
+          const a = area.angle + offset * area.spread / 2;
+          markWetGround(area.x + Math.cos(a)*area.radius,
+            area.y + Math.sin(a)*area.radius,area.evolved?120:94);
+        }
+      }
+      for (const enemy of nearbyEnemies(area.x,area.y,area.radius + 80)) {
+        if (enemy.dead || area.hit.has(enemy)) continue;
+        const dx=enemy.x-area.x, dy=enemy.y-area.y;
+        const dist=Math.hypot(dx,dy);
+        const diff=Math.atan2(Math.sin(Math.atan2(dy,dx)-area.angle),
+          Math.cos(Math.atan2(dy,dx)-area.angle));
+        if (Math.abs(diff)>area.spread/2 ||
+            Math.abs(dist-area.radius)>enemyHitRadius(enemy)+32) continue;
+        area.hit.add(enemy);
+        damageEnemyElemental(enemy, (17+upgrades.tidalWave*8)*globalDamageMultiplier()*
+          (area.evolved?1.12:1),"water",area.x,area.y,"tidalWave");
+        enemy.knockbackX = (enemy.knockbackX || 0)+
+          Math.cos(area.angle)*(enemy===boss?20:185);
+        enemy.knockbackY = (enemy.knockbackY || 0)+
+          Math.sin(area.angle)*(enemy===boss?20:185);
+      }
+      continue;
+    }
+    if (area.type !== "whirlpool") continue;
     area.pulse -= dt;
     const pulse = area.pulse <= 0;
-    if (pulse) area.pulse = 0.45;
-    for (const enemy of nearbyEnemies(area.x, area.y, area.radius + 60)) {
+    if (pulse) area.pulse = area.evolved ? 0.33 : 0.45;
+    for (const enemy of nearbyEnemies(area.x,area.y,area.radius + 60)) {
       if (enemy.dead) continue;
-      const dx = area.x - enemy.x, dy = area.y - enemy.y;
-      const distance = Math.hypot(dx, dy) || 1;
-      if (distance > area.radius + enemyHitRadius(enemy)) continue;
-      const force = enemy === boss ? 60 : 680;
-      enemy.knockbackX = (enemy.knockbackX || 0) + dx / distance * force * dt;
-      enemy.knockbackY = (enemy.knockbackY || 0) + dy / distance * force * dt;
-      enemy.soakedUntil = Math.max(enemy.soakedUntil || 0, time + 0.6);
-      if (pulse) damage(enemy, (5 + upgrades.whirlpool * 2) * globalDamageMultiplier(), { x: area.x, y: area.y, type: "whirlpool" }, "water");
+      const dx=area.x-enemy.x,dy=area.y-enemy.y;
+      const distance=Math.hypot(dx,dy)||1;
+      if (distance>area.radius+enemyHitRadius(enemy)) continue;
+      const force=enemy===boss?60:(area.evolved?920:680);
+      enemy.knockbackX=(enemy.knockbackX||0)+dx/distance*force*dt;
+      enemy.knockbackY=(enemy.knockbackY||0)+dy/distance*force*dt;
+      enemy.soakedUntil=Math.max(enemy.soakedUntil||0,time+.6);
+      if(pulse) damage(enemy,(5+upgrades.whirlpool*2)*globalDamageMultiplier()*
+        (area.evolved?1.2:1),{x:area.x,y:area.y,type:"whirlpool"},"water");
     }
   }
   elementalAreas = elementalAreas.filter((area) => area.life > 0).slice(-55);
