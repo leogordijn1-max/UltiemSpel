@@ -181,6 +181,7 @@ function updateElementalCombat(dt) {
         if (dx * dx + dy * dy > (enemyHitRadius(enemy) + orb.r) ** 2) continue;
         damageEnemyElemental(enemy, (12 + upgrades.flameOrbit * 4) * globalDamageMultiplier() *
           (evolutions.solarCrown ? 1.25 : 1), "fire", orb.x, orb.y, "flameOrbit");
+        window.addWorldScar?.("fire", orb.x, orb.y, 64);
         enemy.fireOrbitHitUntil = time + (evolutions.solarCrown ? 0.42 : 0.5);
       }
     }
