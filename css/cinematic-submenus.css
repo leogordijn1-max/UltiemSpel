@@ -338,3 +338,9 @@
     grid-template-columns:minmax(0,1fr);
   }
 }
+
+#overlay.cinematic-submenu .cinematic-guide-panel .cinematic-guide-exit {
+  position:sticky;top:0;z-index:10;float:right;
+  margin:0 0 8px 12px;padding:9px 16px;
+  border:1px solid #d5ad72;background:#25231f;color:#f3e1c2;
+}
