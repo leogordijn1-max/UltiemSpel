@@ -128,46 +128,21 @@ let upgrades = {},
   performanceMetrics = { enemyAI: 0, collisions: 0, render: 0 },
   simulationAccumulator = 0;
 function loadSelectedWeapons() {
-  try {
-    const saved = JSON.parse(storageGet("shadowWeapons", "null") || "null");
-    const savedList = Array.isArray(saved)
-      ? saved
-      : saved && typeof saved === "object"
-        ? [
-            saved.startWeapon,
-            ...(Array.isArray(saved.unlockableWeapons)
-              ? saved.unlockableWeapons
-              : []),
-          ]
-        : [];
-    const valid = [
-      ...new Set(
-        savedList.filter((key) =>
-          weaponCatalog.some((weapon) => weapon.key === key),
-        ),
-      ),
-    ].slice(0, 3);
-    startWeapon = valid[0] || "arcane";
-    unlockableWeapons = valid.slice(1);
-    while (unlockableWeapons.length < 2) {
-      const next = weaponCatalog.find(
-        (weapon) =>
-          weapon.key !== startWeapon && !unlockableWeapons.includes(weapon.key),
-      );
-      if (!next) break;
-      unlockableWeapons.push(next.key);
-    }
-    return [startWeapon, ...unlockableWeapons];
-  } catch {
-    startWeapon = "arcane";
-    unlockableWeapons = ["orbit", "bomb"];
-    return [startWeapon, ...unlockableWeapons];
-  }
+  const loadout = elementalLoadout();
+  startWeapon = loadout[0];
+  unlockableWeapons = loadout.slice(1);
+  return loadout;
+}
+function syncElementalLoadout() {
+  selectedWeapons = loadSelectedWeapons();
+  return selectedWeapons;
 }
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
   window.resetWorldScars?.();
+  syncElementalLoadout();
+  resetElementalCombat();
   for (const key in keys) keys[key] = false;
   touchMoveX = 0;
   touchMoveY = 0;
@@ -470,7 +445,7 @@ function hud() {
   $("levelText").textContent = level;
   $("xp").style.width = (100 * xp) / needed + "%";
   $("stats").textContent =
-    `${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
+    `${currentLivingWorldElement().toUpperCase()} · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
   const character = getCharacter(selectedCharacter);
   const boost =
     characterRuntime.activeBoost > 0
@@ -584,18 +559,9 @@ function end() {
   if (!active) return;
   playSfx("gameover");
   recordRun();
-  const activeWeapons = Object.entries({
-    "Arcane Bolt": upgrades.arcane,
-    "Spirit Blades": upgrades.orbit,
-    "Eiad Bom": upgrades.bomb,
-    "Death Pulse": upgrades.nova,
-    "Chain Lightning": upgrades.chain,
-    Boomerang: upgrades.boomerang,
-    "Flame Cone": upgrades.flame,
-    "Frost Orb": upgrades.frost,
-  })
-    .filter(([, levelValue]) => levelValue > 0)
-    .map(([name]) => name)
+  const activeWeapons = weaponCatalog
+    .filter((weapon) => upgrades[weapon.key] > 0)
+    .map((weapon) => weapon.name)
     .join(", ");
   active = false;
   paused = true;
@@ -830,6 +796,7 @@ function update(dt) {
         ? Math.max(0.58, 0.82 - (upgrades.knockback - 3) * 0.06)
         : 1) *
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
+      (e.soakedUntil > time ? 0.82 : 1) *
       (e.frostUntil > time ? 0.48 : 1) *
       (e.pulseSlowUntil > time ? 0.77 : 1);
     if (e.burnUntil > time && e.nextBurnTick <= time) {
@@ -1182,6 +1149,7 @@ function update(dt) {
   }
   enemies = enemies.filter((e) => !e.dead);
   rebuildEnemyGrid();
+  updateElementalCombat(dt);
   performanceMetrics.enemyAI += performance.now() - enemyAIStarted;
   const collisionStarted = performance.now();
   for (const b of bullets) {
