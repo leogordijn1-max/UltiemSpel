@@ -22,6 +22,8 @@ function backButton(parent) {
   parent.append(button);
 }
 function showMainMenu() {
+  window.abandonWorldRun?.();
+  window.clearWorldScars?.();
   menuRunMode = "standard";
   active = false;
   paused = true;
