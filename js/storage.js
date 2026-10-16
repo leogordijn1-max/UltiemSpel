@@ -10,6 +10,10 @@ function storageGet(key, fallback = null) {
 }
 
 function storageSet(key, value) {
+  // Developer sandbox may mutate runtime state, but never career progress,
+  // high scores, historical world memory or permanent conquest.
+  if (["shadowProgress", "shadowHigh", "shadowLivingWorldV1", "shadowDominantWorldV1"].includes(key)
+      && typeof window !== "undefined" && window.isDeveloperRun?.()) return false;
   try {
     localStorage.setItem(key, String(value));
     return true;
