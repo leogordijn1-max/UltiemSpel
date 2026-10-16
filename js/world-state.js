@@ -171,6 +171,15 @@
     return conquered && visualCoverage() >= 96 ? getInvadingWorld() : getDominantWorld();
   }
   // Developer-only, non-persistent biome previews and staged boss reactions.
+  function developerChangeRunElement(element) {
+    if (!Object.prototype.hasOwnProperty.call(ELEMENT_WORLD, element) ||
+        !runActive || !window.isDeveloperRun?.()) return false;
+    runElement = element;
+    changeCoverage(0, 0);
+    conquered = false;
+    restored = false;
+    return true;
+  }
   function developerChangeWorld(world) {
     if (!validWorld(world) || !runActive || !window.isDeveloperRun?.()) return false;
     runWorld = world;
@@ -364,6 +373,7 @@
   window.drawWorldEnvironment = drawWorldEnvironment;
   window.worldBiomeAt = worldBiomeAt;
   window.getWorldConquest = getWorldConquest;
+  window.developerChangeRunElement = developerChangeRunElement;
   window.developerChangeWorld = developerChangeWorld;
   window.developerSetWorldCoverage = developerSetWorldCoverage;
   window.onWorldBossDefeated = onWorldBossDefeated;
