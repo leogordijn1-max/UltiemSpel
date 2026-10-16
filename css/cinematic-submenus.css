@@ -123,3 +123,35 @@
     height:calc(100dvh - 20px);
   }
 }
+
+/* Stable guide and records frames */
+#overlay.cinematic-submenu #panel.cinematic-guide-panel,
+#overlay.cinematic-submenu #panel.cinematic-records-panel {
+  box-sizing:border-box;width:min(1100px,100%);
+  height:min(760px,calc(100dvh - 40px));min-height:0;
+  overflow:hidden;display:flex;flex-direction:column;
+}
+#overlay.cinematic-submenu .cinematic-guide-panel > h1,
+#overlay.cinematic-submenu .cinematic-records-panel > h1,
+#overlay.cinematic-submenu .cinematic-guide-panel > p,
+#overlay.cinematic-submenu .cinematic-records-panel > p {flex-shrink:0}
+#overlay.cinematic-submenu .cinematic-guide-panel #choices,
+#overlay.cinematic-submenu .cinematic-records-panel #choices {
+  min-height:0;flex:1;overflow:hidden;display:flex;flex-direction:column;
+}
+#overlay.cinematic-submenu .cinematic-guide-panel .encyclopedia-tabs,
+#overlay.cinematic-submenu .cinematic-guide-panel .collection-progress {flex-shrink:0}
+#overlay.cinematic-submenu .cinematic-guide-panel .encyclopedia-list,
+#overlay.cinematic-submenu .cinematic-records-panel .records-scroll-area {
+  flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;
+  overscroll-behavior:contain;
+}
+#overlay.cinematic-submenu .cinematic-records-panel .records-scroll-area {padding-right:8px}
+#overlay.cinematic-submenu .cinematic-guide-panel #choices > button:last-child,
+#overlay.cinematic-submenu .cinematic-records-panel #choices > button:last-child {
+  flex-shrink:0;align-self:flex-start;margin-top:5px;
+}
+@media(max-width:650px){
+  #overlay.cinematic-submenu #panel.cinematic-guide-panel,
+  #overlay.cinematic-submenu #panel.cinematic-records-panel {height:calc(100dvh - 20px)}
+}
