@@ -5,7 +5,7 @@
   const MAX_SCARS = 140;
   const scars = [];
   const cachedSprites = new Map();
-  const types = ["frost", "fire", "ruin"];
+  const types = ["frost", "fire", "ruin", "water"];
   const hash = (x,y) => {
     const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
     return n - Math.floor(n);
@@ -66,6 +66,25 @@
         g.fillStyle=i%3===0?"#ffbc6899":"#dd643e91";
         g.beginPath();g.arc(x,y,1.2+random()*2.2,0,Math.PI*2);g.fill();
       }g.restore();
+    } else if (type === "water") {
+      // Wet ground is a persistent local puddle (not a short-lived projectile VFX).
+      disk(r, grad("#20769bb8", "#0c385a70"), .74);
+      disk(74, grad("#4599cb6b", "#194d6b24"), .69);
+      g.save(); g.translate(mid,mid); g.scale(1,.73);
+      for(let i=0;i<4;i++){
+        const radius=28+i*17+variant*2;
+        g.strokeStyle=i%2?"#b7edff76":"#6bc7f7a3";
+        g.lineWidth=2.5-i*.25;
+        g.beginPath();
+        g.ellipse(0,0,radius,radius*.79,variant*.15,i*.45,Math.PI*1.78+i*.25);
+        g.stroke();
+      }
+      for(let i=0;i<13;i++){
+        const a=random()*Math.PI*2, distance=13+random()*72;
+        g.fillStyle=i%3===0?"#e0fbffb8":"#4eabce8a";
+        g.beginPath();g.ellipse(Math.cos(a)*distance,Math.sin(a)*distance,2+random()*6,1+random()*2,a,0,Math.PI*2);g.fill();
+      }
+      g.restore();
     } else {
       disk(r,grad("#111113a8","#45383250"),.82);
       g.save();g.translate(mid,mid);
@@ -95,8 +114,15 @@
   window.resetWorldScars=()=>{scars.length=0};
   window.addWorldScar=(type,x,y,radius)=>{
     if(!types.includes(type)||!Number.isFinite(x)||!Number.isFinite(y))return;
-    if(typeof graphicsQuality!=="undefined"&&graphicsQuality==="low")return;
     if(scars.some(s=>s.type===type&&(s.x-x)**2+(s.y-y)**2<48**2))return;
+    // New elements transform old marks instead of painting contradictory layers.
+    if(type!=="ruin"){
+      for(let i=scars.length-1;i>=0;i--){
+        const previous=scars[i];
+        if(previous.type!=="ruin"&&previous.type!==type&&
+           (previous.x-x)**2+(previous.y-y)**2<58**2)scars.splice(i,1);
+      }
+    }
     const size=Math.max(48,Math.min(152,(radius||80)*.83));
     scars.push({type,x,y,size,variant:Math.floor(hash(x,y)*4)});
     if(scars.length>MAX_SCARS)scars.shift();
@@ -118,7 +144,6 @@
     ctx.drawImage(tile,mark.x-mark.size,mark.y-mark.size,mark.size*2,mark.size*2);
   }
   window.drawWorldScars=(left,top)=>{
-    if(typeof graphicsQuality!=="undefined"&&graphicsQuality==="low")return;
     const right=left+W,bottom=top+H;
     const history=historicalWorld();
     const fullQuality=graphicsQuality==="high";
@@ -140,7 +165,7 @@
       }
     }
     const visible=scars.filter(s=>s.x+s.size>left&&s.x-s.size<right&&s.y+s.size>top&&s.y-s.size<bottom);
-    for(const s of visible)drawMark(s,fullQuality?.85:.60);
+    for(const s of visible)drawMark(s,fullQuality?.85:graphicsQuality==="low"?.43:.60);
     ctx.restore();
   };
 })();
