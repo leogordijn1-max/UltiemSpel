@@ -109,6 +109,7 @@ function castFlameBurst() {
   const burnDps = 8 + upgrades.flame * 5;
   const burnDuration = evolved ? 3.6 : 2.6 + upgrades.flame * 0.18;
   flameBursts.push({ x: player.x, y: player.y, angle, spread, radius, life: 0.42, evolved, lobes: evolved ? 3 : 1 });
+  window.addWorldScar?.("fire", player.x + facingX * radius * .58, player.y + facingY * radius * .58, radius);
 
   for (const enemy of nearbyEnemies(player.x, player.y, radius + 50)) {
     const dx = enemy.x - player.x, dy = enemy.y - player.y;
@@ -153,6 +154,7 @@ function fireFrostOrb() {
 function applyFrostBurst(x, y, projectile) {
   const radius = projectile.frostRadius * (evolutions.glacier ? 1.25 : 1);
   frostZones.push({ x, y, radius, life: 1.4, evolved: !!evolutions.glacier });
+  window.addWorldScar?.("frost", x, y, radius);
   for (const enemy of nearbyEnemies(x, y, radius + 70)) {
     const dx = enemy.x - x, dy = enemy.y - y;
     const hitRadius = radius + enemyHitRadius(enemy);
