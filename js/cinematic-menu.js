@@ -74,7 +74,7 @@
     });
   }
   function showElementSelection() {
-    panel("CHOOSE YOUR ELEMENT", "Choose the element for your upcoming run. Element-specific weapons are still in development; existing weapons remain available during this preview.", (parent) => {
+    panel("CHOOSE YOUR ELEMENT", "Choose one element. Every run has three matching weapons: one starter and two level-up unlocks.", (parent) => {
       const grid = document.createElement("div");
       grid.className = "cinematic-element-grid";
       for (const element of Object.values(livingWorldElements)) {
@@ -88,11 +88,12 @@
         description.textContent = element.description;
         const count = document.createElement("span");
         count.className = "cinematic-element-count";
-        count.textContent = "3 planned weapons · " + (selectedRunElement === element.id ? "SELECTED" : "SELECT");
+        count.textContent = "3 elemental weapons · " + (selectedRunElement === element.id ? "SELECTED" : "SELECT");
         choice.append(heading, description, count);
         choice.onclick = () => {
           selectedRunElement = element.id;
           storageSet("shadowRunElement", selectedRunElement);
+          syncElementalLoadout();
           showElementSelection();
         };
         grid.append(choice);
@@ -101,7 +102,7 @@
       const continueButton = document.createElement("button");
       continueButton.className = "cinematic-element-continue";
       continueButton.textContent = "CONTINUE · CHOOSE SURVIVOR";
-      continueButton.onclick = showCharacterSelection;
+      continueButton.onclick = () => { syncElementalLoadout(); showCharacterSelection(); };
       parent.append(continueButton);
     });
   }
