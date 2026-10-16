@@ -167,6 +167,7 @@ function loadSelectedWeapons() {
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
+  window.resetWorldScars?.();
   for (const key in keys) keys[key] = false;
   touchMoveX = 0;
   touchMoveY = 0;
@@ -1313,6 +1314,7 @@ function update(dt) {
       });
     puff(bomb.x, bomb.y, "#e6a96a", 26);
     playSfx("bomb");
+    window.addWorldScar?.("ruin", bomb.x, bomb.y, bomb.radius);
     explosions.push({
       x: bomb.x,
       y: bomb.y,
