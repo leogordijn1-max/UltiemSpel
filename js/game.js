@@ -798,6 +798,7 @@ function update(dt) {
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
       (e.soakedUntil > time ? 0.82 : 1) *
       (e.frostUntil > time ? 0.48 : 1) *
+      (e.deepFreezeUntil > time && e !== boss ? 0.16 : 1) *
       (e.pulseSlowUntil > time ? 0.77 : 1);
     if (e.burnUntil > time && e.nextBurnTick <= time) {
       e.nextBurnTick = time + 0.5;
