@@ -1051,6 +1051,7 @@ function draw() {
     ctx.fill();
     ctx.restore();
   }
+  drawElementalCombat();
   if (upgrades.orbit)
     for (let i = 0; i < upgrades.orbit; i++) {
       let a = orbitAngle + (i * Math.PI * 2) / upgrades.orbit;
