@@ -446,8 +446,9 @@ function hud() {
   $("hp").style.width = (100 * player.hp) / player.maxHp + "%";
   $("levelText").textContent = level;
   $("xp").style.width = (100 * xp) / needed + "%";
+  const conqueredPercent = window.getWorldConquest?.().coverage || 0;
   $("stats").textContent =
-    `${(window.getDominantWorld?.() || "frozen").toUpperCase()} WORLD · ${currentLivingWorldElement().toUpperCase()} ELEMENT · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
+    `${(window.getDominantWorld?.() || "frozen").toUpperCase()} WORLD · ${conqueredPercent}% IMPACT · ${currentLivingWorldElement().toUpperCase()} ELEMENT · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
   const character = getCharacter(selectedCharacter);
   const boost =
     characterRuntime.activeBoost > 0
@@ -497,6 +498,7 @@ function showVictory() {
   if (victoryClaimed || gameState === "victory" || !active) return false;
   finalBossDefeated = true;
   if (!grantFinalVictory()) return false;
+  window.completeWorldConquest?.();
   paused = true;
   choiceScreenOpen = true;
   gameState = "victory";
@@ -512,7 +514,7 @@ function showVictory() {
   if (typeof playSfx === "function") playSfx("victory");
   panel(
     "VICTORY · THE NIGHT IS YOURS",
-    `You defeated THE LAST MEME!<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
+    `You defeated THE LAST MEME!<br><b>World conquered:</b> ${window.getWorldConquest?.().invading?.toUpperCase() || "UNKNOWN"} · 100% PERMANENT<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
     (container) => {
       const continueButton = document.createElement("button");
       continueButton.className = "victory-continue";
@@ -561,6 +563,7 @@ function end() {
   if (!active) return;
   playSfx("gameover");
   recordRun();
+  if (!victoryClaimed) window.restoreWorldOnDefeat?.();
   const activeWeapons = weaponCatalog
     .filter((weapon) => upgrades[weapon.key] > 0)
     .map((weapon) => weapon.name)
@@ -571,7 +574,7 @@ function end() {
   choiceScreenOpen = false;
   panel(
     "KKR SUKKEL",
-    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s in ${runMode.toUpperCase()} mode, reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.${victoryClaimed ? "<br>Standard victory completed · Endless unlocked." : ""}<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints + (victoryClaimed ? FINAL_VICTORY_BONUS : 0)}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
+    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s in ${runMode.toUpperCase()} mode.<br><b>World:</b> ${window.getWorldConquest?.().original?.toUpperCase() || "FROZEN"} · ${victoryClaimed ? "CONQUERED" : "RESTORED BY THE GUARDIAN"}<br>Reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.${victoryClaimed ? "<br>Standard victory completed · Endless unlocked." : ""}<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints + (victoryClaimed ? FINAL_VICTORY_BONUS : 0)}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
     (el) => {
       let b = document.createElement("button");
       b.textContent = "TRY AGAIN";
