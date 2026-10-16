@@ -39,6 +39,8 @@ function isLivingWorldElement(value) {
 }
 
 function currentLivingWorldElement() {
+  const preview = typeof window !== "undefined" ? window.developerRunElement?.() : null;
+  if (isLivingWorldElement(preview)) return preview;
   const saved = storageGet("shadowRunElement", "fire");
   return isLivingWorldElement(saved) ? saved : "fire";
 }
