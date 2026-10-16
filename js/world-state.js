@@ -111,7 +111,8 @@
   }
   function completeWorldConquest() {
     if (!runActive || conquered || restored ||
-        (typeof runMode !== "undefined" && runMode !== "standard")) return false;
+        (typeof runMode !== "undefined" && runMode !== "standard") ||
+        (typeof victoryClaimed !== "undefined" && !victoryClaimed)) return false;
     conquered = true;
     changeCoverage(100, 2400);
     storageSet(KEY, JSON.stringify({ version: 1, dominant: getInvadingWorld() }));
