@@ -801,7 +801,7 @@ function update(dt) {
       (e.pulseSlowUntil > time ? 0.77 : 1);
     if (e.burnUntil > time && e.nextBurnTick <= time) {
       e.nextBurnTick = time + 0.5;
-      damage(e, e.burnDps * 0.5, player, "burn");
+      damage(e, e.burnDps * 0.5, e.burnWeapon ? { x: player.x, y: player.y, type: e.burnWeapon } : player, "burn");
       if (e.dead) continue;
     }
     if (e.kind === 4) {
