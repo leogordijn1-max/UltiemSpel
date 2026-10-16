@@ -347,3 +347,50 @@
 
 /* Field guides use the fixed upper back control; hide the redundant lower button. */
 #overlay.cinematic-submenu .cinematic-guide-panel #choices > button:last-child { display:none; }
+
+/* One consistent BACK button across every cinematic sub-screen. */
+#overlay.cinematic-submenu #panel .cinematic-screen-back {
+  position:sticky;
+  top:0;
+  z-index:20;
+  align-self:flex-start;
+  flex-shrink:0;
+  display:inline-flex;
+  width:max-content;
+  min-height:38px;
+  margin:0 0 15px;
+  padding:9px 17px;
+  border:1px solid #d5ad72;
+  border-radius:2px;
+  background:#25231f;
+  color:#f3e1c2;
+  font:13px Georgia,serif;
+  letter-spacing:.12em;
+}
+#overlay.cinematic-submenu .cinematic-run-modes {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  width:100%;
+}
+#overlay.cinematic-submenu .cinematic-run-modes button {
+  min-height:160px;
+  margin:0;
+  padding:25px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  gap:16px;
+  text-align:left;
+}
+#overlay.cinematic-submenu .cinematic-run-modes strong {
+  font:normal 25px Georgia,serif;
+  color:#e9d0a6;
+}
+#overlay.cinematic-submenu .cinematic-run-modes small {
+  font:15px/1.6 Georgia,serif;
+}
+@media(max-width:650px){
+  #overlay.cinematic-submenu .cinematic-run-modes {grid-template-columns:1fr}
+}
