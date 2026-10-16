@@ -112,3 +112,25 @@
 #overlay.cinematic-overlay .cinematic-menu::after {
   display: none;
 }
+
+/* NEW RUN is a deliberate call-to-action, not a permanently hovered menu item. */
+#overlay.cinematic-overlay .cinematic-nav button.cinematic-primary {
+  color:#17130e;
+  border-color:#e5c38d;
+  background:linear-gradient(105deg,#e6c58e,#b99763);
+  box-shadow:inset 0 1px #fff5ce8c,0 4px 18px #0007;
+  text-shadow:none;
+  font-weight:bold;
+}
+#overlay.cinematic-overlay .cinematic-nav button.cinematic-primary::before {
+  color:#342412;
+  opacity:1;
+}
+#overlay.cinematic-overlay .cinematic-nav button.cinematic-primary:hover,
+#overlay.cinematic-overlay .cinematic-nav button.cinematic-primary:focus-visible {
+  color:#120f0b;
+  border-color:#ffe6b4;
+  background:linear-gradient(105deg,#ffdfaa,#d6ad70);
+  box-shadow:inset 0 1px #fff8df,0 0 22px #d7a85b60;
+  text-shadow:none;
+}
