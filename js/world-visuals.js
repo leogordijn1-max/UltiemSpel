@@ -111,16 +111,59 @@
     }
     cachedSprites.set(key,canvas);return canvas;
   }
-  window.resetWorldScars=()=>{scars.length=0};
+  const effects = [];
+  let running = false;
+  function terrainAt(x, y) {
+    for (let i = scars.length - 1; i >= 0; i--) {
+      const mark = scars[i];
+      if (mark.type === "ruin") continue;
+      const dx = mark.x - x, dy = mark.y - y;
+      if (dx*dx+dy*dy <= (mark.size*.78)**2) return mark.type;
+    }
+    return null;
+  }
+  function leaveScarEffect(kind, x, y) {
+    if (effects.length >= 35) effects.shift();
+    if (effects.some(effect=>effect.kind===kind &&
+      (effect.x-x)**2+(effect.y-y)**2 < 48**2)) return;
+    effects.push({kind,x,y,life:kind==="steam"?.88:.75,max:kind==="steam"?.88:.75});
+  }
+  function resolveScar(type, x, y) {
+    if(type==="ruin") return {type, effect:null};
+    const local = terrainAt(x,y);
+    const base = window.worldBiomeAt?.(x,y) || window.getDominantWorld?.() || "frozen";
+    // Local marks take precedence over the baseline biome.
+    const ground = local || (base==="burning"?"fire":base==="flooded"?"water":"frost");
+    if (type==="fire" && ground==="frost")
+      return {type:"water",effect:"steam"}; // Heat melts existing ice.
+    if (type==="fire" && ground==="water")
+      return {type:"water",effect:"steam"}; // Water boils; the ground stays wet.
+    if (type==="water" && ground==="fire")
+      return {type:"water",effect:"steam"}; // Water extinguishes embers.
+    if (type==="frost" && ground==="water")
+      return {type:"frost",effect:"crystals"}; // Frozen puddles become ice.
+    return {type,effect:null};
+  }
+  window.resetWorldScars=()=>{scars.length=0;effects.length=0;running=true;};
+  window.clearWorldScars=()=>{scars.length=0;effects.length=0;running=false;};
+  window.terrainAt=terrainAt;
+  window.updateWorldScarEffects=dt=>{
+    for(let i=effects.length-1;i>=0;i--){
+      effects[i].life-=dt;
+      if(effects[i].life<=0) effects.splice(i,1);
+    }
+  };
   window.addWorldScar=(type,x,y,radius)=>{
-    if(!types.includes(type)||!Number.isFinite(x)||!Number.isFinite(y))return;
+    if(!running||!types.includes(type)||!Number.isFinite(x)||!Number.isFinite(y))return;
+    const reaction=resolveScar(type,x,y);
+    if(reaction.effect)leaveScarEffect(reaction.effect,x,y);
+    type=reaction.type;
     if(scars.some(s=>s.type===type&&(s.x-x)**2+(s.y-y)**2<48**2))return;
-    // New elements transform old marks instead of painting contradictory layers.
     if(type!=="ruin"){
       for(let i=scars.length-1;i>=0;i--){
         const previous=scars[i];
         if(previous.type!=="ruin"&&previous.type!==type&&
-           (previous.x-x)**2+(previous.y-y)**2<58**2)scars.splice(i,1);
+           (previous.x-x)**2+(previous.y-y)**2<76**2)scars.splice(i,1);
       }
     }
     const size=Math.max(48,Math.min(152,(radius||80)*.83));
@@ -167,7 +210,30 @@
       }
     }
     const visible=scars.filter(s=>s.x+s.size>left&&s.x-s.size<right&&s.y+s.size>top&&s.y-s.size<bottom);
-    for(const s of visible)drawMark(s,fullQuality?.85:graphicsQuality==="low"?.43:.60);
+    const cover = window.getWorldConquest?.();
+    // Local damage is temporary: it visually fades as the guardian restores the world.
+    const scarAlpha = cover?.restored ? Math.min(1, cover.coverage / Math.max(1,cover.target||50)) : 1;
+    for(const s of visible)drawMark(s,(fullQuality?.85:graphicsQuality==="low"?.43:.60)*scarAlpha);
+    ctx.globalAlpha=1;
+    for(const effect of effects){
+      if(effect.x<left-80||effect.x>right+80||effect.y<top-80||effect.y>bottom+80)continue;
+      const t=Math.max(0,effect.life/effect.max);
+      ctx.save();
+      ctx.globalAlpha=t*.7;
+      ctx.lineWidth=effect.kind==="steam"?4:2.5;
+      ctx.strokeStyle=effect.kind==="steam"?"#c7eaf3":"#b2efff";
+      ctx.shadowBlur=graphicsQuality==="high"?12:0;
+      ctx.shadowColor=ctx.strokeStyle;
+      const scale=1-t;
+      for(let i=0;i<3;i++){
+        const y=effect.y-(scale*34)+i*10;
+        ctx.beginPath();
+        ctx.arc(effect.x+(i-1)*19,y,12+i*4+scale*18,
+          -.2+scale,2.3+scale);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     ctx.restore();
   };
 })();
