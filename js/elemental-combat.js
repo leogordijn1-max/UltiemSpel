@@ -39,15 +39,16 @@ function elementalCircle(x, y, radius, damage, kind, duration = 0.65) {
     const dx = enemy.x - x, dy = enemy.y - y;
     const reach = radius + enemyHitRadius(enemy);
     if (dx * dx + dy * dy > reach * reach) continue;
-    damageEnemyElemental(enemy, damage, kind, x, y);
+    damageEnemyElemental(enemy, damage, kind, x, y, kind === "fire" ? "fireball" : "glacialPulse");
   }
 }
-function damageEnemyElemental(enemy, amount, element, originX, originY) {
+function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKey = element) {
   if (enemy.dead) return;
-  damage(enemy, amount, player, element);
+  damage(enemy, amount, { x: originX, y: originY, type: weaponKey }, element);
   if (enemy.dead) return;
   if (element === "fire") {
     enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + 2.2);
+    enemy.burnWeapon = weaponKey;
     enemy.burnDps = Math.max(enemy.burnDps || 0, 7 + (upgrades.fireball || upgrades.flameOrbit || 1) * 3);
     enemy.nextBurnTick = Math.min(enemy.nextBurnTick || Infinity, time + 0.5);
   } else if (element === "frost") {
@@ -106,7 +107,7 @@ function updateElementalCombat(dt) {
         if (distance > radius + enemyHitRadius(enemy)) continue;
         const diff = Math.atan2(Math.sin(Math.atan2(dy, dx) - aim.angle), Math.cos(Math.atan2(dy, dx) - aim.angle));
         if (Math.abs(diff) > spread / 2) continue;
-        damageEnemyElemental(enemy, (17 + upgrades.tidalWave * 8) * globalDamageMultiplier(), "water", player.x, player.y);
+        damageEnemyElemental(enemy, (17 + upgrades.tidalWave * 8) * globalDamageMultiplier(), "water", player.x, player.y, "tidalWave");
         enemy.knockbackX = (enemy.knockbackX || 0) + Math.cos(aim.angle) * (enemy === boss ? 20 : 145);
         enemy.knockbackY = (enemy.knockbackY || 0) + Math.sin(aim.angle) * (enemy === boss ? 20 : 145);
       }
@@ -146,7 +147,7 @@ function updateElementalCombat(dt) {
         if (enemy.dead || (enemy.fireOrbitHitUntil || 0) > time) continue;
         const dx = enemy.x - x, dy = enemy.y - y;
         if (dx * dx + dy * dy > (enemyHitRadius(enemy) + 12) ** 2) continue;
-        damageEnemyElemental(enemy, (12 + upgrades.flameOrbit * 4) * globalDamageMultiplier(), "fire", x, y);
+        damageEnemyElemental(enemy, (12 + upgrades.flameOrbit * 4) * globalDamageMultiplier(), "fire", x, y, "flameOrbit");
         enemy.fireOrbitHitUntil = time + 0.5;
       }
     }
@@ -168,7 +169,7 @@ function updateElementalCombat(dt) {
           shot.life = 0;
         } else {
           const kind = shot.type === "iceShards" ? "frost" : "water";
-          damageEnemyElemental(enemy, shot.damage, kind, shot.x - shot.vx * dt, shot.y - shot.vy * dt);
+          damageEnemyElemental(enemy, shot.damage, kind, shot.x - shot.vx * dt, shot.y - shot.vy * dt, shot.type);
           if (shot.type === "waterBolt") {
             elementalAreas.push({ type: "water", x: shot.x, y: shot.y, radius: 37, life: 0.36, maxLife: 0.36 });
             shot.life = 0;
@@ -197,7 +198,7 @@ function updateElementalCombat(dt) {
       enemy.knockbackX = (enemy.knockbackX || 0) + dx / distance * force * dt;
       enemy.knockbackY = (enemy.knockbackY || 0) + dy / distance * force * dt;
       enemy.soakedUntil = Math.max(enemy.soakedUntil || 0, time + 0.6);
-      if (pulse) damage(enemy, (5 + upgrades.whirlpool * 2) * globalDamageMultiplier(), player, "water");
+      if (pulse) damage(enemy, (5 + upgrades.whirlpool * 2) * globalDamageMultiplier(), { x: area.x, y: area.y, type: "whirlpool" }, "water");
     }
   }
   elementalAreas = elementalAreas.filter((area) => area.life > 0).slice(-55);
