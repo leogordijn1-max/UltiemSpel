@@ -166,6 +166,9 @@
       setTimeout(() => { if (layer.parentNode) layer.remove(); }, 2550);
     }
   }
+  function getVisibleWorld() {
+    return conquered && visualCoverage() >= 96 ? getInvadingWorld() : getDominantWorld();
+  }
   function getWorldInfo() {
     return WORLDS[getDominantWorld()];
   }
@@ -335,6 +338,7 @@
   }
   window.livingWorldStates = WORLDS;
   window.getDominantWorld = getDominantWorld;
+  window.getVisibleWorld = getVisibleWorld;
   window.beginWorldRun = beginWorldRun;
   window.previewWorldState = previewWorldState;
   window.getLivingWorldState = worldStatus;
