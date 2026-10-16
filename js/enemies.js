@@ -447,6 +447,7 @@ function damage(e, d, origin = player, damageType = "direct") {
     const killedFinalBoss = e === boss && e.isFinalBoss;
     if (e === boss) {
       bossesDefeated++;
+      if (!killedFinalBoss) window.onWorldBossDefeated?.(bossesDefeated, false);
       if (typeof awardBossLoot === "function" && typeof metaProgress !== "undefined") {
         const lootKey = e.isFinalBoss ? "final" : ["beau", "mourning", "bell"][e.variant] || null;
         const trophy = awardBossLoot(metaProgress, lootKey);
