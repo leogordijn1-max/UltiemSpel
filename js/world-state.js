@@ -43,23 +43,132 @@
       return state && validWorld(state.dominant) ? state.dominant : DEFAULT_WORLD;
     } catch { return DEFAULT_WORLD; }
   }
+  // Boss defeats shift the visible landscape, but only the final-boss victory
+  // persists a new dominant world. This state is never tied to weapon unlocks.
+  const ELEMENT_WORLD = Object.freeze({ fire: "burning", water: "flooded", frost: "frozen" });
   let runWorld = null;
+  let runElement = "fire";
+  let runActive = false;
+  let coverage = 0;
+  let spread = null;
+  let restored = false;
+  let conquered = false;
+  const monotonicNow = () => typeof performance !== "undefined" && performance.now
+    ? performance.now() : Date.now();
+  const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
   function getDominantWorld() {
     return runWorld || readSavedWorld();
   }
+  function getInvadingWorld() {
+    return ELEMENT_WORLD[runElement] || getDominantWorld();
+  }
   function beginWorldRun() {
     runWorld = readSavedWorld();
+    runElement = typeof currentLivingWorldElement === "function"
+      ? currentLivingWorldElement() : "fire";
+    runActive = true;
+    conquered = false;
+    restored = false;
+    coverage = 0;
+    spread = null;
     return runWorld;
+  }
+  function visualCoverage() {
+    if (!spread) return coverage;
+    const progress = clamp((monotonicNow() - spread.started) / spread.duration, 0, 1);
+    if (progress >= 1) { spread = null; return coverage; }
+    const eased = progress * progress * (3 - 2 * progress);
+    return spread.from + (spread.to - spread.from) * eased;
+  }
+  function changeCoverage(next, duration = 1600) {
+    const from = visualCoverage();
+    coverage = clamp(next, 0, 100);
+    spread = duration > 0 ? { from, to: coverage, started: monotonicNow(), duration } : null;
+  }
+  function getWorldConquest() {
+    return {
+      original: getDominantWorld(),
+      invading: getInvadingWorld(),
+      coverage: Math.round(visualCoverage()),
+      target: coverage,
+      conquered, restored, active: runActive,
+    };
+  }
+  function onWorldBossDefeated(count, isFinal) {
+    if (!runActive || conquered || restored ||
+        (typeof runMode !== "undefined" && runMode !== "standard") || isFinal) return false;
+    if (count !== 1 && count !== 2) return false;
+    changeCoverage(count === 1 ? 15 : 50, 1900);
+    const percent = count === 1 ? 15 : 50;
+    if (typeof notify === "function") {
+      notify("WORLD BARRIER SHATTERED · " + percent + "% " +
+        getInvadingWorld().toUpperCase(), "boss", 5);
+    }
+    return true;
+  }
+  function completeWorldConquest() {
+    if (!runActive || conquered || restored ||
+        (typeof runMode !== "undefined" && runMode !== "standard")) return false;
+    conquered = true;
+    changeCoverage(100, 2400);
+    storageSet(KEY, JSON.stringify({ version: 1, dominant: getInvadingWorld() }));
+    showWorldMoment("conquest", "THE WORLD HAS FALLEN",
+      getInvadingWorld().toUpperCase() + " · THE GUARDIAN'S POWER IS BROKEN");
+    return true;
+  }
+  function restoreWorldOnDefeat() {
+    if (!runActive || conquered || restored) return false;
+    restored = true;
+    const hadImpact = coverage > 0;
+    changeCoverage(0, 2200);
+    if (hadImpact) showWorldMoment("restoration", "THE WORLD ENDURES",
+      getDominantWorld().toUpperCase() + " · THE GUARDIAN RESTORES ITS REALM");
+    // Local elemental scars fade with restoration rather than being committed.
+    return true;
+  }
+  function abandonWorldRun() {
+    runActive = false;
+    runWorld = null;
+    runElement = "fire";
+    coverage = 0;
+    spread = null;
+    restored = false;
+    conquered = false;
+  }
+  // Short temporary animation. Future cinematic cutscenes can replace this event.
+  function showWorldMoment(kind, heading, detail) {
+    if (typeof document === "undefined" || !document.body) return;
+    const previous = document.getElementById("worldMoment");
+    if (previous) previous.remove();
+    const layer = document.createElement("div");
+    layer.id = "worldMoment";
+    layer.className = "living-world-moment moment-" + kind;
+    layer.setAttribute("role", "status");
+    layer.setAttribute("aria-live", "polite");
+    const ring = document.createElement("span");
+    ring.className = "living-world-moment-ring";
+    ring.setAttribute("aria-hidden", "true");
+    const content = document.createElement("div");
+    content.className = "living-world-moment-content";
+    const title = document.createElement("strong");
+    title.textContent = heading;
+    const subtitle = document.createElement("small");
+    subtitle.textContent = detail;
+    content.append(title, subtitle);
+    layer.append(ring, content);
+    document.body.append(layer);
+    if (typeof setTimeout === "function") {
+      setTimeout(() => { if (layer.parentNode) layer.remove(); }, 2550);
+    }
   }
   function getWorldInfo() {
     return WORLDS[getDominantWorld()];
   }
-  // Only used by Settings > World Preview while developing phase 3.
-  // Cannot change a running game and does not touch the player's old saves.
+  // Temporary development preview; boss victories supersede this after testing.
   function previewWorldState(world) {
     if (!validWorld(world) || (typeof active !== "undefined" && active)) return false;
     storageSet(KEY, JSON.stringify({ version: 1, dominant: world }));
-    runWorld = null;
+    abandonWorldRun();
     return true;
   }
   function worldStatus() {
@@ -153,17 +262,50 @@
     tiles.set(key, tile);
     return tile;
   }
+  // Deterministic mosaic: every camera position shares the same conquest patches.
+  // Coverage reaches 15%, 50%, then 100%; no unbounded tile persistence.
+  function hashCell(x, y) {
+    let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  }
   function drawWorldEnvironment(left, top) {
     const world = getDominantWorld();
+    const invading = getInvadingWorld();
+    const percent = visualCoverage();
     const step = 320;
     const x0 = Math.floor(left / step) - 1;
     const y0 = Math.floor(top / step) - 1;
+    const full = percent >= 99.9 && invading !== world;
     ctx.save();
     ctx.globalAlpha = typeof graphicsQuality !== "undefined" && graphicsQuality === "low" ? .60 : .85;
     for (let gx = x0; gx * step < left + W + step; gx++) {
       for (let gy = y0; gy * step < top + H + step; gy++) {
         const variant = ((gx * 37 + gy * 71) % 4 + 4) % 4;
-        ctx.drawImage(buildTile(world, variant), gx * step, gy * step);
+        ctx.drawImage(buildTile(full ? invading : world, variant), gx * step, gy * step);
+      }
+    }
+    ctx.restore();
+    if (invading === world || percent <= 0 || full) return;
+    // Each patch has a soft circular contour and its own deterministic takeover
+    // threshold. No tile grids are stored in localStorage.
+    const threshold = percent / 100;
+    const patchSize = 190;
+    ctx.save();
+    ctx.globalAlpha = .85;
+    for (let gx = Math.floor(left / patchSize) - 1; gx * patchSize < left + W + patchSize; gx++) {
+      for (let gy = Math.floor(top / patchSize) - 1; gy * patchSize < top + H + patchSize; gy++) {
+        const seed = hashCell(gx, gy);
+        if (seed >= threshold) continue;
+        const x = gx * patchSize, y = gy * patchSize;
+        const tile = buildTile(invading, (Math.abs(gx * 7 + gy * 11) % 4));
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(x + patchSize * .5, y + patchSize * .5,
+          patchSize * .64, patchSize * .56, seed * 1.5, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(tile, x - 55, y - 55, patchSize + 110, patchSize + 110);
+        ctx.restore();
       }
     }
     ctx.restore();
@@ -174,4 +316,9 @@
   window.previewWorldState = previewWorldState;
   window.getLivingWorldState = worldStatus;
   window.drawWorldEnvironment = drawWorldEnvironment;
+  window.getWorldConquest = getWorldConquest;
+  window.onWorldBossDefeated = onWorldBossDefeated;
+  window.completeWorldConquest = completeWorldConquest;
+  window.restoreWorldOnDefeat = restoreWorldOnDefeat;
+  window.abandonWorldRun = abandonWorldRun;
 })();
