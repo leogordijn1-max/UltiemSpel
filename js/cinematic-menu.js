@@ -3,6 +3,8 @@
   const originalShowMainMenu = showMainMenu;
   const overlay = document.getElementById("overlay");
   const panelNode = document.getElementById("panel");
+  let selectedRunElement = isLivingWorldElement(storageGet("shadowRunElement", "fire")) ? storageGet("shadowRunElement", "fire") : "fire";
+  window.getSelectedRunElement = () => selectedRunElement;
   const savedTheme = () => storageGet("shadowVisualTheme", "friends") === "original" ? "original" : "friends";
   function renderCinematicMenu() {
     if (gameState !== "main-menu") return;
@@ -58,7 +60,7 @@
       modes.className = "cinematic-run-modes";
       const standard = document.createElement("button");
       standard.innerHTML = "<strong>STANDARD RUN</strong><small>Fight through the night and defeat the final boss.</small>";
-      standard.onclick = () => { menuRunMode = "standard"; showCharacterSelection(); };
+      standard.onclick = () => { menuRunMode = "standard"; showElementSelection(); };
       const endless = document.createElement("button");
       endless.innerHTML = "<strong>ENDLESS MODE</strong><small>" +
         (metaProgress.endlessUnlocked
@@ -66,9 +68,41 @@
           : "Locked · Defeat the final boss in Standard Mode to unlock.") +
         "</small>";
       endless.disabled = !metaProgress.endlessUnlocked;
-      endless.onclick = () => { menuRunMode = "endless"; showCharacterSelection(); };
+      endless.onclick = () => { menuRunMode = "endless"; showElementSelection(); };
       modes.append(standard, endless);
       parent.append(modes);
+    });
+  }
+  function showElementSelection() {
+    panel("CHOOSE YOUR ELEMENT", "Choose the element for your upcoming run. Element-specific weapons are still in development; existing weapons remain available during this preview.", (parent) => {
+      const grid = document.createElement("div");
+      grid.className = "cinematic-element-grid";
+      for (const element of Object.values(livingWorldElements)) {
+        const choice = document.createElement("button");
+        choice.className = "cinematic-element-card element-" + element.id;
+        choice.classList.toggle("selected", selectedRunElement === element.id);
+        choice.setAttribute("aria-pressed", String(selectedRunElement === element.id));
+        const heading = document.createElement("strong");
+        heading.textContent = element.name.toUpperCase();
+        const description = document.createElement("small");
+        description.textContent = element.description;
+        const count = document.createElement("span");
+        count.className = "cinematic-element-count";
+        count.textContent = "3 planned weapons · " + (selectedRunElement === element.id ? "SELECTED" : "SELECT");
+        choice.append(heading, description, count);
+        choice.onclick = () => {
+          selectedRunElement = element.id;
+          storageSet("shadowRunElement", selectedRunElement);
+          showElementSelection();
+        };
+        grid.append(choice);
+      }
+      parent.append(grid);
+      const continueButton = document.createElement("button");
+      continueButton.className = "cinematic-element-continue";
+      continueButton.textContent = "CONTINUE · CHOOSE SURVIVOR";
+      continueButton.onclick = showCharacterSelection;
+      parent.append(continueButton);
     });
   }
   showMainMenu = function () {
@@ -89,7 +123,8 @@
     panelNode.classList.toggle("cinematic-records-panel", menuScreen && title === "PERSONAL RECORDS");
     if (!menuScreen) return;
     // A single top-left back control is shared by all menu screens.
-    const backTarget = title === "CHOOSE YOUR SURVIVOR" ? showRunModeSelection
+    const backTarget = title === "CHOOSE YOUR SURVIVOR" ? showElementSelection
+      : title === "CHOOSE YOUR ELEMENT" ? showRunModeSelection
       : (title === "BUILD YOUR LOADOUT" || title === "ENDLESS · BUILD YOUR LOADOUT") ? showCharacterSelection
       : showMainMenu;
     const choices = panelNode.querySelector("#choices");
