@@ -692,7 +692,13 @@ function update(dt) {
   } else if (!boss && time >= nextBossTime) {
     spawnBoss();
   }
-  player.inv = Math.max(0, player.inv - dt);
+  if (window.developerInvincible?.()) {
+    // Reapply before all collision checks; the normal damage logic remains untouched.
+    player.inv = Math.max(player.inv, 1.2);
+    player.hp = player.maxHp;
+  } else {
+    player.inv = Math.max(0, player.inv - dt);
+  }
   damageFlash = Math.max(0, damageFlash - dt);
   novaFlash = Math.max(0, novaFlash - dt);
   novaEchoFlash = Math.max(0, novaEchoFlash - dt);
