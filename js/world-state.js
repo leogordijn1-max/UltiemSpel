@@ -53,6 +53,7 @@
   let spread = null;
   let restored = false;
   let conquered = false;
+  let restorationPeak = 0;
   const monotonicNow = () => typeof performance !== "undefined" && performance.now
     ? performance.now() : Date.now();
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
@@ -69,6 +70,7 @@
     runActive = true;
     conquered = false;
     restored = false;
+    restorationPeak = 0;
     coverage = 0;
     spread = null;
     return runWorld;
@@ -91,7 +93,7 @@
       invading: getInvadingWorld(),
       coverage: Math.round(visualCoverage()),
       target: coverage,
-      conquered, restored, active: runActive,
+      conquered, restored, restorationPeak, active: runActive,
     };
   }
   function onWorldBossDefeated(count, isFinal) {
@@ -120,6 +122,7 @@
     if (!runActive || conquered || restored) return false;
     restored = true;
     const hadImpact = coverage > 0;
+    restorationPeak = Math.max(1,visualCoverage());
     changeCoverage(0, 2200);
     if (hadImpact) showWorldMoment("restoration", "THE WORLD ENDURES",
       getDominantWorld().toUpperCase() + " · THE GUARDIAN RESTORES ITS REALM");
@@ -134,6 +137,7 @@
     spread = null;
     restored = false;
     conquered = false;
+    restorationPeak = 0;
   }
   // Short temporary animation. Future cinematic cutscenes can replace this event.
   function showWorldMoment(kind, heading, detail) {
