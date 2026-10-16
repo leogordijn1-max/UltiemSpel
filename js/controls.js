@@ -113,9 +113,11 @@ function showCharacterSelection() {
 }
 
 function showWeaponSelection() {
+  const allowedKeys = livingWorldElements[currentLivingWorldElement()].weapons;
+  if (selectedWeapons.length !== 3 || selectedWeapons.some((key) => !allowedKeys.includes(key))) syncElementalLoadout();
   const isEndless = menuRunMode === "endless" && metaProgress.endlessUnlocked;
   panel(isEndless ? "ENDLESS · BUILD YOUR LOADOUT" : "BUILD YOUR LOADOUT",
-    "Choose one Start Weapon and two different Unlockable Weapons. Only the start weapon is active at level 1.", (parent) => {
+    "Choose the order of your three " + currentLivingWorldElement().toUpperCase() + " weapons. Your starter is active immediately; the others unlock through level-ups.", (parent) => {
     const slots = document.createElement("div");
     slots.className = "loadout-select-grid";
     const slotDefinitions = [
@@ -130,7 +132,7 @@ function showWeaponSelection() {
       title.textContent = slot.label;
       const select = document.createElement("select");
       select.setAttribute("aria-label", slot.label);
-      for (const weapon of weaponCatalog) {
+      for (const weapon of weaponCatalog.filter((weapon) => allowedKeys.includes(weapon.key))) {
         const option = document.createElement("option");
         option.value = weapon.key;
         option.textContent = weapon.name;
@@ -145,6 +147,7 @@ function showWeaponSelection() {
         if (slot.index === 0) startWeapon = select.value;
         else unlockableWeapons[slot.index - 1] = select.value;
         selectedWeapons = [startWeapon, ...unlockableWeapons];
+        saveElementalLoadout(currentLivingWorldElement(), selectedWeapons);
         showWeaponSelection();
       };
       card.append(title, select, info);
@@ -154,7 +157,7 @@ function showWeaponSelection() {
 
     const grid = document.createElement("div");
     grid.className = "weapon-select-grid";
-    for (const weapon of weaponCatalog) {
+    for (const weapon of weaponCatalog.filter((weapon) => allowedKeys.includes(weapon.key))) {
       const card = document.createElement("article");
       const roleIndex = selectedWeapons.indexOf(weapon.key);
       const role = roleIndex === 0 ? "START" : roleIndex > 0 ? `UNLOCK ${roleIndex}` : "NOT SELECTED";
@@ -170,7 +173,7 @@ function showWeaponSelection() {
     start.textContent = `START ${isEndless ? "ENDLESS" : "STANDARD"} · ${weaponCatalog.find((weapon) => weapon.key === startWeapon).name} + 2 UNLOCKS`;
     start.disabled = new Set(selectedWeapons).size !== 3;
     start.onclick = () => {
-      storageSet("shadowWeapons", JSON.stringify({ startWeapon, unlockableWeapons }));
+      saveElementalLoadout(currentLivingWorldElement(), selectedWeapons);
       startAudio();
       reset();
     };
