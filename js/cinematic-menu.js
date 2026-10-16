@@ -77,6 +77,7 @@
     overlay.classList.remove("cinematic-overlay");
     overlay.classList.toggle("cinematic-submenu", menuScreen);
     originalPanel(title, body, buttons);
+    panelNode.classList.toggle("cinematic-shop-panel", menuScreen && title === "PERMANENT SHOP");
     if (!menuScreen) return;
     if (title === "SETTINGS") {
       const settings = document.createElement("section");
