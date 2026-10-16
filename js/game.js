@@ -140,6 +140,8 @@ function syncElementalLoadout() {
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
+  // Start a fresh sandbox before any discovery or rewards can be written.
+  window.developerBeginRun?.();
   // Lock the dominant environment at run start. Choosing an element never conquers it.
   window.beginWorldRun?.();
   window.resetWorldScars?.();
