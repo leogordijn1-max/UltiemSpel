@@ -81,6 +81,16 @@
     panelNode.classList.toggle("cinematic-guide-panel", menuScreen && (title === "ENCYCLOPEDIA" || title === "THE COLLECTION"));
     panelNode.classList.toggle("cinematic-records-panel", menuScreen && title === "PERSONAL RECORDS");
     if (!menuScreen) return;
+    if (title === "PERSONAL RECORDS") {
+      const choices = panelNode.querySelector("#choices");
+      const sections = choices?.querySelectorAll(":scope > .records-section");
+      if (sections?.length) {
+        const scroller = document.createElement("div");
+        scroller.className = "records-scroll-area";
+        sections[0].before(scroller);
+        sections.forEach(section => scroller.append(section));
+      }
+    }
     if (title === "SETTINGS") {
       const settings = document.createElement("section");
       settings.className = "cinematic-extra";
