@@ -78,6 +78,8 @@
     overlay.classList.toggle("cinematic-submenu", menuScreen);
     originalPanel(title, body, buttons);
     panelNode.classList.toggle("cinematic-shop-panel", menuScreen && title === "PERMANENT SHOP");
+    panelNode.classList.toggle("cinematic-guide-panel", menuScreen && (title === "ENCYCLOPEDIA" || title === "THE COLLECTION"));
+    panelNode.classList.toggle("cinematic-records-panel", menuScreen && title === "PERSONAL RECORDS");
     if (!menuScreen) return;
     if (title === "SETTINGS") {
       const settings = document.createElement("section");
