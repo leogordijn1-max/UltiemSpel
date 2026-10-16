@@ -149,6 +149,26 @@
       }
     }
     if (title === "SETTINGS") {
+      // Temporary phase 3 development preview. Remove when boss conquests take over.
+      const worldPreview = document.createElement("section");
+      worldPreview.className = "cinematic-extra cinematic-world-preview";
+      const current = window.getDominantWorld?.() || "frozen";
+      const worldHeading = document.createElement("h2");
+      worldHeading.textContent = "WORLD PREVIEW · PROTOTYPE";
+      const worldDescription = document.createElement("p");
+      worldDescription.textContent = "For testing the three worlds before boss conquests are built. This changes the next run's world without changing your selected element.";
+      worldPreview.append(worldHeading, worldDescription);
+      for (const [key, label] of [["frozen", "FROZEN"], ["burning", "BURNING"], ["flooded", "FLOODED"]]) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label + (current === key ? " · CURRENT" : "");
+        button.setAttribute("aria-pressed", String(current === key));
+        button.onclick = () => {
+          if (window.previewWorldState?.(key)) showSettings(false);
+        };
+        worldPreview.append(button);
+      }
+      panelNode.querySelector("#choices")?.prepend(worldPreview);
       const settings = document.createElement("section");
       settings.className = "cinematic-extra";
       settings.innerHTML = '<h2>VISUAL THEME</h2><p>Choose the presentation theme. Character and enemy art swapping is not implemented yet.</p>';
