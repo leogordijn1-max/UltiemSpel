@@ -148,7 +148,9 @@
     const history=historicalWorld();
     const fullQuality=graphicsQuality==="high";
     ctx.save();
-    if(history&&history.runs>0){
+    // Legacy run-history marks are kept in storage, but must not overwrite the
+    // visual identity of the new single-dominant-world system.
+    if(history&&history.runs>0&&!window.getDominantWorld){
       const step=480;
       for(let i=0;i<types.length;i++){
         const type=types[i],power=Math.min(40,Math.max(0,Number(history[type])||0));
