@@ -1,0 +1,109 @@
+/* Shared cinematic styling for all pre-run screens. Gameplay HUD and pause panels are untouched. */
+#overlay.cinematic-submenu {
+  inset:0; width:100vw; height:100vh; height:100dvh;
+  display:flex; align-items:center; justify-content:center;
+  overflow-y:auto; padding:clamp(12px,3vw,36px);
+  background:
+    linear-gradient(100deg,rgba(3,7,12,.95),rgba(5,9,14,.78) 55%,rgba(6,9,14,.92)),
+    url('../img/menu-background.webp') center bottom / cover no-repeat,
+    #070b10;
+  backdrop-filter:none;
+}
+#overlay.cinematic-submenu #panel {
+  width:min(1100px,100%); max-width:1100px;
+  max-height:calc(100dvh - 40px); overflow-y:auto; scrollbar-width:thin;
+  margin:auto; padding:clamp(22px,3.5vw,44px);
+  border:1px solid rgba(198,165,114,.36); border-radius:2px;
+  background:linear-gradient(145deg,rgba(9,15,22,.96),rgba(5,9,14,.94));
+  box-shadow:0 20px 90px #000c, inset 0 1px #ffe6b11b;
+  color:#d9d5cd; text-align:left; animation:none;
+}
+#overlay.cinematic-submenu #panel::before {display:none}
+#overlay.cinematic-submenu #panel > h1 {
+  margin:0 0 12px; color:#e6d4b4; text-shadow:0 3px 20px #000a;
+  font:normal clamp(30px,4vw,54px)/1.05 Georgia,serif;
+  letter-spacing:.07em;
+}
+#overlay.cinematic-submenu #panel > p {
+  max-width:900px; margin:0 0 24px; color:#acaa9f;
+  font:15px/1.65 Georgia,serif; letter-spacing:.015em;
+}
+#overlay.cinematic-submenu #choices{display:flex;flex-direction:column;gap:16px}
+#overlay.cinematic-submenu button {
+  border:1px solid #9e825744; border-radius:1px;
+  background:linear-gradient(135deg,#1d2126,#10151b);
+  color:#e6d7ba; box-shadow:none; font:13px Georgia,serif;
+  letter-spacing:.07em; transition:background .16s,border-color .16s;
+}
+#overlay.cinematic-submenu button:hover:not(:disabled),
+#overlay.cinematic-submenu button:focus-visible {
+  transform:none; filter:none; border-color:#d5b37b;
+  background:linear-gradient(135deg,#3b3227,#1c2026); box-shadow:0 0 16px #0007;
+}
+#overlay.cinematic-submenu button:disabled{opacity:.48;cursor:not-allowed}
+#overlay.cinematic-submenu #panel small{color:#aaa79d;line-height:1.5}
+#overlay.cinematic-submenu .character-select-grid,
+#overlay.cinematic-submenu .weapon-select-grid,
+#overlay.cinematic-submenu .shop-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(205px,1fr));
+  gap:14px; width:100%;
+}
+#overlay.cinematic-submenu .character-select-card,
+#overlay.cinematic-submenu .weapon-select-card,
+#overlay.cinematic-submenu .shop-entry,
+#overlay.cinematic-submenu .shop-earned,
+#overlay.cinematic-submenu .loadout-select-card {
+  min-width:0; margin:0; padding:18px;
+  border:1px solid #a88a624e; border-radius:2px;
+  background:linear-gradient(160deg,#20252b,#0d1319 80%);
+  text-align:left; color:#dfd7c8;
+}
+#overlay.cinematic-submenu .character-select-card {
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:11px; min-height:260px; justify-content:flex-start;
+}
+#overlay.cinematic-submenu .character-select-card img {
+  height:106px; width:106px; object-fit:contain; filter:drop-shadow(0 10px 18px #0008)
+}
+#overlay.cinematic-submenu .character-select-card b,
+#overlay.cinematic-submenu .shop-entry b,
+#overlay.cinematic-submenu .shop-earned b {color:#f0dbb5;font:normal 20px Georgia,serif}
+#overlay.cinematic-submenu .character-select-card.selected,
+#overlay.cinematic-submenu .weapon-select-card.selected,
+#overlay.cinematic-submenu .shop-tabs button.selected {
+  border-color:#d8b57b; background:linear-gradient(150deg,#403324,#12181e);
+  box-shadow:inset 0 0 0 1px #c49c6240;
+}
+#overlay.cinematic-submenu .character-unlock,
+#overlay.cinematic-submenu .shop-entry strong,
+#overlay.cinematic-submenu .shop-earned strong{color:#d6bb8e}
+#overlay.cinematic-submenu .shop-tabs,
+#overlay.cinematic-submenu .menu-footer {
+  display:flex; flex-wrap:wrap; align-items:center; gap:9px;
+}
+#overlay.cinematic-submenu .shop-tabs button,
+#overlay.cinematic-submenu .menu-footer button{margin:0}
+#overlay.cinematic-submenu .records-section,
+#overlay.cinematic-submenu .encyclopedia-card,
+#overlay.cinematic-submenu fieldset {
+  padding:18px; border:1px solid #b89c704a; border-radius:2px;
+  background:#131b23de; color:#d4cbbb;
+}
+#overlay.cinematic-submenu .records-section h2 {color:#ddc399;font:normal 23px Georgia,serif}
+#overlay.cinematic-submenu .records-section p {color:#c3bbaf;font:14px/1.6 Georgia,serif}
+#overlay.cinematic-submenu select,
+#overlay.cinematic-submenu input {accent-color:#caaa75}
+#overlay.cinematic-submenu select{color:#efe0c7;background:#1a222b;border:1px solid #806e51;padding:9px}
+#overlay.cinematic-submenu .cinematic-extra {
+  padding:18px; border:1px solid #b89c704a; background:#101820;
+  color:#c4b7a1; font:14px/1.6 Georgia,serif;
+}
+#overlay.cinematic-submenu .cinematic-extra h2 {margin:0 0 8px;color:#e1c594;font:normal 23px Georgia,serif}
+#overlay.cinematic-submenu .cinematic-extra button{margin:7px 7px 0 0}
+@media(max-width:650px){
+  #overlay.cinematic-submenu{align-items:flex-start;padding:10px}
+  #overlay.cinematic-submenu #panel{max-height:calc(100dvh - 20px);padding:20px}
+  #overlay.cinematic-submenu .character-select-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #overlay.cinematic-submenu .character-select-card{padding:10px;min-height:220px}
+  #overlay.cinematic-submenu .character-select-card img{width:70px;height:70px}
+}
