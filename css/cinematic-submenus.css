@@ -107,3 +107,19 @@
   #overlay.cinematic-submenu .character-select-card{padding:10px;min-height:220px}
   #overlay.cinematic-submenu .character-select-card img{width:70px;height:70px}
 }
+
+/* Keep the Permanent Shop frame stationary while switching tabs.
+   Only its content scrolls, regardless of item count. */
+#overlay.cinematic-submenu #panel.cinematic-shop-panel {
+  box-sizing:border-box;
+  width:min(1100px,100%);
+  height:min(760px,calc(100dvh - 40px));
+  min-height:0;
+  overflow-y:auto;
+  scrollbar-gutter:stable;
+}
+@media(max-width:650px){
+  #overlay.cinematic-submenu #panel.cinematic-shop-panel {
+    height:calc(100dvh - 20px);
+  }
+}
