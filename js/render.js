@@ -30,12 +30,16 @@ function drawSnowflake(x, y, radius) {
 }
 
 function getBackgroundPaints() {
-  if (backgroundPaintCache?.width === W && backgroundPaintCache?.height === H)
+  const world = window.getDominantWorld?.() || "frozen";
+  if (backgroundPaintCache?.width === W && backgroundPaintCache?.height === H &&
+      backgroundPaintCache.world === world)
     return backgroundPaintCache;
+  const theme = window.livingWorldStates?.[world];
+  const colors = theme?.background || ["#111017", "#1a1720", "#1a1c22"];
   const backdrop = ctx.createLinearGradient(0, 0, W, H);
-  backdrop.addColorStop(0, "#111017");
-  backdrop.addColorStop(0.52, "#1a1720");
-  backdrop.addColorStop(1, "#1a1c22");
+  backdrop.addColorStop(0, colors[0]);
+  backdrop.addColorStop(0.52, colors[1]);
+  backdrop.addColorStop(1, colors[2]);
   const ambient = ctx.createRadialGradient(
     W * 0.5,
     H * 0.48,
@@ -44,10 +48,10 @@ function getBackgroundPaints() {
     H * 0.48,
     Math.max(W, H) * 0.72,
   );
-  ambient.addColorStop(0, "rgba(112, 79, 100, 0.12)");
-  ambient.addColorStop(0.6, "rgba(80, 93, 105, 0.07)");
+  ambient.addColorStop(0, theme?.ambient?.[0] || "rgba(112, 79, 100, 0.12)");
+  ambient.addColorStop(0.6, theme?.ambient?.[1] || "rgba(80, 93, 105, 0.07)");
   ambient.addColorStop(1, "rgba(0, 0, 0, 0)");
-  backgroundPaintCache = { width: W, height: H, backdrop, ambient };
+  backgroundPaintCache = { width: W, height: H, world, backdrop, ambient };
   return backgroundPaintCache;
 }
 
@@ -150,6 +154,8 @@ function draw() {
       ctx.shadowBlur = glow(0);
     }
   }
+  // World terrain belongs below local weapon scars and entities.
+  window.drawWorldEnvironment?.(left, top);
   // Terrain scars live behind characters, enemies, pickups and projectiles.
   window.drawWorldScars?.(left, top);
   // XP and health pickups.
