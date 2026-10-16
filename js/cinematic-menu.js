@@ -1,7 +1,6 @@
 // Presentation-only main menu. Existing game panels and run flow stay intact.
 (() => {
   const originalShowMainMenu = showMainMenu;
-  let returnToMoreOptions = false;
   const overlay = document.getElementById("overlay");
   const panelNode = document.getElementById("panel");
   const savedTheme = () => storageGet("shadowVisualTheme", "friends") === "original" ? "original" : "friends";
@@ -22,11 +21,13 @@
           <p class="cinematic-subtitle">A WORLD THAT REMEMBERS</p>
           <nav class="cinematic-nav" aria-label="Main menu actions">
             <button type="button" class="cinematic-primary" data-action="play">NEW RUN</button>
-            <button type="button" data-action="endless" ${metaProgress.endlessUnlocked ? "" : "disabled title='Defeat the final boss to unlock Endless Mode'"}>ENDLESS MODE ${metaProgress.endlessUnlocked ? "" : "· LOCKED"}</button>
             <button type="button" data-action="shop">PERMANENT UPGRADES</button>
             <button type="button" data-action="records">PERSONAL RECORDS</button>
             <button type="button" data-action="settings">SETTINGS</button>
-            <button type="button" data-action="more">MORE OPTIONS</button>
+            <button type="button" data-action="achievements">ACHIEVEMENTS</button>
+            <button type="button" data-action="encyclopedia">ENCYCLOPEDIA</button>
+            <button type="button" data-action="collection">COLLECTION</button>
+            <button type="button" data-action="controls">CONTROLS</button>
           </nav>
           <span class="cinematic-note">${world.detail} · ${world.runs} completed runs remembered. Visual theme swapping is coming later.</span>
         </section>
@@ -37,37 +38,40 @@
       renderCinematicMenu();
     }));
     const actions = {
-      play: () => { menuRunMode = "standard"; showCharacterSelection(); },
-      endless: () => { if (metaProgress.endlessUnlocked) { menuRunMode = "endless"; showCharacterSelection(); } },
+      play: () => showRunModeSelection(),
       shop: () => showMetaShop("Stats"),
       records: () => showRecords(),
       settings: () => showSettings(false),
-      more: () => showMoreOptions(),
+      achievements: () => showAchievements(),
+      encyclopedia: () => showEncyclopedia(),
+      collection: () => showCollection(),
+      controls: () => showControlsHelp(false),
     };
     panelNode.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => {
       overlay.classList.remove("cinematic-overlay");
       actions[button.dataset.action]?.();
     }));
   }
-  function showMoreOptions() {
-    returnToMoreOptions = false;
-    panel("MORE OPTIONS", "Existing game features", (parent) => {
-      for (const [label, callback] of [
-        ["ACHIEVEMENTS", showAchievements],
-        ["ENCYCLOPEDIA", () => showEncyclopedia()],
-        ["COLLECTION", () => showCollection()],
-        ["CONTROLS", () => showControlsHelp(false)],
-      ]) {
-        const button = document.createElement("button");
-        button.textContent = label;
-        button.onclick = () => { returnToMoreOptions = true; callback(); };
-        parent.append(button);
-      }
-      backButton(parent);
+  function showRunModeSelection() {
+    panel("SELECT RUN MODE", "Choose how your next run begins.", (parent) => {
+      const modes = document.createElement("div");
+      modes.className = "cinematic-run-modes";
+      const standard = document.createElement("button");
+      standard.innerHTML = "<strong>STANDARD RUN</strong><small>Fight through the night and defeat the final boss.</small>";
+      standard.onclick = () => { menuRunMode = "standard"; showCharacterSelection(); };
+      const endless = document.createElement("button");
+      endless.innerHTML = "<strong>ENDLESS MODE</strong><small>" +
+        (metaProgress.endlessUnlocked
+          ? "The night never ends. See how long you can survive."
+          : "Locked · Defeat the final boss in Standard Mode to unlock.") +
+        "</small>";
+      endless.disabled = !metaProgress.endlessUnlocked;
+      endless.onclick = () => { menuRunMode = "endless"; showCharacterSelection(); };
+      modes.append(standard, endless);
+      parent.append(modes);
     });
   }
   showMainMenu = function () {
-    returnToMoreOptions = false;
     overlay.classList.remove("cinematic-overlay", "cinematic-submenu");
     originalShowMainMenu();
     renderCinematicMenu();
@@ -84,21 +88,20 @@
     panelNode.classList.toggle("cinematic-guide-panel", menuScreen && (title === "ENCYCLOPEDIA" || title === "THE COLLECTION"));
     panelNode.classList.toggle("cinematic-records-panel", menuScreen && title === "PERSONAL RECORDS");
     if (!menuScreen) return;
-    if (returnToMoreOptions && ["ACHIEVEMENTS", "ENCYCLOPEDIA", "THE COLLECTION", "CONTROLS"].includes(title)) {
-      panelNode.querySelectorAll("#choices > button").forEach(button => {
-        if (button.textContent.trim().startsWith("BACK")) {
-          button.textContent = "BACK TO MORE OPTIONS";
-          button.onclick = showMoreOptions;
-        }
-      });
-    }
-    if (title === "ENCYCLOPEDIA" || title === "THE COLLECTION") {
-      const exit = document.createElement("button");
-      exit.className = "cinematic-guide-exit";
-      exit.textContent = "← BACK";
-      exit.onclick = returnToMoreOptions ? showMoreOptions : showMainMenu;
-      panelNode.prepend(exit);
-    }
+    // A single top-left back control is shared by all menu screens.
+    const backTarget = title === "CHOOSE YOUR SURVIVOR" ? showRunModeSelection
+      : (title === "BUILD YOUR LOADOUT" || title === "ENDLESS · BUILD YOUR LOADOUT") ? showCharacterSelection
+      : showMainMenu;
+    const choices = panelNode.querySelector("#choices");
+    choices?.querySelectorAll("button").forEach(button => {
+      if (/^BACK(?: TO |$)/.test(button.textContent.trim())) button.remove();
+    });
+    const back = document.createElement("button");
+    back.className = "cinematic-screen-back";
+    back.type = "button";
+    back.textContent = "← BACK";
+    back.onclick = backTarget;
+    panelNode.prepend(back);
     if (title === "PERSONAL RECORDS") {
       const choices = panelNode.querySelector("#choices");
       const sections = choices?.querySelectorAll(":scope > .records-section");
