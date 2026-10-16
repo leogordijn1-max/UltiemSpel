@@ -81,6 +81,13 @@
     panelNode.classList.toggle("cinematic-guide-panel", menuScreen && (title === "ENCYCLOPEDIA" || title === "THE COLLECTION"));
     panelNode.classList.toggle("cinematic-records-panel", menuScreen && title === "PERSONAL RECORDS");
     if (!menuScreen) return;
+    if (title === "ENCYCLOPEDIA" || title === "THE COLLECTION") {
+      const exit = document.createElement("button");
+      exit.className = "cinematic-guide-exit";
+      exit.textContent = "← BACK";
+      exit.onclick = showMainMenu;
+      panelNode.prepend(exit);
+    }
     if (title === "PERSONAL RECORDS") {
       const choices = panelNode.querySelector("#choices");
       const sections = choices?.querySelectorAll(":scope > .records-section");
