@@ -277,3 +277,64 @@
     grid-column:auto;
   }
 }
+
+/* Repair: field guide content was clipped inside nested flex/overflow containers.
+   Use a single scroll container, exactly like the working Permanent Shop. */
+#overlay.cinematic-submenu #panel.cinematic-guide-panel {
+  display:block;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-gutter:stable;
+}
+#overlay.cinematic-submenu .cinematic-guide-panel #choices {
+  display:flex;
+  flex-direction:column;
+  flex-wrap:nowrap;
+  justify-content:flex-start;
+  align-items:stretch;
+  width:100%;
+  min-height:auto;
+  height:auto;
+  overflow:visible;
+  gap:16px;
+}
+#overlay.cinematic-submenu .cinematic-guide-panel .encyclopedia-tabs {
+  display:flex;
+  flex-wrap:nowrap;
+  gap:6px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  min-height:52px;
+  padding-bottom:5px;
+}
+#overlay.cinematic-submenu .cinematic-guide-panel .encyclopedia-tabs button {
+  flex:0 0 auto;
+  min-width:0;
+  padding:10px 13px;
+  font-size:12px;
+  white-space:nowrap;
+}
+#overlay.cinematic-submenu .cinematic-guide-panel .encyclopedia-list {
+  display:grid;
+  flex:none;
+  height:auto;
+  min-height:160px;
+  max-height:none;
+  overflow:visible;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-content:start;
+}
+#overlay.cinematic-submenu .cinematic-guide-panel #choices > button:last-child {
+  align-self:flex-start;
+  position:sticky;
+  bottom:0;
+  z-index:3;
+  margin:10px 0 0;
+  background:#312b24;
+  border-color:#d5ad72;
+}
+@media(max-width:730px) {
+  #overlay.cinematic-submenu .cinematic-guide-panel .encyclopedia-list {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
