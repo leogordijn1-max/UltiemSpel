@@ -443,3 +443,17 @@
   #overlay.cinematic-submenu .cinematic-element-grid {grid-template-columns:1fr}
   #overlay.cinematic-submenu .cinematic-element-card {min-height:115px}
 }
+
+/* Living World phase 3: prototype world preview and world/element separation. */
+#overlay.cinematic-submenu .cinematic-element-world-context {
+  margin:0; padding:12px 16px;
+  border-left:3px solid #9cb7c9;
+  background:rgba(42,72,87,.25);
+  color:#d5e3e9; font:13px/1.5 Georgia,serif;
+  letter-spacing:.025em;
+}
+#overlay.cinematic-submenu .cinematic-world-preview button[aria-pressed="true"] {
+  border-color:#d5b582;
+  background:rgba(193,149,90,.17);
+  color:#f4e0bf;
+}
