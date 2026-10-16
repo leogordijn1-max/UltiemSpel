@@ -140,6 +140,8 @@ function syncElementalLoadout() {
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
+  // Lock the dominant environment at run start. Choosing an element never conquers it.
+  window.beginWorldRun?.();
   window.resetWorldScars?.();
   syncElementalLoadout();
   resetElementalCombat();
@@ -445,7 +447,7 @@ function hud() {
   $("levelText").textContent = level;
   $("xp").style.width = (100 * xp) / needed + "%";
   $("stats").textContent =
-    `${currentLivingWorldElement().toUpperCase()} · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
+    `${(window.getDominantWorld?.() || "frozen").toUpperCase()} WORLD · ${currentLivingWorldElement().toUpperCase()} ELEMENT · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
   const character = getCharacter(selectedCharacter);
   const boost =
     characterRuntime.activeBoost > 0
