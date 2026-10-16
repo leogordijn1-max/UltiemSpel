@@ -161,9 +161,9 @@
       worldPreview.className = "cinematic-extra cinematic-world-preview";
       const current = window.getDominantWorld?.() || "frozen";
       const worldHeading = document.createElement("h2");
-      worldHeading.textContent = "WORLD PREVIEW · PROTOTYPE";
+      worldHeading.textContent = "WORLD PREVIEW · TEST ONLY";
       const worldDescription = document.createElement("p");
-      worldDescription.textContent = "For testing the three worlds before boss conquests are built. This changes the next run's world without changing your selected element.";
+      worldDescription.textContent = "Development shortcut: manually override the saved world to test each biome. Normal progression changes the world only by defeating the final boss.";
       worldPreview.append(worldHeading, worldDescription);
       for (const [key, label] of [["frozen", "FROZEN"], ["burning", "BURNING"], ["flooded", "FLOODED"]]) {
         const button = document.createElement("button");
