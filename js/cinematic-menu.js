@@ -1,6 +1,7 @@
 // Presentation-only main menu. Existing game panels and run flow stay intact.
 (() => {
   const originalShowMainMenu = showMainMenu;
+  let returnToMoreOptions = false;
   const overlay = document.getElementById("overlay");
   const panelNode = document.getElementById("panel");
   const savedTheme = () => storageGet("shadowVisualTheme", "friends") === "original" ? "original" : "friends";
@@ -23,7 +24,7 @@
             <button type="button" class="cinematic-primary" data-action="play">NEW RUN</button>
             <button type="button" data-action="endless" ${metaProgress.endlessUnlocked ? "" : "disabled title='Defeat the final boss to unlock Endless Mode'"}>ENDLESS MODE ${metaProgress.endlessUnlocked ? "" : "· LOCKED"}</button>
             <button type="button" data-action="shop">PERMANENT UPGRADES</button>
-            <button type="button" data-action="records">RECORDS &amp; ACHIEVEMENTS</button>
+            <button type="button" data-action="records">PERSONAL RECORDS</button>
             <button type="button" data-action="settings">SETTINGS</button>
             <button type="button" data-action="more">MORE OPTIONS</button>
           </nav>
@@ -49,6 +50,7 @@
     }));
   }
   function showMoreOptions() {
+    returnToMoreOptions = false;
     panel("MORE OPTIONS", "Existing game features", (parent) => {
       for (const [label, callback] of [
         ["ACHIEVEMENTS", showAchievements],
@@ -58,13 +60,14 @@
       ]) {
         const button = document.createElement("button");
         button.textContent = label;
-        button.onclick = callback;
+        button.onclick = () => { returnToMoreOptions = true; callback(); };
         parent.append(button);
       }
       backButton(parent);
     });
   }
   showMainMenu = function () {
+    returnToMoreOptions = false;
     overlay.classList.remove("cinematic-overlay", "cinematic-submenu");
     originalShowMainMenu();
     renderCinematicMenu();
@@ -81,11 +84,19 @@
     panelNode.classList.toggle("cinematic-guide-panel", menuScreen && (title === "ENCYCLOPEDIA" || title === "THE COLLECTION"));
     panelNode.classList.toggle("cinematic-records-panel", menuScreen && title === "PERSONAL RECORDS");
     if (!menuScreen) return;
+    if (returnToMoreOptions && ["ACHIEVEMENTS", "ENCYCLOPEDIA", "THE COLLECTION", "CONTROLS"].includes(title)) {
+      panelNode.querySelectorAll("#choices > button").forEach(button => {
+        if (button.textContent.trim().startsWith("BACK")) {
+          button.textContent = "BACK TO MORE OPTIONS";
+          button.onclick = showMoreOptions;
+        }
+      });
+    }
     if (title === "ENCYCLOPEDIA" || title === "THE COLLECTION") {
       const exit = document.createElement("button");
       exit.className = "cinematic-guide-exit";
       exit.textContent = "← BACK";
-      exit.onclick = showMainMenu;
+      exit.onclick = returnToMoreOptions ? showMoreOptions : showMainMenu;
       panelNode.prepend(exit);
     }
     if (title === "PERSONAL RECORDS") {
