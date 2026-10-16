@@ -324,68 +324,104 @@ function updateElementalCombat(dt) {
 
 function drawElementalCombat() {
   for (const area of elementalAreas) {
-    const alpha = Math.max(0, Math.min(0.55, area.life / area.maxLife * 0.55));
     ctx.save();
-    ctx.globalAlpha = alpha;
+    const fade = Math.max(0, Math.min(1, area.life / area.maxLife));
+    if (area.type === "meteorWarning") {
+      ctx.globalAlpha = .22 + Math.sin(time*22)**2 * .2;
+      ctx.fillStyle = "#ff713a"; ctx.strokeStyle = "#ffb36c";
+      ctx.lineWidth = 3;
+      ctx.beginPath();ctx.arc(area.x,area.y,area.radius,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+      ctx.restore();
+      continue;
+    }
+    if (area.type === "frostEcho") {
+      ctx.globalAlpha = .28 + .2*Math.sin(time*12)**2;
+      ctx.strokeStyle = "#cefbff";ctx.lineWidth = 7;
+      ctx.beginPath();ctx.arc(area.x,area.y,area.radius,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+      continue;
+    }
+    if (area.type === "tidalWave") {
+      // Sweeping wave front, not a static cone like Flame Cone.
+      const progress = Math.max(0,1-area.life/area.maxLife);
+      ctx.globalAlpha = Math.min(1,fade*1.2);
+      ctx.strokeStyle = area.evolved ? "#b1f4ff" : "#7ad2ff";
+      ctx.shadowColor = "#3c9be7"; ctx.shadowBlur = glow(19);
+      ctx.lineWidth = area.evolved ? 33 : 25;
+      ctx.lineCap = "round";
+      ctx.beginPath();ctx.arc(area.x,area.y,Math.max(0,area.radius),
+        area.angle-area.spread/2,area.angle+area.spread/2);
+      ctx.stroke();
+      ctx.globalAlpha = fade*.64;
+      ctx.strokeStyle = "#e0ffff";ctx.lineWidth=5;
+      ctx.beginPath();ctx.arc(area.x,area.y,Math.max(0,area.radius)+9,
+        area.angle-area.spread/2,area.angle+area.spread/2);
+      ctx.stroke();
+      ctx.restore();
+      continue;
+    }
+    ctx.globalAlpha = Math.min(0.60, fade * 0.58);
     const fire = area.type === "fire";
     const frost = area.type === "frost";
     const color = fire ? "#ff955c" : frost ? "#b5f4ff" : "#67bfff";
     ctx.fillStyle = fire ? "#e45722" : frost ? "#8bd5fa" : "#1c7dc3";
     ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = glow(16);
-    ctx.beginPath();
-    if (area.type === "tidalWave") {
-      ctx.moveTo(area.x, area.y);
-      ctx.arc(area.x, area.y, area.radius, area.angle - area.spread / 2, area.angle + area.spread / 2);
-      ctx.closePath();
-    } else {
-      ctx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
-    }
-    ctx.fill();
-    ctx.stroke();
+    ctx.lineWidth = area.type === "whirlpool" && area.evolved ? 5 : 3;
+    ctx.shadowColor = color; ctx.shadowBlur = glow(16);
+    ctx.beginPath();ctx.arc(area.x,area.y,area.radius,0,Math.PI*2);
+    ctx.fill();ctx.stroke();
     if (area.type === "whirlpool") {
-      ctx.beginPath();
-      ctx.arc(area.x, area.y, area.radius * 0.55, time * 3, time * 3 + Math.PI * 1.55);
-      ctx.stroke();
+      ctx.globalAlpha = Math.min(.95,fade);
+      for (let arm = 0; arm < (area.evolved ? 3 : 2); arm++) {
+        ctx.beginPath();
+        ctx.arc(area.x,area.y,area.radius*(.40+arm*.19),time*(arm%2?-2.2:2.8)+arm,
+          time*(arm%2?-2.2:2.8)+arm+Math.PI*1.35,arm%2===1);
+        ctx.stroke();
+      }
     }
     ctx.restore();
   }
   for (const shot of elementalShots) {
     ctx.save();
-    ctx.translate(shot.x, shot.y);
-    ctx.rotate(Math.atan2(shot.vy, shot.vx));
-    const color = shot.type === "fireball" ? "#ff8c4b" : shot.type === "waterBolt" ? "#6fcaff" : "#c5f4ff";
-    ctx.shadowColor = color;
-    ctx.shadowBlur = glow(18);
+    ctx.translate(shot.x,shot.y);
+    ctx.rotate(Math.atan2(shot.vy,shot.vx));
+    const fire = shot.type==="fireball",water=shot.type==="waterBolt";
+    const color = fire ? "#ff8c4b" : water ? "#6fcaff" : "#c5f4ff";
+    ctx.shadowColor = color;ctx.shadowBlur=glow(19);
     ctx.fillStyle = color;
     ctx.beginPath();
     if (shot.type === "iceShards") {
-      ctx.moveTo(shot.r * 2, 0);
-      ctx.lineTo(-shot.r, -shot.r);
-      ctx.lineTo(-shot.r * 0.4, 0);
-      ctx.lineTo(-shot.r, shot.r);
+      ctx.moveTo(shot.r*2,0);ctx.lineTo(-shot.r,-shot.r);
+      ctx.lineTo(-shot.r*.4,0);ctx.lineTo(-shot.r,shot.r);
+      ctx.closePath();
+    } else if (water) {
+      // Thin pressurised spear of water instead of a spherical Fireball.
+      ctx.moveTo(shot.r*3.1,0);ctx.lineTo(-shot.r*2.8,-shot.r*.48);
+      ctx.lineTo(-shot.r*1.1,0);ctx.lineTo(-shot.r*2.8,shot.r*.48);
       ctx.closePath();
     } else {
-      ctx.ellipse(0, 0, shot.r * 1.5, shot.r, 0, 0, Math.PI * 2);
+      ctx.arc(0,0,shot.r*1.4,0,Math.PI*2);
     }
     ctx.fill();
+    if (fire) {
+      ctx.strokeStyle="#ffdca0";ctx.lineWidth=2.8;
+      ctx.beginPath();ctx.arc(0,0,shot.r*.75,0,Math.PI*2);ctx.stroke();
+      for(let i=0;i<5;i++){
+        const a=(i*Math.PI*2/5)+time*3;
+        ctx.beginPath();ctx.moveTo(Math.cos(a)*shot.r*1.3,Math.sin(a)*shot.r*1.3);
+        ctx.lineTo(Math.cos(a)*shot.r*2.2,Math.sin(a)*shot.r*2.2);ctx.stroke();
+      }
+    } else if (water) {
+      ctx.strokeStyle="#e1faff";ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(-shot.r*2,0);ctx.lineTo(shot.r*2.3,0);ctx.stroke();
+    }
     ctx.restore();
   }
-  if (upgrades.flameOrbit) {
-    const count = 2 + Math.floor((upgrades.flameOrbit - 1) / 2);
-    for (let i = 0; i < count; i++) {
-      const angle = orbitFireAngle + i * Math.PI * 2 / count;
-      ctx.save();
-      ctx.fillStyle = "#ffb166";
-      ctx.shadowColor = "#ff5423";
-      ctx.shadowBlur = glow(19);
-      ctx.beginPath();
-      ctx.arc(player.x + Math.cos(angle) * (62 + upgrades.flameOrbit * 4),
-        player.y + Math.sin(angle) * (62 + upgrades.flameOrbit * 4), 10 + upgrades.flameOrbit, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
+  for (const orb of fireOrbitPositions()) {
+    ctx.save();ctx.fillStyle=evolutions.solarCrown?"#ffe4a1":"#ffb166";
+    ctx.shadowColor="#ff5423";ctx.shadowBlur=glow(evolutions.solarCrown?26:19);
+    ctx.beginPath();ctx.arc(orb.x,orb.y,orb.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
   }
 }
