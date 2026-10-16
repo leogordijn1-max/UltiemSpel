@@ -113,24 +113,25 @@
   display: none;
 }
 
-/* NEW RUN is a deliberate call-to-action, not a permanently hovered menu item. */
+/* NEW RUN stays as understated as the rest of the menu.
+   A warmer text tone is its only default distinction. */
 #overlay.cinematic-overlay .cinematic-nav button.cinematic-primary {
-  color:#17130e;
-  border-color:#e5c38d;
-  background:linear-gradient(105deg,#e6c58e,#b99763);
-  box-shadow:inset 0 1px #fff5ce8c,0 4px 18px #0007;
-  text-shadow:none;
-  font-weight:bold;
+  color:#dfc49b;
+  border-color:transparent;
+  background:transparent;
+  box-shadow:none;
+  text-shadow:0 2px 6px #000;
+  font-weight:normal;
 }
 #overlay.cinematic-overlay .cinematic-nav button.cinematic-primary::before {
-  color:#342412;
-  opacity:1;
+  color:#c5ac83;
+  opacity:.7;
 }
 #overlay.cinematic-overlay .cinematic-nav button.cinematic-primary:hover,
 #overlay.cinematic-overlay .cinematic-nav button.cinematic-primary:focus-visible {
-  color:#120f0b;
-  border-color:#ffe6b4;
-  background:linear-gradient(105deg,#ffdfaa,#d6ad70);
-  box-shadow:inset 0 1px #fff8df,0 0 22px #d7a85b60;
-  text-shadow:none;
+  color:#f1dfbd;
+  border-color:#b69a6caa;
+  background:linear-gradient(90deg,#0a0c10ed,#17130db0);
+  box-shadow:inset 0 0 0 1px #bd9f5933,0 0 24px #0008;
+  text-shadow:0 2px 6px #000;
 }
