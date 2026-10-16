@@ -64,6 +64,7 @@
     return ELEMENT_WORLD[runElement] || getDominantWorld();
   }
   function beginWorldRun() {
+    if (typeof document !== "undefined") document.getElementById("worldMoment")?.remove();
     runWorld = readSavedWorld();
     runElement = typeof currentLivingWorldElement === "function"
       ? currentLivingWorldElement() : "fire";
@@ -121,15 +122,15 @@
   function restoreWorldOnDefeat() {
     if (!runActive || conquered || restored) return false;
     restored = true;
-    const hadImpact = coverage > 0;
     restorationPeak = Math.max(1,visualCoverage());
     changeCoverage(0, 2200);
-    if (hadImpact) showWorldMoment("restoration", "THE WORLD ENDURES",
+    showWorldMoment("restoration", "THE WORLD ENDURES",
       getDominantWorld().toUpperCase() + " · THE GUARDIAN RESTORES ITS REALM");
     // Local elemental scars fade with restoration rather than being committed.
     return true;
   }
   function abandonWorldRun() {
+    if (typeof document !== "undefined") document.getElementById("worldMoment")?.remove();
     runActive = false;
     runWorld = null;
     runElement = "fire";
