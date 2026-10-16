@@ -114,5 +114,16 @@ function runSummaryRows(run, catalog = []) {
     ["Critical Hits", numberForDisplay(stats.criticalHits)],
     ["XP Collected", numberForDisplay(stats.xpCollected)],
   ];
+  if (typeof run?.worldBefore === "string") {
+    const source = run.worldBefore.toUpperCase();
+    const after = (run.worldAfter || run.worldBefore).toUpperCase();
+    const element = (run.runElement || "fire").toUpperCase();
+    info.unshift(
+      ["World Before", source],
+      ["Run Element", element],
+      ["World Impact", (Math.max(0, Math.min(100, Number(run.worldImpact) || 0))) + "%"],
+      ["World After", after]
+    );
+  }
   return { info, damage: damageLeaderboard(stats, catalog) };
 }
