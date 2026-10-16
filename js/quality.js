@@ -1,7 +1,7 @@
 // Update 8: run analytics, discovery collection and safe presentation utilities.
 // Pure helpers do not depend on browser APIs; the game owns their lifecycle.
 const discoveryGroups = ["weapons", "evolutions", "enemies", "bosses", "characters"];
-const combatSourceKeys = ["arcane", "orbit", "bomb", "chain", "boomerang", "flame", "frost", "nova", "fish", "other"];
+const combatSourceKeys = ["arcane", "orbit", "bomb", "chain", "boomerang", "flame", "frost", "nova", "fireball", "flameOrbit", "waterBolt", "tidalWave", "whirlpool", "iceShards", "glacialPulse", "fish", "other"];
 
 function createRunStats() {
   return {
@@ -32,6 +32,7 @@ function normalizeRunStats(raw) {
   };
 }
 function weaponDamageSource(type, origin) {
+  if (origin?.type && combatSourceKeys.includes(origin.type) && origin.type !== "other") return origin.type;
   const mapping = {
     pulse: "nova", blade: "orbit", bomb: "bomb", lightning: "chain",
     chain: "chain", burn: "flame", flame: "flame", frost: "frost",
