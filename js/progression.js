@@ -79,6 +79,12 @@ function recordRun(outcome = "defeat") {
     victory: won,
     evolutionCount: typeof evolutions !== "undefined" ? Object.values(evolutions).filter(Boolean).length : 0,
     weapons: typeof selectedWeapons !== "undefined" ? [...selectedWeapons] : [],
+    worldBefore: window.getWorldConquest?.().original || "frozen",
+    runElement: typeof currentLivingWorldElement === "function" ? currentLivingWorldElement() : "fire",
+    worldImpact: won ? 100 : (window.getWorldConquest?.().target || 0),
+    worldAfter: won
+      ? (window.getWorldConquest?.().invading || "frozen")
+      : (window.getWorldConquest?.().original || "frozen"),
     stats: typeof runStats !== "undefined" && typeof normalizeRunStats === "function" ? normalizeRunStats(runStats) : null,
   };
   if (!Array.isArray(metaProgress.runs)) metaProgress.runs = [];
