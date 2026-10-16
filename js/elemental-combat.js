@@ -22,18 +22,52 @@ function elementalAim(maxRange = 900) {
   return { angle: Math.atan2(dy, dx), target: enemy };
 }
 function elementalShot(type, x, y, angle, speed, radius, damage, lifetime = 2.4) {
-  if (elementalShots.length >= 160) return;
-  elementalShots.push({
+  if (elementalShots.length >= 160) return null;
+  const shot = {
     type, x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-    r: radius, damage, life: lifetime, hit: new Set(),
+    r: radius, damage, life: lifetime, hit: new Set(), distance: 0,
+  };
+  elementalShots.push(shot);
+  return shot;
+}
+function markWetGround(x, y, radius = 70) {
+  window.addWorldScar?.("water", x, y, radius);
+}
+function launchTidalWave(angle, level, { delay = 0, evolved = false } = {}) {
+  if (elementalAreas.length > 50) return;
+  const radius = (170 + level * 24) * (evolved ? 1.28 : 1);
+  elementalAreas.push({
+    type: "tidalWave", x: player.x, y: player.y,
+    radius: 0, maxRadius: radius, angle, spread: evolved ? 2.2 : 1.45,
+    life: 0.95, maxLife: 0.95, delay, hit: new Set(), scarClock: 0,
+    evolved,
   });
+}
+function fireOrbitPositions() {
+  if (!upgrades.flameOrbit) return [];
+  const level = upgrades.flameOrbit;
+  const evolved = !!evolutions.solarCrown;
+  const positions = [];
+  const rings = evolved
+    ? [{ count: 3 + Math.floor(level / 2), radius: 68 + level * 5, direction: 1 },
+       { count: 3, radius: 36 + level * 2, direction: -1 }]
+    : [{ count: 2 + Math.floor((level - 1) / 2), radius: 62 + level * 4, direction: 1 }];
+  for (const ring of rings) {
+    for (let i = 0; i < ring.count; i++) {
+      const a = orbitFireAngle * ring.direction + i * Math.PI * 2 / ring.count;
+      positions.push({ x: player.x + Math.cos(a) * ring.radius,
+        y: player.y + Math.sin(a) * ring.radius,
+        r: evolved ? 12 + level : 10 + level });
+    }
+  }
+  return positions;
 }
 function elementalCircle(x, y, radius, damage, kind, duration = 0.65) {
   elementalAreas.push({ type: kind, x, y, radius, life: duration, maxLife: duration });
   if (elementalAreas.length > 55) elementalAreas.shift();
   const color = kind === "fire" ? "#ff9657" : kind === "frost" ? "#a5eafa" : "#60bcff";
   puff(x, y, color, 8);
-  if (kind === "fire" || kind === "frost") window.addWorldScar?.(kind, x, y, Math.min(150, radius));
+  window.addWorldScar?.(kind, x, y, Math.min(150, radius));
   for (const enemy of nearbyEnemies(x, y, radius + 80)) {
     if (enemy.dead) continue;
     const dx = enemy.x - x, dy = enemy.y - y;
@@ -52,7 +86,9 @@ function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKe
     enemy.burnDps = Math.max(enemy.burnDps || 0, 7 + (upgrades.fireball || upgrades.flameOrbit || 1) * 3);
     enemy.nextBurnTick = Math.min(enemy.nextBurnTick || Infinity, time + 0.5);
   } else if (element === "frost") {
-    enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + 1.7);
+    enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + (evolutions.absoluteZero && weaponKey === "glacialPulse" ? 3 : 1.7));
+    if (evolutions.absoluteZero && weaponKey === "glacialPulse" && enemy !== boss)
+      enemy.deepFreezeUntil = Math.max(enemy.deepFreezeUntil || 0, time + 0.85);
   } else if (element === "water") {
     enemy.soakedUntil = Math.max(enemy.soakedUntil || 0, time + 1.8);
     const dx = enemy.x - originX, dy = enemy.y - originY;
@@ -77,15 +113,16 @@ function updateElementalCombat(dt) {
   if (upgrades.waterBolt && !elementalTimers.waterBolt) {
     const aim = elementalAim(1100);
     if (aim.target) {
-      elementalShot("waterBolt", player.x, player.y, aim.angle, 530, 8,
-        (14 + upgrades.waterBolt * 6) * globalDamageMultiplier(), 1.9);
+      const shot = elementalShot("waterBolt", player.x, player.y, aim.angle, evolutions.riptideLance ? 760 : 640, evolutions.riptideLance ? 10 : 7,
+        (14 + upgrades.waterBolt * 6) * globalDamageMultiplier() * (evolutions.riptideLance ? 1.2 : 1), 1.65);
+      if (shot) shot.pierce = evolutions.riptideLance ? 5 : 2;
       elementalCooldown("waterBolt", Math.max(0.95, 1.5 - upgrades.waterBolt * 0.1));
     }
   }
   if (upgrades.iceShards && !elementalTimers.iceShards) {
     const aim = elementalAim(950);
     if (aim.target) {
-      const count = 3 + (upgrades.iceShards >= 4 ? 2 : 0);
+      const count = 3 + (upgrades.iceShards >= 4 ? 2 : 0) + (evolutions.crystalStorm ? 2 : 0);
       for (let index = 0; index < count; index++) {
         const offset = (index - (count - 1) / 2) * 0.18;
         elementalShot("iceShards", player.x, player.y, aim.angle + offset, 480, 6,
@@ -95,60 +132,56 @@ function updateElementalCombat(dt) {
     }
   }
   if (upgrades.tidalWave && !elementalTimers.tidalWave) {
-    const radius = 180 + upgrades.tidalWave * 17;
-    const aim = elementalAim(radius + 20);
+    const aim = elementalAim(340 + upgrades.tidalWave * 30);
     if (aim.target) {
-      const spread = 1.7;
-      elementalAreas.push({ type: "tidalWave", x: player.x, y: player.y, radius, angle: aim.angle, spread, life: 0.58, maxLife: 0.58 });
-      for (const enemy of nearbyEnemies(player.x, player.y, radius + 90)) {
-        if (enemy.dead) continue;
-        const dx = enemy.x - player.x, dy = enemy.y - player.y;
-        const distance = Math.hypot(dx, dy);
-        if (distance > radius + enemyHitRadius(enemy)) continue;
-        const diff = Math.atan2(Math.sin(Math.atan2(dy, dx) - aim.angle), Math.cos(Math.atan2(dy, dx) - aim.angle));
-        if (Math.abs(diff) > spread / 2) continue;
-        damageEnemyElemental(enemy, (17 + upgrades.tidalWave * 8) * globalDamageMultiplier(), "water", player.x, player.y, "tidalWave");
-        enemy.knockbackX = (enemy.knockbackX || 0) + Math.cos(aim.angle) * (enemy === boss ? 20 : 145);
-        enemy.knockbackY = (enemy.knockbackY || 0) + Math.sin(aim.angle) * (enemy === boss ? 20 : 145);
-      }
+      launchTidalWave(aim.angle, upgrades.tidalWave, { evolved: !!evolutions.tsunami });
+      if (evolutions.tsunami) launchTidalWave(aim.angle, upgrades.tidalWave, { delay: 0.3, evolved: true });
       elementalCooldown("tidalWave", Math.max(4.4, 5.85 - upgrades.tidalWave * 0.29));
     }
   }
   if (upgrades.whirlpool && !elementalTimers.whirlpool) {
     const aim = elementalAim(800);
     if (aim.target) {
-      const radius = 115 + upgrades.whirlpool * 11;
-      elementalAreas.push({
-        type: "whirlpool", x: aim.target.x, y: aim.target.y, radius,
-        life: 2.5 + upgrades.whirlpool * 0.25,
-        maxLife: 2.5 + upgrades.whirlpool * 0.25, pulse: 0,
-      });
+      const evolved = !!evolutions.maelstrom;
+      const radius = (115 + upgrades.whirlpool * 11) * (evolved ? 1.25 : 1);
+      const positions = evolved
+        ? [{x:aim.target.x-85,y:aim.target.y-35},{x:aim.target.x+85,y:aim.target.y+35}]
+        : [{x:aim.target.x,y:aim.target.y}];
+      for(const p of positions) {
+        if(elementalAreas.length>=54)break;
+        const duration=(2.5 + upgrades.whirlpool * 0.25) * (evolved ? 1.4 : 1);
+        elementalAreas.push({
+          type: "whirlpool", x: p.x, y: p.y, radius,
+          life: duration, maxLife: duration, pulse: 0, evolved,
+        });
+        markWetGround(p.x,p.y,radius);
+      }
       elementalCooldown("whirlpool", Math.max(7.1, 9.1 - upgrades.whirlpool * 0.4));
     }
   }
   if (upgrades.glacialPulse && !elementalTimers.glacialPulse) {
     const radius = 145 + upgrades.glacialPulse * 19;
     if (nearbyEnemies(player.x, player.y, radius + 20).length) {
-      elementalCircle(player.x, player.y, radius,
-        (17 + upgrades.glacialPulse * 7) * globalDamageMultiplier(), "frost");
+      elementalCircle(player.x, player.y, radius * (evolutions.absoluteZero ? 1.18 : 1),
+        (17 + upgrades.glacialPulse * 7) * globalDamageMultiplier() * (evolutions.absoluteZero ? 1.2 : 1), "frost");
+      if (evolutions.absoluteZero && elementalAreas.length < 50)
+        elementalAreas.push({ type:"frostEcho", x:player.x, y:player.y, radius:radius*1.35,
+          life:0.5, maxLife:0.5, delay:0.5, damage:(17+upgrades.glacialPulse*7)*globalDamageMultiplier()*0.6 });
       elementalCooldown("glacialPulse", Math.max(5.3, 6.8 - upgrades.glacialPulse * 0.3));
     }
   }
 
   // Flame Orbit follows the player; contact cooldowns belong to individual enemies.
   if (upgrades.flameOrbit) {
-    orbitFireAngle += dt * 2.5;
-    const count = 2 + Math.floor((upgrades.flameOrbit - 1) / 2);
-    for (let i = 0; i < count; i++) {
-      const angle = orbitFireAngle + i * Math.PI * 2 / count;
-      const x = player.x + Math.cos(angle) * (62 + upgrades.flameOrbit * 4);
-      const y = player.y + Math.sin(angle) * (62 + upgrades.flameOrbit * 4);
-      for (const enemy of nearbyEnemies(x, y, 32)) {
+    orbitFireAngle += dt * (evolutions.solarCrown ? 3.15 : 2.5);
+    for (const orb of fireOrbitPositions()) {
+      for (const enemy of nearbyEnemies(orb.x, orb.y, 36)) {
         if (enemy.dead || (enemy.fireOrbitHitUntil || 0) > time) continue;
-        const dx = enemy.x - x, dy = enemy.y - y;
-        if (dx * dx + dy * dy > (enemyHitRadius(enemy) + 12) ** 2) continue;
-        damageEnemyElemental(enemy, (12 + upgrades.flameOrbit * 4) * globalDamageMultiplier(), "fire", x, y, "flameOrbit");
-        enemy.fireOrbitHitUntil = time + 0.5;
+        const dx = enemy.x - orb.x, dy = enemy.y - orb.y;
+        if (dx * dx + dy * dy > (enemyHitRadius(enemy) + orb.r) ** 2) continue;
+        damageEnemyElemental(enemy, (12 + upgrades.flameOrbit * 4) * globalDamageMultiplier() *
+          (evolutions.solarCrown ? 1.25 : 1), "fire", orb.x, orb.y, "flameOrbit");
+        enemy.fireOrbitHitUntil = time + (evolutions.solarCrown ? 0.42 : 0.5);
       }
     }
   }
