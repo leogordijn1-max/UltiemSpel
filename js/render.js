@@ -150,6 +150,8 @@ function draw() {
       ctx.shadowBlur = glow(0);
     }
   }
+  // Terrain scars live behind characters, enemies, pickups and projectiles.
+  window.drawWorldScars?.(left, top);
   // XP and health pickups.
   for (const g of nearbyGems(player.x, player.y, Math.hypot(W, H) * 0.65)) {
     if (!visibleEnemy(g, -30)) continue;
