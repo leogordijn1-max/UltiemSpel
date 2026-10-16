@@ -269,6 +269,24 @@
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   }
+  // Same deterministic check as the visual patches, for weapon/terrain reactions.
+  function worldBiomeAt(x, y) {
+    const original = getDominantWorld();
+    const incoming = getInvadingWorld();
+    const amount = visualCoverage();
+    if (amount <= 0 || incoming === original) return original;
+    if (amount >= 99.9) return incoming;
+    const patchSize = 190;
+    const gx = Math.floor(x / patchSize), gy = Math.floor(y / patchSize);
+    const seed = hashCell(gx, gy);
+    if (seed >= amount / 100) return original;
+    const dx = (x - (gx+.5)*patchSize) / (patchSize*.64);
+    const dy = (y - (gy+.5)*patchSize) / (patchSize*.56);
+    const angle = seed * 1.5;
+    const rx = dx*Math.cos(angle) + dy*Math.sin(angle);
+    const ry = -dx*Math.sin(angle) + dy*Math.cos(angle);
+    return rx*rx+ry*ry <= 1 ? incoming : original;
+  }
   function drawWorldEnvironment(left, top) {
     const world = getDominantWorld();
     const invading = getInvadingWorld();
@@ -316,6 +334,7 @@
   window.previewWorldState = previewWorldState;
   window.getLivingWorldState = worldStatus;
   window.drawWorldEnvironment = drawWorldEnvironment;
+  window.worldBiomeAt = worldBiomeAt;
   window.getWorldConquest = getWorldConquest;
   window.onWorldBossDefeated = onWorldBossDefeated;
   window.completeWorldConquest = completeWorldConquest;
