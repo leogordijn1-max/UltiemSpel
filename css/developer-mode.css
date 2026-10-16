@@ -1,0 +1,101 @@
+/* Isolated Developer Mode overlay. Gameplay and saves remain unmodified by UI. */
+.developer-panel {
+  position:fixed;
+  inset:0 0 0 auto;
+  z-index:12000;
+  box-sizing:border-box;
+  width:min(515px,100vw);
+  padding:20px 20px 26px;
+  overflow:auto;
+  color:#f5e6cd;
+  background:linear-gradient(155deg,#1c2631,#0b131b 54%,#09101a);
+  border-left:2px solid #c89f5a;
+  box-shadow:-25px 0 70px #020509ae;
+  font:14px/1.5 Georgia,serif;
+}
+.developer-panel header {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;border-bottom:1px solid #aa88614a;padding-bottom:12px;
+  margin-bottom:12px;
+}
+.developer-panel h2 {
+  margin:0;
+  color:#ead3a6;
+  font:normal clamp(20px,3vw,28px)/1.2 Georgia,serif;
+  letter-spacing:.13em;
+}
+.developer-panel h3 {
+  margin:5px 0 11px;
+  font:normal 16px/1.3 Georgia,serif;
+  color:#d4b786;letter-spacing:.09em;
+}
+.developer-panel button {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:39px;
+  padding:10px 12px;
+  margin:0;
+  border:1px solid #93826d;
+  background:#263342;
+  border-radius:6px;
+  color:#f7e9d0;
+  cursor:pointer;
+  font:12px/1.25 Georgia,serif;
+  letter-spacing:.025em;
+  transition:background .15s,border-color .15s;
+}
+.developer-panel button:hover:not(:disabled),.developer-panel button:focus-visible {
+  border-color:#e0bd82;background:#36465a;
+}
+.developer-panel button:disabled {
+  opacity:.45;cursor:not-allowed;
+}
+.developer-panel button.developer-danger {border-color:#a65b58;color:#ffcfca}
+.developer-section {
+  margin:13px 0;
+  padding:15px;
+  border:1px solid #7e859048;
+  background:#0a111ad4;
+  border-radius:8px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.developer-section h3 {grid-column:1/-1}
+.developer-section button {width:100%}
+.developer-status {
+  color:#c1e6f0;
+  background:#0d3040a3;
+  border:1px solid #488a9a5f;
+  border-radius:6px;
+  padding:12px;
+  font-size:12px;
+}
+.developer-note{color:#adafb2;margin:12px 0 0;font-size:12px}
+.developer-settings {
+  display:block;
+  padding:15px;margin:14px 0;
+  border-radius:8px;
+  border:1px solid #c89f5a66;
+}
+.developer-settings label {
+  display:flex;align-items:center;gap:10px;
+}
+.developer-settings input {width:19px;height:19px;accent-color:#d9a55f}
+.developer-settings .developer-help {color:#d2c0a8;font-size:12px;max-width:600px}
+.developer-settings button {margin-top:9px}
+.developer-badge {
+  position:fixed;
+  z-index:2000;
+  right:12px;bottom:10px;
+  padding:7px 11px;
+  border:1px solid #c89f5a;
+  border-radius:5px;
+  color:#ffe8b7;
+  background:#120f11e8;
+  font:12px Georgia,serif;
+  pointer-events:none;
+}
+.developer-badge[hidden] {display:none!important}
+@media(max-width:560px) {
+  .developer-panel {width:100%;padding:14px}
+  .developer-section {grid-template-columns:1fr}
+}
