@@ -650,6 +650,7 @@ function updateCharacterAbility(dt) {
 
 function update(dt) {
   time += dt;
+  window.updateWorldScarEffects?.(dt);
   updateCharacterAbility(dt);
   hudUpdateTimer += dt;
   if (!boss) growthTime += dt;
@@ -795,12 +796,24 @@ function update(dt) {
       upgrades.novaSlow &&
       playerDistance < novaRadius() + enemyHitRadius(e);
     let moveAngle = a;
+    // Sample real terrain a few times per second, not 300 enemies x 60 fps.
+    if (onScreen && time >= (e.nextTerrainSample || 0)) {
+      e.groundElement = window.terrainAt?.(e.x,e.y) || null;
+      e.nextTerrainSample = time + .22 + (Math.abs(e.x*.003+e.y*.005) % .11);
+    }
+    const groundElement = onScreen ? e.groundElement : null;
+    if (groundElement==="fire" && time >= (e.nextGroundBurn || 0)) {
+      e.nextGroundBurn = time + .85;
+      damage(e,e===boss?1.3:3.8,player,"flame");
+      if(e.dead)continue;
+    }
     let moveSpeed =
       e.speed *
       (e.impactSlowUntil > time
         ? Math.max(0.58, 0.82 - (upgrades.knockback - 3) * 0.06)
         : 1) *
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
+      (groundElement==="water" ? .86 : groundElement==="frost" ? .74 : 1) *
       (e.soakedUntil > time ? 0.82 : 1) *
       (e.frostUntil > time ? 0.48 : 1) *
       (e.deepFreezeUntil > time && e !== boss ? 0.16 : 1) *
