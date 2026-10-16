@@ -75,6 +75,13 @@
   }
   function showElementSelection() {
     panel("CHOOSE YOUR ELEMENT", "Choose one element. Every run has three matching weapons: one starter and two level-up unlocks.", (parent) => {
+      const world = window.getLivingWorldState?.();
+      if (world) {
+        const context = document.createElement("p");
+        context.className = "cinematic-element-world-context";
+        context.textContent = "CURRENT WORLD · " + world.title + " — Your choice changes your weapons, not the world itself.";
+        parent.append(context);
+      }
       const grid = document.createElement("div");
       grid.className = "cinematic-element-grid";
       for (const element of Object.values(livingWorldElements)) {
