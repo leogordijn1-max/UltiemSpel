@@ -981,7 +981,7 @@ function update(dt) {
         }
         e.finalIntro = Math.max(0, (e.finalIntro || 0) - dt);
       }
-      if (!e.isFinalBoss && !e.phaseTwo && e.hp <= e.maxHp * 0.5) {
+      if (!e.isFinalBoss && !e.phaseTwo && e.hp <= e.maxHp * 0.66) {
         e.phaseTwo = true;
         e.phaseIntro = 0.95;
         e.shotWarning = 0;
@@ -991,6 +991,18 @@ function update(dt) {
         $("bossName").textContent = `${e.bossName} · PHASE II`;
         notify(`PHASE TWO · ${e.bossName}`, "boss", 4);
         puff(e.x, e.y, "#e09aff", 23);
+      } else if (!e.isFinalBoss && e.phaseTwo && !e.phaseThree &&
+                 e.hp <= e.maxHp * 0.33) {
+        e.phaseThree = true;
+        e.phaseIntro = 1.25;
+        e.shotWarning = 0;
+        e.chargeWarning = 0;
+        e.shootCooldown = Math.max(e.shootCooldown, 1.6);
+        e.chargeCooldown = Math.max(e.chargeCooldown, 2.5);
+        $("bossName").textContent = `${e.bossName} · PHASE III`;
+        notify(`FINAL STAND · ${e.bossName} · PHASE III`, "boss", 4);
+        playSfx("boss-warn");
+        puff(e.x, e.y, "#f8c47b", 26);
       }
       if (e.phaseIntro > 0) {
         e.phaseIntro = Math.max(0, e.phaseIntro - dt);
