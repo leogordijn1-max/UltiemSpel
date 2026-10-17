@@ -55,6 +55,7 @@ test("Beau locks three targeted ambush areas and has a timed counterattack",()=>
   h.player.x=900;h.player.y=900;
   h.window.updateBossCombat(h.boss,8.8,h.player,h.hooks);
   assert.equal(h.calls.hazards.length,3);
+  assert.equal(h.calls.projectiles.length,3);
   assert.equal(h.calls.hazards[1][0],300);
   assert.equal(h.calls.hazards[1][1],0);
   assert.equal(h.window.bossCombatDamageMultiplier(h.boss,8.9),1.42);
@@ -63,31 +64,35 @@ test("Beau locks three targeted ambush areas and has a timed counterattack",()=>
   assert.equal(h.calls.hazards.length,3);
 });
 
-test("Mourning Shade leaves a safe gap in its projectile ring",()=>{
+test("Mourning Shade attacks the player as well as leaving an off-axis escape gap",()=>{
   const h=harness(1);
   h.window.updateBossCombat(h.boss,7.6,h.player,h.hooks);
   h.window.updateBossCombat(h.boss,9,h.player,h.hooks);
   assert.equal(h.calls.hazards.length,0);
   assert.ok(h.calls.projectiles.length>=9);
-  for(const shot of h.calls.projectiles)
-    assert.ok(Math.abs(shot[1])>0.4);
+  // Previous implementation made the straight-ahead direction completely safe.
+  assert.ok(h.calls.projectiles.some(shot=>Math.abs(shot[1])<.01 && shot[2]>=320));
+  assert.ok(h.calls.projectiles.some(shot=>Math.abs(shot[1])>.8));
 });
 
-test("Bell Tower displays a split fan and one locked impact marker",()=>{
+test("Bell Tower fires a targeted centre shot and warns about one impact marker",()=>{
   const h=harness(2);
   h.window.updateBossCombat(h.boss,7.6,h.player,h.hooks);
   h.window.updateBossCombat(h.boss,9,h.player,h.hooks);
-  assert.equal(h.calls.projectiles.length,6);
+  assert.equal(h.calls.projectiles.length,7);
+  assert.ok(h.calls.projectiles.some(shot=>Math.abs(shot[1])<.01 && shot[2]>=310));
   assert.equal(h.calls.hazards.length,1);
   assert.equal(h.calls.hazards[0][0],300);
 });
 
-test("final boss reality break leaves a dodgeable central square",()=>{
+test("final boss Reality Break threatens the centre rather than rewarding standing still",()=>{
   const h=harness(3,true);
   h.window.updateBossCombat(h.boss,7.6,h.player,h.hooks);
   h.window.updateBossCombat(h.boss,9.3,h.player,h.hooks);
-  assert.equal(h.calls.hazards.length,4);
-  assert.ok(h.calls.hazards.every(p=>p[0]!==300 && p[1]!==0));
+  assert.equal(h.calls.hazards.length,5);
+  assert.equal(h.calls.hazards[0][0],300);
+  assert.equal(h.calls.hazards[0][1],0);
+  assert.ok(h.calls.hazards.slice(1).every(p=>p[0]!==300 || p[1]!==0));
 });
 
 test("special windup waits for regular charge or shots to finish",()=>{
