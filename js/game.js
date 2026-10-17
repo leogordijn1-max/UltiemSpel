@@ -1008,6 +1008,7 @@ function update(dt) {
       } else if (!e.isFinalBoss && e.phaseTwo && !e.phaseThree &&
                  e.hp <= e.maxHp * 0.33) {
         e.phaseThree = true;
+        window.interruptBeauEncounter?.(e, time);
         e.phaseIntro = 1.25;
         e.shotWarning = 0;
         e.chargeWarning = 0;
@@ -1024,6 +1025,7 @@ function update(dt) {
       } else {
         const encounterHooks = {
           visible: onScreen,
+          clearBossAttacks: () => { bossShots = []; bossHazards = []; },
           projectile: (source,angle,speed,amount,type) =>
             addBossProjectile(source,angle,speed,amount,type),
           hazard: (x,y,radius,warning,amount) => {
