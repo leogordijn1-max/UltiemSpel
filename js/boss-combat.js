@@ -111,7 +111,7 @@
     e.specialCount++;
     e.specialWarningUntil=0;
     e.specialRecoveryUntil=gameTime+(phase===3?1.4:1.9);
-    e.specialNextAt=gameTime+(phase===3?9.5:phase===2?11.5:14);
+    e.specialNextAt=gameTime+(phase===3?8:phase===2?9.5:11);
     e.shootCooldown=Math.max(e.shootCooldown||0,1.55);
     e.chargeCooldown=Math.max(e.chargeCooldown||0,2.4);
     hooks.notify?.("GUARDIAN EXPOSED · COUNTERATTACK NOW","boss",1.8);
@@ -179,7 +179,10 @@
       } else if(variant===1){
         const count=phase===3?18:phase===2?16:12;
         const gap=aim+Math.PI*.72;
-        ctx.beginPath();ctx.arc(e.x,e.y,190,gap+.28,gap+Math.PI*2-.28);ctx.stroke();
+        const halfGap=Math.PI*2/count*1.35;
+        ctx.beginPath();
+        ctx.arc(e.x,e.y,190,gap+halfGap,gap+Math.PI*2-halfGap);
+        ctx.stroke();
         for(const offset of [-.16,0,.16]){
           ctx.beginPath();ctx.moveTo(e.x,e.y);
           ctx.lineTo(e.x+Math.cos(aim+offset)*380,e.y+Math.sin(aim+offset)*380);
