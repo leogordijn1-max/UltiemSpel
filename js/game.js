@@ -1008,12 +1008,26 @@ function update(dt) {
         e.phaseIntro = Math.max(0, e.phaseIntro - dt);
         moveSpeed *= 0.4;
       } else {
-        window.updateGuardianWorld?.(e, time, player, {
+        const specialActive = window.updateBossCombat?.(e, time, player, {
+          visible: onScreen,
+          projectile: (source,angle,speed,amount,type) =>
+            addBossProjectile(source,angle,speed,amount,type),
+          hazard: (x,y,radius,warning,amount) => {
+            if (bossHazards.length < 14) bossHazards.push({
+              x,y,radius,warning,
+              damage: amount * (difficultyProfiles[difficulty] || difficultyProfiles.normal).enemyDamage,
+            });
+          },
+          notify: (message,kind,duration) => notify(message,kind,duration),
+          puff: (x,y,color,amount) => puff(x,y,color,amount),
+        });
+        if (!specialActive) window.updateGuardianWorld?.(e, time, player, {
           visible: onScreen,
           scar: (type,x,y,r) => window.addWorldScar?.(type,x,y,r),
           projectile: (source,angle,speed,amount,type) => addBossProjectile(source,angle,speed,amount,type),
           warn: (message,kind,duration) => notify(message,kind,duration),
         });
+        if (window.isBossCombatBusy?.(e, time)) moveSpeed = 0;
       }
       if (e.chargeActive > 0) {
         e.chargeActive = Math.max(0, e.chargeActive - dt);
