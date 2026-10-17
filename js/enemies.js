@@ -211,6 +211,8 @@ function enemySpawn(preferredKind = null, forceElite = false) {
   if (forceElite || Math.random() < Math.min(0.18, 0.02 + growthTime / 12000 + tier * 0.007)) {
     makeEliteEnemy(e);
   }
+  // Adaptation is determined by the actual world patch at the spawn point.
+  window.initializeEnemyAdaptation?.(e);
   enemies.push(e);
   if (typeof trackDiscovery === "function") {
     const seen = typeof enemyDiscoveryId === "function" ? enemyDiscoveryId(e.kind) : null;
@@ -371,7 +373,8 @@ function damage(e, d, origin = player, damageType = "direct") {
   const slowedAreaBonus = e.impactSlowUntil > time && (damageType === "bomb" || damageType === "flame" || damageType === "frost" || damageType === "pulse") ? 1.15 : 1;
   const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
   const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
-  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense;
+  const worldResistance = window.enemyWorldResistance?.(e, damageType) ?? 1;
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance;
   const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
   e.hp -= finalDamage;
   if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
@@ -409,6 +412,8 @@ function damage(e, d, origin = player, damageType = "direct") {
   if (e.hp <= 0) playSfx(e === boss ? "boss" : "kill");
   else playSfx("hit");
   if (e.hp <= 0) {
+    // Keep one terrain trail per heavy/elite death, never for bosses or summons.
+    window.enemyWorldOnDeath?.(e);
     // Mark the enemy immediately so later hits in this frame cannot reward it twice.
     e.dead = true;
     kills++;
