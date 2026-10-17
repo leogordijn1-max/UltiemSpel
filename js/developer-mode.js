@@ -193,6 +193,19 @@
     rebuildEnemyGrid();
     updateHud();
   }
+  function forceBossPhaseTwo() {
+    if (!available() || !boss) return;
+    boss.hp = Math.max(1, Math.min(boss.hp, boss.maxHp * .42));
+    notify("DEV · BOSS PHASE II QUEUED", "boss", 3);
+    updateHud();
+  }
+  function triggerGuardianWarning() {
+    if (!available() || !boss || !boss.guardianWorld) return;
+    boss.hp = Math.max(1, Math.min(boss.hp, boss.maxHp * .42));
+    boss.guardianCooldownAt = time;
+    notify("DEV · WORLD GUARDIAN POWER READY", "boss", 3);
+    updateHud();
+  }
   function defeatTestBoss() {
     if (!available() || !boss) return;
     const target = boss;
@@ -315,6 +328,8 @@
     addButton(s, "SPAWN NORMAL BOSS", () => spawnTestBoss(false), !!boss);
     addButton(s, "SPAWN FINAL BOSS", () => spawnTestBoss(true),
       !!boss || runMode !== "standard" || victoryClaimed);
+    addButton(s, "FORCE BOSS PHASE II", forceBossPhaseTwo, !boss);
+    addButton(s, "TRIGGER GUARDIAN POWER", triggerGuardianWarning, !boss);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
 
     s = section(root, "TEST ELEMENTAL ENEMY TYPES");
