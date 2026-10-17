@@ -1036,6 +1036,8 @@ function update(dt) {
           },
           notify: (message,kind,duration) => notify(message,kind,duration),
           puff: (x,y,color,amount) => puff(x,y,color,amount),
+          sfx: name => playSfx(name),
+          shake: amount => { shake = Math.max(shake, amount); },
         };
         beauActive = window.updateBeauEncounter?.(e, time, dt, player, encounterHooks) || false;
         // Beau keeps the normal shotgun and charge; dedicated showcase
