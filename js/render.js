@@ -257,6 +257,9 @@ function draw() {
   // Enemies and their projectiles.
   for (const e of enemies) {
     if (!visibleEnemy(e, -e.r * 2)) continue;
+    // Distinct ice crystals / ember crown / water rings around all adapted
+    // enemy silhouettes, without extra sprites or high-cost particle systems.
+    window.drawEnemyWorldAura?.(e, ctx, time, graphicsQuality);
     if (e.pulseSlowUntil > time) {
       ctx.save();
       ctx.strokeStyle = "rgba(191, 108, 255, 0.85)";
