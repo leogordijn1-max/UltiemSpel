@@ -733,7 +733,8 @@ function update(dt) {
       characterRuntime,
       player.hp,
       player.maxHp,
-    );
+    ) *
+    (player.guardianChillUntil > time ? .83 : 1);
   if (dx || dy) {
     player.facingX = dx / mag;
     player.facingY = dy / mag;
@@ -750,6 +751,11 @@ function update(dt) {
   } else {
     player.x += (dx / mag) * movementSpeed * dt;
     player.y += (dy / mag) * movementSpeed * dt;
+  }
+  // Flooded Guardian pushes in a short, visible surge after its warning.
+  if (player.guardianTidePushUntil > time) {
+    player.x += (player.guardianTidePushX || 0) * dt;
+    player.y += (player.guardianTidePushY || 0) * dt;
   }
   spawn -= dt;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
@@ -828,6 +834,7 @@ function update(dt) {
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
       (walkingGround==="water" ? .86 : walkingGround==="frost" ? .74 : 1) *
       (window.enemyWorldMovement?.(e, walkingGround, time, dt) ?? 1) *
+      (window.guardianWorldSpeed?.(e, walkingGround) ?? 1) *
       (e.soakedUntil > time ? 0.82 : 1) *
       (e.frostUntil > time ? 0.48 : 1) *
       (e.deepFreezeUntil > time && e !== boss ? 0.16 : 1) *
@@ -837,6 +844,7 @@ function update(dt) {
       damage(e, e.burnDps * 0.5, e.burnWeapon ? { x: player.x, y: player.y, type: e.burnWeapon } : player, "burn");
       if (e.dead) continue;
     }
+    moveAngle = window.enemyTerrainSteer?.(e, moveAngle, onScreen, playerDistanceSquared, time) ?? moveAngle;
     if (e.kind === 4) {
       const movementMode = rangedEnemyMovementMode(e, playerDistance);
       if (movementMode === "retreat") moveAngle += Math.PI;
@@ -980,6 +988,13 @@ function update(dt) {
       if (e.phaseIntro > 0) {
         e.phaseIntro = Math.max(0, e.phaseIntro - dt);
         moveSpeed *= 0.4;
+      } else {
+        window.updateGuardianWorld?.(e, time, player, {
+          visible: onScreen,
+          scar: (type,x,y,r) => window.addWorldScar?.(type,x,y,r),
+          projectile: (source,angle,speed,amount,type) => addBossProjectile(source,angle,speed,amount,type),
+          warn: (message,kind,duration) => notify(message,kind,duration),
+        });
       }
       if (e.chargeActive > 0) {
         e.chargeActive = Math.max(0, e.chargeActive - dt);
