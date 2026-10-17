@@ -639,7 +639,9 @@ function spawnBoss() {
     chargeWarning: 0,
     chargeActive: 0,
     phaseTwo: false,
+    phaseThree: false,
   };
+  window.initializeBossCombat?.(boss, time);
   window.initializeGuardianWorld?.(boss);
   enemies.push(boss);
   if (typeof trackDiscovery === "function") trackDiscovery("bosses", ["beau", "mourning", "bell"][variant]);
