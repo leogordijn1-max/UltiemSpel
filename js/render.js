@@ -260,6 +260,7 @@ function draw() {
     // Distinct ice crystals / ember crown / water rings around all adapted
     // enemy silhouettes, without extra sprites or high-cost particle systems.
     window.drawEnemyWorldAura?.(e, ctx, time, graphicsQuality);
+    window.drawGuardianWorldWarning?.(e, ctx, time, graphicsQuality === "low");
     if (e.pulseSlowUntil > time) {
       ctx.save();
       ctx.strokeStyle = "rgba(191, 108, 255, 0.85)";
