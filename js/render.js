@@ -158,6 +158,8 @@ function draw() {
   window.drawWorldEnvironment?.(left, top);
   // Terrain scars live behind characters, enemies, pickups and projectiles.
   window.drawWorldScars?.(left, top);
+  // Cinematic Beau arena effects stay beneath player, projectiles and tells.
+  window.drawBeauBackdrop?.(boss, ctx, time, player, graphicsQuality, W, H);
   // XP and health pickups.
   for (const g of nearbyGems(player.x, player.y, Math.hypot(W, H) * 0.65)) {
     if (!visibleEnemy(g, -30)) continue;
@@ -262,6 +264,7 @@ function draw() {
     window.drawEnemyWorldAura?.(e, ctx, time, graphicsQuality);
     window.drawGuardianWorldWarning?.(e, ctx, time, graphicsQuality === "low");
     window.drawBossCombat?.(e, ctx, time, graphicsQuality);
+    window.drawBeauTelegraph?.(e, ctx, time, graphicsQuality);
     if (e.pulseSlowUntil > time) {
       ctx.save();
       ctx.strokeStyle = "rgba(191, 108, 255, 0.85)";
