@@ -974,6 +974,7 @@ function update(dt) {
         }
       }
     }
+    let beauActive = false;
     if (e === boss) {
       // Phase-dependent attack pacing stays isolated to the active Guardian.
       if (e.isFinalBoss) {
@@ -1021,7 +1022,7 @@ function update(dt) {
         e.phaseIntro = Math.max(0, e.phaseIntro - dt);
         moveSpeed *= 0.4;
       } else {
-        const specialActive = window.updateBossCombat?.(e, time, player, {
+        const encounterHooks = {
           visible: onScreen,
           projectile: (source,angle,speed,amount,type) =>
             addBossProjectile(source,angle,speed,amount,type),
@@ -1033,16 +1034,26 @@ function update(dt) {
           },
           notify: (message,kind,duration) => notify(message,kind,duration),
           puff: (x,y,color,amount) => puff(x,y,color,amount),
-        });
-        if (!specialActive) window.updateGuardianWorld?.(e, time, player, {
-          visible: onScreen,
-          scar: (type,x,y,r) => window.addWorldScar?.(type,x,y,r),
-          projectile: (source,angle,speed,amount,type) => addBossProjectile(source,angle,speed,amount,type),
-          warn: (message,kind,duration) => notify(message,kind,duration),
-        });
-        if (window.isBossCombatBusy?.(e, time)) moveSpeed = 0;
+        };
+        beauActive = window.updateBeauEncounter?.(e, time, dt, player, encounterHooks) || false;
+        // Beau keeps the normal shotgun and charge; dedicated showcase
+        // attacks replace his original small Hound's Ambush ability.
+        const specialActive = beauActive || (
+          e.variant === 0 && !e.isFinalBoss ? false :
+          window.updateBossCombat?.(e, time, player, encounterHooks)
+        );
+        if (!specialActive && (e.variant !== 0 || e.isFinalBoss))
+          window.updateGuardianWorld?.(e, time, player, {
+            visible: onScreen,
+            scar: (type,x,y,r) => window.addWorldScar?.(type,x,y,r),
+            projectile: (source,angle,speed,amount,type) => addBossProjectile(source,angle,speed,amount,type),
+            warn: (message,kind,duration) => notify(message,kind,duration),
+          });
+        if (beauActive || window.isBossCombatBusy?.(e, time)) moveSpeed = 0;
       }
-      if (e.chargeActive > 0) {
+      if (beauActive) {
+        // Scripted Hunting Grounds rush has moved the boss already.
+      } else if (e.chargeActive > 0) {
         e.chargeActive = Math.max(0, e.chargeActive - dt);
         e.x += e.chargeX * e.chargeSpeed * dt;
         e.y += e.chargeY * e.chargeSpeed * dt;
@@ -1134,7 +1145,9 @@ function update(dt) {
 
     e.hit = Math.max(0, e.hit - dt);
     if (e === boss) {
-      if (e.shotWarning > 0) {
+      if (beauActive) {
+        // Normal volleys are suppressed until the showcase pattern ends.
+      } else if (e.shotWarning > 0) {
         // Briefly follow the player during the opening of the warning, then
         // lock directions and painted impact spots for the final dodge window.
         if (time < (e.shotTrackUntil || 0)) {
