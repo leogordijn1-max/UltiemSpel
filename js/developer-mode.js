@@ -221,6 +221,24 @@
     notify("DEV · " + Math.max(0, missing) + " ENEMIES ADDED · TARGET " + max, "wave", 3);
     updateHud();
   }
+  function spawnEnemyVariant(world, count = 12) {
+    if (!available() || !window.enemyWorldVariants?.[world] || !player) return;
+    const missing = Math.min(count, Math.max(0, 250 - enemies.filter(e=>!e.dead).length));
+    for (let i = 0; i < missing; i++) {
+      const e = enemySpawn([0,1,2,4,6,0][i % 6], false);
+      const angle = i * 2.399963229728653;
+      const radius = 165 + (i % 3) * 68;
+      e.x = player.x + Math.cos(angle) * radius;
+      e.y = player.y + Math.sin(angle) * radius;
+      e.developerTestEnemy = true;
+      e.developerForcedAffinity = world;
+      e.noXp = true;
+      window.initializeEnemyAdaptation?.(e, world);
+    }
+    rebuildEnemyGrid();
+    notify("DEV · " + world.toUpperCase() + " ENEMIES: " + missing, "wave", 3);
+    updateHud();
+  }
   function clearTestEnemies() {
     if (!available()) return;
     enemies = enemies.filter(e=>!e.developerTestEnemy);
@@ -299,6 +317,9 @@
       !!boss || runMode !== "standard" || victoryClaimed);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
 
+    s = section(root, "TEST ELEMENTAL ENEMY TYPES");
+    for (const id of ["frozen", "burning", "flooded"])
+      addButton(s, "SPAWN 12 " + id.toUpperCase(), () => spawnEnemyVariant(id));
     s = section(root, "ENEMY STRESS TEST · TARGET COUNT");
     for (const count of [10,50,100,250])
       addButton(s, count + " ENEMIES", () => spawnTestEnemies(count));
