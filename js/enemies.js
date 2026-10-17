@@ -732,26 +732,33 @@ function bossFire(e) {
     const offsets = e.phaseThree ? [-0.62,-0.42,-0.23,0,0.23,0.42,0.62]
       : e.phaseTwo ? [-0.48, -0.32, -0.16, 0, 0.16, 0.32, 0.48]
       : [-0.3, -0.15, 0, 0.15, 0.3];
-    for (const offset of offsets) addBossProjectile(e, angle + offset, e.phaseTwo ? 182 : 165, 13, "fish");
+    // Central shot is aimed at the player and fast enough to catch a runner
+    // who refuses to change direction. Fans still have readable openings.
+    for (const offset of offsets) addBossProjectile(e, angle + offset, e.phaseThree ? 340 : e.phaseTwo ? 320 : 290, 13, "fish");
     if (e.phaseTwo && e.volleyCount % 2 === 0) {
       for (let i = 0; i < 8; i++) addBossProjectile(e, i * Math.PI / 4 + time * 0.2, 128, 9, "shadow");
     }
   } else if (e.variant === 1) {
-    // Mourning Shade leaves a generous gap in the ring, facing the player.
+    // Old ring opened directly toward the player, allowing them to stand
+    // still safely. Its exit is now off-axis, with a clearly warned lance.
     const count = e.phaseThree ? 16 : e.phaseTwo ? 14 : 10;
-    const offset = time * 0.34;
+    const gapAngle = angle + Math.PI * .72;
     for (let i = 0; i < count; i++) {
-      const shotAngle = offset + i * Math.PI * 2 / count;
-      const gap = Math.atan2(Math.sin(shotAngle - angle), Math.cos(shotAngle - angle));
+      const shotAngle = angle + i * Math.PI * 2 / count;
+      const gap = Math.atan2(Math.sin(shotAngle - gapAngle), Math.cos(shotAngle - gapAngle));
       if (Math.abs(gap) < Math.PI * 2 / count * 1.18) continue;
-      addBossProjectile(e, shotAngle, e.phaseTwo ? 155 : 126, e.phaseTwo ? 12 : 10, "shadow");
+      addBossProjectile(e, shotAngle, e.phaseThree ? 260 : e.phaseTwo ? 240 : 215, e.phaseTwo ? 12 : 10, "shadow");
     }
+    const spears = e.phaseTwo ? [-.16,0,.16] : [0];
+    for (const offset of spears)
+      addBossProjectile(e, angle+offset, e.phaseThree ? 365 : e.phaseTwo ? 345 : 320, 11, "shadow");
   } else {
-    // Bell Tower's aimed lanes have a narrow safe opening down their center.
-    const offsets = e.phaseThree ? [-0.85,-0.63,-0.4,0.4,0.63,0.85]
-      : e.phaseTwo ? [-0.68, -0.48, -0.27, 0.27, 0.48, 0.68]
-      : [-0.44, -0.25, 0.25, 0.44];
-    for (const offset of offsets) addBossProjectile(e, angle + offset, e.phaseTwo ? 190 : 168, 12, "bell");
+    // A fast bell-bolt down the centre means the player must dodge rather
+    // than camp in the safe channel from the old pattern.
+    const offsets = e.phaseThree ? [-.68,-.46,-.23,0,.23,.46,.68]
+      : e.phaseTwo ? [-.55,-.29,0,.29,.55] : [-.39,0,.39];
+    for (const offset of offsets)
+      addBossProjectile(e, angle + offset, e.phaseThree ? 355 : e.phaseTwo ? 330 : 305, 12, "bell");
     if (e.phaseTwo && e.volleyCount % 2 === 0) {
       addBossProjectile(e, angle - 1.05, 130, 9, "bell");
       addBossProjectile(e, angle + 1.05, 130, 9, "bell");
@@ -768,26 +775,30 @@ function finalBossFire(e) {
   const pattern = e.shotPattern || 0;
   const angle = e.shotAngle || 0;
   if (pattern === 0) {
-    // Rift volley: a deliberately clear central escape lane.
-    const offsets = phase === 3 ? [-0.95, -0.7, -0.45, 0.45, 0.7, 0.95]
-      : [-0.8, -0.54, -0.32, 0.32, 0.54, 0.8];
-    for (const offset of offsets) addBossProjectile(e, angle + offset, 165 + 16 * phase, 11 + phase, "rift");
+    // Direct rift pressure, with wider edges the player can dash between.
+    const offsets = phase === 3 ? [-.82,-.57,-.29,0,.29,.57,.82]
+      : [-.65,-.36,0,.36,.65];
+    for (const offset of offsets)
+      addBossProjectile(e, angle + offset, 285 + 17 * phase, 11 + phase, "rift");
   } else if (pattern === 1) {
-    // Rotating dark ring, with a broad fixed safe gap aimed at the player.
+    // Side-facing safe exit plus a central lance; no free safe spot where
+    // the player was standing at the beginning of the windup.
     const count = phase === 3 ? 16 : phase === 2 ? 14 : 12;
+    const exitAngle = angle + Math.PI * .72;
     for (let i = 0; i < count; i++) {
-      const direction = e.shotRotation + i * Math.PI * 2 / count;
-      const relative = Math.atan2(Math.sin(direction - angle), Math.cos(direction - angle));
-      if (Math.abs(relative) < Math.PI * 2 / count * 1.6) continue;
-      addBossProjectile(e, direction, 127 + 12 * phase, 11 + phase, "shadow");
+      const direction = angle + i * Math.PI * 2 / count;
+      const relative = Math.atan2(Math.sin(direction - exitAngle), Math.cos(direction - exitAngle));
+      if (Math.abs(relative) < Math.PI * 2 / count * 1.35) continue;
+      addBossProjectile(e, direction, 225 + 12 * phase, 11 + phase, "shadow");
     }
+    addBossProjectile(e, angle, 325 + 12 * phase, 11 + phase, "rift");
   } else {
     // The boss marked this point during wind-up; players can leave the blast area.
     if (typeof bossHazards !== "undefined" && bossHazards.length < 14) {
       bossHazards.push({
         x: e.warningX, y: e.warningY,
-        radius: 92 + phase * 12,
-        warning: 0.52,
+        radius: 104 + phase * 12,
+        warning: 0.24,
         damage: (15 + 3 * phase) * (difficultyProfiles[difficulty] || difficultyProfiles.normal).enemyDamage,
       });
     }
