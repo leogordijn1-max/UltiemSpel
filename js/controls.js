@@ -22,6 +22,7 @@ function backButton(parent) {
   parent.append(button);
 }
 function showMainMenu() {
+  window.resetBossIsolation?.();
   window.developerEndRun?.();
   window.abandonWorldRun?.();
   window.clearWorldScars?.();
