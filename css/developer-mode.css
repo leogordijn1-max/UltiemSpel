@@ -99,3 +99,24 @@
   .developer-panel {width:100%;padding:14px}
   .developer-section {grid-template-columns:1fr}
 }
+
+/* Lightweight in-run stress-test metrics (never shown for normal players). */
+.developer-performance {
+  position:fixed;
+  left:12px;bottom:10px;
+  z-index:2000;
+  pointer-events:none;
+  max-width:min(760px, calc(100vw - 120px));
+  padding:8px 12px;
+  background:#091722eb;
+  color:#bdefff;
+  border:1px solid #5eacc27b;
+  border-radius:5px;
+  box-shadow:0 2px 12px #050c12a9;
+  font:12px/1.4 monospace;
+  letter-spacing:.005em;
+}
+.developer-performance[hidden]{display:none!important}
+@media(max-width:600px) {
+  .developer-performance{bottom:45px;max-width:calc(100vw - 40px);font-size:10px}
+}
