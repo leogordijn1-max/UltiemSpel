@@ -25,7 +25,10 @@
   function refresh(e, gameTime, onScreen, sampledBiome) {
     if (!e || e.kind === 3 || e.dead || !onScreen) return;
     if (gameTime < (e.nextBiomeCheck || 0)) return;
-    assign(e, valid(sampledBiome) ? sampledBiome : biomeAt(e.x, e.y));
+    // Deliberately summoned Developer Mode specimens keep their chosen variant.
+    const forced = window.isDeveloperRun?.() && valid(e.developerForcedAffinity)
+      ? e.developerForcedAffinity : null;
+    assign(e, forced || (valid(sampledBiome) ? sampledBiome : biomeAt(e.x, e.y)));
     // Sample 3-4x per second, stagger across enemies using position.
     e.nextBiomeCheck = gameTime + .28 + (Math.abs(e.x*.0027+e.y*.0019)% .12);
   }
