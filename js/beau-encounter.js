@@ -47,6 +47,9 @@
     } else {
       s.ultimateUsed=true;s.stage="ultimateIntro";
       s.until=t+1.65;s.lockedAt=t;
+      // Start the set-piece clean; old shotgun projectiles and hit markers
+      // must not create unexpected hits during the cinematic warning.
+      hooks.clearBossAttacks?.();
       target(e,player);
       hooks.notify?.("THE FINAL HUNT · THERE IS NO HIDING","boss",4);
       hooks.puff?.(e.x,e.y,"#ff665e",26);
@@ -164,6 +167,17 @@
     } else if(s.stage==="ultimateEnd" && t>=s.until){
       finish(e,t,hooks);
     }
+    return true;
+  }
+  function interrupt(e,t){
+    if(!isBeau(e) || !e.beauFight)return false;
+    const s=e.beauFight;
+    if(s.mode==="idle")return false;
+    // The HP phase transition interrupts the previous pattern instead of
+    // skipping its warning frames and delivering an instant, unfair hit.
+    s.mode="idle";s.stage="";s.echoes=[];
+    s.until=0;s.lockedAt=0;s.nextAt=t+1.5;
+    e.specialRecoveryUntil=0;
     return true;
   }
   function force(e,mode,t){
@@ -286,6 +300,7 @@
   window.initializeBeauEncounter=initialize;
   window.updateBeauEncounter=tick;
   window.forceBeauEncounter=force;
+  window.interruptBeauEncounter=interrupt;
   window.getBeauEncounterStatus=e=>e?.beauFight ? {
     mode:e.beauFight.mode,stage:e.beauFight.stage,round:e.beauFight.round,
     ultimateUsed:e.beauFight.ultimateUsed
