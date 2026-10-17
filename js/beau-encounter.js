@@ -36,6 +36,7 @@
     e.chargeActive=0;e.chargeWarning=0;e.shotWarning=0;
     e.shootCooldown=Math.max(e.shootCooldown||0,3);
     e.chargeCooldown=Math.max(e.chargeCooldown||0,3);
+    hooks.sfx?.("boss-warn");
     if(which==="hunt") {
       s.stage="huntTell";s.until=t+1.0;s.lockedAt=t+.32;
       target(e,player);
@@ -53,6 +54,7 @@
       target(e,player);
       hooks.notify?.("THE FINAL HUNT · THERE IS NO HIDING","boss",4);
       hooks.puff?.(e.x,e.y,"#ff665e",26);
+      hooks.shake?.(10);
     }
   }
   function finish(e,t,hooks) {
@@ -100,6 +102,7 @@
       s.chargeX=Math.cos(angle);s.chargeY=Math.sin(angle);
       s.stage="huntRush";s.until=t+.49;s.trailAt=t;
       houndShots(e,hooks,angle,335);
+      hooks.shake?.(5);
       hooks.puff?.(e.x,e.y,"#ffb86b",15);
     } else if(s.stage==="huntRush") {
       // Real boss movement along the locked charge lane, never teleportation.
@@ -124,6 +127,7 @@
           hooks.projectile?.(echo,angle+offset,345+phase(e)*8,12,"fish");
         hooks.puff?.(echo.x,echo.y,"#d58eff",12);
       }
+      hooks.shake?.(6);
       // Boss fires down the threatened centre while echoes close both sides.
       const angle=Math.atan2(s.target.y-e.y,s.target.x-e.x);
       houndShots(e,hooks,angle,365);
@@ -146,6 +150,7 @@
       for(const off of [-.3,-.1,.1,.3])
         hooks.projectile?.(e,s.aim+off,360+phase(e)*10,12,"fish");
       hooks.puff?.(x,y,"#ff7771",20);
+      hooks.shake?.(8);
       s.stage="ultimatePause";s.until=t+.55;s.round++;
     } else if(s.stage==="ultimatePause" && t>=s.until){
       if(s.round>=3){
@@ -163,6 +168,8 @@
       for(const off of [-.55,-.32,-.12,0,.12,.32,.55])
         hooks.projectile?.(e,s.aim+off,390,14,"fish");
       hooks.puff?.(x,y,"#ffe3a1",32);
+      hooks.shake?.(14);
+      hooks.sfx?.("bomb");
       s.stage="ultimateEnd";s.until=t+.58;
     } else if(s.stage==="ultimateEnd" && t>=s.until){
       finish(e,t,hooks);
