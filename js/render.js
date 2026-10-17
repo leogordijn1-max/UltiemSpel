@@ -349,15 +349,10 @@ function draw() {
         const angle = e.shotAngle || 0;
         const pattern = e.shotPattern || 0;
         if (pattern === 0) {
-          // Only the flanking attack arcs are dangerous; the center is the safe lane.
-          for (const [start, end] of [
-            [-1, -0.3],
-            [0.3, 1],
-          ]) {
-            ctx.moveTo(e.x, e.y);
-            ctx.arc(e.x, e.y, 295, angle + start, angle + end);
-            ctx.closePath();
-          }
+          // Aimed rift volley; center lane is no longer an automatic safe spot.
+          ctx.moveTo(e.x, e.y);
+          ctx.arc(e.x, e.y, 295, angle - .86, angle + .86);
+          ctx.closePath();
           ctx.fill();
         } else if (pattern === 1) {
           const count =
@@ -366,29 +361,41 @@ function draw() {
               : (e.finalPhase || 1) === 2
                 ? 14
                 : 12;
-          const gap = ((Math.PI * 2) / count) * 1.6;
+          const gap = ((Math.PI * 2) / count) * 1.35;
+          const exit = angle + Math.PI * .72;
           ctx.moveTo(e.x, e.y);
-          ctx.arc(e.x, e.y, 185, angle + gap, angle + Math.PI * 2 - gap);
+          ctx.arc(e.x, e.y, 185, exit + gap, exit + Math.PI * 2 - gap);
           ctx.closePath();
           ctx.fill();
+          // Highlight the extra direct aimed lance.
+          ctx.moveTo(e.x,e.y);
+          ctx.lineTo(e.x+Math.cos(angle)*340,e.y+Math.sin(angle)*340);
         } else {
           // This ground target is locked from the first warning frame.
-          const size = 92 + (e.finalPhase || 1) * 12;
+          const size = 104 + (e.finalPhase || 1) * 12;
           ctx.arc(e.warningX, e.warningY, size, 0, Math.PI * 2);
           ctx.fill();
         }
       } else if (e.variant === 1) {
-        // Leave the same opening indicated by the actual Mourning Shade ring.
-        const gapHalf = ((Math.PI * 2) / (e.phaseTwo ? 14 : 10)) * 1.18;
-        const start = e.shotAngle + gapHalf;
-        const end = e.shotAngle + Math.PI * 2 - gapHalf;
+        // The ring's exit is on the SIDE. Warn separately for the
+        // central shadow lances aimed at the player's locked position.
+        const count = e.phaseThree ? 16 : e.phaseTwo ? 14 : 10;
+        const gapHalf = (Math.PI * 2 / count) * 1.18;
+        const exit = e.shotAngle + Math.PI * .72;
         ctx.moveTo(e.x, e.y);
-        ctx.arc(e.x, e.y, 135, start, end);
+        ctx.arc(e.x, e.y, 160, exit + gapHalf, exit + Math.PI * 2 - gapHalf);
         ctx.closePath();
         ctx.fill();
+        for(const offset of (e.phaseTwo ? [-.16,0,.16] : [0])){
+          const a=e.shotAngle+offset;
+          ctx.moveTo(e.x,e.y);
+          ctx.lineTo(e.x+Math.cos(a)*370,e.y+Math.sin(a)*370);
+        }
       } else {
         const facing = e.shotAngle || 0;
-        const halfCone = e.variant === 2 ? 0.72 : e.phaseTwo ? 0.55 : 0.38;
+        const halfCone = e.variant === 2
+          ? e.phaseThree ? .77 : e.phaseTwo ? .65 : .46
+          : e.phaseThree ? .7 : e.phaseTwo ? .55 : .38;
         ctx.moveTo(e.x, e.y);
         ctx.arc(
           e.x,
