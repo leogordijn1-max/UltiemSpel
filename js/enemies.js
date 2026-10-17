@@ -660,7 +660,8 @@ function spawnFinalBoss() {
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
   const angle = rand(0, Math.PI * 2);
   const radius = Math.max(W, H) * 0.56 + 160;
-  const hp = (6000 + Math.min(2400, bossNumber * 200)) * profile.bossHealth;
+  const baseHp = (6000 + Math.min(2400, bossNumber * 200)) * profile.bossHealth;
+  const hp = window.bossCombatMaxHealth?.(baseHp, {final:true,index:bossNumber}) ?? baseHp;
   boss = {
     x: player.x + Math.cos(angle) * radius,
     y: player.y + Math.sin(angle) * radius,
