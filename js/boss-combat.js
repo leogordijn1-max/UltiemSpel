@@ -11,6 +11,23 @@
   });
   const phaseOf = e => e.isFinalBoss ? Math.max(1,e.finalPhase||1) :
     e.phaseThree ? 3 : e.phaseTwo ? 2 : 1;
+  // Aim toward where the moving player is going, with an intentionally short
+  // and bounded lead. Standing still means no prediction.
+  function predictTarget(e, player) {
+    const vx = Number.isFinite(player.combatVX) ? player.combatVX : 0;
+    const vy = Number.isFinite(player.combatVY) ? player.combatVY : 0;
+    const lead = Math.min(0.5,0.32+phaseOf(e)*0.045);
+    const lx = vx*lead, ly = vy*lead;
+    const length = Math.hypot(lx,ly);
+    const scale = length > 130 ? 130/length : 1;
+    return {x:player.x+lx*scale,y:player.y+ly*scale};
+  }
+  function lockTarget(e,player){
+    const target=predictTarget(e,player);
+    e.specialTargetX=target.x;
+    e.specialTargetY=target.y;
+    e.specialAim=Math.atan2(target.y-e.y,target.x-e.x);
+  }
 
   function maxHealth(base, {final=false, index=1}={}) {
     // Tunable encounter health, not an unbounded escalation. First boss:
@@ -30,6 +47,7 @@
     e.specialRecoveryUntil=0;
     e.specialCount=0;
     e.specialTelegraphSize=0;
+    e.specialTrackingUntil=0;
     return e;
   }
   function busy(e, gameTime) {
@@ -54,36 +72,41 @@
     const x=e.specialTargetX, y=e.specialTargetY;
     const aim=e.specialAim;
     if(variant===0) {
-      // Three marked pounce locations. All positions locked during warning.
-      // The flanks are separated enough for a player to dodge through.
+      // An overlapping ambush across the player's predicted path, followed
+      // by three fast hound bolts. Escape sideways or dash out of the band.
       const sideX=-Math.sin(aim),sideY=Math.cos(aim);
-      for(const offset of [-115,0,115]) {
-        hooks.hazard?.(x+sideX*offset,y+sideY*offset,phase===3?73:63,.48,13+phase*2);
+      for(const offset of [-90,0,90]) {
+        hooks.hazard?.(x+sideX*offset,y+sideY*offset,phase===3?97:86,.22,13+phase*2);
       }
+      for(const offset of [-.16,0,.16])
+        hooks.projectile?.(e,aim+offset,320+phase*12,9+phase,"fish");
     } else if(variant===1) {
-      // Two staggered-looking spectral fans with a readable safe opening.
+      // Aimed triple lance forces movement; the surrounding shadow ring
+      // offers a SIDE exit rather than automatically opening at the player.
       const count=phase===3?18:phase===2?16:12;
+      const gapAngle=aim+Math.PI*.72;
       for(let i=0;i<count;i++){
         const theta=aim+i*2*Math.PI/count;
-        const diff=Math.atan2(Math.sin(theta-aim),Math.cos(theta-aim));
-        // Wide front-facing gap remains traversable.
-        if(i<=1 || i>=count-1)continue;
-        hooks.projectile?.(e,theta,145+phase*11,10+phase,"shadow");
+        const diff=Math.atan2(Math.sin(theta-gapAngle),Math.cos(theta-gapAngle));
+        if(Math.abs(diff)<Math.PI*2/count*1.35)continue;
+        hooks.projectile?.(e,theta,245+phase*12,10+phase,"shadow");
       }
+      for(const offset of [-.16,0,.16])
+        hooks.projectile?.(e,aim+offset,325+phase*12,10+phase,"shadow");
     } else if(variant===2) {
-      // Two outward bell fan rows: middle lane remains clear.
-      for(const offset of [-.85,-.66,-.45,.45,.66,.85])
-        hooks.projectile?.(e,aim+offset,178+phase*12,11+phase,"bell");
-      // Distinct ringing anchor away from the boss. Warning drawn in advance.
-      hooks.hazard?.(x,y,phase===3?86:72,.48,11+phase*2);
+      // Center is dangerous: a fast focused bell-strike with flanking bolts.
+      for(const offset of [-.6,-.38,-.19,0,.19,.38,.6])
+        hooks.projectile?.(e,aim+offset,310+phase*12,11+phase,"bell");
+      hooks.hazard?.(x,y,phase===3?105:92,.24,11+phase*2);
     } else {
-      // Final guardian reshapes positioning: four marked quadrants around the
-      // snapshot, leaving a central space instead of an unavoidable full circle.
+      // Targeting the center prevents standing still from countering Reality
+      // Break; outer cells cut off the obvious diagonal routes, not all exits.
       const sideX=-Math.sin(aim),sideY=Math.cos(aim);
       const frontX=Math.cos(aim),frontY=Math.sin(aim);
-      for(const [forward,side] of [[140,125],[140,-125],[-140,125],[-140,-125]])
+      hooks.hazard?.(x,y,phase===3?113:101,.25,14+phase*2);
+      for(const [forward,side] of [[155,145],[155,-145],[-155,145],[-155,-145]])
         hooks.hazard?.(x+frontX*forward+sideX*side,
-          y+frontY*forward+sideY*side,phase===3?88:72,.55,14+phase*2);
+          y+frontY*forward+sideY*side,phase===3?90:77,.25,14+phase*2);
     }
     e.specialCount++;
     e.specialWarningUntil=0;
@@ -103,17 +126,19 @@
       e.specialNextAt=Math.min(e.specialNextAt,gameTime+3.2);
     }
     if(e.specialWarningUntil>0) {
+      // Follow the player's motion only during the first part of the tell.
+      // The final ~0.7s is fully locked and always matches the marked danger.
+      if(gameTime<e.specialTrackingUntil)lockTarget(e,player);
       if(gameTime<e.specialWarningUntil)return true;
       fireSignature(e,player,gameTime,hooks);
       return true;
     }
     if(!canStart(e,gameTime,!!hooks.visible))return busy(e,gameTime);
     const variant=e.isFinalBoss?3:e.variant;
-    e.specialAim=Math.atan2(player.y-e.y,player.x-e.x);
-    e.specialTargetX=player.x;
-    e.specialTargetY=player.y;
+    lockTarget(e,player);
     e.specialActiveName=attacks[variant].name;
     e.specialWarningUntil=gameTime+attacks[variant].warning;
+    e.specialTrackingUntil=gameTime+.4;
     e.specialTelegraphSize=phase;
     // Cancel no active normal attack; wait for a safe opening to start.
     hooks.notify?.("GUARDIAN ATTACK · "+e.specialActiveName,"boss",2);
@@ -145,23 +170,32 @@
         ctx.beginPath();ctx.arc(px,py,rad,0,2*Math.PI);ctx.stroke();
       };
       if(variant===0){
-        for(const offset of [-115,0,115])marker(x+sx*offset,y+sy*offset,phase===3?73:63);
+        for(const offset of [-90,0,90])marker(x+sx*offset,y+sy*offset,phase===3?97:86);
+        for(const offset of [-.16,0,.16]){
+          ctx.beginPath();ctx.moveTo(e.x,e.y);
+          ctx.lineTo(e.x+Math.cos(aim+offset)*380,e.y+Math.sin(aim+offset)*380);
+          ctx.stroke();
+        }
       } else if(variant===1){
-        for(const offset of [-1.15,-.78,.78,1.15]){
+        const count=phase===3?18:phase===2?16:12;
+        const gap=aim+Math.PI*.72;
+        ctx.beginPath();ctx.arc(e.x,e.y,190,gap+.28,gap+Math.PI*2-.28);ctx.stroke();
+        for(const offset of [-.16,0,.16]){
           ctx.beginPath();ctx.moveTo(e.x,e.y);
           ctx.lineTo(e.x+Math.cos(aim+offset)*380,e.y+Math.sin(aim+offset)*380);
           ctx.stroke();
         }
       } else if(variant===2){
-        for(const offset of [-.85,-.45,.45,.85]){
+        for(const offset of [-.6,-.38,-.19,0,.19,.38,.6]){
           ctx.beginPath();ctx.moveTo(e.x,e.y);
           ctx.lineTo(e.x+Math.cos(aim+offset)*380,e.y+Math.sin(aim+offset)*380);
           ctx.stroke();
         }
-        marker(x,y,phase===3?86:72);
+        marker(x,y,phase===3?105:92);
       } else {
-        for(const [forward,side] of [[140,125],[140,-125],[-140,125],[-140,-125]])
-          marker(x+fx*forward+sx*side,y+fy*forward+sy*side,phase===3?88:72);
+        marker(x,y,phase===3?113:101);
+        for(const [forward,side] of [[155,145],[155,-145],[-155,145],[-155,-145]])
+          marker(x+fx*forward+sx*side,y+fy*forward+sy*side,phase===3?90:77);
       }
     } else {
       // Exposed core ring conveys the 42% counterattack bonus.
@@ -175,6 +209,7 @@
   }
   window.bossCombatCatalog=attacks;
   window.bossCombatMaxHealth=maxHealth;
+  window.bossCombatPredictTarget=predictTarget;
   window.initializeBossCombat=initialize;
   window.updateBossCombat=update;
   window.isBossCombatBusy=busy;
