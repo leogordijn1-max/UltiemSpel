@@ -140,5 +140,5 @@ test("Beau showcase is integrated without breaking arena isolation or F9",()=>{
   assert.match(render,/drawBeauTelegraph/);
   assert.match(developer,/BEAU · THE FINAL HUNT/);
   assert.match(game,/!boss && !window\.isBossIsolationActive\?\.\(\)/);
-  assert.ok(index.includes("js/beau-encounter.js?v=2"));
+  assert.ok(index.includes("js/beau-encounter.js?v=3"));
 });
