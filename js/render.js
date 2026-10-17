@@ -261,6 +261,7 @@ function draw() {
     // enemy silhouettes, without extra sprites or high-cost particle systems.
     window.drawEnemyWorldAura?.(e, ctx, time, graphicsQuality);
     window.drawGuardianWorldWarning?.(e, ctx, time, graphicsQuality === "low");
+    window.drawBossCombat?.(e, ctx, time, graphicsQuality);
     if (e.pulseSlowUntil > time) {
       ctx.save();
       ctx.strokeStyle = "rgba(191, 108, 255, 0.85)";
