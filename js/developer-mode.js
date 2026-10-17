@@ -187,8 +187,8 @@
     // Make a real boss immediately visible instead of spawning offscreen.
     boss.x = player.x + Math.min(W * .26, 260);
     boss.y = player.y - 20;
-    boss.hp = Math.max(300, Math.round(boss.maxHp * .28));
-    boss.maxHp = boss.hp;
+    // Keep real boss HP for balancing. Phase shortcuts are separate buttons.
+    boss.hp = boss.maxHp;
     nextBossTime = Infinity;
     rebuildEnemyGrid();
     updateHud();
@@ -197,6 +197,19 @@
     if (!available() || !boss) return;
     boss.hp = Math.max(1, Math.min(boss.hp, boss.maxHp * .42));
     notify("DEV · BOSS PHASE II QUEUED", "boss", 3);
+    updateHud();
+  }
+  function forceBossPhaseThree() {
+    if (!available() || !boss) return;
+    boss.hp = Math.max(1, Math.min(boss.hp, boss.maxHp * .27));
+    notify("DEV · BOSS PHASE III QUEUED", "boss", 3);
+    updateHud();
+  }
+  function forceSignature() {
+    if (!available() || !boss) return;
+    boss.specialNextAt = time;
+    // An existing windup or dash finishes before the special starts.
+    notify("DEV · SIGNATURE ATTACK READY", "boss", 2);
     updateHud();
   }
   function triggerGuardianWarning() {
@@ -331,6 +344,8 @@
     addButton(s, "SPAWN FINAL BOSS", () => spawnTestBoss(true),
       !!boss || runMode !== "standard" || victoryClaimed);
     addButton(s, "FORCE BOSS PHASE II", forceBossPhaseTwo, !boss);
+    addButton(s, "FORCE BOSS PHASE III", forceBossPhaseThree, !boss);
+    addButton(s, "TRIGGER SIGNATURE ATTACK", forceSignature, !boss);
     addButton(s, "TRIGGER GUARDIAN POWER", triggerGuardianWarning, !boss);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
 
