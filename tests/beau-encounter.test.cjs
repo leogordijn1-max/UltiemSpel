@@ -111,6 +111,27 @@ test("Ultimate backdrop works in low and high quality without assets",()=>{
   assert.ok(calls.strokes>0);
   assert.equal(calls.words,1);
 });
+test("HP phase transition cancels an active special instead of instant firing",()=>{
+  const h=setup(2);
+  h.window.forceBeauEncounter(h.e,"pincer",0);
+  h.window.updateBeauEncounter(h.e,0,.025,h.player,h.hooks);
+  assert.equal(h.e.beauFight.mode,"pincer");
+  assert.equal(h.window.interruptBeauEncounter(h.e,.5),true);
+  assert.equal(h.e.beauFight.mode,"idle");
+  const before=h.events.shots.length;
+  h.e.phaseIntro=1;
+  h.window.updateBeauEncounter(h.e,1.6,.025,h.player,h.hooks);
+  assert.equal(h.events.shots.length,before);
+});
+test("The Final Hunt clears old boss projectiles at cinematic start",()=>{
+  const h=setup(3);
+  let cleans=0;
+  h.hooks.clearBossAttacks=()=>cleans++;
+  h.window.updateBeauEncounter(h.e,0,.025,h.player,h.hooks);
+  assert.equal(cleans,1);
+  h.window.updateBeauEncounter(h.e,.5,.025,h.player,h.hooks);
+  assert.equal(cleans,1);
+});
 test("Beau showcase is integrated without breaking arena isolation or F9",()=>{
   assert.match(game,/window\.updateBeauEncounter\?\.\(e, time, dt, player, encounterHooks\)/);
   assert.match(game,/if \(beauActive\) \{/);
