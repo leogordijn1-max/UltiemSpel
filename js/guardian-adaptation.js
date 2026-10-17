@@ -48,7 +48,7 @@
       if (inRange) player.guardianChillUntil=Math.max(player.guardianChillUntil||0,gameTime+2);
     } else if (world==="burning") {
       hooks.scar?.("fire",e.x,e.y,150);
-      const angle=Math.atan2(dy,dx);
+      const angle=Number.isFinite(e.guardianAim) ? e.guardianAim : Math.atan2(dy,dx);
       for(const offset of [-.38,0,.38])
         hooks.projectile?.(e,angle+offset,250,e.isFinalBoss?12:9,"shadow");
     } else if (world==="flooded") {
@@ -75,6 +75,7 @@
     }
     if (gameTime < e.guardianCooldownAt) return false;
     e.guardianWarningUntil=gameTime+1.05;
+    e.guardianAim=Math.atan2(player.y-e.y,player.x-e.x);
     e.guardianNextAvailable=true;
     hooks.warn?.("WORLD GUARDIAN · "+data.name,"boss",3);
     return false;
@@ -92,12 +93,23 @@
     if(!lowGraphics){ctx.shadowBlur=14;ctx.shadowColor=entry.color}
     ctx.setLineDash(winding?[9,7]:[]);
     ctx.beginPath();
-    ctx.arc(e.x,e.y,entry.radius,0,Math.PI*2);
+    if (e.guardianWorld==="burning") {
+      // Aim is locked when the warning starts: three lanes show the actual
+      // upcoming projectile spread. Moving sideways is a reliable counter.
+      const angle=e.guardianAim||0;
+      for(const offset of [-.38,0,.38]){
+        const a=angle+offset;
+        ctx.moveTo(e.x,e.y);
+        ctx.lineTo(e.x+Math.cos(a)*380,e.y+Math.sin(a)*380);
+      }
+    } else {
+      ctx.arc(e.x,e.y,entry.radius,0,Math.PI*2);
+    }
     ctx.stroke();
     if(!lowGraphics){
       ctx.setLineDash([]);
       ctx.beginPath();
-      ctx.arc(e.x,e.y,entry.radius*.55,0,Math.PI*2);
+      ctx.arc(e.x,e.y,e.guardianWorld==="burning"?36:entry.radius*.55,0,Math.PI*2);
       ctx.stroke();
     }
     ctx.restore();
