@@ -35,7 +35,7 @@ const enemyCatalog = [
   { name: "Bulwark", image: "", hp: "3× Drifter", damage: "11 + time scaling", speed: "0.75× Drifter", ability: "Alternates between shielded and vulnerable phases.", xp: "3 souls" },
 ];
 const bossCatalog = [
-  { name: "Beau de Hond", image: "img/BeauDeHond.png", attacks: "Telegraphed MarioVis shotgun fan and charge.", phase: "Below half HP, fires a wider fish fan and occasional shadow rings; summons minions." },
+  { name: "Beau de Hond", image: "img/BeauDeHond.png", attacks: "MarioVis shotgun and targeted charge; Hunting Grounds triple rush and Pincer Ambush shadow flanks.", phase: "Phase II unlocks signature chains. Below 33% HP, The Final Hunt darkens the arena with three hunts and a massive finale." },
   { name: "The Mourning Shade", image: "", attacks: "Telegraphed radial shadow rings with a deliberate dodge gap.", phase: "Below half HP, creates larger, faster rotating rings and summons minions." },
   { name: "The Bell Tower", image: "", attacks: "Telegraphed aimed bell-bolt fans with a narrow safe lane.", phase: "Below half HP, fires additional side-lane volleys and summons minions." },
   { name: "The Last Meme", image: "", attacks: "Final encounter: safe-gap rifts, a dark projectile ring and marked explosion zones.", phase: "Three phases at 100%, 66% and 33% HP. Appears around minute 25 in Standard Mode." },
