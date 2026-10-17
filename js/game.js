@@ -748,6 +748,7 @@ function update(dt) {
       player.spriteFacing = 1;
     }
   }
+  const previousPlayerX = player.x, previousPlayerY = player.y;
   if (dashTimer > 0) {
     player.x += dashDirectionX * movementSpeed * 4 * dt;
     player.y += dashDirectionY * movementSpeed * 4 * dt;
@@ -760,6 +761,9 @@ function update(dt) {
     player.x += (player.guardianTidePushX || 0) * dt;
     player.y += (player.guardianTidePushY || 0) * dt;
   }
+  // Exact movement, including dashes: standing still must not be predicted.
+  player.combatVX = (player.x - previousPlayerX) / Math.max(dt, .001);
+  player.combatVY = (player.y - previousPlayerY) / Math.max(dt, .001);
   // Boss arenas are separate encounters: NO regular spawns or catch-up
   // waves. Only the boss may create minions via its own phase mechanics.
   if (!boss && !window.isBossIsolationActive?.()) {
@@ -855,6 +859,10 @@ function update(dt) {
       damage(e, e.burnDps * 0.5, e.burnWeapon ? { x: player.x, y: player.y, type: e.burnWeapon } : player, "burn");
       if (e.dead) continue;
     }
+    // Guardians can close the gap instead of harmlessly following behind a
+    // player who moves faster than their base walking speed.
+    if (e === boss && playerDistanceSquared > 370 * 370) moveSpeed *= 2.7;
+    else if (e === boss && playerDistanceSquared > 240 * 240) moveSpeed *= 1.6;
     moveAngle = window.enemyTerrainSteer?.(e, moveAngle, onScreen, playerDistanceSquared, time) ?? moveAngle;
     if (e.kind === 4) {
       const movementMode = rangedEnemyMovementMode(e, playerDistance);
@@ -1127,6 +1135,14 @@ function update(dt) {
     e.hit = Math.max(0, e.hit - dt);
     if (e === boss) {
       if (e.shotWarning > 0) {
+        // Briefly follow the player during the opening of the warning, then
+        // lock directions and painted impact spots for the final dodge window.
+        if (time < (e.shotTrackUntil || 0)) {
+          const target = window.bossCombatPredictTarget?.(e, player) || player;
+          e.shotAngle = Math.atan2(target.y - e.y, target.x - e.x);
+          e.warningX = target.x;
+          e.warningY = target.y;
+        }
         e.shotWarning = Math.max(0, e.shotWarning - dt);
         if (e.shotWarning === 0 && visibleEnemy(e, -12) && e.phaseIntro <= 0)
           bossFire(e);
@@ -1139,12 +1155,14 @@ function update(dt) {
         e.shootCooldown -= dt;
         if (e.shootCooldown <= 0 && visibleEnemy(e, -12)) {
           e.shootCooldown = 0;
-          e.shotAngle = Math.atan2(player.y - e.y, player.x - e.x);
+          const target = window.bossCombatPredictTarget?.(e, player) || player;
+          e.shotAngle = Math.atan2(target.y - e.y, target.x - e.x);
+          e.shotTrackUntil = time + .35;
           if (e.isFinalBoss) {
             e.shotPattern = (e.volleyCount || 0) % 3;
             e.shotRotation = time * 0.45;
-            e.warningX = player.x;
-            e.warningY = player.y;
+            e.warningX = target.x;
+            e.warningY = target.y;
             e.shotWarning = [1.2, 1.05, 0.92][e.finalPhase - 1];
           } else {
             e.shotWarning = e.phaseTwo ? 0.95 : 1.05;
