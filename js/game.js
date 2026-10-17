@@ -1572,6 +1572,8 @@ function loop(t) {
     simulationAccumulator = 0;
   }
   draw();
+  // Live benchmark samples real, unpaused browser frames (not the paused F9 menu).
+  window.developerPerfFrame?.(elapsed);
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
