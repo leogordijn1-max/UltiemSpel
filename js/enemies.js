@@ -374,7 +374,8 @@ function damage(e, d, origin = player, damageType = "direct") {
   const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
   const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
   const worldResistance = window.enemyWorldResistance?.(e, damageType) ?? 1;
-  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance;
+  const guardianResistance = window.guardianWorldResistance?.(e, damageType) ?? 1;
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance;
   const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
   e.hp -= finalDamage;
   if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
@@ -630,6 +631,7 @@ function spawnBoss() {
     chargeActive: 0,
     phaseTwo: false,
   };
+  window.initializeGuardianWorld?.(boss);
   enemies.push(boss);
   if (typeof trackDiscovery === "function") trackDiscovery("bosses", ["beau", "mourning", "bell"][variant]);
   puff(boss.x, boss.y, "#cf7cff", 28);
@@ -678,6 +680,7 @@ function spawnFinalBoss() {
     chargeActive: 0,
     minionCooldown: 13,
   };
+  window.initializeGuardianWorld?.(boss);
   enemies.push(boss);
   if (typeof trackDiscovery === "function") trackDiscovery("bosses", "final");
   nextBossTime = Infinity;
