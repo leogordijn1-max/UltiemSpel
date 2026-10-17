@@ -164,6 +164,8 @@ function currentEndlessTier() {
 
 // Special waves can request a type; ordinary spawns retain a mixed distribution.
 function enemySpawn(preferredKind = null, forceElite = false) {
+  // Only the boss itself may summon enemies during an isolated encounter.
+  if (boss || window.isBossIsolationActive?.()) return null;
   const angle = rand(0, Math.PI * 2);
   const distance = Math.max(W, H) * 0.72;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
@@ -253,6 +255,9 @@ function wavePatternFor(number) {
   return available[index];
 }
 function spawnSpecialWave(number, cap = 300) {
+  // Defensive guard: scripted wave calls cannot bypass the boss arena.
+  if (boss || window.isBossIsolationActive?.())
+    return { name: "BOSS ARENA · WAVES PAUSED", spawned: 0, pattern: null };
   const pattern = wavePatternFor(number);
   const waveSize = Math.min(22, 7 + Math.floor(number * 1.15));
   let spawned = 0;
@@ -467,6 +472,7 @@ function damage(e, d, origin = player, damageType = "direct") {
         if (trophy.first && typeof saveMetaProgress === "function") saveMetaProgress();
       }
       nextBossTime = time + 180;
+      window.finishBossIsolation?.(e);
       boss = null;
       $("bossHud").style.display = "none";
       bossShots = [];
@@ -596,6 +602,8 @@ function enemyFireOrb(e) {
 }
 
 function spawnBoss() {
+  if (boss) return false;
+  window.beginBossIsolation?.();
   bossNumber++;
   const variant = (bossNumber - 1) % 3;
   const bossNames = bossCatalog.map((entry) => entry.name.toUpperCase());
@@ -639,12 +647,14 @@ function spawnBoss() {
   $("bossName").textContent = boss.bossName;
   playSfx("boss");
   $("bossFill").style.width = "100%";
-  if (typeof notify === "function") notify(`BOSS INCOMING · ${boss.bossName}`, "boss", 4);
+  if (typeof notify === "function") notify(`BOSS INCOMING · ${boss.bossName} · THE HORDE RETREATS`, "boss", 4);
+  return true;
 }
 
 // The Last Meme is intentionally drawn in Canvas until its custom meme asset exists.
 function spawnFinalBoss() {
   if (boss) return false;
+  window.beginBossIsolation?.();
   bossNumber++;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
   const angle = rand(0, Math.PI * 2);
