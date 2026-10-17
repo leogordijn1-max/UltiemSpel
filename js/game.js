@@ -1040,6 +1040,7 @@ function update(dt) {
           !e.chargeWarning &&
           e.shotWarning <= 0 &&
           e.phaseIntro <= 0 &&
+          !window.isBossCombatBusy?.(e, time) &&
           visibleEnemy(e, -12)
         ) {
           e.chargeX = Math.cos(a);
@@ -1051,7 +1052,7 @@ function update(dt) {
                 ? 360
                 : e.variant === 1
                   ? 310
-                  : 395) * (e.phaseTwo ? 1.18 : 1);
+                  : 395) * (e.phaseThree ? 1.31 : e.phaseTwo ? 1.18 : 1);
           e.chargeWarning = e.isFinalBoss ? 1.15 : e.variant === 2 ? 1.05 : 0.9;
         }
         if (e.chargeWarning > 0) {
@@ -1127,7 +1128,8 @@ function update(dt) {
       } else if (
         e.phaseIntro <= 0 &&
         e.chargeActive <= 0 &&
-        e.chargeWarning <= 0
+        e.chargeWarning <= 0 &&
+        !window.isBossCombatBusy?.(e, time)
       ) {
         e.shootCooldown -= dt;
         if (e.shootCooldown <= 0 && visibleEnemy(e, -12)) {
