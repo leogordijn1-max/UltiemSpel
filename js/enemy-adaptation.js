@@ -22,10 +22,10 @@
     }
     return e;
   }
-  function refresh(e, gameTime, onScreen) {
+  function refresh(e, gameTime, onScreen, sampledBiome) {
     if (!e || e.kind === 3 || e.dead || !onScreen) return;
     if (gameTime < (e.nextBiomeCheck || 0)) return;
-    assign(e, biomeAt(e.x, e.y));
+    assign(e, valid(sampledBiome) ? sampledBiome : biomeAt(e.x, e.y));
     // Sample 3-4x per second, stagger across enemies using position.
     e.nextBiomeCheck = gameTime + .28 + (Math.abs(e.x*.0027+e.y*.0019)% .12);
   }
@@ -43,7 +43,7 @@
     const onNativeGround = (affinity === "frozen" && ground === "frost") ||
       (affinity === "burning" && ground === "fire") ||
       (affinity === "flooded" && ground === "water");
-    if (affinity === "frozen" && ground === "frost") return 1.27; // Already slowed by ice globally.
+    if (affinity === "frozen" && ground === "frost") return 1.42; // Cancels normal ice slowdown and gives a slight edge.
     if (affinity === "burning" && ground === "fire") return e.kind === 1 ? 1.32 : 1.16;
     if (affinity === "flooded" && ground === "water") {
       e.worldSurgeCooldown = Math.max(0, (e.worldSurgeCooldown || 0) - dt);
