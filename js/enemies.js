@@ -729,7 +729,8 @@ function bossFire(e) {
   e.volleyCount = (e.volleyCount || 0) + 1;
   if (e.variant === 0) {
     // Beau's trademark MarioVis shotgun. In phase two, add an occasional ring.
-    const offsets = e.phaseTwo ? [-0.48, -0.32, -0.16, 0, 0.16, 0.32, 0.48]
+    const offsets = e.phaseThree ? [-0.62,-0.42,-0.23,0,0.23,0.42,0.62]
+      : e.phaseTwo ? [-0.48, -0.32, -0.16, 0, 0.16, 0.32, 0.48]
       : [-0.3, -0.15, 0, 0.15, 0.3];
     for (const offset of offsets) addBossProjectile(e, angle + offset, e.phaseTwo ? 182 : 165, 13, "fish");
     if (e.phaseTwo && e.volleyCount % 2 === 0) {
@@ -737,7 +738,7 @@ function bossFire(e) {
     }
   } else if (e.variant === 1) {
     // Mourning Shade leaves a generous gap in the ring, facing the player.
-    const count = e.phaseTwo ? 14 : 10;
+    const count = e.phaseThree ? 16 : e.phaseTwo ? 14 : 10;
     const offset = time * 0.34;
     for (let i = 0; i < count; i++) {
       const shotAngle = offset + i * Math.PI * 2 / count;
@@ -747,7 +748,8 @@ function bossFire(e) {
     }
   } else {
     // Bell Tower's aimed lanes have a narrow safe opening down their center.
-    const offsets = e.phaseTwo ? [-0.68, -0.48, -0.27, 0.27, 0.48, 0.68]
+    const offsets = e.phaseThree ? [-0.85,-0.63,-0.4,0.4,0.63,0.85]
+      : e.phaseTwo ? [-0.68, -0.48, -0.27, 0.27, 0.48, 0.68]
       : [-0.44, -0.25, 0.25, 0.44];
     for (const offset of offsets) addBossProjectile(e, angle + offset, e.phaseTwo ? 190 : 168, 12, "bell");
     if (e.phaseTwo && e.volleyCount % 2 === 0) {
@@ -756,7 +758,7 @@ function bossFire(e) {
     }
   }
   e.shotWarning = 0;
-  e.shootCooldown = e.phaseTwo ? 2.35 : 2.9;
+  e.shootCooldown = e.phaseThree ? 2.08 : e.phaseTwo ? 2.35 : 2.9;
 }
 
 // Alternate visibly different patterns; all aim directions/target points were locked
