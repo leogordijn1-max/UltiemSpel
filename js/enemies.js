@@ -694,6 +694,7 @@ function spawnFinalBoss() {
     chargeActive: 0,
     minionCooldown: 13,
   };
+  window.initializeBossCombat?.(boss, time);
   window.initializeGuardianWorld?.(boss);
   enemies.push(boss);
   if (typeof trackDiscovery === "function") trackDiscovery("bosses", "final");
