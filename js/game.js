@@ -807,9 +807,14 @@ function update(dt) {
     // Sample real terrain a few times per second, not 300 enemies x 60 fps.
     if (onScreen && time >= (e.nextTerrainSample || 0)) {
       e.groundElement = window.terrainAt?.(e.x,e.y) || null;
+      e.groundBiome = window.worldBiomeAt?.(e.x,e.y) || "frozen";
       e.nextTerrainSample = time + .22 + (Math.abs(e.x*.003+e.y*.005) % .11);
     }
+    window.refreshEnemyAdaptation?.(e, time, onScreen, e.groundBiome);
     const groundElement = onScreen ? e.groundElement : null;
+    const worldGround = e.groundBiome === "frozen" ? "frost"
+      : e.groundBiome === "flooded" ? "water" : "fire";
+    const walkingGround = groundElement || (onScreen ? worldGround : null);
     if (groundElement==="fire" && time >= (e.nextGroundBurn || 0)) {
       e.nextGroundBurn = time + .85;
       damage(e,e===boss?1.3:3.8,player,"flame");
@@ -821,7 +826,8 @@ function update(dt) {
         ? Math.max(0.58, 0.82 - (upgrades.knockback - 3) * 0.06)
         : 1) *
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
-      (groundElement==="water" ? .86 : groundElement==="frost" ? .74 : 1) *
+      (walkingGround==="water" ? .86 : walkingGround==="frost" ? .74 : 1) *
+      (window.enemyWorldMovement?.(e, walkingGround, time, dt) ?? 1) *
       (e.soakedUntil > time ? 0.82 : 1) *
       (e.frostUntil > time ? 0.48 : 1) *
       (e.deepFreezeUntil > time && e !== boss ? 0.16 : 1) *
@@ -1106,7 +1112,7 @@ function update(dt) {
           const minionCount = e.isFinalBoss ? 2 : 3;
           for (let i = 0; i < minionCount; i++) {
             const angle = (Math.PI * 2 * i) / minionCount + time;
-            enemies.push({
+            const minion = {
               x: e.x + Math.cos(angle) * 115,
               y: e.y + Math.sin(angle) * 115,
               r: kind === 4 ? 15 : 11,
@@ -1125,7 +1131,9 @@ function update(dt) {
               summoned: true,
               knockbackX: 0,
               knockbackY: 0,
-            });
+            };
+            window.initializeEnemyAdaptation?.(minion);
+            enemies.push(minion);
           }
           if (!e.summonAnnounced) {
             notify("BOSS SUMMONS · ADDITIONAL ENEMIES", "boss", 3.5);
