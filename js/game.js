@@ -794,6 +794,11 @@ function update(dt) {
   const enemyAIStarted = performance.now();
   for (const e of enemies) {
     if (e.dead) continue;
+    // Summoned adds are temporary, not an endless secondary horde.
+    if (e.summoned && Number.isFinite(e.summonUntil) && time >= e.summonUntil) {
+      e.dead = true;
+      continue;
+    }
 
     if (e === boss && Math.abs(player.x - e.x) > 1) {
       e.facing = player.x > e.x ? 1 : -1;
@@ -1148,7 +1153,9 @@ function update(dt) {
       }
       if (e.phaseTwo || (e.isFinalBoss && e.finalPhase >= 2)) {
         e.minionCooldown = (e.minionCooldown ?? 8) - dt;
-        if (e.minionCooldown <= 0 && enemies.length < 58) {
+        const existingSummons = e.minionCooldown <= 0
+          ? enemies.filter(enemy => enemy.summoned && !enemy.dead).length : 0;
+        if (e.minionCooldown <= 0 && existingSummons < 6) {
           e.minionCooldown = e.isFinalBoss ? 13 : e.variant === 1 ? 11 : 10;
           const kind = e.isFinalBoss
             ? e.finalPhase === 3
@@ -1159,7 +1166,7 @@ function update(dt) {
               : e.variant === 2
                 ? 4
                 : 0;
-          const minionCount = e.isFinalBoss ? 2 : 3;
+          const minionCount = Math.min(6 - existingSummons, e.isFinalBoss ? 2 : 2);
           for (let i = 0; i < minionCount; i++) {
             const angle = (Math.PI * 2 * i) / minionCount + time;
             const minion = {
@@ -1179,6 +1186,7 @@ function update(dt) {
               hit: 0,
               noXp: true,
               summoned: true,
+              summonUntil: time + (e.isFinalBoss ? 18 : 15),
               knockbackX: 0,
               knockbackY: 0,
             };
