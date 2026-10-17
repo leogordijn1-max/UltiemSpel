@@ -962,6 +962,7 @@ function update(dt) {
       }
     }
     if (e === boss) {
+      // Phase-dependent attack pacing stays isolated to the active Guardian.
       if (e.isFinalBoss) {
         const nextPhase =
           e.hp <= e.maxHp * 0.33 ? 3 : e.hp <= e.maxHp * 0.66 ? 2 : 1;
