@@ -1,4 +1,4 @@
-// Enemy creation and shared combat effects.
+// Enemy creation, combat effects and boss encounter health.
 const difficultyProfiles = {
   easy: {
     enemyHealth: 0.8,
