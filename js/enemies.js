@@ -380,7 +380,7 @@ function damage(e, d, origin = player, damageType = "direct") {
   const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
   const worldResistance = window.enemyWorldResistance?.(e, damageType) ?? 1;
   const guardianResistance = window.guardianWorldResistance?.(e, damageType) ?? 1;
-  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance;
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
   const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
   e.hp -= finalDamage;
   if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
