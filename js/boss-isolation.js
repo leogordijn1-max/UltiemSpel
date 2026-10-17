@@ -42,8 +42,7 @@
     if (!isolated) return false;
     // Only summons belong to this encounter. The actual boss death is
     // processed by damage(), so this cleanup never awards a second kill.
-    removedOnExit = clearEnemies(e => e.summoned || e.kind === 3 ||
-      e === defeatedBoss || !e.developerTestEnemy);
+    removedOnExit = clearEnemies(() => true);
     clearArenaProjectiles();
     window.resetWorldScars?.();
     // Avoid instantly dumping a backlog of enemies after the rewards screen.
