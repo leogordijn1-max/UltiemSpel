@@ -59,6 +59,37 @@
     if (!onNativeGround) e.worldSurgeUntil = Math.min(e.worldSurgeUntil || 0, gameTime);
     return 1;
   }
+  // Lightweight terrain-aware steering, not full pathfinding. A subset of
+  // visible enemies checks two flanks at most twice a second. Never applied
+  // to bosses, exploding Burstlings or telegraphed elite charges.
+  function terrainSteer(e, heading, onScreen, playerDistanceSquared, gameTime) {
+    if (!e || !onScreen || ![1,2,4,6].includes(e.kind) || e.dead ||
+        e.eliteChargeWarning > 0 || e.eliteChargeActive > 0 ||
+        (e.kind === 4 && e.shotWarning > 0)) return heading;
+    if (playerDistanceSquared < 135*135) return heading;
+    if (gameTime >= (e.nextTerrainDecision || 0)) {
+      e.nextTerrainDecision = gameTime + .48 + (Math.abs(e.x*.0019+e.y*.0021) % .16);
+      const desired = {frozen:"frost",burning:"fire",flooded:"water"}[e.worldAffinity];
+      if (!desired) {e.terrainTurn=0;return heading;}
+      const nativeAt=(angle)=>{
+        const x=e.x+Math.cos(angle)*125, y=e.y+Math.sin(angle)*125;
+        const scar=window.terrainAt?.(x,y);
+        const world=window.worldBiomeAt?.(x,y) || e.worldAffinity;
+        const ground=scar || ({frozen:"frost",burning:"fire",flooded:"water"}[world]);
+        return ground===desired;
+      };
+      // Favor a native patch only if it is visible one step away; avoid
+      // constant zigzagging when the world is uniform.
+      e.terrainTurn=0;
+      if (!nativeAt(heading)) {
+        const left=nativeAt(heading-.62),right=nativeAt(heading+.62);
+        if (left || right) e.terrainTurn=left && right
+          ? ((Math.floor(e.x+e.y)&1) ? -.62:.62)
+          : left ? -.62 : .62;
+      }
+    }
+    return heading + (e.terrainTurn || 0);
+  }
   function onDeath(e) {
     if (!e || e.kind === 3 || !e.worldAffinity || e.summoned || e.noXp) return;
     // Only heavy or elite enemies leave lingering terrain. No chain reaction
@@ -114,6 +145,7 @@
   window.refreshEnemyAdaptation = refresh;
   window.enemyWorldResistance = resistance;
   window.enemyWorldMovement = groundEffect;
+  window.enemyTerrainSteer = terrainSteer;
   window.enemyWorldOnDeath = onDeath;
   window.drawEnemyWorldAura = drawAura;
 })();
