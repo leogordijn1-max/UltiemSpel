@@ -140,6 +140,7 @@ function syncElementalLoadout() {
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
+  window.resetBossIsolation?.();
   // Start a fresh sandbox before any discovery or rewards can be written.
   window.developerBeginRun?.();
   // Lock the dominant environment at run start. Choosing an element never conquers it.
@@ -539,6 +540,8 @@ function showVictory() {
 
 function continueEndlessAfterVictory() {
   if (gameState !== "victory" || !victoryClaimed) return false;
+  // Future-proof the transition even if victory happens via a scripted event.
+  window.finishBossIsolation?.(boss);
   runMode = "endless";
   menuRunMode = "endless";
   endlessStartTime = time;
@@ -757,19 +760,22 @@ function update(dt) {
     player.x += (player.guardianTidePushX || 0) * dt;
     player.y += (player.guardianTidePushY || 0) * dt;
   }
-  spawn -= dt;
-  const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
-  const gradualWavePressure =
-    1 +
-    Math.min(0.24, waveNumber * 0.015) +
-    Math.min(0.35, currentEndlessTier() * 0.025);
-  let interval =
-    (Math.max(0.14, 1.6 - growthTime * 0.0026) * (boss ? 2 : 1)) /
-    (profile.spawnRate * gradualWavePressure);
-  const enemyLimit = boss ? 60 : 300;
-  while (spawn <= 0 && enemies.length < enemyLimit) {
-    enemySpawn();
-    spawn += interval;
+  // Boss arenas are separate encounters: NO regular spawns or catch-up
+  // waves. Only the boss may create minions via its own phase mechanics.
+  if (!boss && !window.isBossIsolationActive?.()) {
+    spawn -= dt;
+    const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
+    const gradualWavePressure =
+      1 +
+      Math.min(0.24, waveNumber * 0.015) +
+      Math.min(0.35, currentEndlessTier() * 0.025);
+    const interval =
+      Math.max(0.14, 1.6 - growthTime * 0.0026) /
+      (profile.spawnRate * gradualWavePressure);
+    while (spawn <= 0 && enemies.length < 300) {
+      enemySpawn();
+      spawn += interval;
+    }
   }
   shot -= dt;
   if (shot <= 0) {
