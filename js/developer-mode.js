@@ -12,6 +12,10 @@
   let wasPlaying = false;
   let panelNode = null;
   let badgeNode = null;
+  let performanceNode = null;
+  let frameTimes = [];
+  let perfClock = 0;
+  let perfSnapshot = { fps: 0, p95: 0, count: 0, ai: 0, render: 0, collisions: 0 };
 
   const isSandbox = () => sandbox;
   window.isDeveloperRun = isSandbox;
@@ -34,12 +38,51 @@
     document.body.append(badgeNode);
     return badgeNode;
   }
+  function ensurePerformanceOverlay() {
+    if (performanceNode) return performanceNode;
+    performanceNode = document.createElement("div");
+    performanceNode.id = "developerPerformance";
+    performanceNode.className = "developer-performance";
+    performanceNode.setAttribute("aria-label", "Live test performance");
+    document.body.append(performanceNode);
+    return performanceNode;
+  }
   function updateBadge() {
     const badge = ensureBadge();
     badge.hidden = !sandbox;
     badge.textContent = invincible
       ? "DEV SANDBOX · GOD MODE · F9" : "DEV SANDBOX · F9";
+    const overlay = ensurePerformanceOverlay();
+    overlay.hidden = !sandbox;
+    if (sandbox) {
+      overlay.textContent = "FPS " + perfSnapshot.fps + " · P95 FRAME " +
+        perfSnapshot.p95.toFixed(1) + " ms · ENEMIES " + perfSnapshot.count +
+        " · AI " + perfSnapshot.ai.toFixed(1) + " ms" +
+        " · DRAW " + perfSnapshot.render.toFixed(1) + " ms" +
+        " · COLLISIONS " + perfSnapshot.collisions.toFixed(1) + " ms";
+    }
   }
+  window.developerPerfFrame = elapsedSeconds => {
+    if (!sandbox || !active || paused || !Number.isFinite(elapsedSeconds)) return;
+    frameTimes.push(Math.max(1, Math.min(200, elapsedSeconds * 1000)));
+    if (frameTimes.length > 120) frameTimes.shift();
+    perfClock += Math.min(.2, elapsedSeconds);
+    if (perfClock < .8) return;
+    perfClock = 0;
+    const ordered = [...frameTimes].sort((a,b)=>a-b);
+    const avg = frameTimes.reduce((sum,ms)=>sum+ms,0)/Math.max(1,frameTimes.length);
+    perfSnapshot = {
+      fps: Math.round(1000/avg),
+      p95: ordered[Math.max(0,Math.ceil(ordered.length*.95)-1)] || 0,
+      count: typeof enemies !== "undefined" ? enemies.filter(e=>!e.dead).length : 0,
+      ai: performanceMetrics.enemyAI || 0,
+      render: performanceMetrics.render || 0,
+      collisions: performanceMetrics.collisions || 0,
+    };
+    updateBadge();
+  };
+  window.developerPerfSnapshot = () => ({...perfSnapshot});
+
   function beginRun() {
     closePanel(false);
     // Discard mutations from any previous unsaved sandbox run.
@@ -48,6 +91,9 @@
       highest = storageNumber("shadowHigh", 0, 0);
     }
     sandbox = enabled;
+    frameTimes = [];
+    perfClock = 0;
+    perfSnapshot = { fps: 0, p95: 0, count: 0, ai: 0, render: 0, collisions: 0 };
     invincible = false;
     testElement = null;
     updateBadge();
@@ -155,6 +201,32 @@
     damage(target, target.hp + 999999, player, "direct");
     updateHud();
   }
+  function spawnTestEnemies(target) {
+    if (!available() || !player) return;
+    const max = Math.min(250, Math.max(10, Math.floor(target)));
+    const missing = Math.max(0, max - enemies.filter(e=>!e.dead).length);
+    const kinds = [0, 1, 0, 2, 4, 0, 6, 5];
+    for (let i = 0; i < missing; i++) {
+      const e = enemySpawn(kinds[i % kinds.length], false);
+      const angle = i * 2.399963229728653; // golden angle: reproducible spread
+      const radius = 145 + (i % 9) * Math.max(12, Math.min(W,H)*.03);
+      e.x = player.x + Math.cos(angle)*radius;
+      e.y = player.y + Math.sin(angle)*radius;
+      e.developerTestEnemy = true;
+      e.noXp = true;
+      // We moved the spawn into view, so sample its actual new world patch.
+      window.initializeEnemyAdaptation?.(e, window.enemyWorldBiomeAt?.(e.x,e.y));
+    }
+    rebuildEnemyGrid();
+    notify("DEV · " + Math.max(0, missing) + " ENEMIES ADDED · TARGET " + max, "wave", 3);
+    updateHud();
+  }
+  function clearTestEnemies() {
+    if (!available()) return;
+    enemies = enemies.filter(e=>!e.developerTestEnemy);
+    rebuildEnemyGrid();
+    updateHud();
+  }
   function toggleInvulnerability() {
     if (!available()) return;
     invincible = !invincible;
@@ -226,6 +298,14 @@
     addButton(s, "SPAWN FINAL BOSS", () => spawnTestBoss(true),
       !!boss || runMode !== "standard" || victoryClaimed);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
+
+    s = section(root, "ENEMY STRESS TEST · TARGET COUNT");
+    for (const count of [10,50,100,250])
+      addButton(s, count + " ENEMIES", () => spawnTestEnemies(count));
+    addButton(s, "CLEAR TEST ENEMIES", clearTestEnemies, false, true);
+    root.append(small("p",
+      "Close F9 to resume the game and measure real FPS. Bottom-left overlay shows FPS, P95 frametime and engine costs.",
+      "developer-note"));
 
     s = section(root, "WORLD ENVIRONMENT · TEMPORARY");
     for (const id of ["frozen", "burning", "flooded"])
