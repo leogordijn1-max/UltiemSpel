@@ -173,6 +173,116 @@
     e.beauFight.nextAt=t;
     return true;
   }
+  // Canvas-only cinematic VFX: no sprites or external dependencies needed.
+  // Backdrop belongs behind projectiles; tells are drawn around the boss.
+  function backdrop(e,ctx,t,player,quality,w,h) {
+    if(!isBeau(e) || !e.beauFight || e.beauFight.mode==="idle" || !player)return;
+    const s=e.beauFight,ultimate=s.mode==="ultimate";
+    ctx.save();
+    if(ultimate) {
+      const distance=Math.max(300,Math.hypot(w,h)*.67);
+      if(quality!=="low"){
+        const fog=ctx.createRadialGradient(player.x,player.y,85,player.x,player.y,distance);
+        fog.addColorStop(0,"rgba(9,2,15,0.03)");
+        fog.addColorStop(.39,"rgba(20,4,22,0.34)");
+        fog.addColorStop(1,"rgba(10,2,15,0.82)");
+        ctx.fillStyle=fog;
+      }else ctx.fillStyle="rgba(18,4,24,0.36)";
+      ctx.fillRect(player.x-w/2,player.y-h/2,w,h);
+      ctx.strokeStyle="#ff656a";
+      ctx.globalAlpha=.42;
+      ctx.lineWidth=quality==="low"?2:4;
+      for(let i=0;i<3;i++){
+        const radius=180+i*115+Math.sin(t*2.8+i)*9;
+        ctx.beginPath();ctx.arc(e.x,e.y,radius,0,TAU);ctx.stroke();
+      }
+      if(quality!=="low"){
+        ctx.font="bold 26px system-ui, sans-serif";
+        ctx.textAlign="center";
+        ctx.fillStyle="#ffb6b2";
+        ctx.globalAlpha=.78;
+        ctx.fillText("THE FINAL HUNT",player.x,player.y-h*.38);
+      }
+    } else {
+      ctx.strokeStyle=s.mode==="hunt"?"#ffb66e":"#c9a3ff";
+      ctx.lineWidth=3;ctx.globalAlpha=.28;
+      const pulse=110+Math.sin(t*5)*9;
+      ctx.beginPath();ctx.arc(e.x,e.y,pulse,0,TAU);ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function telegraph(e,ctx,t,quality){
+    if(!isBeau(e) || !e.beauFight || e.beauFight.mode==="idle")return;
+    const s=e.beauFight;
+    const low=quality==="low",x=s.target.x,y=s.target.y;
+    const ax=Math.cos(s.aim),ay=Math.sin(s.aim),sx=-ay,sy=ax;
+    ctx.save();
+    ctx.lineWidth=low?3:5;
+    ctx.globalAlpha=.86;
+    ctx.strokeStyle=s.mode==="ultimate"?"#ff677f":s.mode==="hunt"?"#ffb36b":"#c7a0ff";
+    if(!low){ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=15}
+    ctx.setLineDash([13,9]);
+    const mark=(px,py,r)=>{
+      ctx.beginPath();ctx.arc(px,py,r,0,TAU);ctx.stroke();
+      if(!low){
+        ctx.beginPath();ctx.moveTo(px-r*.46,py);ctx.lineTo(px+r*.46,py);
+        ctx.moveTo(px,py-r*.46);ctx.lineTo(px,py+r*.46);ctx.stroke();
+      }
+    };
+    if(s.mode==="hunt"){
+      if(s.stage==="huntTell"){
+        // Fast charge corridor: central aimed lane is genuinely dangerous.
+        ctx.beginPath();ctx.moveTo(e.x,e.y);
+        ctx.lineTo(e.x+ax*360,e.y+ay*360);
+        ctx.lineWidth=low?52:90;ctx.globalAlpha=.19;ctx.stroke();
+        ctx.globalAlpha=.9;ctx.lineWidth=low?2:4;
+        ctx.beginPath();ctx.moveTo(e.x+sx*55,e.y+sy*55);
+        ctx.lineTo(e.x+ax*360+sx*55,e.y+ay*360+sy*55);
+        ctx.moveTo(e.x-sx*55,e.y-sy*55);
+        ctx.lineTo(e.x+ax*360-sx*55,e.y+ay*360-sy*55);
+        ctx.stroke();
+        mark(x,y,40);
+      }else if(s.stage==="huntRush"){
+        ctx.setLineDash([]);
+        ctx.lineWidth=low?8:18;
+        ctx.globalAlpha=.4;
+        ctx.beginPath();ctx.moveTo(e.x-ax*110,e.y-ay*110);
+        ctx.lineTo(e.x,e.y);ctx.stroke();
+      }
+    }else if(s.mode==="pincer"){
+      if(s.stage==="pincerTell"){
+        for(const echo of s.echoes){
+          ctx.save();ctx.setLineDash([]);
+          ctx.globalAlpha=.38;
+          ctx.fillStyle="#8e55bf";
+          ctx.beginPath();ctx.arc(echo.x,echo.y,24,0,TAU);ctx.fill();
+          ctx.restore();
+          ctx.beginPath();ctx.moveTo(echo.x,echo.y);ctx.lineTo(x,y);ctx.stroke();
+        }
+        ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
+        mark(x,y,65);
+      }
+    }else{
+      if(s.stage==="ultimateIntro"){
+        ctx.lineWidth=8;ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(e.x,e.y,90+(s.until-t)*115,0,TAU);ctx.stroke();
+      }else if(s.stage==="ultimateTell"){
+        mark(x,y,91);
+        const side=s.round%2?1:-1;
+        mark(x+sx*side*155+ax*80,y+sy*side*155+ay*80,74);
+        ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
+      }else if(s.stage==="ultimateFinalTell"){
+        for(const side of [-1,0,1])mark(x+sx*side*150,y+sy*side*150,94);
+        ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
+      }else{
+        ctx.lineWidth=4;ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(x,y,100+Math.sin(t*9)*20,0,TAU);ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  window.drawBeauBackdrop=backdrop;
+  window.drawBeauTelegraph=telegraph;
   window.initializeBeauEncounter=initialize;
   window.updateBeauEncounter=tick;
   window.forceBeauEncounter=force;
