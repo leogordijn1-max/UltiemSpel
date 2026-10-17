@@ -75,6 +75,14 @@
     ctx.strokeStyle = entry.color;
     ctx.lineWidth = quality === "low" ? 1.6 : 2.3;
     ctx.globalAlpha = .52;
+    // One cheap ring on low quality, even with hundreds of visible enemies.
+    if (quality === "low") {
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
     if (quality === "high") {
       ctx.shadowColor = entry.color;
       ctx.shadowBlur = 9;
