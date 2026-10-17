@@ -611,9 +611,10 @@ function spawnBoss() {
   const a = rand(0, Math.PI * 2),
     radius = Math.hypot(W, H) * 0.65 + 90;
   const tier = currentEndlessTier();
-  const hp =
+  const baseHp =
     (800 + bossNumber * 210 + growthTime * 0.4) *
     1.18 * profile.bossHealth * (1 + tier * 0.18);
+  const hp = window.bossCombatMaxHealth?.(baseHp, {index:bossNumber}) ?? baseHp;
   boss = {
     x: player.x + Math.cos(a) * radius,
     y: player.y + Math.sin(a) * radius,
