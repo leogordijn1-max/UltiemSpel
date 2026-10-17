@@ -209,9 +209,22 @@
   }
   function forceSignature() {
     if (!available() || !boss) return;
+    if (boss.variant === 0 && !boss.isFinalBoss) {
+      forceBeau("hunt");
+      return;
+    }
     boss.specialNextAt = time;
-    // An existing windup or dash finishes before the special starts.
     notify("DEV · SIGNATURE ATTACK READY", "boss", 2);
+    updateHud();
+  }
+  function forceBeau(mode) {
+    if (!available() || !boss || boss.variant !== 0 || boss.isFinalBoss) return;
+    if (mode === "ultimate") {
+      if (boss.beauFight) boss.beauFight.ultimateUsed = false;
+      forceBossPhaseThree();
+    } else if (!boss.phaseTwo) forceBossPhaseTwo();
+    if (window.forceBeauEncounter?.(boss, mode, time))
+      notify("DEV · BEAU " + mode.toUpperCase() + " READY", "boss", 2);
     updateHud();
   }
   function triggerGuardianWarning() {
@@ -349,7 +362,11 @@
     addButton(s, "FORCE BOSS PHASE II", forceBossPhaseTwo, !boss);
     addButton(s, "FORCE BOSS PHASE III", forceBossPhaseThree, !boss);
     addButton(s, "TRIGGER SIGNATURE ATTACK", forceSignature, !boss);
-    addButton(s, "TRIGGER GUARDIAN POWER", triggerGuardianWarning, !boss);
+    const isBeau = !!boss && boss.variant === 0 && !boss.isFinalBoss;
+    addButton(s, "BEAU · HUNTING GROUNDS", () => forceBeau("hunt"), !isBeau);
+    addButton(s, "BEAU · PINCER AMBUSH", () => forceBeau("pincer"), !isBeau);
+    addButton(s, "BEAU · THE FINAL HUNT", () => forceBeau("ultimate"), !isBeau);
+    addButton(s, "TRIGGER GUARDIAN POWER", triggerGuardianWarning, !boss || isBeau);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
 
     s = section(root, "TEST ELEMENTAL ENEMY TYPES");
