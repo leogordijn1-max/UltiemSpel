@@ -215,7 +215,7 @@
     updateHud();
   }
   function spawnTestEnemies(target) {
-    if (!available() || !player) return;
+    if (!available() || !player || boss || window.isBossIsolationActive?.()) return;
     const max = Math.min(250, Math.max(10, Math.floor(target)));
     const missing = Math.max(0, max - enemies.filter(e=>!e.dead).length);
     const kinds = [0, 1, 0, 2, 4, 0, 6, 5];
@@ -235,7 +235,8 @@
     updateHud();
   }
   function spawnEnemyVariant(world, count = 12) {
-    if (!available() || !window.enemyWorldVariants?.[world] || !player) return;
+    if (!available() || !window.enemyWorldVariants?.[world] || !player ||
+        boss || window.isBossIsolationActive?.()) return;
     const missing = Math.min(count, Math.max(0, 250 - enemies.filter(e=>!e.dead).length));
     for (let i = 0; i < missing; i++) {
       const e = enemySpawn([0,1,2,4,6,0][i % 6], false);
@@ -306,7 +307,8 @@
     root.className = "developer-content";
     const status = small("div",
       sandbox && active
-        ? "WORLD " + (window.getDominantWorld?.() || "frozen").toUpperCase() +
+        ? (boss ? "ISOLATED BOSS ARENA · " : "") +
+          "WORLD " + (window.getDominantWorld?.() || "frozen").toUpperCase() +
           " · ELEMENT " + currentLivingWorldElement().toUpperCase() +
           " · IMPACT " + (window.getWorldConquest?.().coverage || 0) + "%" +
           " · LEVEL " + level
@@ -334,13 +336,15 @@
 
     s = section(root, "TEST ELEMENTAL ENEMY TYPES");
     for (const id of ["frozen", "burning", "flooded"])
-      addButton(s, "SPAWN 12 " + id.toUpperCase(), () => spawnEnemyVariant(id));
+      addButton(s, "SPAWN 12 " + id.toUpperCase(), () => spawnEnemyVariant(id), !!boss);
     s = section(root, "ENEMY STRESS TEST · TARGET COUNT");
     for (const count of [10,50,100,250])
-      addButton(s, count + " ENEMIES", () => spawnTestEnemies(count));
+      addButton(s, count + " ENEMIES", () => spawnTestEnemies(count), !!boss);
     addButton(s, "CLEAR TEST ENEMIES", clearTestEnemies, false, true);
     root.append(small("p",
-      "Close F9 to resume the game and measure real FPS. Bottom-left overlay shows FPS, P95 frametime and engine costs.",
+      boss
+        ? "BOSS ISOLATION ACTIVE · Only the Guardian can summon minions. Defeat the boss to resume horde stress tests."
+        : "Close F9 to resume the game and measure real FPS. Bottom-left overlay shows FPS, P95 frametime and engine costs.",
       "developer-note"));
 
     s = section(root, "WORLD ENVIRONMENT · TEMPORARY");
