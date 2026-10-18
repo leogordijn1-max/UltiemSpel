@@ -5,8 +5,9 @@
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
 **Laatste afgeronde update:** 30 — Combat & Gameplay 2.0 TECHNISCHE mijlpaalreview: tien groen geauditeerde technische gates, zes open handmatige releasegates en een roadmap richting Update 40.
-**Volgende update:** 31 — Verifieerbare Normal-run-telemetrie en de eerste volledig geregistreerde menselijke speeltest. **Daarna volgens [ROADMAP-31-50.md](ROADMAP-31-50.md): 31–40 echte speelkwaliteit, 41–45 vloeiende 2.5D Visual Foundation, 46–50 Animation & VFX Lock-In.**
+**Volgende update:** 31 — run-telemetrie **technisch gebouwd** (479 tests), maar eerste echte Normal-browserrun **nog OPEN**. Daarna Update 32 XP/evolutie-economie volgens [ROADMAP-31-50.md](ROADMAP-31-50.md): 31–40 echte speelkwaliteit, 41–45 vloeiende 2.5D Visual Foundation, 46–50 Animation & VFX Lock-In.**
 **Planningvoortgang:** **20 / 20 afgerond = 100%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Update-31-handoff:** zie [RUN-TEST-31.md](RUN-TEST-31.md) en [ROADMAP-31-50.md](ROADMAP-31-50.md) voor de lokale recorder, echte browser-QA en resterende acceptatie. Het 20/20-percentage blijft alleen over Updates 11–30.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
