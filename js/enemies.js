@@ -27,12 +27,12 @@ const difficultyProfiles = {
 };
 
 const enemyCatalog = [
-  { name: "Drifter", image: "", hp: "20 + time scaling", damage: "8 + time scaling", speed: "43–63 + time scaling", ability: "Moves toward the player.", xp: "1 soul" },
-  { name: "Runner", image: "", hp: "55% of Drifter", damage: "6 + time scaling", speed: "1.85× Drifter", ability: "Fast, low-health melee attacker.", xp: "0.8 soul" },
-  { name: "Zombie Mike", image: "img/ZombieMike.png", hp: "4× Drifter", damage: "14 + time scaling", speed: "0.7× Drifter", ability: "Large tank enemy.", xp: "5 souls" },
-  { name: "Ranged Shade", image: "", hp: "Drifter base", damage: "6 + ranged orb", speed: "34–42 + time scaling", ability: "Keeps distance, warns before shooting and fires moderately homing orbs.", xp: "2 souls" },
-  { name: "Burstling", image: "", hp: "70% of Drifter", damage: "Area blast on detonation", speed: "1.25× Drifter", ability: "Stops near the player, flashes a warning circle, then explodes. Can be killed first.", xp: "1.6 souls" },
-  { name: "Bulwark", image: "", hp: "3× Drifter", damage: "11 + time scaling", speed: "0.75× Drifter", ability: "Alternates between shielded and vulnerable phases.", xp: "3 souls" },
+  { name: "Drifter", image: "", hp: "20 + time scaling", damage: "8 + time scaling", speed: "43–63 + time scaling", ability: "Persistent basic pursuer. Vulnerable to pulse damage (+15%).", xp: "1 soul" },
+  { name: "Runner", image: "", hp: "55% of Drifter", damage: "6 + time scaling", speed: "1.85× Drifter", ability: "Fast melee attacker with a lateral feint. Especially vulnerable to frost (+30%).", xp: "0.8 soul" },
+  { name: "Zombie Mike", image: "img/ZombieMike.png", hp: "4× Drifter", damage: "14 + time scaling", speed: "0.7× Drifter", ability: "Heavy tank. Winds up a seismic stomp that can be dodged. Bombs deal +25% damage.", xp: "5 souls" },
+  { name: "Ranged Shade", image: "", hp: "Drifter base", damage: "6 + ranged orb", speed: "34–42 + time scaling", ability: "Keeps distance and telegraphs tracking shots. Vulnerable at close range (+20% direct damage).", xp: "2 souls" },
+  { name: "Burstling", image: "", hp: "70% of Drifter", damage: "Area blast on detonation", speed: "1.25× Drifter", ability: "Explodes after a clear warning. Lightning deals +35% damage, making early disarms easier.", xp: "1.6 souls" },
+  { name: "Bulwark", image: "", hp: "3× Drifter", damage: "11 + time scaling", speed: "0.75× Drifter", ability: "Shield faces the player across 16 directions. Strong from the front, weaker from the sides and rear; shield drops periodically.", xp: "3 souls" },
 ];
 const bossCatalog = [
   { name: "Beau de Hond", image: "img/BeauDeHond.png", attacks: "MarioVis shotgun and targeted charge; Hunting Grounds triple rush and Pincer Ambush fish crossfire and delayed blast corridor.", phase: "Phase II unlocks signature chains. Below 33% HP, The Final Hunt darkens the arena with three hunts and a massive finale." },
