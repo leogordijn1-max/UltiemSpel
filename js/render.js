@@ -313,14 +313,26 @@ function draw() {
     // Ranged attack wind-up is aimed and locked before the projectile fires.
     if (e.kind === 4 && e.shotWarning > 0) {
       const angle = e.aimAngle ?? Math.atan2(player.y - e.y, player.x - e.x);
+      const spread=e.encounterTactic==="crossfire"
+        ? (e.tacticVolleyOffsets||[]) : [];
+      const warnProgress=1-Math.min(1,e.shotWarning/.7);
       ctx.save();
-      ctx.strokeStyle = "rgba(255, 222, 114, 0.82)";
+      ctx.strokeStyle = "rgba(255, 222, 114, 0.9)";
       ctx.lineWidth = 2.5;
       ctx.setLineDash([8, 5]);
-      ctx.beginPath();
-      ctx.moveTo(e.x, e.y);
-      ctx.lineTo(e.x + Math.cos(angle) * 240, e.y + Math.sin(angle) * 240);
-      ctx.stroke();
+      for(const offset of [0,...spread]){
+        const attackAngle=angle+offset;
+        ctx.globalAlpha=offset===0?.95:.52+.3*warnProgress;
+        ctx.beginPath();ctx.moveTo(e.x,e.y);
+        ctx.lineTo(e.x+Math.cos(attackAngle)*290,
+          e.y+Math.sin(attackAngle)*290);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      // A radial clock signals when the committed projectile fan fires.
+      ctx.globalAlpha=.9;ctx.lineWidth=3;ctx.strokeStyle="#fff4ba";
+      ctx.beginPath();ctx.arc(e.x,e.y,e.r+17,-Math.PI/2,
+        -Math.PI/2+Math.PI*2*warnProgress);ctx.stroke();
       ctx.restore();
     }
     // Burstlings always telegraph their actual explosion radius.
@@ -328,11 +340,24 @@ function draw() {
       ctx.save();
       ctx.fillStyle = "rgba(255, 88, 53, 0.11)";
       ctx.strokeStyle = "rgba(255, 145, 62, 0.92)";
-      ctx.lineWidth = 3 + (1 - e.burstWarning / 0.95) * 2;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.burstRadius || 86, 0, Math.PI * 2);
-      ctx.fill();
+      const progress=1-Math.min(1,e.burstWarning/.95);
+      const radius=e.burstRadius||86;
+      ctx.lineWidth=3+progress*2;
+      ctx.beginPath();ctx.arc(e.x,e.y,radius,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+      ctx.strokeStyle="#fff1c7";ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(e.x,e.y,radius*(.22+.78*progress),0,Math.PI*2);
       ctx.stroke();
+      if(graphicsQuality!=="low"){
+        ctx.strokeStyle="#ffb369";ctx.lineWidth=2;
+        for(let i=0;i<6;i++){
+          const a=i*Math.PI/3;
+          ctx.beginPath();ctx.moveTo(e.x+Math.cos(a)*(radius-13),
+            e.y+Math.sin(a)*(radius-13));
+          ctx.lineTo(e.x+Math.cos(a)*radius,e.y+Math.sin(a)*radius);
+          ctx.stroke();
+        }
+      }
       ctx.restore();
     }
     // Elite charges lock direction and provide enough warning to dodge.
