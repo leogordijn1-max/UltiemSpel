@@ -601,6 +601,9 @@ function damage(e, d, origin = player, damageType = "direct") {
     }
     const killedFinalBoss = e === boss && e.isFinalBoss;
     if (e === boss) {
+      window.runQaEvent?.("boss_defeated",{
+        name:e.bossName,variant:e.variant,final:!!e.isFinalBoss,
+        number:bossNumber,bossesDefeated:bossesDefeated+1},time);
       bossesDefeated++;
       if (!killedFinalBoss) window.onWorldBossDefeated?.(bossesDefeated, false);
       if (typeof awardBossLoot === "function" && typeof metaProgress !== "undefined") {
@@ -781,6 +784,8 @@ function spawnBoss() {
   playSfx("boss");
   $("bossFill").style.width = "100%";
   if (typeof notify === "function") notify(`BOSS INCOMING · ${boss.bossName} · THE HORDE RETREATS`, "boss", 4);
+  window.runQaEvent?.("boss_spawn",{name:boss.bossName,number:bossNumber,
+    variant:boss.variant,hp:boss.maxHp,final:false},time);
   return true;
 }
 
@@ -840,6 +845,8 @@ function spawnFinalBoss() {
   playSfx("boss");
   puff(boss.x, boss.y, "#f5a5ff", 35);
   notify("FINAL BOSS · THE LAST MEME · SURVIVE THE CHAOS", "boss", 5);
+  window.runQaEvent?.("boss_spawn",{name:boss.bossName,number:bossNumber,
+    variant:3,hp:boss.maxHp,final:true},time);
   return true;
 }
 
