@@ -322,8 +322,9 @@ function spawnSpecialWave(number, cap = 95) {
       const position = window.enemyOffscreenSpawn?.(waveAngle, 145, spread);
       e.x = position?.x ?? (centerX - Math.sin(waveAngle)*spread);
       e.y = position?.y ?? (centerY + Math.cos(waveAngle)*spread);
-      e.hp *= 1.45 + Math.min(.65,number*.06);
-      e.damage *= 1.12 + Math.min(.22,number*.02);
+      e.hp *= 1.75 + Math.min(.72,number*.065);
+      e.damage *= 1.22 + Math.min(.27,number*.023);
+      e.speed *= 1.13;
       e.xpValueMultiplier = 1.9;
       e.encounterRole = "patrol";
       window.assignEncounterTactic?.(e,i,tacticGroup);
