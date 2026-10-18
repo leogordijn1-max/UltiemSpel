@@ -30,7 +30,7 @@
 
 | Update | Werkpakket | Klaar wanneer / toetsbare uitkomst |
 |---|---|---|
-| **31** | **Run Telemetry & First Live Test** | Binnen de echte browser XP, levelaanbod, wapen-/supportlevels, boss/checkpoints, hits, FPS en momenten bijhouden; minstens één daadwerkelijke speeltestpoging loggen. Zonder gebruikersspeeltest expliciet OPEN laten. |
+| **31** | **Run Telemetry & First Live Test — TECHNISCH GEREED; LIVE QA OPEN** | De game bevat nu `js/run-telemetry.js` (lokale recorder, 30s checkpoints, 5s echte FPS/P95, upgrade-aanbod én gekozen optie, bossphases/kill, einde en JSON-export). **479 tests groen.** Echte Normal-browserrun nog NIET geverifieerd; zie `RUN-TEST-31.md`. Pas na werkelijk uitgelezen JSON het speeltestdeel afvinken. |
 | **32** | **XP & Evolution Economy** | Met echte rungegevens wapen L5 + support L3 bereiken bij 10:00 en 17:00; juiste upgrade-aanbiedingen en maximaal twee evoluties, geen gratis unlocks. |
 | **33** | **Beau & Mourning Shade Live Boss QA** | Echte fase-3-overlap, telegraphs, dodgeroutes, recovery en minionregels beoordelen bij 1×/2×/3×; gevonden oneerlijke combinaties herstellen. |
 | **34** | **Bell Tower & The Last Meme Live QA** | Zelfde beoordeling voor laatste twee bosses, met finale pas na 25:00 en drie echte voorgaande kills; geen onvermijdbare chained attacks. |
@@ -80,7 +80,7 @@
 ## Hoe we voortgang bijhouden
 
 - **Update 30:** 20/20 voltooide *geplande* technische/combat-updates. **Releasegates nog OPEN.**
-- **Updates 31–40:** momenteel **0/10 uitgevoerde updates**; **verified playable release niet bevestigd**.
+- **Updates 31–40:** **Update 31 is technisch geïmplementeerd (1/10 code-onderdelen)**, maar nog **0/10 volledig op live browsertests geaccepteerd**. De eerste echte Normal-run met geëxporteerd JSON staat OPEN. `RUN-TEST-31.md` legt de handmatige stappen vast. **Verified playable release niet bevestigd.**
 - **Updates 41–45:** momenteel **0/5**; de 2.5D art direction is **gekozen als doel**, de assetstijl nog **niet definitief getekend/goedgekeurd**.
 - **Updates 46–50:** momenteel **0/5**; 3D-gevoel via vloeiende, gelaagde 2D-animatie/VFX is **het doel**, niet reeds gerealiseerd.
 - Na iedere werkelijk geïmplementeerde update: GitHub commit, syntax/regressietests, waar relevant browser screenshot/video of FPS, beide projectdocumenten en deze roadmap bijwerken. **Een roadmappunt is niet voltooid doordat we erover praten.**
@@ -91,3 +91,12 @@
 Een **eventuele** Shadow Survivor 2 mag later 3D movement, ruimere arena's, cinematografische bosses en een uitgebreidere Living World krijgen. **Geen echte 3D-camera, enginewissel of 3D-sequel bouwen in Updates 31–50**. We ontwikkelen eerst een zelfstandige, sterke, herkenbare 2D-game met een bijna-3D-look, zodat een vervolg voortbouwt op een bewezen concept.
 
 **Smaak / makerbesluit:** “ik wil voor deze game echt een lijp goed vloeiende stijl, dat het bijna 3d voelt, en dan misschien later als meer een soort deel 2 van het spel 3d”. Dit is voortaan de leidende visuele richting voor alle designs, revisies en vervolgstappen.
+
+## Update 31 — technische implementatie (18 oktober 2026; LIVE PLAYTEST OPEN)
+
+- `js/run-telemetry.js` verzamelt **uitsluitend lokaal/in geheugen** gegevens van een werkelijk lopende game (geen fetch of auto-upload). Nieuwe run begint eigen rapport; Developer Mode krijgt duidelijk `sandbox:true`.
+- Registratie: 30s gameklok snapshots met levels/XP/needed/unlocked/upgrades/HP/wereld/boss, level-upaanbiedingen en gekozen upgrades, upgrade- en bossbeloningen, **de werkelijke twee evoluties**, boss spawns/phase transitions/defeats, hits, death/Victory/Endless; 5s FPS/P95/AI/collision/draw/objectmetingen uit echte realtime browserframes. Ruwe per-framebuffers en eventlijsten zijn beperkt qua geheugen.
+- Settings heeft nu **Record local run QA data** (aan, uitzetbaar); pauzemenu/Victory/Game Over/hoofdmenu leveren **DOWNLOAD QA REPORT · JSON** en **COPY QA SUMMARY**. De gebruiker deelt het bestand alleen zelf.
+- `tests/update-31-run-telemetry.test.cjs` voegde **11 specifieke tests** toe; GitHub Actions is **479/479 groen**, technische milestone-audit Update 30 blijft groen. Rapport en handmatige procedures: [RUN-TEST-31.md](RUN-TEST-31.md).
+- **Geen eerste live browserrun geclaimd.** Run 31 is daarmee **technisch gereed maar de expliciete live-acceptatie nog niet**. De zes manuele releasegates blijven OPEN. Volgende praktische stap is een Normal-run uitvoeren, JSON uploaden en vervolgens Update 32 XP-/evolutie-economie baseren op werkelijk aanbod in plaats van aannames.
+
