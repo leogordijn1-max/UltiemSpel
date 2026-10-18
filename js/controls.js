@@ -536,6 +536,20 @@ function renderRunSummaryPanel() {
     worldAfter: victoryClaimed ? window.getWorldConquest?.().invading : window.getWorldConquest?.().original,
     stats: runStats,
   });
+  // Preserve the original statistics while spelling out who won the war.
+  const report=window.worldConsequenceEndReport?.();
+  if(report){
+    const section=document.createElement("section");
+    section.className="world-consequence-report";
+    const title=document.createElement("h3");
+    title.textContent="THE WORLD REMEMBERS";
+    const detail=document.createElement("p");
+    detail.textContent=report.before+" DEFENDED AGAINST "+report.invasion+
+      " · "+report.peak+"% INVADED · "+report.outcome+
+      " · FINAL WORLD: "+report.after;
+    section.append(title,detail);
+    holder.append(section);
+  }
   panelNode.insertBefore(holder, choicesNode);
 }
 
