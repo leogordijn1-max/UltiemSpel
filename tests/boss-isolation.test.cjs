@@ -120,7 +120,7 @@ test("regular and final bosses both enter isolation before constructing entity",
   assert.match(enemiesSource, /function spawnBoss\(\) \{[\s\S]*?return false;\s*window\.beginBossIsolation\?\.\(\);/);
   assert.match(enemiesSource, /function spawnFinalBoss\(\) \{\s*if \(boss\) return false;[\s\S]*?bossFlowCanFinale[\s\S]*?window\.beginBossIsolation\?\.\(\);/);
   assert.match(enemiesSource, /window\.finishBossIsolation\?\.\(e\);\s*boss = null;/);
-  assert.match(gameSource, /function reset\(\) \{\s*window\.resetBossIsolation\?\.\(\);/);
+  assert.match(gameSource, /function reset\(\) \{\s*window\.resetGuardianArenaPower\?\.\(\);\s*window\.resetBossIsolation\?\.\(\);/);
 });
 
 test("boss phase summons are the only entities explicitly created mid-encounter", () => {
