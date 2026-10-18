@@ -6,7 +6,7 @@
 >
 > **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
 
-> **ACTUELE STAND (na Update 23, 18 oktober 2026):** Update 23 is technisch afgerond en gepusht op feature/living-world-prototype. **13/20 = 65% planningsvoortgang** naar mijlpaal 30. **402/402 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39151060369. **Volgende update: 24 — Living World-terreinreacties en gevolgen duidelijker merkbaar maken.** Browserplaytests en volledige Normal-runs staan nog open. Verifieer de actuele HEAD en CI voordat je verder bouwt.
+> **ACTUELE STAND (na Update 24, 18 oktober 2026):** Update 24 is technisch afgerond en gepusht op feature/living-world-prototype. **14/20 = 70% planningsvoortgang** naar mijlpaal 30. **412/412 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39154500366. **Volgende update: 25 — boss-flow, arena-isolatie en beloningen.** Browserplaytests en volledige Normal-runs staan nog open. Verifieer de actuele HEAD en CI voordat je verder bouwt.
 
 ## 1. De ziel van de game — lees dit vóór de code
 
@@ -101,12 +101,12 @@ Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De
 
 We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
 
-**Actuele afgesproken roadmap (na Update 23):**
+**Actuele afgesproken roadmap (na Update 24):**
 - **20 — AFGEROND (CI groen, browser-VFX-test nog open):** Eigen visuele accenten voor de negen huidige elementwapens, met render-culling en kwaliteitslimieten.
 - **21 — AFGEROND (CI groen, browser-test open):** Drie kleine, echte same-element cross-weapon combo's met een begrensde bonus en overzichtelijke evolutiepaden op upgrade-/supportkaarten.
 - **22 — AFGEROND (CI groen, speeltest open):** Difficulty komt uit taktische teamstatistieken en nog leesbare timings, niet extra Nightmare-vijanden. Flame Orbit en Frost-slow tegen bosses begrensd.
 - **23 — AFGEROND (CI groen, browsertest open):** Permanente rifts tonen duidelijke aanvallen, herhaalde oplaadwaarschuwingen van 0,95s, zichtbare veilige tussenfases, ook op Low graphics, en ontstaan zonder onderlinge overlap.
-- **24:** Living World-terreinreacties en consequente gevolgen.
+- **24 — AFGEROND (CI groen, browsertest open):** Zes rivaliserende world fronts, duidelijke veroveringsstatus en uitkomst in HUD en resultscherm, kleine tactische terreinconsequenties voor native defenders op invaded ground. Alleen final victory verandert de opgeslagen dominante wereld.
 - **25:** Boss-volgorde, isolatie, beloningen en flow.
 - **26:** Boss attacks — moeilijkheid, timings, spectaculariteit.
 - **27:** HUD en combat-UI: leesbaarheid.
@@ -116,7 +116,7 @@ We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eers
 
 Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
 
-**Laatste stand:** Update 19 verbeterde de echte elementwapens; Update 20 legde hun cosmetische VFX-basis; Update 21 bracht kleine, verdiende same-element combo's en heldere evolutieroutes; Update 22 verschoof difficulty van horde-/HP-spam naar leesbare tactische dreiging. **Makerbesluit over VFX: effecten hoeven nu te bestaan, niet volledig gepolijst te zijn; definitieve art komt later.** **Update 23** is technisch afgerond: Living World-rifts waarschuwen vóór **iedere** herhaalde uitbarsting, tonen visueel het verschil tussen actieve, oplaad- en rustfases, ook op Low graphics. Nieuwe rifts zoeken een niet-overlappende plek; tot 24 permanente zones blijven mogelijk. Boss-isolatie bevriest de hazardtimer. **402 tests groen**; nog te bewijzen in browser: leesbaarheid bij 2×/3× speed, Low graphics, drukke gevechten en echt navigeren tussen rifts. **Volgende: Update 24 — Living World-gevolgen.**
+**Laatste stand:** Update 19 verbeterde de echte elementwapens, Update 20 bouwde hun cosmetische VFX-basis, Update 21 bracht drie kleine, earned same-element combo's en helder evolutieprogress, Update 22 maakte difficulty tactischer zonder horde-spam, en Update 23 zorgde voor leesbare, eerlijk herhaalde terrain-hazardwarnings zonder overlaps. **Update 24 is nu technisch afgerond**: alle zes invader/defender combinaties kregen eigen driefasige frontnamen; de HUD toont live het conflict, aantal hazards/squads en native/invaded ground. Oorspronkelijke verdedigers bewegen op conquered ground licht trager (6%/9%/12%), niet buiten hun eigen world/front en nooit voor bosses/summons. In de eindrapportage verschijnt verdiende piek-invasie en of de wereld definitief is veroverd of hersteld. Alleen winst op The Last Meme persistente world conquest. **412 tests groen.** De maker wil VFX voorlopig alleen als basis, niet volledig gepolijst. Echte browser-/full-runvalidatie blijft open. **Volgende: Update 25 boss-flow/arena-isolatie/beloningen.**
 
 ## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
 
@@ -147,6 +147,19 @@ Praktisch werken we zo:
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Update 24: Living World Consequences technisch afgerond**
+- Branch: feature/living-world-prototype. Nieuwe **js/world-consequences.js** (leesbare gevolgen, geen bron van waarheid voor saved world), geïntegreerd in **js/world-state.js**, **js/game.js**, **js/controls.js**, **index.html** en **styles.css**. Tests: tests/update-24-world-consequences.test.cjs (10 nieuwe).
+- Zes ordered invasies kregen elk **drie eigen worldfrontnamen** bij de earned boss thresholds van 15%, 50%, 85%. Bestaande 18 elemental reactions, max. 24 blijvende hazard zones en alle bestaande defenders/faction-affiniteiten blijven.
+- De HUD toont verdedigende versus invader wereld, territory percentage en front, hoeveel rifts en squads er zijn en het element van de grond waar de speler staat. De status wordt beperkt geüpdatet (één keer per 0,4 game-seconde), niet op elke frame.
+- **Nieuwe tactische consequentie, begrensd**: reguliere levende verdedigers met de native-world affinity krijgen op echt veroverde terreinpatches in drie fases speed multipliers 0,94/0,91/0,88. Native terrain behoudt de oorspronkelijke affinityvoordelen. Bosses, summons, dead, foreign affinity, zelfde invader/original en herstelde/world-conquered runs uitgesloten. Geen passive damage of extra vijanden.
+- Na echte Beau, Shade en Bell Tower overwinningen verschijnt één gededupliceerde **THE WORLD FIGHTS BACK**-melding met de unieke frontnaam. De originele bossstage- en conquestregel blijft ongewijzigd; geen gratis opmars.
+- **THE WORLD REMEMBERS** in Victory/Game-Over panel noemt originele world, invader, hoogste earned percentage en of world saved / reclaimed is. Verliezen schrijft niet naar local saved dominant world. Finale winst verandert deze wereld wél. De resultssummary telt verdiende bossstages ook als de 1,9 s cosmetische overgang nog niet voltooid is (fix in `restorationPeak`).
+- Bewijs: GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39154500366 — **412/412 tests geslaagd, 0 gefaald**. Niet doen alsof een echte complete 25–30 min browser-run automatisch bewezen is.
+- Mijlpaal: **14/20 = 70% van de geplande updates**, niet een kwaliteitsscore.
+- Open QA: duel Fire/Water/Frost tegenover elk van de andere werelden, 15/50/85% overgang, native/invader patches vergelijken, Game-Over versus Final-Victory resultaat, readability van HUD op klein scherm en daadwerkelijk speelgevoel na >15 min.
+- **Volgende: Update 25 — boss-flow/arena-isolatie/beloningen** en vervolgens Update 26 voor extreem spectaculaire, maar leerbare boss-signature-aanvallen. Bosses moeten vooral géén gewone vijanden in hun soloarena krijgen tenzij de boss zelf minions summon.
+- **Makerafspraak**: VFX-polish hoeft nu nog niet perfect te zijn; geef prioriteit aan complete, begrijpelijke, uitdagende gameplay.
 
 **18-10-2026 — Update 23: Terrain Hazards Overhaul technisch afgerond**
 - Branch: feature/living-world-prototype. In js/world-retaliation.js krijgen alle zes elementparen op elk van drie conqueststadia een expliciete hazardfase. De reacties zelf (18), fases 15%/50%/85% en permanente rifts blijven ongewijzigd.
