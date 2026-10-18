@@ -479,7 +479,25 @@ function damage(e, d, origin = player, damageType = "direct") {
   if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
     recordDamage(runStats, effectiveDamage, damageType, origin, critical);
   }
-  e.hit = 0.12;
+  e.hit = critical ? .2 : e.hp <= 0 ? .18 : .12;
+  const hitVisible=typeof W==="undefined"||typeof H==="undefined"||
+    typeof player==="undefined"||!player ||
+    (Math.abs(e.x-player.x)<W/2+65 && Math.abs(e.y-player.y)<H/2+65);
+  const hitNear=typeof player==="undefined"||!player||
+    Math.hypot(e.x-player.x,e.y-player.y)<Math.min(
+      typeof W==="number"?W*.42:500,typeof H==="number"?H*.65:500);
+  const directImpact=!["burn","poison","damage-over-time"].includes(damageType);
+  const impactFeedback=typeof window!=="undefined"
+    ? window.recordEnemyHitFeedback?.({
+        x:e.x,y:e.y,radius:e.r||16,damage:effectiveDamage,
+        critical,killed:e.hp<=0,boss:e===boss,
+        direct:directImpact,visible:hitVisible,nearby:hitNear,
+        directionX:e.x-(origin?.x??e.x-1),
+        directionY:e.y-(origin?.y??e.y),
+        targetKey:e,now:typeof time==="number"?time:0
+      }) : null;
+  if(typeof shake!=="undefined" && impactFeedback?.camera)
+    shake=Math.max(shake,impactFeedback.camera);
 
   // Tanks and bosses resist knockback; regular enemies are easier to push away.
   const knockbackX = e.x - origin.x;
@@ -502,14 +520,16 @@ function damage(e, d, origin = player, damageType = "direct") {
   if (texts.length >= 240) texts.shift();
   texts.push({
     x: e.x,
-    y: e.y - 15,
+    y: e.y - (critical ? 23 : 15),
     n: Math.ceil(finalDamage),
-    life: 0.65,
+    life: critical ? .86 : .65,
     color: critical ? "#ffe17d" : "#fff1ba",
+    critical,
+    heavy: effectiveDamage>=28,
   });
   if (critical) puff(e.x, e.y, "#ffe17d", 5);
   if (e.hp <= 0) playSfx(e === boss ? "boss" : "kill");
-  else playSfx("hit");
+  else playSfx(impactFeedback?.sound || "hit");
   if (e.hp <= 0) {
     // Keep one terrain trail per heavy/elite death, never for bosses or summons.
     window.enemyWorldOnDeath?.(e);
