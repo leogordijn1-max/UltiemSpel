@@ -134,7 +134,10 @@ function castFlameBurst() {
       const combo=window.triggerElementalSynergy?.(
         enemy,"fire","flame",damageValue,time,enemy===boss) || {damage:damageValue,activated:false};
       damage(enemy, combo.damage, player, "flame");
-      if(combo.activated)window.emitWeaponVfxImpact?.("flame",enemy.x,enemy.y,time);
+      if(combo.activated){
+        window.emitWeaponVfxImpact?.("flame",enemy.x,enemy.y,time);
+        window.showElementalCombo?.(enemy,combo,time);
+      }
       if (!enemy.dead) {
         enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + burnDuration + (combo.bonusBurn || 0));
         enemy.burnWeapon = "flame";
