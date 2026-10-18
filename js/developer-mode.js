@@ -430,6 +430,22 @@
     s = section(root, "TEST ELEMENTAL ENEMY TYPES");
     for (const id of ["frozen", "burning", "flooded"])
       addButton(s, "SPAWN 12 " + id.toUpperCase(), () => spawnEnemyVariant(id), !!boss);
+    s = section(root, "ENCOUNTER PACING · SMALL PACKS VS SWARM");
+    addButton(s, "SPAWN TOUGH PATROL", () => {
+      if(boss || window.isBossIsolationActive?.())return;
+      const spawned=window.spawnEncounterPatrol?.(time,growthTime,player,enemies,
+        kind=>enemySpawn(kind),difficulty) || 0;
+      rebuildEnemyGrid();
+      notify("DEV · HARD PATROL · " + spawned + " UNITS", "wave", 2.5);
+      updateHud();
+    }, !!boss);
+    addButton(s, "SPAWN WEAK SWARM", () => {
+      if(boss || window.isBossIsolationActive?.())return;
+      const wave=spawnSpecialWave(4,95);
+      rebuildEnemyGrid();
+      notify("DEV · SMALL-ENEMY SWARM · " + wave.spawned + " UNITS", "wave", 2.5);
+      updateHud();
+    }, !!boss);
     s = section(root, "ENEMY STRESS TEST · TARGET COUNT");
     for (const count of [10,50,100,250])
       addButton(s, count + " ENEMIES", () => spawnTestEnemies(count), !!boss);
