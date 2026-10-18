@@ -8,14 +8,18 @@ const COLORS={vanguard:"#87d8fa",binder:"#a8a6ff",pouncer:"#ffad68",
   volatile:"#ffad57"};
 let groupSequence=0;
 function reset(){groupSequence=0;}
-function assign(e,position=0,groupId=null){
+const validRoles={0:["vanguard","binder"],1:["skirmisher","pouncer"],
+  2:["crusher"],4:["crossfire"],5:["volatile"],6:["ward"]};
+function assign(e,position=0,groupId=null,requestedRole=null){
   if(!e||e.kind===3||e.summoned)return e;
-  const role=e.kind===0?(position%3===0?"vanguard":"binder")
+  const roles=validRoles[e.kind];
+  if(!roles)return e;
+  const role=roles.includes(requestedRole)?requestedRole:
+    e.kind===0?(position%3===0?"vanguard":"binder")
     :e.kind===1?(position%2===0?"skirmisher":"pouncer")
-    :e.kind===2?"crusher":e.kind===4?"crossfire"
-    :e.kind===5?"volatile":e.kind===6?"ward":null;
-  if(!role)return e;
+    :roles[0];
   e.encounterTactic=role;
+  e.encounterSlot=position;
   e.encounterGroup=groupId||("pack-"+(++groupSequence));
   e.tacticCooldown=1.6+(position%3)*.7;
   e.tacticWarning=0;e.tacticDashTime=0;
@@ -23,18 +27,40 @@ function assign(e,position=0,groupId=null){
   return e;
 }
 function groupId(){return "pack-"+(++groupSequence);}
+function linkTeam(members){
+  if(!Array.isArray(members))return 0;
+  // Only a handful of squad members; avoid searching every enemy each frame.
+  const team=members.filter(e=>e?.encounterTactic&&!e.dead);
+  for(const e of team)e.encounterPartners=team;
+  return team.length;
+}
+function syncTactics(e,now){
+  if(e.encounterTactic!=="pouncer"||!Array.isArray(e.encounterPartners))return;
+  for(const ally of e.encounterPartners){
+    if(ally===e||ally.dead||ally.hp<=0||ally.encounterTactic!=="binder")continue;
+    if(ally.tacticWarning>0)e.tacticCooldown=Math.min(e.tacticCooldown||0,.45);
+    // One quick charge after a real slowing pulse, never repeat on the same pulse.
+    if(Number.isFinite(ally.tacticPulseAt)&&now-ally.tacticPulseAt<1.6&&
+        ally.tacticPulseAt!==e.tacticLastBoostAt){
+      e.tacticCooldown=0;
+      e.tacticComboBoostUntil=now+1.4;
+      e.tacticLastBoostAt=ally.tacticPulseAt;
+    }
+  }
+}
 function tick(e,dt,player,now,visible,hooks={}){
   if(!e?.encounterTactic||e.dead||!player||!visible||!Number.isFinite(dt)||dt<=0)return null;
   const role=e.encounterTactic;
+  syncTactics(e,now);
   const dx=player.x-e.x,dy=player.y-e.y;
   const distance=Math.hypot(dx,dy)||1;
   if(role==="skirmisher"&&distance>130&&distance<610){
     // Skirmishers circle instead of stacking behind the player's movement.
-    return {angle:Math.atan2(dy,dx)+(e.encounterGroup?.length%2? .58:-.58),speedMult:1.32};
+    return {angle:Math.atan2(dy,dx)+(e.encounterSlot%2? .70:-.70),speedMult:1.32};
   }
   if(role==="pouncer"&&e.tacticDashTime>0){
     e.tacticDashTime=Math.max(0,e.tacticDashTime-dt);
-    return {angle:e.tacticAngle||0,speedMult:4.55};
+    return {angle:e.tacticAngle||0,speedMult:e.tacticComboBoostUntil>now?5.4:4.55};
   }
   if(e.tacticWarning>0){
     e.tacticWarning=Math.max(0,e.tacticWarning-dt);
@@ -45,6 +71,7 @@ function tick(e,dt,player,now,visible,hooks={}){
       }else if(role==="crusher"){
         if(distance<e.tacticRadius+(player.r||0))hooks.damage?.(21,e);
       }else if(role==="binder"){
+        e.tacticPulseAt=now;
         if(distance<e.tacticRadius+(player.r||0))hooks.chill?.(2.4,e);
       }
     }
@@ -76,7 +103,11 @@ function rangedVolley(e,shots,player){
   if(e?.encounterTactic!=="crossfire"||!Array.isArray(shots)||shots.length>=316)return 0;
   const aim=Number.isFinite(e.aimAngle)?e.aimAngle:Math.atan2(player.y-e.y,player.x-e.x);
   let created=0;
-  for(const offset of [-.38,-.14,.14,.38]){
+  const crusherWarning=e.encounterPartners?.some(ally=>
+    ally!==e&&!ally.dead&&ally.hp>0&&
+    ally.encounterTactic==="crusher"&&ally.tacticWarning>0);
+  // The Crusher occupies the center; crossfire cuts off wide escape angles.
+  for(const offset of (crusherWarning?[-.57,-.29,.29,.57]:[-.38,-.14,.14,.38])){
     shots.push({type:"enemyOrb",x:e.x,y:e.y,vx:Math.cos(aim+offset)*188,
       vy:Math.sin(aim+offset)*188,speed:188,turnRate:.12,
       life:3.8,r:6,damage:6,tacticShot:true});
@@ -115,6 +146,14 @@ function draw(e,ctx,time,quality){
       ctx.beginPath();ctx.arc(e.x,e.y,e.tacticRadius*(1-ratio*.68),0,TAU);ctx.stroke();
     }
   }
+  if(e.encounterTactic==="binder"&&e.tacticWarning>0&&quality!=="low"){
+    const partners=e.encounterPartners?.filter(ally=>
+      ally!==e&&!ally.dead&&ally.hp>0&&ally.encounterTactic==="pouncer")||[];
+    for(const ally of partners.slice(0,2)){
+      ctx.globalAlpha=.27;ctx.lineWidth=1.7;ctx.beginPath();
+      ctx.moveTo(e.x,e.y);ctx.lineTo(ally.x,ally.y);ctx.stroke();
+    }
+  }
   if(e.tacticDashTime>0&&quality!=="low"){
     ctx.globalAlpha=.45;ctx.lineWidth=5;ctx.beginPath();
     ctx.moveTo(e.x-Math.cos(e.tacticAngle)*40,e.y-Math.sin(e.tacticAngle)*40);
@@ -125,6 +164,7 @@ function draw(e,ctx,time,quality){
 window.resetEncounterTactics=reset;
 window.newEncounterTacticGroup=groupId;
 window.assignEncounterTactic=assign;
+window.linkEncounterTacticTeam=linkTeam;
 window.updateEncounterTactic=tick;
 window.encounterTacticDamageMultiplier=damageMultiplier;
 window.encounterTacticVolley=rangedVolley;
