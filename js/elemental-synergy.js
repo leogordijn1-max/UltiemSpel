@@ -34,6 +34,18 @@
     if (!enemy || enemy.dead || !groups[element]?.includes(weapon) || !Number.isFinite(now)) return;
     enemy.elementalComboMark = { element, weapon, until: now + markLife, hitAt: now };
   }
+  let nextCalloutAt = 0;
+  function callout(enemy, combo, now) {
+    if (!combo?.activated || !Number.isFinite(now) || now < nextCalloutAt ||
+        typeof texts === "undefined" || !Array.isArray(texts) || texts.length >= 140) return false;
+    nextCalloutAt = now + .65; // One brief callout at most per 0.65 game seconds.
+    const colors = {fire:"#ffb878",water:"#94e8ff",frost:"#d5f9ff"};
+    texts.push({x:enemy.x,y:enemy.y-22,n:combo.name,life:.75,
+      color:colors[combo.element] || "#ffffff",heavy:true});
+    return true;
+  }
+  window.showElementalCombo = callout;
+  window.resetElementalComboFeedback = () => { nextCalloutAt = 0; };
   window.triggerElementalSynergy = trigger;
   window.markElementalSynergy = mark;
   window.elementalSynergyNames = names;
