@@ -413,6 +413,7 @@ function hud() {
   const finalApproaching =
     runMode === "standard" &&
     !finalBossDefeated &&
+    bossesDefeated >= STANDARD_BOSS_COUNT &&
     time >= FINAL_BOSS_TIME - 60;
   const countdown = finalApproaching
     ? Math.max(0, FINAL_BOSS_TIME - time)
@@ -697,17 +698,13 @@ function update(dt) {
     player.hp = Math.min(player.maxHp, player.hp + upgrades.health * 0.8 * dt);
     if (runStats) runStats.healing += Math.max(0, player.hp - beforeHeal);
   }
-  // Final boss takes priority over the ordinary boss schedule at the 25-minute mark.
-  // If another boss is already alive, the final encounter starts after that fight.
-  if (
-    !boss &&
-    runMode === "standard" &&
-    !finalBossDefeated &&
-    time >= FINAL_BOSS_TIME
-  ) {
-    spawnFinalBoss();
-  } else if (!boss && time >= nextBossTime) {
-    spawnBoss();
+  // Standard Mode has exactly three guardians; the fourth boss is the finale.
+  // Completing Bell before 25:00 preserves time for weapon evolutions.
+  if(!boss){
+    const encounter=nextBossEncounter(
+      runMode,bossesDefeated,time,nextBossTime,finalBossDefeated);
+    if(encounter==="final")spawnFinalBoss();
+    else if(encounter==="ordinary")spawnBoss();
   }
   if (window.developerInvincible?.()) {
     // Reapply before all collision checks; the normal damage logic remains untouched.
