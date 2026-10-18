@@ -119,7 +119,7 @@ function behavior(e,player,now){
 }
 function guarding(e){
   const s=getSquad(e);
-  if(!s||!alive(e)||e.defenseRole==="defender"||e.defenseRole==="commander")return false;
+  if(!s||!alive(e)||e.defenseRole==="defender")return false;
   return s.members.some(other=>alive(other)&&other.defenseRole==="defender"&&
     dist2(e,other)<130*130);
 }
