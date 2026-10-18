@@ -143,3 +143,21 @@ test("real game wiring covers flame, frost burst, elemental shots and whirlpool"
   assert.match(game,/window\.triggerElementalSynergy\?\.\(e,"frost","frost"/);
   assert.doesNotMatch(read("js/elemental-synergy.js"),/Math\.random/);
 });
+
+test("earned combo labels appear briefly without clutter and reset on a fresh run",()=>{
+  const window={},texts=[];
+  const ctx=vm.createContext({window,texts,Math,Number,Set});
+  vm.runInContext(read("js/elemental-synergy.js"),ctx);
+  const target={x:20,y:30};
+  window.triggerElementalSynergy(target,"fire","flame",50,1);
+  const proc=window.triggerElementalSynergy(target,"fire","fireball",50,1.1);
+  assert.equal(window.showElementalCombo(target,proc,1.1),true);
+  assert.equal(texts.length,1);
+  assert.equal(texts[0].n,"IGNITION");
+  assert.equal(texts[0].color,"#ffb878");
+  assert.equal(window.showElementalCombo(target,proc,1.2),false);
+  assert.equal(texts.length,1);
+  window.resetElementalComboFeedback();
+  assert.equal(window.showElementalCombo(target,proc,1.2),true);
+  assert.equal(texts.length,2);
+});
