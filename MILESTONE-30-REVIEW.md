@@ -89,6 +89,10 @@ De audit wordt **bij iedere push** op deze branch uitgevoerd. Lokale opdracht: `
 
 **Nieuw makerbesluit:** de eerste Shadow Survivor blijft 2D top-down met een **vloeiende stylized 2.5D-look, bijna 3D-gevoel, geen pixelart**. Een mogelijke latere sequel mag werkelijk 3D worden. De concrete art direction, contactschaduwen, volume, character/enemy/boss-redesign en Living World-diepte staan gepland voor **41–45**; animaties, negen weapon-VFX, evoluties en grote boss-setpieces voor **46–50**. **[ROADMAP-31-50.md](ROADMAP-31-50.md)** is nu het officiële vervolgplan. Het besluit maakt NO-GO-manuele gameplaychecks 31–40 niet automatisch PASS en verandert de voltooide teller 11–30 niet.
 
+### Status Update 31 (technisch gereed, live check open)
+
+Update 31 heeft een echte **browser-runtime QA-recorder** toegevoegd met 30s voortgangscheckpoints, echt upgrade-aanbod/keuzes, bossfasen, XP, damage, 5s FPS/P95 en lokale optionele download. Hij kan ook de overgang Standard Victory → Endless in één verslag bewaren en markeert Developer sandbox apart. **479/479 tests groen**, maar de eerste live 25–30min run is **nog niet aantoonbaar uitgevoerd**. Zie **[RUN-TEST-31.md](RUN-TEST-31.md)** en de actuele [ROADMAP-31-50.md](ROADMAP-31-50.md). **M1–M6 blijven OPEN**; geen releasebeslissing zonder echte JSON en spelerfeedback.
+
 ## 6. Hoe we deze review blijven bijwerken
 
 - De enige bron van spelwaarheid blijft de **werkelijke code op GitHub**. De CI is bewijs voor automatische checks.
