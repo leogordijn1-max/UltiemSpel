@@ -100,9 +100,9 @@
   function onWorldBossDefeated(count, isFinal) {
     if (!runActive || conquered || restored ||
         (typeof runMode !== "undefined" && runMode !== "standard") || isFinal) return false;
-    if (count !== 1 && count !== 2) return false;
-    changeCoverage(count === 1 ? 15 : 50, 1900);
-    const percent = count === 1 ? 15 : 50;
+    if (count !== 1 && count !== 2 && count !== 3) return false;
+    const percent = count === 1 ? 15 : count === 2 ? 50 : 85;
+    changeCoverage(percent, 1900);
     if (typeof notify === "function") {
       notify("WORLD BARRIER SHATTERED · " + percent + "% " +
         getInvadingWorld().toUpperCase(), "boss", 5);
