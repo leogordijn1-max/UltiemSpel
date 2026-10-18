@@ -452,7 +452,7 @@ function damage(e, d, origin = player, damageType = "direct") {
         value:
           soulValue *
           (difficultyProfiles[difficulty] || difficultyProfiles.normal).xpReward *
-          (e.elite ? 2.5 : 1),
+          (e.elite ? 2.5 : 1) * (e.xpValueMultiplier || 1),
       });
     }
     const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
