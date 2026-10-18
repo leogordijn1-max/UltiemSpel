@@ -126,12 +126,29 @@
     if (!state.running) return false;
     return createReaction(player,conquestTier());
   }
-  function erupting(r) {
-    if (!r.burst) return true;
-    if (r.elapsed < r.warning) return false;
-    const cycle=(r.elapsed-r.warning) % 3.8;
-    return cycle < 1.05;
+  // Every repeating eruption has a new, fully visible telegraph. Time values
+  // are measured in simulation seconds so 1x/2x/3x behave consistently.
+  const BURST_CYCLE = 3.8;
+  const BURST_ACTIVE = 1.05;
+  const REARM_WARNING = 0.95;
+  function phaseOf(r) {
+    if (r.elapsed < r.warning) return {
+      phase: "forming", progress: Math.max(0, Math.min(1,r.elapsed/r.warning)),
+      remaining: r.warning-r.elapsed, dangerous: false
+    };
+    if (!r.burst) return {phase:"active",progress:1,remaining:0,dangerous:true};
+    const offset = (r.elapsed-r.warning) % BURST_CYCLE;
+    if (offset < BURST_ACTIVE) return {
+      phase:"active",progress:offset/BURST_ACTIVE,
+      remaining:BURST_ACTIVE-offset,dangerous:true
+    };
+    const untilNext=BURST_CYCLE-offset;
+    return untilNext <= REARM_WARNING
+      ? {phase:"charging",progress:1-untilNext/REARM_WARNING,
+          remaining:untilNext,dangerous:false}
+      : {phase:"recovering",progress:0,remaining:untilNext,dangerous:false};
   }
+  function erupting(r) { return phaseOf(r).dangerous; }
   function tick(dt,player,hooks={}) {
     if (!state.running || !Number.isFinite(dt) || dt<=0 || hooks.suspended) return;
     for (const r of state.rifts) {
@@ -154,24 +171,49 @@
       r.lastHit = r.elapsed;
     }
   }
-  function draw(ctx,time,quality) {
-    if (!state.running) return;
+  function draw(ctx,time,quality,view=null) {
+    if (!state.running || !ctx) return;
     ctx.save();
     for (const r of state.rifts) {
-      const active = r.elapsed>=r.warning, pulse=erupting(r);
-      const phase=active?1:Math.max(0,r.elapsed/r.warning);
-      const alpha=active?(r.burst?(pulse?.34:.12):.25):.07;
-      ctx.beginPath();ctx.arc(r.x,r.y,r.radius,0,TAU);
-      ctx.fillStyle=r.fill;ctx.globalAlpha=alpha/.28;ctx.fill();
-      ctx.globalAlpha=1;ctx.lineWidth=active?4:3;ctx.strokeStyle=r.color;
-      if(r.burst && active && !pulse)ctx.setLineDash([11,9]);
-      ctx.stroke();ctx.setLineDash([]);
-      if(!active){
-        ctx.beginPath();ctx.arc(r.x,r.y,Math.max(8,r.radius*(1-phase)),0,TAU);
-        ctx.strokeStyle="#f7f4e9";ctx.lineWidth=2;ctx.stroke();
-        continue;
+      // These scars persist, so avoid wasting Canvas work on distant rifts.
+      if (view && (r.x+r.radius+24<view.left || r.x-r.radius-24>view.left+view.width ||
+          r.y+r.radius+24<view.top || r.y-r.radius-24>view.top+view.height)) continue;
+      const phase=phaseOf(r),dangerous=r.effects.includes("damage");
+      const warning=phase.phase==="forming"||phase.phase==="charging";
+      const idle=phase.phase==="recovering";
+      const active=phase.phase==="active";
+      const charge=warning?phase.progress:0;
+      // A continuous damaging field is always brightly bounded. A recovering
+      // periodic vent is visibly muted/dashed, never drawn as if erupting.
+      const alpha=warning?.14+.19*charge:idle?.075:dangerous?.34:.20;
+      ctx.globalAlpha=alpha;
+      ctx.fillStyle=r.fill;
+      ctx.beginPath();ctx.arc(r.x,r.y,r.radius,0,TAU);ctx.fill();
+      ctx.globalAlpha=warning?.65+.35*charge:idle?.38:1;
+      ctx.strokeStyle=r.color;
+      ctx.lineWidth=warning?3.5:active&&dangerous?4:2.4;
+      if(idle)ctx.setLineDash([9,11]);
+      ctx.beginPath();ctx.arc(r.x,r.y,r.radius,0,TAU);ctx.stroke();
+      if(idle)ctx.setLineDash([]);
+      if(warning){
+        // The contracting ring arrives at the exact active boundary. This
+        // telegraph is present on Low too, not hidden behind graphics settings.
+        const radius=r.radius*(.98-.76*charge);
+        ctx.globalAlpha=.85;ctx.lineWidth=3;ctx.strokeStyle="#fff5d8";
+        ctx.beginPath();ctx.arc(r.x,r.y,radius,0,TAU);ctx.stroke();
+        ctx.globalAlpha=.48+.40*charge;
+        ctx.beginPath();ctx.arc(r.x,r.y,r.radius*.73,0,TAU);ctx.stroke();
+      } else if(active && dangerous){
+        // Small inner target identifies a damaging floor zone even without glow.
+        ctx.globalAlpha=.75;ctx.lineWidth=2;ctx.strokeStyle="#fff0cc";
+        ctx.beginPath();ctx.arc(r.x,r.y,r.radius*.28,0,TAU);ctx.stroke();
+      } else if(idle) {
+        // Visually mark the floor as temporarily safe while it recharges.
+        ctx.globalAlpha=.32;ctx.lineWidth=2;ctx.strokeStyle=r.color;
+        ctx.beginPath();ctx.arc(r.x,r.y,r.radius*.20,0,TAU);ctx.stroke();
       }
-      if(quality==="low") continue;
+      if(quality==="low" || idle)continue;
+      ctx.globalAlpha=active?.65:warning?.45:.22;
       const n=r.visual==="crack"?7:r.visual==="ice"?8:6;
       for(let i=0;i<n;i++){
         const a=i*TAU/n+r.trigger*.43;
@@ -192,10 +234,10 @@
         }
         ctx.stroke();
       }
-      if(r.burst){
-        const sweep=((r.elapsed-r.warning)%3.8)/3.8;
-        ctx.beginPath();ctx.arc(r.x,r.y,r.radius*(.15+.8*sweep),0,TAU);
-        ctx.strokeStyle=r.color;ctx.lineWidth=pulse?4:1;ctx.stroke();
+      if(r.burst && active){
+        ctx.globalAlpha=.7;ctx.beginPath();
+        ctx.arc(r.x,r.y,r.radius*(.23+.65*phase.progress),0,TAU);
+        ctx.strokeStyle="#fff3cf";ctx.lineWidth=3;ctx.stroke();
       }
     }
     ctx.restore();
@@ -203,7 +245,10 @@
   function status() {
     return {kills:state.kills,threshold:state.threshold,active:state.rifts.length,
       sequence:state.sequence,tier:conquestTier(),pair:pair(),
-      lastReaction:state.lastReaction,rifts:state.rifts.map(r=>({...r,effects:r.effects.slice()}))};
+      lastReaction:state.lastReaction,rifts:state.rifts.map(r=>({
+        ...r,effects:r.effects.slice(),warningPhase:phaseOf(r).phase,
+        secondsUntilChange:phaseOf(r).remaining,currentlyDangerous:phaseOf(r).dangerous
+      }))};
   }
   window.getWorldReactionTier=conquestTier;
   window.getElementReactionCatalog=()=>REACTIONS;
@@ -211,4 +256,5 @@
   window.resetWorldRetaliation=reset;window.clearWorldRetaliation=clear;
   window.recordWorldDestruction=onKill;window.updateWorldRetaliation=tick;
   window.drawWorldRetaliation=draw;window.getWorldRetaliationStatus=status;
+  window.worldRetaliationPhase=phaseOf;
 })();
