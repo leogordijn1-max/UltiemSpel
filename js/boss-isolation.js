@@ -49,6 +49,10 @@
     window.resetWorldScars?.();
     // Avoid instantly dumping a backlog of enemies after the rewards screen.
     spawn = Math.max(spawn, 0.65);
+    // No catch-up wave should begin when the boss reward closes.
+    const floor=window.bossFlowRecoveryFloor?.(
+      typeof runMode==="string"?runMode:"standard") ?? 12;
+    waveTimer = Math.max(waveTimer, floor);
     isolated = false;
     return true;
   }
