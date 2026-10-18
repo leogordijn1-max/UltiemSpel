@@ -148,6 +148,7 @@ function reset() {
   window.resetWorldScars?.();
   window.resetWorldRetaliation?.();
   window.resetWorldDefense?.();
+  window.resetEncounterPacing?.();
   syncElementalLoadout();
   resetElementalCombat();
   for (const key in keys) keys[key] = false;
@@ -792,20 +793,24 @@ function update(dt) {
   // Boss arenas are separate encounters: NO regular spawns or catch-up
   // waves. Only the boss may create minions via its own phase mechanics.
   if (!boss && !window.isBossIsolationActive?.()) {
-    spawn -= dt;
-    const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
-    const gradualWavePressure =
-      1 +
-      Math.min(0.24, waveNumber * 0.015) +
-      Math.min(0.35, currentEndlessTier() * 0.025);
-    const interval =
-      Math.max(0.14, 1.6 - growthTime * 0.0026) /
-      (profile.spawnRate * gradualWavePressure);
-    while (spawn <= 0 && enemies.length < 300) {
-      enemySpawn();
-      spawn += interval;
+    const cap = window.encounterPopulationCap?.(growthTime,difficulty) ?? 52;
+    // Leave population headroom for tactical patrols and World Defense squads.
+    const ambientCap = Math.max(9,cap-12);
+    if (enemies.length >= ambientCap) {
+      // Never accumulate a catch-up horde while at the population limit.
+      spawn = Math.max(spawn,.4);
+    } else {
+      spawn -= dt;
+      const interval = window.encounterAmbientInterval?.(growthTime,difficulty) ?? 6;
+      while (spawn <= 0 && enemies.length < ambientCap) {
+        if (!enemySpawn()) break;
+        spawn += interval;
+      }
     }
   }
+  window.notifyEncounterPatrol = message => notify(message,"wave",2.6);
+  window.updateEncounterPacing?.(time,growthTime,player,enemies,
+    kind => enemySpawn(kind),!!boss || !!window.isBossIsolationActive?.(),difficulty);
   shot -= dt;
   if (shot <= 0) {
     fire();
