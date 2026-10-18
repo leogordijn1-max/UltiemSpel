@@ -212,3 +212,29 @@ test("element selection remains a per-run override, never alters saved preferenc
   assert.equal(t.context.startWeapon, "waterBolt");
   assert.equal(t.context.storageGet("shadowRunElement", "fire"), "fire");
 });
+
+test("deleting a sandbox boss keeps F9 actions and resumes on close", () => {
+  const t = environment();
+  t.enable();
+  t.start();
+  t.context.boss = {kind:3,hp:100,maxHp:100,variant:0};
+  t.context.damage = enemy => { enemy.dead=true; t.context.boss=null; };
+  assert.equal(t.context.window.openDeveloperPanel(), true);
+  const defeat = t.find(t.document.body,node=>node.textContent==="DEFEAT ACTIVE BOSS");
+  assert.ok(defeat);
+  assert.equal(defeat.disabled,false);
+  defeat.listeners.click();
+  assert.equal(t.context.boss,null);
+  assert.equal(t.context.gameState,"paused");
+  const nextBoss = t.find(t.document.body,node=>node.textContent==="SPAWN NORMAL BOSS");
+  assert.ok(nextBoss);
+  assert.equal(nextBoss.disabled,false);
+  t.context.window.closeDeveloperPanel();
+  assert.equal(t.context.gameState,"playing");
+  assert.equal(t.context.paused,false);
+});
+
+test("sandbox boss kills do not open the gameplay reward overlay", () => {
+  const source=fs.readFileSync(path.join(__dirname,"../js/enemies.js"),"utf8");
+  assert.match(source,/!killedFinalBoss && !window\.isDeveloperRun\?\.\(\)\) showBossReward\(\)/);
+});
