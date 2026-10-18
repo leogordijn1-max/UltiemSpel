@@ -138,7 +138,7 @@ test("lower kill rate and poor soul collection remain legitimately challenging",
 });
 test("late XP bonus rewards only strong squads, not cheap swarms",()=>{
   const w={};vm.runInNewContext(source("js/encounter-pacing.js"),{window:w,Math});
-  assert.equal(w.encounterXpMultiplier(500,"patrol"),2.8+Math.min(2,500/600*2));
+  assert.equal(w.encounterXpMultiplier(500,"patrol"),2.8+Math.min(2,500/600));
   assert.equal(w.encounterXpMultiplier(900,"swarm"),.44);
   assert.ok(w.encounterXpMultiplier(1500,"wave")>w.encounterXpMultiplier(600,"wave"));
   assert.ok(w.encounterPopulationCap(1200)<=30);
