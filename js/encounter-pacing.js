@@ -17,9 +17,12 @@
   function xpMultiplier(growthSeconds=0,source="patrol") {
     const elapsed=Math.max(0,Number(growthSeconds)||0);
     if(source==="swarm")return .44;
-    if(source==="wave")return 2.6+Math.min(1.5,elapsed/800);
-    if(source==="defense")return 2.0+Math.min(1.5,elapsed/850);
-    return 2.8+Math.min(2.0,elapsed/600);
+    // Gentle late-run compensation: a harder squad replaces several old trash
+    // spawns, but its rewards should keep the second evolution attainable.
+    const late=1+Math.min(.16,Math.max(0,elapsed-600)/900*.16);
+    if(source==="wave")return (2.6+Math.min(1.5,elapsed/800))*late;
+    if(source==="defense")return (2.0+Math.min(1.5,elapsed/850))*late;
+    return (2.8+Math.min(2.0,elapsed/600))*late;
   }
   function ambientInterval(growthSeconds = 0, difficulty = "normal") {
     const time = Math.max(0, Number(growthSeconds) || 0);
