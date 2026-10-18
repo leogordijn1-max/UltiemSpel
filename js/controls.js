@@ -26,6 +26,7 @@ function showMainMenu() {
   window.developerEndRun?.();
   window.abandonWorldRun?.();
   window.clearWorldScars?.();
+  window.clearWorldRetaliation?.();
   menuRunMode = "standard";
   active = false;
   paused = true;
