@@ -180,6 +180,8 @@ function upgradeChoiceWeight(key) {
 // Never grant free upgrades. Keep one useful build-progress choice available
 // among the three choices when a player has committed to their weapons.
 function evolutionFocusKey() {
+  if(typeof evolutions!=="undefined"&&
+    Object.values(evolutions).filter(Boolean).length>=2)return null;
   if(typeof selectedWeapons==="undefined"||!Array.isArray(selectedWeapons))return null;
   for(const key of selectedWeapons){
     if(!isWeaponUnlocked(key)||weaponIsEvolved(key))continue;
