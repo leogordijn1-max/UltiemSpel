@@ -225,6 +225,16 @@
     notify("DEV · SIGNATURE ATTACK READY", "boss", 2);
     updateHud();
   }
+  function forceMeme(mode) {
+    if (!available() || !boss?.isFinalBoss) return;
+    if (mode === "end") {
+      if (boss.memeFight) boss.memeFight.ultimateUsed = false;
+      forceBossPhaseThree();
+    } else if (mode === "orbit" && boss.finalPhase < 2) forceBossPhaseTwo();
+    if (window.forceMemeEncounter?.(boss, mode, time))
+      notify("DEV · LAST MEME " + mode.toUpperCase() + " READY", "boss", 2);
+    updateHud();
+  }
   function forceBell(mode) {
     if (!available() || !boss || boss.variant !== 2 || boss.isFinalBoss) return;
     if (mode === "peal") {
@@ -402,6 +412,10 @@
     addButton(s, "BELL · RESONANT SWEEP", () => forceBell("sweep"), !isBell);
     addButton(s, "BELL · CLOCKWORK JUDGMENT", () => forceBell("clock"), !isBell);
     addButton(s, "BELL · THE GRAND PEAL", () => forceBell("peal"), !isBell);
+    const isMeme = !!boss?.isFinalBoss;
+    addButton(s, "MEME · REALITY SCISSORS", () => forceMeme("cuts"), !isMeme);
+    addButton(s, "MEME · BROKEN ORBIT", () => forceMeme("orbit"), !isMeme);
+    addButton(s, "MEME · THE END OF EVERYTHING", () => forceMeme("end"), !isMeme);
     addButton(s, "TRIGGER GUARDIAN POWER", triggerGuardianWarning, !boss || isBeau);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
 
