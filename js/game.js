@@ -704,6 +704,15 @@ function update(dt) {
     player.inv = Math.max(0, player.inv - dt);
   }
   window.updateWorldRetaliation?.(dt, player, {
+    chill: seconds => {
+      player.guardianChillUntil = Math.max(player.guardianChillUntil || 0, time + seconds);
+    },
+    push: (dx,dy,power) => {
+      const length = Math.hypot(dx,dy) || 1;
+      player.guardianTidePushX = (dx / length) * power;
+      player.guardianTidePushY = (dy / length) * power;
+      player.guardianTidePushUntil = time + .28;
+    },
     damage: amount => {
       if (player.inv > 0 || window.developerInvincible?.()) return false;
       player.hp -= amount;
