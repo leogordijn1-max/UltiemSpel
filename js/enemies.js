@@ -422,6 +422,8 @@ function damage(e, d, origin = player, damageType = "direct") {
     window.enemyWorldOnDeath?.(e);
     // Mark the enemy immediately so later hits in this frame cannot reward it twice.
     e.dead = true;
+    if(window.recordWorldDestruction?.(e,player,time))
+      notify("THE WORLD STRIKES BACK · RIFT OPENING","wave",2.4);
     kills++;
     // Character kill thresholds trigger abilities independently of the weapon build.
     if (typeof selectedCharacter !== "undefined" && typeof characterRuntime !== "undefined") {
