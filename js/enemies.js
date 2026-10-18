@@ -158,6 +158,8 @@ function nearestEnemies(x, y, radius, limit, include = null) {
 const FINAL_BOSS_TIME = 25 * 60;
 const STANDARD_BOSS_COUNT = 3; // Beau → Mourning Shade → Bell Tower → The Last Meme
 function nextBossEncounter(mode,defeated,clock,nextOrdinaryTime,finalDefeated=false){
+  if(typeof window!=="undefined"&&typeof window.bossFlowSchedule==="function")
+    return window.bossFlowSchedule(mode,defeated,clock,nextOrdinaryTime,finalDefeated);
   if(mode==="standard"){
     if(finalDefeated)return null;
     // The finale cannot jump ahead of one of the three world guardians.
@@ -715,7 +717,7 @@ function spawnBoss() {
       bossNumber>=STANDARD_BOSS_COUNT))return false;
   window.beginBossIsolation?.();
   bossNumber++;
-  const variant = (bossNumber - 1) % 3;
+  const variant = window.bossFlowOrdinaryVariant?.(runMode,bossNumber) ?? (bossNumber-1)%3;
   const bossNames = bossCatalog.map((entry) => entry.name.toUpperCase());
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
   const a = rand(0, Math.PI * 2),
@@ -770,6 +772,10 @@ function spawnBoss() {
 // The Last Meme is intentionally drawn in Canvas until its custom meme asset exists.
 function spawnFinalBoss() {
   if (boss) return false;
+  // Standard requires 3 actual Guardians and 25:00. Sandbox can quick-test.
+  if (window.bossFlowCanFinale &&
+      !window.bossFlowCanFinale(runMode,bossesDefeated,time,
+        finalBossDefeated,!!window.isDeveloperRun?.())) return false;
   window.beginBossIsolation?.();
   bossNumber++;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
