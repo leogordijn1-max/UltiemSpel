@@ -73,7 +73,7 @@ function campaign(element="fire",mode="standard"){
     upgrades:{damage:0,critChance:0,knockback:0},
     evolutions:{},recentAchievements:[],
     selectedCharacter:undefined,runStats:null,
-    level:1,metaProgress,runDamageTaken:0,
+    level:1,metaProgress,runDamageTaken:0,runRecorded:false,
     bossRewardPoints:0,simulationAccumulator:0,
     menuDifficulty:"normal",gameSpeed:1,
     startWeapon:ELEMENTS[element][0],
