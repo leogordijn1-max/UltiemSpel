@@ -150,6 +150,7 @@ function reset() {
   window.resetWorldDefense?.();
   window.resetEncounterPacing?.();
   window.resetEnemyProgression?.();
+  window.resetEncounterTactics?.();
   syncElementalLoadout();
   resetElementalCombat();
   for (const key in keys) keys[key] = false;
@@ -911,6 +912,7 @@ function update(dt) {
           moveSpeed = 0;
           if (e.shotWarning === 0) {
             enemyFireOrb(e);
+            window.encounterTacticVolley?.(e,enemyShots,player);
             e.shootCooldown = rand(4.5, 6.2);
           }
         } else {
@@ -1014,6 +1016,26 @@ function update(dt) {
       if (coordinated) {
         moveAngle = coordinated.angle;
         moveSpeed *= coordinated.speedMult;
+      }
+    }
+    if (onScreen && e.encounterTactic && !boss) {
+      const ability = window.updateEncounterTactic?.(e,dt,player,time,onScreen,{
+        chill: seconds => {
+          player.guardianChillUntil=Math.max(player.guardianChillUntil||0,time+seconds);
+        },
+        damage: amount => {
+          if(player.inv>0 || window.developerInvincible?.() || tryDodge())return false;
+          player.hp-=amount;
+          recordPlayerHit(amount);
+          player.inv=.85;damageFlash=.48;shake=Math.max(shake,10);
+          puff(player.x,player.y,"#ff9478",11);
+          if(player.hp<=0)end();
+          return true;
+        }
+      });
+      if (ability) {
+        moveAngle=ability.angle;
+        moveSpeed*=ability.speedMult;
       }
     }
     let beauActive = false;
