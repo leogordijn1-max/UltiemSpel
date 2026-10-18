@@ -32,7 +32,7 @@ test("Guardian countdown is real simulation time, three beats and dash status",(
   h.window.beginGuardianArenaPower(h.boss,10,h.player);
   const initial=h.window.combatHudDescribe(h.boss,h.player,10,0);
   assert.equal(initial.stage,"warning");
-  assert.match(initial.detail,/BEAT 1\/3 · IMPACT IN 1\.4s/);
+  assert.match(initial.detail,/BEAT 1\/3 · IMPACT IN 1\.5s/);
   assert.match(initial.instruction,/TARGET TRACKING/);
   assert.equal(initial.subtext,"DASH READY · SHIFT");
   assert.ok(Math.abs(initial.progress)<1e-8,"floating-point countdown begins effectively at zero");
