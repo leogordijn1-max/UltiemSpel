@@ -957,3 +957,61 @@ input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   #panel, .toast, .toast-leaving { animation: none !important; transition-duration: .01ms !important; }
 }
+
+
+/* Update 27: combat-critical boss cues sit directly under the boss HP bar,
+   not among transient toast notifications or the large player loadout. */
+#bossCombatCue[hidden],
+#bossCueTrack[hidden] { display: none !important; }
+.boss-combat-cue {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border: 2px solid #ffb277;
+  border-radius: 9px;
+  background: rgba(23, 10, 29, .94);
+  color: #fff0dc;
+  box-shadow: 0 5px 24px rgba(0,0,0,.62);
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: .03em;
+  text-shadow: 0 1px 4px #000;
+  overflow-wrap: anywhere;
+}
+#bossCueTitle { color: #ffe29b; font-size: 13px; font-weight: 900; }
+#bossCueClock { color: #fff8e7; font-weight: 800; font-variant-numeric: tabular-nums; }
+#bossCueAdvice { color: #d9ffeb; font-size: 10px; font-weight: 800; }
+#bossCueDash { color: #cce3ff; font-size: 10px; }
+#bossCueTrack {
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(252,203,161,.72);
+  border-radius: 20px;
+  background: #190c20;
+}
+#bossCueFill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #ffbe74, #ff5d86);
+  transition: width .1s linear;
+}
+.boss-combat-cue[data-tone="clear"] { border-color: #97f8d2; }
+.boss-combat-cue[data-tone="clear"] #bossCueTitle { color: #c2ffe3; }
+.boss-combat-cue[data-tone="clear"] #bossCueFill { background: #7df1cb; }
+.boss-combat-cue[data-tone="prepare"] { border-color: #b9a8f5; }
+.boss-combat-cue[data-tone="prepare"] #bossCueTitle { color: #d8d0ff; }
+.boss-combat-cue[data-tone="recovery"] {
+  border-color: #8bffdd;
+  background: rgba(8, 35, 35, .95);
+}
+.boss-combat-cue[data-tone="recovery"] #bossCueTitle { color: #a4ffe6; }
+.boss-combat-cue[data-tone="recovery"] #bossCueFill { background: #72eacb; }
+@media (max-width: 620px) {
+  .boss-combat-cue { margin-top: 5px; padding: 6px; gap: 3px; font-size: 9px; }
+  #bossCueTitle { font-size: 10px; }
+  #bossCueAdvice, #bossCueDash { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bossCueFill { transition: none; }
+}
