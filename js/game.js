@@ -918,7 +918,7 @@ function update(dt) {
       (window.enemyWorldMovement?.(e, walkingGround, time, dt) ?? 1) *
       (window.guardianWorldSpeed?.(e, walkingGround) ?? 1) *
       (e.soakedUntil > time ? 0.82 : 1) *
-      (e.frostUntil > time ? 0.48 : 1) *
+      (e.frostUntil > time ? (window.frostMoveMultiplier?.(e,boss) ?? 0.48) : 1) *
       (e.deepFreezeUntil > time && e !== boss ? 0.16 : 1) *
       (e.pulseSlowUntil > time ? 0.77 : 1);
     if (e.burnUntil > time && e.nextBurnTick <= time) {
@@ -944,14 +944,16 @@ function update(dt) {
           if (e.shotWarning === 0) {
             enemyFireOrb(e);
             window.encounterTacticVolley?.(e,enemyShots,player);
-            e.shootCooldown = rand(4.5, 6.2);
+            const rangedTuning=window.getCombatDifficultyTuning?.(difficulty);
+            e.shootCooldown = rand(rangedTuning?.rangedCooldownMin ?? 4.5,
+              rangedTuning?.rangedCooldownMax ?? 6.2);
           }
         } else {
           e.shootCooldown -= dt;
           if (e.shootCooldown <= 0) {
             e.shootCooldown = 0;
             e.aimAngle = Math.atan2(player.y - e.y, player.x - e.x);
-            e.shotWarning = 0.7;
+            e.shotWarning = window.getCombatDifficultyTuning?.(difficulty)?.rangedTelegraph ?? 0.7;
             window.prepareEncounterTacticVolley?.(e);
           }
         }
@@ -966,13 +968,15 @@ function update(dt) {
       e.guardTimer = (e.guardTimer ?? 3) - dt;
       if (e.guardTimer <= 0) {
         e.shieldActive = !e.shieldActive;
-        e.guardTimer = e.shieldActive ? 3 : 2;
+        const shieldTuning=window.getCombatDifficultyTuning?.(difficulty);
+        e.guardTimer = e.shieldActive
+          ? (shieldTuning?.shieldRaised ?? 3) : (shieldTuning?.shieldExposed ?? 2);
       }
     }
     if (e.kind === 5) {
       if (!e.armed && onScreen && playerDistanceSquared < 115 * 115) {
         e.armed = true;
-        e.burstWarning = 0.95;
+        e.burstWarning = window.getCombatDifficultyTuning?.(difficulty)?.burstTelegraph ?? 0.95;
       }
       if (e.armed) {
         moveSpeed = 0;
