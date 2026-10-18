@@ -101,7 +101,7 @@ test("the game resumes when every upgrade is capped", () => {
   assert.equal(vm.runInContext("overlay.style.display", context), "none");
 });
 
-test("Normal difficulty preserves the original enemy and spawn balance", () => {
+test("Normal difficulty remains the combat baseline and Nightmare avoids spawn spam", () => {
   const context = vm.createContext({});
   loadScript(context, "js/enemies.js");
 
@@ -112,7 +112,7 @@ test("Normal difficulty preserves the original enemy and spawn balance", () => {
         context,
       ),
     ),
-    [0.8, 1, 1.28, 0.82, 1, 1.18],
+    [0.8, 1, 1.16, 0.82, 1, 1],
   );
 });
 
