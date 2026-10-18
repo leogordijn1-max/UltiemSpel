@@ -125,7 +125,9 @@
   function restoreWorldOnDefeat() {
     if (!runActive || conquered || restored) return false;
     restored = true;
-    restorationPeak = Math.max(1,visualCoverage());
+    // The gameplay milestone is earned immediately at a boss kill. A visual
+    // spread still tweening must not hide that earned progress on Game Over.
+    restorationPeak = Math.max(1,coverage,visualCoverage());
     changeCoverage(0, 2200);
     showWorldMoment("restoration", "THE WORLD ENDURES",
       getDominantWorld().toUpperCase() + " · THE GUARDIAN RESTORES ITS REALM");
