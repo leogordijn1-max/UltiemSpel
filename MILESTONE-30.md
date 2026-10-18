@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 21 — Elemental Synergy & Evolution Feedback: drie gecontroleerde combo's en duidelijke routes naar verdiende evoluties.
-**Volgende update:** 22 — Wapen- en vijandbalans: Normal/Easy/Nightmare.
-**Planningvoortgang:** **11 / 20 afgerond = 55%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 22 — Weapon & Enemy Balance: Easy/Normal/Nightmare via leesbare tactische druk, geen extra Nightmare-hordes, en gerichte boss-wapenbalans.
+**Volgende update:** 23 — Wereldterreinen: gevaren duidelijk en eerlijk.
+**Planningvoortgang:** **12 / 20 afgerond = 60%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -36,7 +36,7 @@
 | 19 | Weapon Feel: voorspellend richten en betrouwbare treffers | AFGEROND · 365/365 tests na correctie · speeltest open |
 | 20 | Weapon VFX: eerste visuele kwaliteitslat | AFGEROND · 372/372 tests · browser-visual review open |
 | 21 | Wapens en evoluties: keuze, synergie, feedback | AFGEROND · 381/381 tests · gecombineerde browser-speeltest open |
-| 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | OPEN |
+| 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | AFGEROND · 391/391 tests · echte difficulty/play-feeltest open |
 | 23 | Wereldterreinen: gevaren duidelijk en eerlijk | OPEN |
 | 24 | Living World: terreinreacties en duidelijke consequenties | OPEN |
 | 25 | Boss-flow: volgorde, arena-isolatie, beloningen | OPEN |
@@ -230,3 +230,24 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Open voor mijlpaal 30:** complete Standard 25–30-minuten-run, twee echt verdiende evoluties, bewezen bossvolgorde en isolatie, eerlijke late-game balans, performance en meerdere volledige browserruns.
 
 **Volgende stap (Update 22):** gerichte balansanalyse en aanpassingen van de negen actieve elementwapens en vijanddruk in **Normal/Easy/Nightmare**. Meet werkelijk speelgevoel en damage, voorkom nieuwe spam en let op de beperkte extra combo-bonussen uit Update 21.
+
+
+## Update 22 — afgerond (18 oktober 2026)
+**Doel:** Easy, Normal en Nightmare anders laten aanvoelen, zonder Nightmare als vijandenspam of overmatige HP-sponsen vorm te geven. Focus ligt op de echte Fire/Water/Frost-builds, leesbare telegraphs en kleine gevaarlijke teams.
+
+**Gewijzigd in de speelbare code:**
+- Nieuwe module `js/combat-difficulty.js` levert overzichtelijke, begrensde moeilijkheidsinstellingen. **Normal** is de exacte baseline voor de bestaande squadstatistieken en ranged/shield/bursttimings.
+- **Easy:** tactische squads krijgen een kleine extra HP-/damage-/speedverlaging naast de bestaande Easy-profielwaarden. Ranged Shots waarschuwen langer (0,90 s), vuren rustiger en Burstlings geven 1,16 s reactietijd. Een Bulwark laat de verdediging relatief langer openstaan.
+- **Nightmare:** de bestaande algemene vijand-HP-vermenigvuldiger ging van 1,28 naar **1,16**; boss-HP van 1,20 naar **1,16**. Tactische squads worden iets sterker/sneller (HP ×1,04, schade ×1,065, snelheid ×1,04), maar hun skillwaarschuwingen blijven eerlijk: ranged 0,64 s en burst 0,86 s, met kortere aanvalscooldowns. De normale enemyDamage-waarde blijft ×1,18 en Normal blijft ×1. De bossvolgorde en boss-isolatie blijven hetzelfde.
+- **Geen extra Nightmare-spam:** `js/encounter-pacing.js` gebruikt voor Nightmare dezelfde normale population cap (20 begin, max 26 later), dezelfde ambient limiet en dezelfde ambient spawninterval als Normal. Easy houdt de lagere cap en langere interval. Tactische groepen worden niet groter: de moeilijkheid komt uit bedreiging en timing.
+- De moeilijkheidsmodificaties worden bij **patrols, geplande waves en Living World-verdedigingssquads** één keer toegepast; niet op bosses of hun zelfgespawnde minions. Echte drop-/XP-/evolutieregels blijven ongewijzigd.
+- Twee bescheiden **wapen-vs-boss** correcties: Flame Orbit doet ×0,82 contactscha­de **alleen tegen een boss** (gewone vijanden onveranderd), en een Frost Orb/ander frost slow vertraagt de boss tot ×0,78 bewegingssnelheid in plaats van ×0,48. Gewone vijanden blijven met Frost ×0,48 vertraagd. Deze correcties beschermen Guardian-movement en het nut van meerdere buildkeuzes, niet als definitieve eindbalans zonder playtest.
+- De nieuwe module is vóór enemy/game/elemental code opgenomen in `index.html`. Bestaande tests zijn aangepast waar ze nog de oude 1,28 Nightmare-HP of 1,18 spawnRate verwachtten.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39150233474 — **391 geslaagde tests, 0 fouten** en JS-syntax groen. Tien nieuwe Update 22-tests controleren profielen en telegraphgrenzen, echte patrolstats voor alle drie moeilijkheden, gegarandeerd gelijke Nightmare/Normal vijandlimieten, boss-/summon-uitzonderingen, idempotent toepassen, Frost/FlameOrbit boss-guardrails, en integratie van wave/defense/game/HTML. De eerdere 381 regressietests blijven groen.
+
+**Planningvoortgang:** **12 / 20 = 60%** van de geplande updates richting mijlpaal Update 30. Dit betekent niet dat de game al 60% visueel/gameplay-af is.
+
+**Nog open — handmatige browser-speeltest:** speel minimaal de eerste 8 minuten van elk niveau met vergelijkbare starter/upgrade-route: blijft Easy toegankelijk, Normal uitdagend, Nightmare spannend maar fair? Vergelijk echte HP/time-to-kill, boss-movement onder Frost, Flame Orbit dichtbij de boss en of ranged/burstwaarschuwingen op Nightmare werkelijk te ontwijken zijn. Kijk ook naar de voorjaars-/late-game pacing en de twee volledig verdiende evoluties. Geautomatiseerde tests bewijzen de verhoudingen, niet het daadwerkelijke spelgevoel.
+
+**Volgende update (23):** terreingevaren eerlijk en leesbaar maken (bijv. waarschuwing, impactzone, reactietijd en visueel onderscheid) zonder World-/Living World-consequenties af te zwakken. De omvangrijke cosmetische VFX-polish blijft voor een latere fase: de maker wil nu vooral dat de effecten bestaan.
