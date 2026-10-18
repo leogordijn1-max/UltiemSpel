@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 29 — Normal Campaign QA Replay: echte bosskill/evolutie-/Victory-/Endless-functies, herstel van wereld-eindscherm en bescherming tegen same-tick Victory-overwrite.
-**Volgende update:** 30 — Milestone review: Combat & Gameplay 2.0, releasecriteria en open browser-QA.
-**Planningvoortgang:** **19 / 20 afgerond = 95%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 30 — Combat & Gameplay 2.0 TECHNISCHE mijlpaalreview: tien groen geauditeerde technische gates, zes open handmatige releasegates en een roadmap richting Update 40.
+**Volgende update:** 31 — Verifieerbare Normal-run-telemetrie en de eerste volledig geregistreerde menselijke speeltest.
+**Planningvoortgang:** **20 / 20 afgerond = 100%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -44,7 +44,7 @@
 | 27 | UI/HUD: helderheid en leesbaarheid van combat | AFGEROND · 441/441 tests · visuele browsertest open |
 | 28 | Performance: FPS, memory en spawnstabiliteit | AFGEROND · 451/451 tests · browser-FPS meting nog open |
 | 29 | Volledige Normal-run tests: polish en grootste issues | AFGEROND · 462/462 geautomatiseerde checks · handmatige 25–30-min browserrun OPEN |
-| 30 | MILESTONE: Combat & Gameplay 2.0 beoordelen | OPEN |
+| 30 | MILESTONE: Combat & Gameplay 2.0 beoordelen | AFGEROND · 468/468 tests · 10/10 technische checks PASS · 6/6 manuele gates OPEN · verified release NO-GO |
 
 **Voortgangsvorm voor elke update:**
 - **Update:** N / 30
@@ -400,3 +400,23 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **OPEN tot vrijgave:** volledige **echte** Standard Normal-browserrun van 25–30min met Fire/Water/Frost; kunnen verdienen van weapon L5 + support L3 *via normaal gespeelde XP en daadwerkelijk aanbod*, fase-3 Guardian Powers plus bestaande showcases zonder oneerlijke overlap; aanhoudende FPS/stabiliteit, eventuele late-game balans; volledige handmatige boss-/wereld-/Endless-overgang. De gescripte 26:40 QA replay is géén praktische spell- of survivabilitybenchmark.
 
 **Volgende — Update 30:** beslismoment Combat & Gameplay 2.0: inventariseer echte bewezen acceptatiecriteria en bekende risico's, markeer scenario's eerlijk als PASS / AUTOMATISCH PASS, MANUEEL OPEN of FAIL, maak een gerichte vervolg-roadmap naar de eerste daadwerkelijk volledig speelgeteste versie. Houd de makerafspraak aan dat VFX voor nu vooral bestaan en gameplay voorrang heeft boven eindpolish. Geen definitieve kwaliteits-/releaseclaims zonder browsertests.
+
+
+## Update 30 — TECHNISCHE MIJLPAAL BEREIKT (18 oktober 2026)
+
+**Definitieve planningsteller:** **20 van 20 updates (11–30) voltooid = 100% van het geplande werk**. Dit is expliciet **niet** 100% gamekwaliteit, evenmin een bevestigde live gespeelde 25–30 minuten Standard-run.
+
+**Eindbesluit:** `TECHNICAL MILESTONE = PASS`, `VERIFIED PLAYABLE RELEASE = NO-GO` totdat echte browserplaytests zijn aangeleverd. Er zijn **6 expliciete manuele release-gates OPEN**, waaronder een echte volledige Normal-run, via XP verdiende dubbele evolutie, bossaanval-overlap, saved world/Victory/Endless na reload, echte FPS/P95/geheugen en drie geregistreerde complete runs. Zie **[MILESTONE-30-REVIEW.md](MILESTONE-30-REVIEW.md)** en **[NORMAL-RUN-QA.md](NORMAL-RUN-QA.md)**.
+
+**Concreet gebouwd in Update 30:**
+- `scripts/milestone-30-audit.cjs` voert een **reproduceerbare technische audit met 10 aparte PASS-gates** uit: elementwapens, earned boss-volgorde, twee evoluties/tijdgates, soloarena, echte world-commit, vier Guardian Powers, collisiongebaseerde HUD-aanwijzingen, spatial/performance invariant, Victory-safety, CI en handmatig QA-protocol. De output noemt altijd de **handmatige OPEN-items**, en meldt duidelijk `VERIFIED PLAYABLE RELEASE: NO-GO`. Hij doet nooit alsof Node echte browserframes test.
+- De GitHub Actions-workflow draait **na alle bestaande gameplay-tests** nu ook `node scripts/milestone-30-audit.cjs`, met de tien gates en zes OPEN-items in het workflowlog. De audit doet alleen de build falen wanneer een **technische** gate stukgaat; de open manuele vrijgavebeslissing blijft eerlijk zichtbaar en wordt niet 'groen' op basis van een tijdskiptest.
+- `tests/update-30-milestone-audit.test.cjs` geeft **6 extra regressietests** voor de gate-uitkomsten, 100%-planningslabel versus NO-GO-release, de README met echte elementloadouts en twee evoluties, de voortdurende CI-audit en de expliciete nog open browserbewijsstukken.
+- De `README.md` heeft nu een actuele, leidende uitleg over negen echte elementwapens, twee evoluties op 10:00/17:00, drie Guardians + The Last Meme en zijn saved-world-/Endless-gedrag. Oude informatie over legacy weapons/derde evolutie is duidelijk gemarkeerd als **historisch archief**.
+- Nieuwe officiële **[MILESTONE-30-REVIEW.md](MILESTONE-30-REVIEW.md)**: matrix van automatische en handmatige criteria, zes releasegates, P0/P1/P2-risico's met voorgestelde acties en de concrete **Updates 31–40 'Verified Playable Run'**. Deze fase gaat over daadwerkelijke gameplay en echte observaties, niet blind nieuwe mechanics of perfecte VFX toevoegen.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39161207142 — **468/468 tests geslaagd, 0 fouten**, plus **10/10 technische audits PASS**. De audit vermeldt expliciet: `MILESTONE PLAN: 20/20; TECHNICAL AUDIT: PASS; VERIFIED PLAYABLE RELEASE: NO-GO (browser evidence missing)`. Het project heeft dus nu een **afgeronde technische basis** en een **nog niet geverifieerde release**.
+
+**Volgende echte werk — Update 31:** run-telemetrie, vast testformat en **eerste daadwerkelijk gespeelde Normal-run**, met gemeten XP/levels/evolutiekansen, bossfase en FPS. Daarna Update 32 evolutie-economie; 33–34 de boss-fights live; 35 difficulty; 36 echte performance; 37 world/save/endless; 38 wapenbalans; 39 drie complete Normal-runs; 40 releasebeslissing. Maak deze acceptancecriteria alleen PASS op basis van echt bewijs.
+
+**Creatieve afspraak:** The Living World moet voelbaar worden, bosses blijven geïsoleerd en spectaculair maar eerlijk. Niet veel enemies toevoegen als makkelijke difficulty-knop. De huidige elementwapens blijven de negen selecteerbare wapens. Definitieve VFX-polish wordt pas een belangrijke lat **na** betrouwbare gameplay; effecten mogen nu basaal zijn.
