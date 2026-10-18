@@ -104,7 +104,7 @@ test("normal waves are small challenging patrols, not huge hordes",()=>{
     if(waveNumber%4===0)continue;
     assert.ok(wave.spawned>=4&&wave.spawned<=8);
     assert.ok(h.enemies.every(e=>e.hp>100&&e.damage>10));
-    assert.ok(h.enemies.every(e=>e.xpValueMultiplier===1.9&&e.encounterRole==="patrol"));
+    assert.ok(h.enemies.every(e=>e.xpValueMultiplier===2.6&&e.encounterRole==="patrol"));
     assert.ok(h.enemies.some(e=>e.elite));
   }
 });
