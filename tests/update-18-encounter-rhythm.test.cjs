@@ -129,6 +129,21 @@ test("same state machine is wired into all three real automatic spawners",()=>{
   assert.match(defense,/recordEncounterRhythmSpawn\?\.\(/);
   assert.match(read("index.html"),/encounter-rhythm\.js\?v=18/);
 });
+test("fewer tough groups earn a modest XP premium without free experience",()=>{
+ const {w,enemy}=director(),squad=[enemy(),enemy(),enemy()];
+ for(const e of squad)e.xpValueMultiplier=3;
+ w.recordEncounterRhythmSpawn("patrol",100,squad,900);
+ assert.ok(squad.every(e=>e.xpValueMultiplier>3.5&&e.xpValueMultiplier<4.2));
+ assert.ok(squad.every(e=>e.rhythmXpAdjusted));
+ assert.equal(w.getEncounterRhythmStatus(101).encounters,1);
+ // Re-recording cannot stack multipliers while a squad remains alive.
+ const xp=squad[0].xpValueMultiplier;
+ w.recordEncounterRhythmSpawn("patrol",102,squad,900);
+ assert.equal(squad[0].xpValueMultiplier,xp);
+ const other=[enemy(),enemy(),enemy()];
+ w.recordEncounterRhythmSpawn("swarm",103,other,900);
+ assert.ok(other.every(e=>e.xpValueMultiplier===1));
+});
 test("boss fights, force-spawn developer buttons, population caps and XP stay distinct",()=>{
   const pacing=read("js/encounter-pacing.js"),defense=read("js/world-defense.js");
   assert.match(pacing,/function spawnPatrol\(/);
