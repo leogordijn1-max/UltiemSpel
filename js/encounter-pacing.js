@@ -36,6 +36,7 @@
     const anchorX = player.x + Math.cos(direction)*distance;
     const anchorY = player.y + Math.sin(direction)*distance;
     let added = 0;
+    const tacticGroup=window.newEncounterTacticGroup?.();
     for(let i=0;i<total;i++){
       const preferred=formation[i];
       const kind=window.resolveEncounterEnemyKind?.(preferred,growthSeconds,i) ?? preferred;
@@ -49,6 +50,7 @@
       e.damage*=1.13+Math.min(.18,growthSeconds/2100);
       e.encounterRole="patrol";
       e.xpValueMultiplier=2.15;
+      window.assignEncounterTactic?.(e,i,tacticGroup);
       // Recheck elemental world affinity after positioning.
       window.initializeEnemyAdaptation?.(e);
       added++;
