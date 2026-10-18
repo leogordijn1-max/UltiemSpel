@@ -8,9 +8,9 @@ const aimAt=(e,p)=>{const q=window.bossCombatPredictTarget?.(e,p)||p;return {x:q
 function initialize(e,t=0){if(!isShade(e))return; e.shadeFight={mode:"idle",stage:"",until:0,lockAt:0,nextAt:t+11,alternation:0,ultimateUsed:false,round:0,target:null,forced:null};}
 function start(e,mode,t,p,h){const s=e.shadeFight;s.mode=mode;s.round=0;s.target=aimAt(e,p);s.stage="tell";s.until=t+(mode==="eclipse"?1.8:1.15);s.lockAt=t+.33;s.forced=null;
 e.chargeWarning=0;e.shotWarning=0;e.chargeActive=0;e.chargeCooldown=Math.max(e.chargeCooldown||0,3);e.shootCooldown=Math.max(e.shootCooldown||0,3);
-if(mode==="eclipse"){s.ultimateUsed=true;h.clearBossAttacks?.();h.shake?.(9);}
+if(mode==="eclipse"){s.ultimateUsed=true;h.clearBossAttacks?.();window.beginGuardianArenaPower?.(e,t,p);h.shake?.(9);}
 h.sfx?.("boss-warn");h.notify?.("MOURNING SHADE · "+({collapse:"SHADOW COLLAPSE",phantoms:"PHANTOM EXECUTION",eclipse:"ETERNAL ECLIPSE"}[mode]),"boss",3.2);}
-function finish(e,t,h){const s=e.shadeFight;s.mode="idle";s.stage="";s.target=null;s.nextAt=t+(phase(e)===3?9.5:12);
+function finish(e,t,h){const s=e.shadeFight;window.interruptGuardianArenaPower?.(e);s.mode="idle";s.stage="";s.target=null;s.nextAt=t+(phase(e)===3?9.5:12);
 e.specialRecoveryUntil=t+2.2;e.chargeCooldown=Math.max(e.chargeCooldown||0,2);e.shootCooldown=Math.max(e.shootCooldown||0,2);h.notify?.("SHADE EXPOSED · COUNTERATTACK!","boss",2);}
 function ring(e,h,a,count,speed){for(let i=0;i<count;i++){const angle=a+i*TAU/count;if(i===0||i===1)continue;h.projectile?.(e,angle,speed,10+phase(e),"shadow");}}
 function execute(e,t,h){const s=e.shadeFight,q=s.target;if(!q)return;
@@ -58,7 +58,7 @@ if(!s.target||t<s.lockAt)s.target=aimAt(e,p);
 if(t>=s.until){execute(e,t,h);}
 }
 return true;}
-function interrupt(e,t){if(!isShade(e)||!e.shadeFight||e.shadeFight.mode==="idle")return false;const s=e.shadeFight;s.mode="idle";s.stage="";s.target=null;s.nextAt=t+1.6;return true;}
+function interrupt(e,t){if(!isShade(e)||!e.shadeFight||e.shadeFight.mode==="idle")return false;const s=e.shadeFight;window.interruptGuardianArenaPower?.(e);s.mode="idle";s.stage="";s.target=null;s.nextAt=t+1.6;return true;}
 function force(e,mode,t){if(!isShade(e)||!e.shadeFight||!["collapse","phantoms","eclipse"].includes(mode))return false;
 if(mode==="eclipse"&&e.shadeFight.ultimateUsed)return false;e.shadeFight.forced=mode;e.shadeFight.nextAt=t;return true;}
 function backdrop(e,ctx,t,p,quality,w,h){if(!isShade(e)||!e.shadeFight||e.shadeFight.mode!=="eclipse"||!p)return;
