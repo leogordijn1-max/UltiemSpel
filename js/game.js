@@ -1664,13 +1664,16 @@ function update(dt) {
   // Picking up gems remains a movement and positioning decision.
   const pickupRange =
     115 + upgrades.magnet * 55 + (metaProgress.magnetLevel || 0) * 12;
-  for (const g of nearbyGems(player.x, player.y, pickupRange)) {
+  // Big souls from tactical defenders are worth pursuing: they attract from a
+  // little farther away. Tiny ambient gems and healing still use normal reach.
+  for (const g of nearbyGems(player.x, player.y, pickupRange + 95)) {
     const oldX = g.x,
       oldY = g.y;
     const dx = player.x - g.x,
       dy = player.y - g.y;
     const distanceSquared = dx * dx + dy * dy;
-    const range = pickupRange;
+    const range = pickupRange +
+      (g.kind!=="health" && g.value>=6 ? 95 : 0);
     if (distanceSquared < range * range) {
       const distance = Math.sqrt(distanceSquared) || 1;
       const speed = Math.max(180, 650 * (1 - distance / range));
