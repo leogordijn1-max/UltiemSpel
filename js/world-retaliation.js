@@ -3,14 +3,23 @@
 "use strict";
 const LIMIT=16;
 const TYPES={fire:{name:"FIRE",color:"#ff7946",fill:"rgba(250,91,30,.22)"},water:{name:"WATER",color:"#68cfff",fill:"rgba(29,153,223,.22)"},frost:{name:"FROST",color:"#aff2ff",fill:"rgba(111,212,255,.21)"}};
-let state={kills:0,threshold:14,rifts:[],running:false,sequence:0};
+let state={kills:0,threshold:0,rifts:[],running:false,sequence:0};
 function element(){const id=window.currentLivingWorldElement?.();return TYPES[id]?id:"fire";}
-function reset(){state={kills:0,threshold:14,rifts:[],running:true,sequence:0};}
+function reset(){state={kills:0,threshold:0,rifts:[],running:true,sequence:0};}
 function clear(){state.rifts.length=0;state.running=false;}
+function conquestTier(){
+  const conquest=window.getWorldConquest?.();
+  const percent=Number(conquest?.target ?? conquest?.coverage ?? 0);
+  if(!conquest?.active || conquest.original===conquest.invading)return 0;
+  return percent>=50?2:percent>=15?1:0;
+}
 function onKill(enemy,player){if(!state.running||!enemy||enemy.kind===3||enemy.summoned||!player)return false;
+const tier=conquestTier();
+if(!tier){state.kills=0;state.threshold=0;return false;}
+state.threshold=tier===2?10:45;
 state.kills++;if(state.kills<state.threshold)return false;state.kills=0;
 if(state.rifts.length>=LIMIT)return false;
-state.sequence++;state.threshold=Math.max(10,14-Math.floor(state.sequence/3));
+state.sequence++;
 const angle=(state.sequence*2.399963)%(Math.PI*2),distance=180+(state.sequence%3)*85;
 state.rifts.push({x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance,
 radius:76,warning:2.2,elapsed:0,lastHit:-Infinity,type:element(),trigger:state.sequence});
@@ -31,5 +40,6 @@ ctx.lineWidth=active?4:3;ctx.strokeStyle=style.color;ctx.globalAlpha=.65+.2*Math
 if(quality!=="low"){ctx.beginPath();ctx.arc(r.x,r.y,active?r.radius*.55:Math.max(8,r.radius*(1-r.elapsed/r.warning)),0,Math.PI*2);ctx.stroke();}}
 ctx.restore();}
 function status(){return {kills:state.kills,threshold:state.threshold,active:state.rifts.length,sequence:state.sequence,rifts:state.rifts.map(r=>({...r}))};}
+window.getWorldReactionTier=conquestTier;
 window.resetWorldRetaliation=reset;window.clearWorldRetaliation=clear;window.recordWorldDestruction=onKill;window.updateWorldRetaliation=tick;window.drawWorldRetaliation=draw;window.getWorldRetaliationStatus=status;
 })();
