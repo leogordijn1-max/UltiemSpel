@@ -42,15 +42,30 @@ const bossCatalog = [
 ];
 
 const ENEMY_GRID_SIZE = 140;
+// Recycle short-lived spatial buckets across fixed simulation ticks (up to
+// 180/sec at 3x). Bound the spare pool to avoid keeping an old huge arena alive.
+const ENEMY_GRID_POOL_LIMIT = 256;
+const enemyGridBucketPool = [];
 function rebuildEnemyGrid() {
-  enemyGrid = new Map();
+  // Clearing lists releases references to defeated/moved enemies immediately.
+  // The grid Map remains stable; query semantics and cell order do not change.
+  for (const bucket of enemyGrid.values()) {
+    bucket.length = 0;
+    if (enemyGridBucketPool.length < ENEMY_GRID_POOL_LIMIT)
+      enemyGridBucketPool.push(bucket);
+  }
+  enemyGrid.clear();
   for (const enemy of enemies) {
     if (enemy.dead) continue;
     const cellX = Math.floor(enemy.x / ENEMY_GRID_SIZE);
     const cellY = Math.floor(enemy.y / ENEMY_GRID_SIZE);
     const key = `${cellX},${cellY}`;
-    if (!enemyGrid.has(key)) enemyGrid.set(key, []);
-    enemyGrid.get(key).push(enemy);
+    let bucket = enemyGrid.get(key);
+    if (!bucket) {
+      bucket = enemyGridBucketPool.pop() || [];
+      enemyGrid.set(key, bucket);
+    }
+    bucket.push(enemy);
   }
 }
 
