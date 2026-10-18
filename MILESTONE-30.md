@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 23 — Terrain Hazards Overhaul: waarschuwing voor iedere terugkerende uitbarsting, zichtbare veilige fases en geen overlappende permanente gevarenzones.
-**Volgende update:** 24 — Living World: terreinreacties en duidelijke consequenties.
-**Planningvoortgang:** **13 / 20 afgerond = 65%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 24 — Living World Consequences: invasiefront in HUD, zes rivaliserende werelden, tactisch terreinvoordeel en eerlijke boss-/runuitkomsten.
+**Volgende update:** 25 — Boss-flow: volgorde, arena-isolatie en beloningen.
+**Planningvoortgang:** **14 / 20 afgerond = 70%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -38,7 +38,7 @@
 | 21 | Wapens en evoluties: keuze, synergie, feedback | AFGEROND · 381/381 tests · gecombineerde browser-speeltest open |
 | 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | AFGEROND · 391/391 tests · echte difficulty/play-feeltest open |
 | 23 | Wereldterreinen: gevaren duidelijk en eerlijk | AFGEROND · 402/402 tests · browser-telegraphs/feeltest open |
-| 24 | Living World: terreinreacties en duidelijke consequenties | OPEN |
+| 24 | Living World: terreinreacties en duidelijke consequenties | AFGEROND · 412/412 tests · browserflow/playtest open |
 | 25 | Boss-flow: volgorde, arena-isolatie, beloningen | OPEN |
 | 26 | Boss attacks: reactietijd en spectaculariteit | OPEN |
 | 27 | UI/HUD: helderheid en leesbaarheid van combat | OPEN |
@@ -273,3 +273,24 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Nog te testen in de browser:** alle drie elementwereldtypes en ten minste één combinatie op 15%, 50% en 85% invasie. Controleer of de krimpende ring in de praktijk vóór een uitbarsting duidelijk genoeg is (ook bij 2×/3× speed en Low quality), of de gestippelde veilige fase intuïtief is, of de zonegrenzen niet door effecten overschaduwd worden en of navigeren tussen meerdere permanente rifts mogelijk blijft. Test dat bosses niet tegelijk met reaction hazards spelers beschadigen. Een groene CI is geen vervanging voor de speeltest.
 
 **Volgende stap (Update 24):** maak de **Living World-terreinreacties en hun gevolgen** nog duidelijker merkbaar in het spel. Richt je op gameplaytelemetrie, reacties op de gekozen invasie versus verdedigde wereld, consequenties na bosswins en run-eindresultaten, niet op grafische eindpolish of nieuwe vijandenspam.
+
+
+## Update 24 — afgerond (18 oktober 2026)
+**Doel:** na de eerlijke hazardwaarschuwingen in Update 23 ook de *gevolgen van de invasie* herkenbaar maken voor de speler, zonder verovering te versnellen, extra hordes te maken of blijvende werelden voortijdig te overschrijven.
+
+**Nieuw in de speelbare game:**
+- Nieuwe module `js/world-consequences.js`: aparte, kleine laag bovenop de bestaande `js/world-state.js` (de bron van waarheid over verovering), `js/world-retaliation.js` en `js/world-defense.js`. De module schrijft **niet** zelf naar permanent geheugen en creëert geen vijanden, gratis XP of schade.
+- **Zes geordende invader/defender-elementparen**, ieder met drie eigen, leesbare frontnamen voor de **15%, 50%, 85% boss-mijlpalen**: bijv. Burning versus Frozen = Icebound Frontier → The Thawing Line → The Last Winter. Water/Frost/Burning zijn wederzijds *niet* uitwisselbaar. De **18 bestaande echte wereldreacties blijven onveranderd**.
+- Een nieuwe, compacte `#worldFront` HUD toont de **verdedigde wereld versus invasiewereld**, bereikt percentage, huidige frontnaam, terrein onder de speler, aantal rifts en actieve verdedigingsteams. De tekst wordt hoogstens eenmaal per 0,4 game-seconden opnieuw opgebouwd en overschaduwt geen boss-waarschuwingen. `styles.css` geeft dit blok een eigen visuele identiteit.
+- **Consequentie op de grond:** in echt door de invader veroverde terreinpatches raken gewone *oorspronkelijke verdedigers* klein beetje uit balans, met **×0,94 / ×0,91 / ×0,88 beweging** bij respectievelijk 15% / 50% / 85% verovering. Op hun eigen terrein behouden ze al bestaande native world-affinityvoordelen. **Bosses, summons, dode vijanden, andere affiniteiten, identieke home/invaderwerelden en herstelde runs zijn uitgesloten.** Geen extra damage per tik, geen spreiding van vijanden en geen algemene enemy-nerf buiten veroverde patches.
+- Na ieder echt verslagen ordinary boss verschijnt, bovenop bestaande 'WORLD BARRIER SHATTERED', één nieuwe **THE WORLD FIGHTS BACK**-melding met de juiste naam van het front en de identiteit van de verdedigers. Melding wordt per wereldfase gededupliceerd en bij een nieuwe run gereset. De bestaande earned stage logic blijft leidend; Developer Mode's sandbox blijft een niet-persistente test.
+- Op Victory / Game Over komt **THE WORLD REMEMBERS** bij de bestaande statistieken: oorspronkelijke wereld, invasie-element, hoogste verdiende veroveringspercentage, uitkomst en definitieve dominante wereld. Alleen de **The Last Meme / echte Standard-victory** mag naar `shadowDominantWorldV1` schrijven. Game Over herstelt de verdedigde wereld. Een boss verdiend op 50% telt ook als de kaarttransitie nog in animatie was (`restorationPeak` neemt het werkelijk verdiende doelpercentage mee).
+- `index.html` bevat de nieuwe module na `js/world-state.js`, terwijl normale spel-functies die pas tijdens de run aanroepen; script- en CSS-cacheversies zijn bijgewerkt.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39154500366 — **412/412 tests geslaagd, 0 gefaald**, inclusief **10 nieuwe Update-24-regressietests**. De tests dekken alle zes invader/defendercombinaties en 18 fasenamen, exact territoriumeffect, uitgesloten enemies/bosses, status/HUD throttling, verdiende drie bossmijlpalen, een correct permanente eindoverwinning versus nederlaag, eerlijke 50%-peak tijdens animatie, en spel-/HTML-wiring.
+
+**Planning:** **14/20 = 70%** van de geplande updates richting Update 30 — *geen* percentage daadwerkelijke gameplay- of visuele afwerking.
+
+**Browser-QA staat nog open:** speel als Fire/Water/Frost tegenover een *andere* verdedigende wereld; check na Beau, Mourning Shade en Bell Tower hoe de frontlinie en terrain patches veranderen, en of verdedigers zichtbaar verschillen op native vs. occupied terrain. Test Live World-reakties naast de wereld-HUD, en de run-summary na zowel een mislukking als de finale overwinning. Meet of lange HUD-status niet met andere elementen overlapt op small screens. Controleer het terreinvoordeel bij 1×/2×/3× en of het tactisch genoeg aanvoelt. Automatische tests garanderen deze visuele/subjectieve ervaring niet.
+
+**Volgende (Update 25):** controleer daadwerkelijk de **bossvolgorde Beau → Mourning Shade → Bell Tower → The Last Meme**, begin/einde van boss-isolatie, minions uitsluitend door de boss, beloningen, eind-overgang naar Endless, geen voortijdige veroveringsopslag; regressietests én handmatige bossflow waar mogelijk. Behoud spectaculaire en leerbare boss-aanvallen als kernvisie; definitieve VFX-polish nog later.
