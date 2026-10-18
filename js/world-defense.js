@@ -90,7 +90,12 @@ function update(now,player,enemies,spawnEnemy,blocked=false,growthSeconds=0){
   const t=tier();
   if(t!==stage){stage=t;nextAt=now+(t?8:Infinity);}
   if(!t||now<nextAt)return false;
+  if(window.encounterRhythmCanStart?.("defense",now,enemies)===false){
+    nextAt=now+8;return false;
+  }
   const spawnedNow=createSquad(now,player,enemies,spawnEnemy,t,growthSeconds,true);
+  if(spawnedNow)window.recordEncounterRhythmSpawn?.(
+    "defense",now,squads[squads.length-1].members);
   nextAt=now+(spawnedNow?cooldown(t):8);
   return spawnedNow;
 }
