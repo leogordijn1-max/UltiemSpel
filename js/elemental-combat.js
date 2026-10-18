@@ -16,7 +16,9 @@ function elementalCooldown(key, seconds) {
   elementalTimers[key] = seconds * weaponCooldownMultiplier();
 }
 function elementalAim(maxRange = 900) {
-  const enemy = nearestEnemy(player.x, player.y, maxRange);
+  const range=window.playerWeaponRange?.(maxRange) ?? maxRange;
+  const enemy = nearestEnemy(player.x, player.y, range, null,
+    e => window.playerWeaponTargetVisible?.(e) ?? true);
   const dx = enemy ? enemy.x - player.x : player.facingX;
   const dy = enemy ? enemy.y - player.y : player.facingY;
   return { angle: Math.atan2(dy, dx), target: enemy };
