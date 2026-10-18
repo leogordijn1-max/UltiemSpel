@@ -3,45 +3,49 @@
 > **Project voortzetten met een nieuwe AI-chat?** Lees eerst [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md) voor visie, sfeer, gemaakte beslissingen en de werkwijze, en [MILESTONE-30.md](MILESTONE-30.md) voor de actuele updateplanning. Deze README bevat op onderdelen nog informatie over oudere versies; de actieve code op de ontwikkelbranch is leidend.
 
 
-## Bestandsindeling
+## Actuele stand — Mijlpaal Update 30 (18 oktober 2026)
 
-- `index.html` bevat de interface en laadt scripts in afhankelijkheidsvolgorde.
-- `styles.css` bevat de interface, overlays en touch-layout.
-- `js/game.js` beheert spelstatus, voortgang, simulatie en hoofdloop.
-- `js/controls.js` verbindt toetsenbord, menu's, joystick en dashknop.
-- `js/storage.js` normaliseert en versieert lokale voortgang met veilige opslagtoegang.
-- `js/progression.js` verwerkt runregistratie en achievements op het moment van de gebeurtenis.
-- `js/enemies.js` bevat vijanden, bosses, projectiles en damage.
-- `js/weapons.js` bevat Chain Lightning, Boomerang, Flame Cone en Frost Orb.
-- `js/upgrades.js` beheert upgrades, XP en evolutierecepten.
-- `js/render.js` tekent arena, personages, wapens en effecten.
-- `js/audio.js` maakt lichte effecten en ambient geluid met Web Audio.
-- `img/` bevat de originele game-afbeeldingen.
-- `tests/game-logic.test.js` bevat de automatische gameplay-tests.
-- `tests/performance-benchmark.js` vergelijkt targetselectie bij 100, 200 en 300 vijanden.
+**Combat & Gameplay 2.0: 20/20 geplande stappen voltooid.** De technische modules en regressietests zijn geïntegreerd, maar de game is **nog niet als volledig speelbaar en uitgebalanceerd vrijgegeven**: een echte doorlopende Normal-browserrun van 25–30 minuten, daadwerkelijk haalbare dubbele evoluties, FPS en overlappende bossaanvallen vereisen nog handmatige speeltests.
 
-## Besturing
+- [MILESTONE-30-REVIEW.md](MILESTONE-30-REVIEW.md): evidence, GO/NO-GO, bekende risico's, plan voor Updates 31–40.
+- [NORMAL-RUN-QA.md](NORMAL-RUN-QA.md): afvinkbare checkpoints voor echte 25–30-minutenspeeltests.
+- [MILESTONE-30.md](MILESTONE-30.md): volledige geschiedenis en tracker Updates 11–30.
+- [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md): spelvisie, grenzen, projectoverdracht en koers.
 
-- Bewegen: WASD of pijltjestoetsen.
-- Dash: Shift op desktop, DASH op touchscreens.
-- Pauze: P.
-- Snelheid: 1, 2 of 3.
-- Fullscreen aan/uit: F.
+### Wat kun je nu spelen?
 
-Kies Easy, Normal of Nightmare in het startmenu. Stel daarna één Start Weapon en twee Unlockable Weapons in. Alleen het startwapen is bij de start actief; de twee andere gekozen wapens verschijnen gegarandeerd als level-up unlock. Een evolution vraagt wapenlevel 5, de bijbehorende support-upgrade op level 3 en minstens één verslagen boss. Evolutions zijn de definitieve vorm van hun wapen. Bosses geven beloningen uit je huidige build. Punten uit runs geven permanente gezondheids- of damage-upgrades in het startmenu.
+- **Mode:** Standard in Easy, Normal of Nightmare. Na een echte overwinning op The Last Meme wordt Endless ontgrendeld.
+- **Drie elementbuilds, ieder met precies drie speelbare wapens:**
+  - **Fire:** Flame Cone, Fireball, Flame Orbit.
+  - **Water:** Water Bolt, Tidal Wave, Whirlpool.
+  - **Frost:** Frost Orb, Ice Shards, Glacial Pulse.
+- Je begint met één gekozen wapen; de twee andere wapens van datzelfde element worden beschikbaar via level-ups. Legacy-wapens (zoals Arcane Bolt en Boomerang) staan nog in oudere broncode en in de historische updates hieronder, maar zijn **geen** huidige selecteerbare buildopties.
+- **Maximaal twee evoluties in een Standard-run:** vanaf **10:00** en **17:00** gameklok, mits wapenlevel **5**, de juiste support-upgrade **3** en minstens één verslagen boss. Ze worden niet gratis toegekend. Het verkrijgen van voldoende levels is nog niet bewezen met een echte volledig gespeelde run.
+- **Bossroute:** Beau de Hond → The Mourning Shade → The Bell Tower → The Last Meme (de finale na minimaal drie echte Guardian-overwinningen én minuut **25:00**).
+- **Bossgevechten:** geïsoleerde arena's. Alleen door de boss zelf gesummonde minions mogen verschijnen. Vier bijzondere fase-3 Guardian Powers plus hun eigen, eerder bestaande aanvallen; waarschuwingen, dodge en schadezones blijven actief.
+- **Living World:** bij de eerste drie bosses groeit de tijdelijke invasie naar 15%, 50%, 85%; alleen een echte Standard-finalevictory schrijft de nieuwe dominante wereld permanent weg. Na Victory verdergaan in Endless bewaart je build en huidige run.
 
-Balansnotities: Emmer Mayo geeft 18% damage per level; permanente damagebonussen blijven apart van de vijf zichtbare upgradelevels. XP-drempels groeien met `floor(vorige drempel × factor + 4)`: factor 1.15 tot level 6, 1.105 tot level 15 en 1.085 daarna. Dat vraagt ongeveer 74 totale XP voor level 5, 334 voor level 10, 872 voor level 15, 1,809 voor level 20 en 3,325 voor level 25. Drifters geven 1 XP, runners 0.8, ranged enemies 2, tanks 5 en elites 2.5× hun typewaarde; bosses geven 14 + 18 per bossnummer. Tijdens bossgevechten leveren nieuw gespawnde vijanden geen XP op, eerder gespawnde vijanden wel. Een grove Normal-run simulatie met gemiddeld 1.2 XP per vijand, 35 seconden voor elk van zeven bossgevechten en 45–105 kills per actieve minuut komt na 25 minuten uit rond level 19–24; dit is een modelinschatting, afhankelijk van XP-ophaaltempo, enemy mix en overleving.
+### Besturing
 
-Level-upopties wegen wapens, supports en passives mee; gekozen locked wapens blijven gegarandeerd als unlock-optie staan. Wapenkeuzes krijgen iets meer gewicht, maar bestaande passives worden afgewogen om herhaling te beperken. Synergieën versterken onder meer Frost/Flame, Critical Eye/Force, Heavy Impact met area damage en Spirit Blades met Ward Blades. Vitality geeft +30 max HP en 0.8 HP/s per level; Rapid Casting verlaagt cooldowns multiplicatief met 10% per level. Evolutions vereisen level 5, de support op level 3 en een bosskill; de eerste, tweede en derde evolution kunnen vanaf respectievelijk 10, 17 en 22 minuten gekozen worden. Een evolution vervangt het wapen niet door een extra slot.
+Bewegen met **WASD / pijltjes**, dash met **Shift** (op touchscreens een DASH-knop), pauzeren met **P**, gametempo **1×/2×/3×** en fullscreen met **F**. In **Settings** kies je Low/Medium/High graphics, FPS-overlay en eventueel Developer Mode voor gecontroleerde tests.
 
-Chain Lightning springt maximaal 820 pixels vanaf de speler en valt 15% sneller aan dan voorheen. Eiad Bom start op 85 damage, schaalt gematigder per level en doet 42% van zijn normale schade tegen bosses. Tempest voert twee zelfstandige ketens uit. Ranged Shades schieten alleen zichtbaar binnen 430 pixels en houden afstand tot 300 pixels.
+### Techniek
 
-Audio, beste runs, achievements en permanente upgrades worden lokaal opgeslagen in `localStorage`. De Web Audio-effecten beginnen pas nadat je op Start hebt gedrukt. De game draait client-side en is geschikt voor GitHub Pages.
+Statische HTML5, Canvas, CSS en JavaScript zonder verplichte server. `index.html` laadt de modules in hun benodigde volgorde. Kernbestanden: `js/game.js` (status en vaste 1/60s-simulatie), `js/enemies.js` (damage, AI en bosses), `js/elemental-combat.js` en `js/weapons.js` (actieve elementwapens), `js/upgrades.js` (keuzes/evoluties), `js/boss-flow.js` + `js/boss-isolation.js` (bossroute/arena), `js/guardian-arena-powers.js` (grote aanvallen), `js/world-state.js` (invasie/opslag), `js/render.js` en `js/combat-hud.js` (Canvas/HUD), `js/developer-mode.js` (lokale veilige tests).
 
-Graphics quality staat in Settings op Low, Medium of High. Dit verandert alleen decoratieve glow, achtergronddecoratie en particlelimieten. Schakel `Show FPS, frametime and object timings` in voor FPS, frametime, enemy-AI-, collision- en renderduur plus entity-aantallen.
+Automatische tests op Node.js 22:
 
-Run tests with `node --test tests/game-logic.test.js`. Run the repeatable target-search stress benchmark with `node tests/performance-benchmark.js`.
+```bash
+node --test tests/*.test.js tests/*.test.cjs
+node scripts/milestone-30-audit.cjs
+node tests/performance-benchmark.js
+```
 
+De audit print **technische PASS-checks** én **OPEN handmatige browserchecks**. Een groene Node/CI-run is nadrukkelijk **niet** hetzelfde als een geverifieerde, volledig gespeelde en uitgebalanceerde release.
+
+## Historisch update-archief (Updates 4–8)
+
+De onderstaande historische secties beschrijven de game in eerdere fasen en zijn **niet leidend** voor de huidige selecteerbare wapens, twee-evolutiegrens, bossroute, XP-economie of releasedatum. Raadpleeg voor de huidige versie bovenstaande uitleg en de daadwerkelijke code.
 
 ## Update 4: Weapon evolutions
 
