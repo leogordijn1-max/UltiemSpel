@@ -700,7 +700,7 @@ function update(dt) {
         waveTimer=6;
       }else{
         if(wave.spawned>0)window.recordEncounterRhythmSpawn?.(
-          wave.pattern?.swarm?"swarm":"wave",time,enemies.slice(waveStart));
+          wave.pattern?.swarm?"swarm":"wave",time,enemies.slice(waveStart),growthTime);
         waveNumber=nextWave;
         waveDuration=Math.max(60,80-waveNumber*2);
         waveTimer=waveDuration;
