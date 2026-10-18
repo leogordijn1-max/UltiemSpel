@@ -297,7 +297,12 @@ function spawnSpecialWave(number, cap = 95) {
     ? Math.min(42, 26 + Math.floor(number * 1.2))
     : pattern.members?.length || Math.min(8, 4 + Math.floor(number / 3));
   // A swarm can temporarily exceed the normal ambient cap, but not this hard limit.
-  const hardCap = Math.min(95, Math.max(0,cap));
+  const allowed=window.encounterCanStart?.(
+    enemies,growthTime,swarm?"swarm":"wave",waveSize,
+    typeof difficulty==="string"?difficulty:"normal");
+  if(allowed===false)return {name:pattern.name,spawned:0,pattern,
+    hint:pattern.hint||null,deferred:true};
+  const hardCap=Math.min(swarm?(window.encounterSwarmLimit||95):95,Math.max(0,cap));
   let spawned = 0;
   const tacticGroup = swarm ? null : window.newEncounterTacticGroup?.();
   const team=[];
@@ -336,6 +341,7 @@ function spawnSpecialWave(number, cap = 95) {
       e.xpValueMultiplier = 1.9;
       e.encounterRole = "patrol";
       window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
+      e.encounterGroup ||= tacticGroup || ("wave-"+number);
       e.encounterPlan=pattern.name;
       e.encounterHint=pattern.hint||null;
       team.push(e);
