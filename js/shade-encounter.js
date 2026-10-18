@@ -20,13 +20,21 @@ ring(e,h,q.a+s.round*.58,16+s.round*2,255+s.round*18);
 const x=q.x+Math.cos(q.a+s.round*.85)*110,y=q.y+Math.sin(q.a+s.round*.85)*110;
 h.hazard?.(x,y,95,.48,13+phase(e));h.puff?.(e.x,e.y,"#b38bff",13);
 }else if(s.mode==="phantoms"){
-// Three distinct firing origins create crossfire, but leave a forward lane.
-const ax=Math.cos(q.a),ay=Math.sin(q.a),sx=-ay,sy=ax;
-for(const side of [-1,1]){const origin={x:q.x-ax*190+sx*side*230,y:q.y-ay*190+sy*side*230};
-const a=Math.atan2(q.y-origin.y,q.x-origin.x);
-for(const offset of [-.13,0,.13])h.projectile?.(origin,a+offset,330,12,"shadow");
-h.puff?.(origin.x,origin.y,"#cf9bff",10);}
-h.hazard?.(q.x,q.y,80,.36,13);
+// Phantom Execution is a rotating execution seal, not another flank crossfire.
+// Six glyphs surround the locked position. Each beat leaves a broad marked
+// opening that rotates 90 degrees, inviting an actual movement decision.
+const rotation=q.a+s.round*Math.PI/2;
+const radius=205;
+for(let i=0;i<8;i++){
+  if(i===0||i===1)continue; // two adjacent safe sectors
+  const a=rotation+i*TAU/8;
+  const x=q.x+Math.cos(a)*radius,y=q.y+Math.sin(a)*radius;
+  h.hazard?.(x,y,74,.44,12+phase(e));
+  h.puff?.(x,y,"#cf9bff",7);
+}
+// A delayed centre strike makes standing still unsafe, without unavoidable
+// flanking projectiles. All impacts are independently warned.
+h.hazard?.(q.x,q.y,67,.52,12);
 }else{
 // Escalating three-beat eclipse; telegraphs exactly match the next danger.
 const ax=Math.cos(q.a),ay=Math.sin(q.a),sx=-ay,sy=ax;
@@ -63,7 +71,17 @@ const q=s.target,ax=Math.cos(q.a),ay=Math.sin(q.a),sx=-ay,sy=ax;
 ctx.save();ctx.strokeStyle=s.mode==="eclipse"?"#ec91ff":"#b99aff";ctx.globalAlpha=.85;ctx.lineWidth=quality==="low"?3:4;ctx.setLineDash([11,8]);
 const circle=(x,y,r)=>{ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.stroke();};
 if(s.mode==="collapse"){circle(e.x,e.y,175+s.round*25);circle(q.x+Math.cos(q.a+s.round*.85)*110,q.y+Math.sin(q.a+s.round*.85)*110,95);}
-else if(s.mode==="phantoms"){circle(q.x,q.y,80);for(const side of [-1,1]){const x=q.x-ax*190+sx*side*230,y=q.y-ay*190+sy*side*230;circle(x,y,25);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(q.x,q.y);ctx.stroke();}}
+else if(s.mode==="phantoms"){
+  const rotation=q.a+s.round*Math.PI/2;
+  for(let i=0;i<8;i++){
+    if(i===0||i===1)continue;
+    const a=rotation+i*TAU/8;
+    const px=q.x+Math.cos(a)*205,py=q.y+Math.sin(a)*205;
+    circle(px,py,74);
+    ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(px,py);ctx.stroke();
+  }
+  circle(q.x,q.y,67);
+}
 else for(const side of [-1,0,1])circle(q.x+sx*side*170+ax*(s.round-1)*65,q.y+sy*side*170+ay*(s.round-1)*65,89);
 ctx.restore();}
 window.initializeShadeEncounter=initialize;window.updateShadeEncounter=update;window.interruptShadeEncounter=interrupt;window.forceShadeEncounter=force;window.drawShadeBackdrop=backdrop;window.drawShadeTelegraph=telegraph;
