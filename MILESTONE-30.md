@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 27 — Combat UI & HUD: bossdreiging met countdown, exacte power-veilige routes en herkenbare counterattack-vensters.
-**Volgende update:** 28 — Performance: FPS, renderkosten en stabiele drukke encounters.
-**Planningvoortgang:** **17 / 20 afgerond = 85%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 28 — Performance Overhaul: herbruikbare spatial grid, schermculling van cosmetische effecten, caching van Canvas-gradient en ongewijzigde HUD-markup.
+**Volgende update:** 29 — Volledige Normal-run QA: 25–30 minuten, bugs, boss-flow, twee evoluties en speelgevoel.
+**Planningvoortgang:** **18 / 20 afgerond = 90%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -42,7 +42,7 @@
 | 25 | Boss-flow: volgorde, arena-isolatie, beloningen | AFGEROND · 422/422 tests · volledige bossrun in browser open |
 | 26 | Boss attacks: reactietijd en spectaculariteit | AFGEROND · 432/432 tests · handmatige spectaculaire bossplaytest open |
 | 27 | UI/HUD: helderheid en leesbaarheid van combat | AFGEROND · 441/441 tests · visuele browsertest open |
-| 28 | Performance: FPS, memory en spawnstabiliteit | OPEN |
+| 28 | Performance: FPS, memory en spawnstabiliteit | AFGEROND · 451/451 tests · browser-FPS meting nog open |
 | 29 | Volledige Normal-run tests: polish en grootste issues | OPEN |
 | 30 | MILESTONE: Combat & Gameplay 2.0 beoordelen | OPEN |
 
@@ -361,3 +361,23 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Nog handmatig te beoordelen:** vier fase-3 bosses in Developer Mode, 1×/2×/3× speed, Low/High graphics en kleine viewport. Kijk of de veilige pijlen bij snel bewegen stabiel blijven, of bestaande boss-projectielen het gemarkeerde pad kruisen, of het paneel leesbaar blijft naast de bossbalk, en of groene `COUNTERATTACK` echt samenvalt met een uit te buiten attack window. De tests bewijzen geometrie en wiring, niet de subjectieve visuele leesbaarheid.
 
 **Volgende Update 28:** **performance** bij volle arena's, FPS, Canvas-tekenkosten, objectlimieten, object lifetime, late-run enemy density en effecten in Normal/Nightmare. Behoud de **echte hitzones en minimaal noodzakelijke waarschuwingen op Low**, en verander de spelbalans niet om benchmarkcijfers mooier te maken. Na 28 volgen 29 (volledige Normal-run QA) en 30 (mijlpaalreview).
+
+
+## Update 28 — afgerond (18 oktober 2026)
+**Doel:** onnodige CPU-, geheugen- en Canvas-werkzaamheden schrappen zonder de game makkelijker te maken. In het bijzonder mag een hogere FPS **niet** worden verkregen door spawns, schadeberekening, hitzones, 16-direction shields, terrain-damage of bosswarnings te verminderen. De maker wil functionele visuele basis behouden; definitieve VFX-polish volgt later.
+
+**Gebouwd op feature/living-world-prototype:**
+- In `js/enemies.js` gebruikt `rebuildEnemyGrid()` nu een **stabiele Map en gerecyclede cel-arrays**, in plaats van voor elke vaste gametick een nieuwe Map en voor elke gevulde cel een nieuwe array te alloceren. Vrijgekomen arrays worden meteen gewist om referenties naar dode/moved enemies los te laten. Het spare-pool is **begrensd op 256 lege buckets**; de bestaande cellengrootte 140, de ordening en alle `nearbyEnemies`/`nearestEnemy` queryregels blijven intact. Juist bij 2×/3× snelheid voorkomt dit terugkerende allocaties en GC-druk.
+- `js/render.js` heeft nu **alleen-voor-tekenen** viewporthelpers `renderEffectVisible()` en `renderSegmentVisible()`. Onzichtbare **Frost Zones, lightning-segmenten, Flame Cone-bursts en explosion-ringen** worden niet meer getekend of van dure glow-traces voorzien; events blijven leven en kunnen hun volle damage en status blijven toepassen. De lijnculler behoudt ook gigantische projectielen die het scherm *doorsnijden* terwijl beide eindpunten offscreen liggen. Ook bommen en finale gemarkeerde ground-hazards krijgen een goedkope cullingcheck zonder nieuw spread-object per iteratie.
+- De **vignette Canvas radial gradient** die voorheen iedere draw opnieuw werd aangemaakt, wordt nu per grootte **1× aangemaakt en gecachet** in `getVignettePaint()`. Bij een echte viewportresize wordt de cache opnieuw opgebouwd; visueel blijft dezelfde vignette over.
+- `js/world-visuals.js` gebruikt nu direct een loop over de scherven/scars met viewportcontrole in plaats van `scars.filter(...)` en een tijdelijke zichtbare array aan te maken, zonder opgeslagen terreinwijzigingen of in-game wereldschade aan te passen.
+- `js/game.js` vervangt de HTML-kaarten van de drie huidige elementwapens in de HUD **alleen als de markup werkelijk verandert**, in plaats van iedere ca. 0,12 game-seconde DOM-nodes te vervangen. De waarde wordt bij reset gewist, zodat een nieuwe run zijn eigen loadout toont. HP, Boss HP, dash, aura, bosswarnings, de Live World-status en schade-feedback blijven onafhankelijk bijgewerkt worden.
+- `index.html` cachebust alle vier aangepaste modules. **Niets gewijzigd** aan Normal/Easy/Nightmare spawn limieten, XP, twee earned evoluties, boss-arena-isolatie, gevaren en attack-hitlogica.
+
+**Automatische regressies en bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39158717600 — **451/451 tests geslaagd, 0 gefaald**, JavaScript-syntax groen. **10 nieuwe tests** in `tests/update-28-performance.test.cjs` verifiëren dat de Map en de bucket-arrays daadwerkelijk hergebruikt worden; dat bewegende en gestorven enemies geen stale spatial hits opleveren; dat celqueries voor 1/80/260/600 enemies op zeven radii en meerdere ticks exact dezelfde set leveren als een brute-force zoekopdracht; dat nearest targeting niet verschuift; dat het pool klein blijft; dat viewportculling randen, explosies en lange kruislijnen correct behandelt; dat de gradient ondanks 500 reads één object blijft en na resize vernieuwt; en dat bestaande Guardian-warnings niet zijn uitgezet. De oude boss-isolation resetvolgorde-test is bijgewerkt met de nieuwe, onschadelijke HUD-cache reset.
+
+**Planningsvoortgang:** **18 van 20 = 90%** van de *geplande* updates naar Combat & Gameplay 2.0. Dit is geen gemeten gameprestatiewinst en niet het aandeel art dat af is.
+
+**Nog open — daadwerkelijk meten en spelen:** gebruik in de browser de FPS/debug-overlay (bestaand) en Developer Mode om vergelijkbare groepen van ±100/200/300 enemies plus projectielen en live area effects op **1×/2×/3×, Low/Medium/High** te vergelijken. Leg gemiddelde FPS en `AI / hit / draw ms` vast op dezelfde computer en met dezelfde loadout. Bevestig via echte runs dat shots offscreen blijven bewegen, geen verdwenen waarschuwingen of gemiste collisions ontstaan, real-world worldscars/retaliation zichtbaar blijven en de HUD na een loadout-upgrade direct bijwerkt. Geen numerieke FPS-claim zonder browsermeting. Controleer geheugen over een lange Normal-run om eventuele leaks te detecteren.
+
+**Volgende Update 29:** de **volledige 25–30 minuten Normal-run** en eventuele grootste blockers prioriteren. Loop de drie earned Guardians, twee earned evoluties, alle drie wapen-elementen, de Last Meme na 25:00, het win-/fail-/Endless-verloop en de nu zwaardere phase-three Guardian Powers door. Koppel browser- en CI-verificatie aan concrete bugfixes en maak niets 'geplaytest' wat alleen via Node is getest. Daarna Update 30: eerste milestone review.
