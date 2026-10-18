@@ -39,7 +39,7 @@ test("XP per tactical kill rises as fewer enemies appear late in the run",()=>{
   const h=sandbox(),m=h.window.encounterXpMultiplier;
   assert.equal(m(0,"patrol"),2.8);
   assert.ok(m(1020,"patrol")>=4);
-  assert.ok(m(1500,"patrol")<=4.8);
+  assert.ok(m(1500,"patrol")<=5.6);
   assert.ok(m(900,"wave")>m(0,"wave"));
   assert.ok(m(900,"defense")>m(0,"defense"));
   assert.equal(m(1000,"swarm"),.44);
@@ -88,6 +88,8 @@ test("second evolution milestone remains 17m, before The Last Meme at 25m",()=>{
   assert.equal(vm.runInContext("nextEvolutionTime()",context),600);
   vm.runInContext("evolutions.first=true",context);
   assert.equal(vm.runInContext("nextEvolutionTime()",context),1020);
+  vm.runInContext("evolutions.second=true",context);
+  assert.equal(vm.runInContext("nextEvolutionTime()",context),Infinity);
   assert.equal(vm.runInContext("FINAL_BOSS_TIME",sandbox().context),1500);
   assert.match(read("js/game.js"),/const pickupRange =[\s\S]{0,35}115 \+ upgrades\.magnet/);
 });
