@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 28 — Performance Overhaul: herbruikbare spatial grid, schermculling van cosmetische effecten, caching van Canvas-gradient en ongewijzigde HUD-markup.
-**Volgende update:** 29 — Volledige Normal-run QA: 25–30 minuten, bugs, boss-flow, twee evoluties en speelgevoel.
-**Planningvoortgang:** **18 / 20 afgerond = 90%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 29 — Normal Campaign QA Replay: echte bosskill/evolutie-/Victory-/Endless-functies, herstel van wereld-eindscherm en bescherming tegen same-tick Victory-overwrite.
+**Volgende update:** 30 — Milestone review: Combat & Gameplay 2.0, releasecriteria en open browser-QA.
+**Planningvoortgang:** **19 / 20 afgerond = 95%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -43,7 +43,7 @@
 | 26 | Boss attacks: reactietijd en spectaculariteit | AFGEROND · 432/432 tests · handmatige spectaculaire bossplaytest open |
 | 27 | UI/HUD: helderheid en leesbaarheid van combat | AFGEROND · 441/441 tests · visuele browsertest open |
 | 28 | Performance: FPS, memory en spawnstabiliteit | AFGEROND · 451/451 tests · browser-FPS meting nog open |
-| 29 | Volledige Normal-run tests: polish en grootste issues | OPEN |
+| 29 | Volledige Normal-run tests: polish en grootste issues | AFGEROND · 462/462 geautomatiseerde checks · handmatige 25–30-min browserrun OPEN |
 | 30 | MILESTONE: Combat & Gameplay 2.0 beoordelen | OPEN |
 
 **Voortgangsvorm voor elke update:**
@@ -381,3 +381,22 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Nog open — daadwerkelijk meten en spelen:** gebruik in de browser de FPS/debug-overlay (bestaand) en Developer Mode om vergelijkbare groepen van ±100/200/300 enemies plus projectielen en live area effects op **1×/2×/3×, Low/Medium/High** te vergelijken. Leg gemiddelde FPS en `AI / hit / draw ms` vast op dezelfde computer en met dezelfde loadout. Bevestig via echte runs dat shots offscreen blijven bewegen, geen verdwenen waarschuwingen of gemiste collisions ontstaan, real-world worldscars/retaliation zichtbaar blijven en de HUD na een loadout-upgrade direct bijwerkt. Geen numerieke FPS-claim zonder browsermeting. Controleer geheugen over een lange Normal-run om eventuele leaks te detecteren.
 
 **Volgende Update 29:** de **volledige 25–30 minuten Normal-run** en eventuele grootste blockers prioriteren. Loop de drie earned Guardians, twee earned evoluties, alle drie wapen-elementen, de Last Meme na 25:00, het win-/fail-/Endless-verloop en de nu zwaardere phase-three Guardian Powers door. Koppel browser- en CI-verificatie aan concrete bugfixes en maak niets 'geplaytest' wat alleen via Node is getest. Daarna Update 30: eerste milestone review.
+
+
+## Update 29 — afgerond (18 oktober 2026)
+**Doel:** de volledige 25–30-minuten Standard Normal-campagne integraal toetsen, echte blokkades repareren en onderscheid maken tussen gescripte gameplay-asserties en **daadwerkelijk gespeeld in de browser**. Vanwege ontbrekende browser-/visuele playtestaccess is deze update bewust een **scripted QA replay**, geen valse belofte van een menselijke volledige run.
+
+**Concreet gebouwd en gerepareerd:**
+- Nieuwe `tests/update-29-full-normal-run.test.cjs`: **11 extra tests**, waaronder gesimuleerde complete **26:40 Normal-campagnes** voor Fire/Water/Frost met de **echte geïmporteerde** `js/boss-flow.js`, `js/world-state.js`, `js/progression.js`, `js/upgrades.js`, `js/enemies.js`, `js/boss-isolation.js` en de echte uit `js/game.js` geëxtraheerde eindscherm- en Endless-functies. De test gebruikt echte bossconstructors, `damage()` en bossdeath, drie world thresholds **15/50/85%**, exacte eerste tweede evolution time-gates 10:00 en 17:00, finale **niet vóór 25:00** en definitieve World Victory op 26:40. Daarna doorgaan in Endless met Beau als eerste terugkerende boss en geen dubbele wins/rewards/run-records. Ook defeat/herstel en geen premature/derde evolutie worden gecontroleerd.
+- **Nuance over de replay:** dit script simuleert geen 60 FPS-render, bootst geen autonome 26 minuten vijandengevechten of daadwerkelijke upgrade-aanbiedingen na en geeft voor de evolutiechecks de juiste vereiste weapon-level 5 en support-level 3 direct in de testfixture. Het bewijst de echte *regels, guards, verdelingen en levenscyclus*, niet dat je in een normale run voldoende XP verdient, twee keer eerlijk kunt evolueren of vier bosses overleeft. Voor dat onderscheid is `NORMAL-RUN-QA.md` met open tests bijgehouden.
+- **Echte bugfix 1 (`js/game.js`):** na een gewonnen Standard en een latere Endless-death meldde Game Over tegenstrijdig dat de *oorspronkelijke* verdedigde wereld was veroverd. Nu toont het de daadwerkelijke **invader-/gewonnen wereld** bij Endless-death, de verdiende piekverovering **100%**, en bij een vroegtijdige Standard-death de oorspronkelijke wereld met het echt behaalde maximum (bv. 50% na twee earned bosskills). De reeds opgeslagen wereldstatus wordt hierdoor niet aangepast.
+- **Echte bugfix 2 (`js/game.js`):** een final-boss-kill gebeurt soms halverwege een 1/60 simulatiestap. Oude projectielen konden in de resterende tick alsnog `end()` aanroepen en zo de net verdiende **VICTORY**-modal overschrijven. `end()` weigert nu enkel wanneer `gameState === "victory"`; na `CONTINUE IN ENDLESS MODE` is gameState opnieuw `playing`, zodat een nieuwe dood wel correct Game Over wordt. Eén nieuwe test dwingt precies deze overgang af en bewaakt de eenmalige runreward.
+- **Nieuw permanent QA-document:** `NORMAL-RUN-QA.md` met concrete handmatige acceptatiecheckpoints van 00:00 tot 25–30min, elk van de vier Guardians, twee earned evoluties, de 18 Living World-reacties, 3 moeilijkheden, low/high, 1×/2×/3×, HUD/power overlap, rewards, verlies/victory/Endless en geheugen/FPS. **Open browsertests zijn expliciet NIET afgevinkt.**
+
+**CI-verificatie:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39159657297 — **462 tests geslaagd / 0 fouten** inclusief 11 nieuwe Update-29 regressies, JavaScript-syntax groen. Een nieuwere docs-only workflow mag daarna ook groen worden; controleer altijd de actuele branch-HEAD.
+
+**Planningsvoortgang:** **19/20 = 95%** van de geplande updates naar Update 30. Dit is geen percentage spelkwaliteit, grafische afwerking of bewezen speelbaarheid.
+
+**OPEN tot vrijgave:** volledige **echte** Standard Normal-browserrun van 25–30min met Fire/Water/Frost; kunnen verdienen van weapon L5 + support L3 *via normaal gespeelde XP en daadwerkelijk aanbod*, fase-3 Guardian Powers plus bestaande showcases zonder oneerlijke overlap; aanhoudende FPS/stabiliteit, eventuele late-game balans; volledige handmatige boss-/wereld-/Endless-overgang. De gescripte 26:40 QA replay is géén praktische spell- of survivabilitybenchmark.
+
+**Volgende — Update 30:** beslismoment Combat & Gameplay 2.0: inventariseer echte bewezen acceptatiecriteria en bekende risico's, markeer scenario's eerlijk als PASS / AUTOMATISCH PASS, MANUEEL OPEN of FAIL, maak een gerichte vervolg-roadmap naar de eerste daadwerkelijk volledig speelgeteste versie. Houd de makerafspraak aan dat VFX voor nu vooral bestaan en gameplay voorrang heeft boven eindpolish. Geen definitieve kwaliteits-/releaseclaims zonder browsertests.
