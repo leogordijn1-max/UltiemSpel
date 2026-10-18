@@ -185,9 +185,9 @@ test("encounters, evolutions and characters are all discoverable", () => {
   load(c,"js/characters.js");
   assert.equal(vm.runInContext("enemyCatalog.length",c), 6);
   assert.equal(vm.runInContext("bossCatalog.length",c), 4);
-  assert.equal(vm.runInContext("evolutionRecipes.length",c),8);
+  assert.equal(vm.runInContext("evolutionRecipes.length",c),15);
   assert.equal(vm.runInContext("characterCatalog.length",c),4);
-  assert.equal(vm.runInContext("weaponCatalog.length",c),8);
+  assert.equal(vm.runInContext("weaponCatalog.length",c),15);
 });
 
 test("important sounds exist alongside per-effect spam protection", () => {
