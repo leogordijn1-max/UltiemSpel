@@ -152,6 +152,17 @@ test("a dodged damage hit cannot still push the player or count as a hit",()=>{
   h.window.updateWorldRetaliation(.1,h.p,hooks);
   assert.equal(calls.damage,2);
 });
+test("boss isolation suspends permanent elemental hazards without deleting them",()=>{
+  const h=make("fire","flooded",50),r=spawn(h);
+  h.p.x=r.x;h.p.y=r.y;
+  let hits=0;
+  h.window.updateWorldRetaliation(50,h.p,{suspended:true,damage:()=>hits++});
+  assert.equal(hits,0);
+  assert.equal(h.window.getWorldRetaliationStatus().rifts[0].elapsed,0);
+  h.window.updateWorldRetaliation(r.warning+.1,h.p,{damage:()=>hits++});
+  assert.equal(hits,1);
+  assert.equal(h.window.getWorldRetaliationStatus().active,1);
+});
 test("reset and clear wipe the reaction field, no cross-run effects",()=>{
   const h=make();
   spawn(h);assert.equal(h.window.getWorldRetaliationStatus().active,1);
