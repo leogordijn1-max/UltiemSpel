@@ -115,12 +115,12 @@ test("only a claimed Standard victory can permanently change the world", () => {
   assert.equal(h.window.getWorldConquest().coverage, 0);
 });
 
-test("local fire melts ice, frost freezes water, sustained heat dries puddles", () => {
+test("player fire conquers frozen and flooded ground while frost freezes water", () => {
   const h = harness("fire", "frozen");
   h.window.beginWorldRun();
   h.window.resetWorldScars();
   h.window.addWorldScar("fire", 100, 100, 120);
-  assert.equal(h.window.terrainAt(100, 100), "water");
+  assert.equal(h.window.terrainAt(100, 100), "fire");
   h.window.addWorldScar("frost", 100, 100, 120);
   assert.equal(h.window.terrainAt(100, 100), "frost");
   h.window.clearWorldScars();
