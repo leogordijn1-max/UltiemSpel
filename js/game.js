@@ -623,13 +623,25 @@ function end() {
     .filter((weapon) => upgrades[weapon.key] > 0)
     .map((weapon) => weapon.name)
     .join(", ");
+  // QA 29: after a legitimate Standard victory the saved dominant world is
+  // the invader. Endless Game Over must not label the ORIGINAL defender as
+  // conquered. Before a win report the earned peak, even during transitions.
+  const conquestAtEnd = window.getWorldConquest?.();
+  const worldAtEnd = victoryClaimed
+    ? conquestAtEnd?.invading
+    : conquestAtEnd?.original;
+  const worldOutcome = victoryClaimed
+    ? "CONQUERED IN STANDARD · ENDLESS ENDED"
+    : "DEFENDERS RETAINED THEIR WORLD";
+  const worldPeak = victoryClaimed ? 100 :
+    (conquestAtEnd?.restorationPeak || conquestAtEnd?.target || 0);
   active = false;
   paused = true;
   gameState = "game-over";
   choiceScreenOpen = false;
   panel(
     "KKR SUKKEL",
-    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s in ${runMode.toUpperCase()} mode.<br><b>World:</b> ${window.getWorldConquest?.().original?.toUpperCase() || "FROZEN"} · ${victoryClaimed ? "CONQUERED" : "RESTORED BY THE GUARDIAN"}<br>Reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.${victoryClaimed ? "<br>Standard victory completed · Endless unlocked." : ""}<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints + (victoryClaimed ? FINAL_VICTORY_BONUS : 0)}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
+    `You survived ${Math.floor(time / 60)}m ${Math.floor(time % 60)}s in ${runMode.toUpperCase()} mode.<br><b>World:</b> ${worldAtEnd?.toUpperCase() || "FROZEN"} · ${worldOutcome} · ${worldPeak}% PEAK INVASION<br>Reached level ${level}, defeated ${kills} monsters, and beat ${bossesDefeated} bosses.${victoryClaimed ? "<br>Standard victory completed · Endless unlocked." : ""}<br>Weapons: ${activeWeapons}<br>Best kills: ${highest}<br>Permanent points earned: ${Math.floor(kills / 100) + bossesDefeated * 3 + bossRewardPoints + (victoryClaimed ? FINAL_VICTORY_BONUS : 0)}${recentAchievements.length ? `<br>Unlocked: ${recentAchievements.join(", ")}` : ""}`,
     (el) => {
       let b = document.createElement("button");
       b.textContent = "TRY AGAIN";
