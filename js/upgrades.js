@@ -167,7 +167,12 @@ function upgradeChoiceWeight(key) {
   let weight = isWeaponKey(key) ? 2.35 : upgradeCategory(key) === "WEAPON SUPPORT" ? 1.25 : 1.35;
   // Avoid repeatedly offering a passive the build has already invested in heavily.
   if (!isWeaponKey(key)) weight *= Math.max(0.58, 1 - levelValue * 0.09);
-  if ((key === "flame" && upgrades.frost) || (key === "frost" && upgrades.flame)) weight *= 1.45;
+  // Real element loadouts never mix Flame Cone and Frost Orb. Favour the
+  // supports that actually advance the player's unlocked evolution recipes.
+  const supportTargets=evolutionRecipes.filter(recipe=>recipe.support===key &&
+    isWeaponUnlocked(recipe.weapon) && !evolutions[recipe.id] &&
+    currentUpgradeLevel(recipe.weapon)>=2 && currentUpgradeLevel(recipe.support)<recipe.supportLevel);
+  if(supportTargets.length)weight*=Math.min(1.65,1.3+supportTargets.length*.15);
   if ((key === "critChance" && upgrades.critDamage) || (key === "critDamage" && upgrades.critChance)) weight *= 1.45;
   if (key === "speed" && upgrades.orbit) weight *= 1.15;
   if (key === "bladeBlock" && upgrades.orbit) weight *= 1.35;
@@ -195,6 +200,41 @@ function evolutionFocusKey() {
   }
   return null;
 }
+function evolutionRouteHints(key, nextLevel = currentUpgradeLevel(key)) {
+  if(typeof selectedWeapons==="undefined"||!Array.isArray(selectedWeapons))return "";
+  if(typeof evolutions!=="undefined"&&Object.values(evolutions).filter(Boolean).length>=2)return "";
+  const routes=evolutionRecipes.filter(recipe=>!evolutions[recipe.id] &&
+    selectedWeapons.includes(recipe.weapon) &&
+    (recipe.weapon===key || (recipe.support===key && isWeaponUnlocked(recipe.weapon))));
+  return routes.slice(0,2).map(recipe=>{
+    const weaponLevel=recipe.weapon===key?nextLevel:currentUpgradeLevel(recipe.weapon);
+    const supportLevel=recipe.support===key?nextLevel:currentUpgradeLevel(recipe.support);
+    const weaponName=weaponCatalog.find(w=>w.key===recipe.weapon)?.name||recipe.weapon;
+    const bossReady=typeof bossesDefeated==="number"&&bossesDefeated>=1;
+    const clock=typeof time==="number"&&time>=nextEvolutionTime();
+    const ready=weaponLevel>=recipe.level&&supportLevel>=recipe.supportLevel&&bossReady&&clock;
+    return '<small class="evolution-route">'+
+      (ready?"EVOLUTION READY":"EVOLUTION PATH")+' · '+weaponName+' → '+recipe.name+
+      ' · Weapon '+weaponLevel+'/'+recipe.level+
+      ' · '+recipe.supportName+' '+supportLevel+'/'+recipe.supportLevel+
+      ' · '+(bossReady?"Boss ✓":"Boss needed")+
+      ' · '+(clock?"Time ✓":"10:00 / 17:00 milestone")+'</small>';
+  }).join("");
+}
+function elementalBuildHint(key) {
+  const groups={fire:["flame","fireball","flameOrbit"],water:["waterBolt","tidalWave","whirlpool"],
+    frost:["frost","iceShards","glacialPulse"]};
+  const names={fire:"IGNITION",water:"UNDERTOW",frost:"SHATTER"};
+  const element=Object.keys(groups).find(e=>groups[e].includes(key));
+  if(!element)return "";
+  const companions=groups[element].filter(w=>w!==key&&isWeaponUnlocked(w));
+  return companions.length
+    ? '<small class="elemental-combo-hint">'+names[element]+
+      ' COMBO · Alternate with '+companions.map(w=>weaponCatalog.find(x=>x.key===w)?.name||w).join(' / ')+
+      ' to trigger a small, limited elemental bonus.</small>'
+    : '<small class="elemental-combo-hint">ELEMENTAL COMBO · Unlock another '+element+
+      ' weapon to trigger a bonus by alternating hits.</small>';
+}
 function makeUpgradeChoice(option, { levels = 1, rare = false } = {}) {
   const [key, name, description] = option;
   const oldLevel = currentUpgradeLevel(key);
@@ -206,12 +246,11 @@ function makeUpgradeChoice(option, { levels = 1, rare = false } = {}) {
   const image = upgradeImage(key);
   const recipe = evolutionForWeapon(key);
   const status = unlocking ? "LOCKED → UNLOCKED" : oldLevel === 0 ? "AVAILABLE" : `LEVEL ${oldLevel} → ${newLevel}`;
-  const evolutionHint = recipe
-    ? `<small>Evolution: ${eligibleEvolutions().some((entry) => entry.id === recipe.id) ? "AVAILABLE" : `requires weapon level ${recipe.level}, ${recipe.supportName} level ${recipe.supportLevel}, one boss kill, and the ${Math.floor(nextEvolutionTime() / 60)}-minute milestone`} → ${recipe.name}</small>`
-    : "";
+  const evolutionHint=evolutionRouteHints(key,newLevel);
+  const elementalHint=isWeaponKey(key)?elementalBuildHint(key):"";
   const button = document.createElement("button");
   button.className = "choice";
-  button.innerHTML = `${image ? `<img class="choice-art" src="${image}" alt="">` : ""}<small class="choice-category">${unlocking ? "WEAPON UNLOCK" : upgradeCategory(key)}${rare ? " · BOSS REWARD" : ""} · ${status}</small><b>${name}</b><small>${unlocking ? `Unlock ${name} and activate it at level 1.` : description}</small><small>${name} — ${unlocking ? "LOCKED" : `Level ${oldLevel}`} → Level ${newLevel}${rare && !unlocking ? ` (+${appliedLevels}${adjustedReward ? "; overflow → +1 permanent point" : ""})` : ""}</small><small>${upgradeEffectAtLevel(key, newLevel)}</small>${evolutionHint}`;
+  button.innerHTML = `${image ? `<img class="choice-art" src="${image}" alt="">` : ""}<small class="choice-category">${unlocking ? "WEAPON UNLOCK" : upgradeCategory(key)}${rare ? " · BOSS REWARD" : ""} · ${status}</small><b>${name}</b><small>${unlocking ? `Unlock ${name} and activate it at level 1.` : description}</small><small>${name} — ${unlocking ? "LOCKED" : `Level ${oldLevel}`} → Level ${newLevel}${rare && !unlocking ? ` (+${appliedLevels}${adjustedReward ? "; overflow → +1 permanent point" : ""})` : ""}</small><small>${upgradeEffectAtLevel(key, newLevel)}</small>${evolutionHint}${elementalHint}`;
   button.onclick = () => {
     if (button.disabled) return;
     button.disabled = true;
@@ -290,14 +329,20 @@ function evolutionHudStatus() {
   if(typeof selectedWeapons==="undefined"||!Array.isArray(selectedWeapons))
     return "EVOLUTIONS "+count+"/2 · "+clock;
   const next=selectedWeapons
+    .filter(key=>isWeaponUnlocked(key))
     .map(key=>evolutionForWeapon(key))
-    .find(recipe=>recipe && !evolutions[recipe.id]);
+    .filter(recipe=>recipe&&!evolutions[recipe.id])
+    .sort((a,b)=>(a.level-currentUpgradeLevel(a.weapon)+
+      a.supportLevel-currentUpgradeLevel(a.support))-
+      (b.level-currentUpgradeLevel(b.weapon)+
+      b.supportLevel-currentUpgradeLevel(b.support)))[0];
   if(!next)return "EVOLUTIONS "+count+"/2 · "+clock;
   const own=currentUpgradeLevel(next.weapon);
   const support=currentUpgradeLevel(next.support);
   return "EVOLUTIONS "+count+"/2 · "+clock+" · "+
     (weaponCatalog.find(w=>w.key===next.weapon)?.name||next.weapon)+
-    " "+own+"/5 · "+next.supportName+" "+support+"/3";
+    " "+own+"/5 · "+next.supportName+" "+support+"/3"+
+    (typeof bossesDefeated==="number"&&bossesDefeated<1?" · BOSS NEEDED":"");
 }
 function offerEarnedEvolution() {
   if(typeof active==="undefined"||!active||
@@ -389,7 +434,7 @@ function choices() {
     resumeRunAfterChoice();
     return;
   }
-  panel("LEVEL " + level, "Unlock one of your chosen weapons or improve your active build.", (el) => {
+  panel("LEVEL " + level, "Build toward two earned evolutions. Alternate different same-element weapons to trigger small elemental combos.", (el) => {
     if (evolutionPicks.length) el.append(makeEvolutionChoice(evolutionPicks[Math.floor(Math.random() * evolutionPicks.length)]));
     pick.forEach((option) => el.append(makeUpgradeChoice(option)));
   });
@@ -411,7 +456,7 @@ function showBossReward() {
   paused = true;
   choiceScreenOpen = true;
   gameState = "boss-reward";
-  panel("BOSS TROPHY", "Choose a reward for your current build.", (el) => {
+  panel("BOSS TROPHY", "Choose a reward that strengthens your build and advances your earned evolutions.", (el) => {
     if (evolutionPicks.length) el.append(makeEvolutionChoice(evolutionPicks[Math.floor(Math.random() * evolutionPicks.length)], { rare: true }));
     rewards.forEach((option) => {
       const key = option[0];
