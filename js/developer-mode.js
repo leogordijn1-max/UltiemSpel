@@ -183,7 +183,10 @@
     if (final) {
       if (runMode !== "standard" || victoryClaimed) return;
       if (!spawnFinalBoss()) return;
-    } else spawnBoss();
+    } else if (!spawnBoss()) {
+      notify("DEV · 3 GUARDIANS DEFEATED · USE SPAWN FINAL BOSS", "boss", 3);
+      return;
+    }
     // Make a real boss immediately visible instead of spawning offscreen.
     boss.x = player.x + Math.min(W * .26, 260);
     boss.y = player.y - 20;
