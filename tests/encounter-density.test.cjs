@@ -60,6 +60,22 @@ test("an intact squad gets priority: ambient budget drops and extra formations a
   assert.equal(h.patrol(),5);
   assert.equal(h.window.encounterActiveGroups(h.enemies),2);
 });
+test("last straggler does not hold the tactical budget hostage",()=>{
+  const h=make();
+  assert.equal(h.patrol(),5);
+  h.enemies.slice(0,4).forEach(e=>{e.dead=true;e.hp=0;});
+  assert.equal(h.window.encounterActiveGroups(h.enemies),0);
+  assert.equal(h.patrol(),5);
+  assert.equal(h.window.encounterActiveGroups(h.enemies),1);
+});
+test("late encounter can't start on top of a dozen stray enemies",()=>{
+  const h=make();
+  for(let i=0;i<13;i++)h.enemies.push({kind:0,hp:10,dead:false});
+  assert.equal(h.patrol(),0);
+  h.enemies[0].dead=true;h.enemies[0].hp=0;
+  assert.equal(h.patrol(),5);
+  assert.equal(h.enemies.filter(e=>!e.dead).length,17);
+});
 test("tactical wave defers rather than overlaps a full arena, then resumes after cleanup",()=>{
   const h=make(),wave=waveHarness(h);
   assert.equal(h.patrol(),5);
