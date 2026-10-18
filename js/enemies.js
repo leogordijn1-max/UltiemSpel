@@ -176,10 +176,12 @@ function enemyOffscreenSpawn(angle, padding = 90, along = 0) {
     y: player.y + Math.sign(Math.sin(angle) || 1) * (halfH + padding)
   };
 }
-window.enemyOffscreenSpawn = enemyOffscreenSpawn;
+if (typeof window!=="undefined")window.enemyOffscreenSpawn = enemyOffscreenSpawn;
 // Cap auto-targeting to threats already visible and near the player.
-window.playerWeaponRange = max => Math.min(max, Math.max(150, Math.min(W,H)*.62));
-window.playerWeaponTargetVisible = enemy => !!enemy && visibleEnemy(enemy, 50);
+if(typeof window!=="undefined"){
+  window.playerWeaponRange = max => Math.min(max, Math.max(150, Math.min(W,H)*.62));
+  window.playerWeaponTargetVisible = enemy => !!enemy && visibleEnemy(enemy, 50);
+}
 
 // Special waves can request a type; ordinary spawns retain a mixed distribution.
 function enemySpawn(preferredKind = null, forceElite = false, bypassProgression = false) {
