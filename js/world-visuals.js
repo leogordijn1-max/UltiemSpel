@@ -209,11 +209,13 @@
         }
       }
     }
-    const visible=scars.filter(s=>s.x+s.size>left&&s.x-s.size<right&&s.y+s.size>top&&s.y-s.size<bottom);
     const cover = window.getWorldConquest?.();
     // Local damage is temporary: it visually fades as the guardian restores the world.
     const scarAlpha = cover?.restored ? Math.min(1, cover.coverage / Math.max(1,cover.restorationPeak||1)) : 1;
-    for(const s of visible)drawMark(s,(fullQuality?.85:graphicsQuality==="low"?.43:.60)*scarAlpha);
+    for(const s of scars){
+      if(s.x+s.size<=left||s.x-s.size>=right||s.y+s.size<=top||s.y-s.size>=bottom)continue;
+      drawMark(s,(fullQuality?.85:graphicsQuality==="low"?.43:.60)*scarAlpha);
+    }
     ctx.globalAlpha=1;
     for(const effect of effects){
       if(effect.x<left-80||effect.x>right+80||effect.y<top-80||effect.y>bottom+80)continue;
