@@ -156,6 +156,16 @@ function nearestEnemies(x, y, radius, limit, include = null) {
 }
 
 const FINAL_BOSS_TIME = 25 * 60;
+const STANDARD_BOSS_COUNT = 3; // Beau → Mourning Shade → Bell Tower → The Last Meme
+function nextBossEncounter(mode,defeated,clock,nextOrdinaryTime,finalDefeated=false){
+  if(mode==="standard"&&!finalDefeated){
+    // The finale cannot jump ahead of one of the three world guardians.
+    if(defeated>=STANDARD_BOSS_COUNT)
+      return clock>=FINAL_BOSS_TIME?"final":null;
+    return clock>=nextOrdinaryTime?"ordinary":null;
+  }
+  return clock>=nextOrdinaryTime?"ordinary":null;
+}
 function currentEndlessTier() {
   if (typeof runMode === "undefined" || runMode !== "endless" || typeof time !== "number") return 0;
   const startingAt = Math.max(FINAL_BOSS_TIME, typeof endlessStartTime === "number" ? endlessStartTime : 0);
@@ -556,7 +566,12 @@ function damage(e, d, origin = player, damageType = "direct") {
         }
         if (trophy.first && typeof saveMetaProgress === "function") saveMetaProgress();
       }
-      nextBossTime = time + 180;
+      // Stop the ordinary 3-boss cycle after Bell Tower in Standard Mode.
+      // Next encounter is The Last Meme at minute 25, not another Beau.
+      nextBossTime =
+        !killedFinalBoss && typeof runMode!=="undefined" &&
+        runMode==="standard" && bossesDefeated>=STANDARD_BOSS_COUNT
+          ? FINAL_BOSS_TIME : time+180;
       window.finishBossIsolation?.(e);
       boss = null;
       $("bossHud").style.display = "none";
@@ -690,7 +705,8 @@ function enemyFireOrb(e) {
 }
 
 function spawnBoss() {
-  if (boss) return false;
+  if(boss||(typeof runMode!=="undefined"&&runMode==="standard"&&
+      bossNumber>=STANDARD_BOSS_COUNT))return false;
   window.beginBossIsolation?.();
   bossNumber++;
   const variant = (bossNumber - 1) % 3;
