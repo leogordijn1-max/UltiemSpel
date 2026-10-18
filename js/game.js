@@ -140,6 +140,7 @@ function syncElementalLoadout() {
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
+  window.resetCombatHud?.();
   window.resetGuardianArenaPower?.();
   window.resetBossIsolation?.();
   // Start a fresh sandbox before any discovery or rewards can be written.
@@ -448,6 +449,20 @@ function hud() {
       ? "DASH READY · SHIFT"
       : `DASH ${dashCooldown.toFixed(1)}s · SHIFT`;
   dashStatus.classList.toggle("ready", dashCooldown <= 0);
+  const combatCue=$("bossCombatCue");
+  if(combatCue){
+    const cue=window.combatHudDescribe?.(boss,player,time,dashCooldown);
+    combatCue.hidden=!cue?.visible;
+    if(cue?.visible){
+      combatCue.dataset.tone=cue.tone;
+      $("bossCueTitle").textContent=cue.title;
+      $("bossCueClock").textContent=cue.detail;
+      $("bossCueAdvice").textContent=cue.instruction;
+      $("bossCueDash").textContent=cue.subtext;
+      $("bossCueTrack").hidden=cue.progress===null;
+      $("bossCueFill").style.width=(cue.progress??0)+"%";
+    }
+  }
   const upcomingWave = waveNumber + 1;
   const waveClock = `${Math.floor(Math.max(0, waveTimer) / 60)}:${String(Math.ceil(Math.max(0, waveTimer) % 60)).padStart(2, "0")}`;
   const currentPattern = waveNumber
