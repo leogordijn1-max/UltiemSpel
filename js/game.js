@@ -937,11 +937,13 @@ function update(dt) {
             e.shootCooldown = 0;
             e.aimAngle = Math.atan2(player.y - e.y, player.x - e.x);
             e.shotWarning = 0.7;
+            window.prepareEncounterTacticVolley?.(e);
           }
         }
       } else if (e.shotWarning > 0) {
         // An enemy leaving the visible attack area cannot finish a hidden shot.
         e.shotWarning = 0;
+        window.cancelEncounterTacticVolley?.(e);
         e.shootCooldown = 0.9;
       }
     }
