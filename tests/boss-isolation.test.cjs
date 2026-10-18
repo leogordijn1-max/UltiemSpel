@@ -108,7 +108,9 @@ test("restart and menu exit cannot leave the next run in an isolated arena", () 
 });
 
 test("the actual game spawn loop is skipped completely while boss exists", () => {
-  assert.match(gameSource, /if \(!boss && !window\.isBossIsolationActive\?\.\(\)\) \{\s*spawn -= dt;/);
+  assert.match(gameSource, /if \(!boss && !window\.isBossIsolationActive\?\.\(\)\) \{\s*const cap = window\.encounterPopulationCap/);
+  assert.match(gameSource, /while \(spawn <= 0 && enemies\.length < ambientCap\)/);
+  assert.match(gameSource, /updateEncounterPacing\?\.\(time,growthTime,player,enemies/);
   assert.match(gameSource, /if \(!boss\) \{\s*waveTimer -= dt;/);
   assert.match(enemiesSource, /if \(boss \|\| window\.isBossIsolationActive\?\.\(\)\) return null;/);
   assert.match(enemiesSource, /BOSS ARENA · WAVES PAUSED/);
