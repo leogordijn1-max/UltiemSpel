@@ -278,6 +278,7 @@ function draw() {
     window.drawBellTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawMemeTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawGuardianArenaPowerWarning?.(e,ctx,time,graphicsQuality);
+    if(e===boss)window.drawCombatHudEscape?.(ctx,e,player,time,graphicsQuality);
     if (e.pulseSlowUntil > time) {
       ctx.save();
       ctx.strokeStyle = "rgba(191, 108, 255, 0.85)";
