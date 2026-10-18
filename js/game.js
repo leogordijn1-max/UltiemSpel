@@ -704,6 +704,7 @@ function update(dt) {
     player.inv = Math.max(0, player.inv - dt);
   }
   window.updateWorldRetaliation?.(dt, player, {
+    suspended: !!boss,
     chill: seconds => {
       player.guardianChillUntil = Math.max(player.guardianChillUntil || 0, time + seconds);
     },
