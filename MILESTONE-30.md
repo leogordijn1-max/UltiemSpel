@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 22 — Weapon & Enemy Balance: Easy/Normal/Nightmare via leesbare tactische druk, geen extra Nightmare-hordes, en gerichte boss-wapenbalans.
-**Volgende update:** 23 — Wereldterreinen: gevaren duidelijk en eerlijk.
-**Planningvoortgang:** **12 / 20 afgerond = 60%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 23 — Terrain Hazards Overhaul: waarschuwing voor iedere terugkerende uitbarsting, zichtbare veilige fases en geen overlappende permanente gevarenzones.
+**Volgende update:** 24 — Living World: terreinreacties en duidelijke consequenties.
+**Planningvoortgang:** **13 / 20 afgerond = 65%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -37,7 +37,7 @@
 | 20 | Weapon VFX: eerste visuele kwaliteitslat | AFGEROND · 372/372 tests · browser-visual review open |
 | 21 | Wapens en evoluties: keuze, synergie, feedback | AFGEROND · 381/381 tests · gecombineerde browser-speeltest open |
 | 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | AFGEROND · 391/391 tests · echte difficulty/play-feeltest open |
-| 23 | Wereldterreinen: gevaren duidelijk en eerlijk | OPEN |
+| 23 | Wereldterreinen: gevaren duidelijk en eerlijk | AFGEROND · 402/402 tests · browser-telegraphs/feeltest open |
 | 24 | Living World: terreinreacties en duidelijke consequenties | OPEN |
 | 25 | Boss-flow: volgorde, arena-isolatie, beloningen | OPEN |
 | 26 | Boss attacks: reactietijd en spectaculariteit | OPEN |
@@ -251,3 +251,25 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Nog open — handmatige browser-speeltest:** speel minimaal de eerste 8 minuten van elk niveau met vergelijkbare starter/upgrade-route: blijft Easy toegankelijk, Normal uitdagend, Nightmare spannend maar fair? Vergelijk echte HP/time-to-kill, boss-movement onder Frost, Flame Orbit dichtbij de boss en of ranged/burstwaarschuwingen op Nightmare werkelijk te ontwijken zijn. Kijk ook naar de voorjaars-/late-game pacing en de twee volledig verdiende evoluties. Geautomatiseerde tests bewijzen de verhoudingen, niet het daadwerkelijke spelgevoel.
 
 **Volgende update (23):** terreingevaren eerlijk en leesbaar maken (bijv. waarschuwing, impactzone, reactietijd en visueel onderscheid) zonder World-/Living World-consequenties af te zwakken. De omvangrijke cosmetische VFX-polish blijft voor een latere fase: de maker wil nu vooral dat de effecten bestaan.
+
+
+## Update 23 — afgerond (18 oktober 2026)
+**Doel:** bestaande Living World-terreingevaren duidelijk en eerlijk maken zonder de 18 huidige elementreacties, veroveringsdrempels of boss-isolatie te veranderen. De gebruiker wil de effecten voorlopig functioneel/aanwezig hebben; uitgebreide eind-VFX-polish komt later.
+
+**Resultaat:**
+- In `js/world-retaliation.js` gebruikt iedere reaction-zone nu een leesbare toestand: **forming → active** voor doorlopende zones, en bij grote bursts steeds opnieuw **active → recovering → charging → active**.
+- **Herhaalde uitbarstingen krijgen nu telkens een eigen 0,95 seconde oplaadwaarschuwing** vóór de nieuwe schadepuls. Previously werd alleen het ontstaan van de permanente scheur gewaarschuwd; latere eruptions begonnen abrupt.
+- De oplaadfase gebruikt een naar binnen krimpende waarschuwingsring; actief gevaar toont een stevige rand en een duidelijke centrumring, en een rustende burst toont een **gedimde, gestippelde veilige rand**. De cirkel geeft de daadwerkelijke hitzone aan. Belangrijk: **dit blijft op Low graphics zichtbaar**, niet alleen High.
+- De eerste waarschuwing blijft 2,2 / 2,6 / 3,1 seconden voor de drie progressiefasen. De werkelijke uitbarstingsduur (1,05 seconden) en cyclus (3,8 seconden) zijn behouden; de extra telegraph valt in de al bestaande veilige tussenfase, zodat damagefrequentie niet stiekem stijgt.
+- De permanente zones worden zonder overlap geplaatst: het algoritme zoekt zo nodig verder naar een vrije plek in steeds grotere ringen, in plaats van na acht mislukte pogingen alsnog op een bestaande hazard te spawnen. **Maximaal alle 24 fasezones** kunnen nog verschijnen en blijven permanent binnen de run. Nieuwe zones ontstaan niet midden op de speler.
+- `js/render.js` geeft het zichtbare speelveld mee, zodat offscreen rifts geen extra Canvas-effecten kosten. De hazard-status meldt nu ook **warningPhase**, **secondsUntilChange** en **currentlyDangerous** voor QA/developer-inspectie.
+- **Boss-isolatie blijft exact zoals bedoeld**: de reactieklok pauzeert zolang een boss aanwezig is; rifts verdwijnen niet en slaan geen waarschuwingsfase over bij terugkeer.
+- Gewone wapensporen blijven visueel; de enige hazarddamage blijft uit de expliciete Live World-reaction-zones. Er zijn geen willekeurige onzichtbare terrein-damage-ticks toegevoegd.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39151060369 — **402/402 automatische tests geslaagd**, 0 gefaald en JS-syntax groen. **11 nieuwe tests** valideren alle 18 reacties, de eerste warnings, herhaalde recovery/charge/eruption, damage pas bij activatie, actieve permanente zones, Low-graphics zichtbaarheid, gestippelde rustende zones, offscreen-culling, bosspause, render/game-wiring en volledige plaatsing van 24 niet-overlappende zones.
+
+**Planning:** **13/20 = 65%** van de geplande updates richting Update 30. Dit is geen percentage definitieve game-/visuele kwaliteit.
+
+**Nog te testen in de browser:** alle drie elementwereldtypes en ten minste één combinatie op 15%, 50% en 85% invasie. Controleer of de krimpende ring in de praktijk vóór een uitbarsting duidelijk genoeg is (ook bij 2×/3× speed en Low quality), of de gestippelde veilige fase intuïtief is, of de zonegrenzen niet door effecten overschaduwd worden en of navigeren tussen meerdere permanente rifts mogelijk blijft. Test dat bosses niet tegelijk met reaction hazards spelers beschadigen. Een groene CI is geen vervanging voor de speeltest.
+
+**Volgende stap (Update 24):** maak de **Living World-terreinreacties en hun gevolgen** nog duidelijker merkbaar in het spel. Richt je op gameplaytelemetrie, reacties op de gekozen invasie versus verdedigde wereld, consequenties na bosswins en run-eindresultaten, niet op grafische eindpolish of nieuwe vijandenspam.
