@@ -259,6 +259,8 @@ function makeUpgradeChoice(option, { levels = 1, rare = false } = {}) {
       if (typeof trackDiscovery === "function") trackDiscovery("weapons", key);
     }
     upgrades[key] = newLevel;
+    window.runQaEvent?.("upgrade_chosen",{key,from:oldLevel,to:newLevel,
+      bossReward:!!rare,weapon:isWeaponKey(key),unlocked:unlocking},time);
     if (key === "health") {
       const healthGain = 30 * (newLevel - oldLevel);
       player.maxHp += healthGain;
@@ -365,6 +367,9 @@ if(typeof window!=="undefined"){
 function evolveWeapon(recipe, { rare = false, consumeLevel = true } = {}) {
   if (!eligibleEvolutions().some((entry) => entry.id === recipe.id)) return false;
   evolutions[recipe.id] = true;
+  window.runQaEvent?.("evolution",{id:recipe.id,weapon:recipe.weapon,
+    support:recipe.support,level:upgrades[recipe.weapon],
+    supportLevel:upgrades[recipe.support],bossesDefeated},time);
   if (typeof trackDiscovery === "function") trackDiscovery("evolutions", recipe.id);
   if (typeof playSfx === "function") playSfx("evolution");
   evolutionFlash = { name: recipe.name, started: time, until: time + 2.4 };
@@ -434,6 +439,8 @@ function choices() {
     resumeRunAfterChoice();
     return;
   }
+  window.runQaEvent?.("upgrade_offer",{level,options:pick.map(x=>x[0]),
+    evolutions:evolutionPicks.map(r=>r.id),pendingLevelUps},time);
   panel("LEVEL " + level, "Build toward two earned evolutions. Alternate different same-element weapons to trigger small elemental combos.", (el) => {
     if (evolutionPicks.length) el.append(makeEvolutionChoice(evolutionPicks[Math.floor(Math.random() * evolutionPicks.length)]));
     pick.forEach((option) => el.append(makeUpgradeChoice(option)));
@@ -453,6 +460,8 @@ function showBossReward() {
     else resumeRunAfterChoice();
     return;
   }
+  window.runQaEvent?.("boss_reward_offer",{options:rewards.map(x=>x[0]),
+    evolutions:evolutionPicks.map(r=>r.id)},time);
   paused = true;
   choiceScreenOpen = true;
   gameState = "boss-reward";
@@ -472,6 +481,8 @@ function addXP(amount) {
   const multiplier = typeof metaProgress !== "undefined" ? 1 + (metaProgress.xpLevel || 0) * 0.02 : 1;
   const collected = amount * multiplier;
   if (typeof runStats !== "undefined" && runStats) runStats.xpCollected += collected;
+  window.runQaXp?.(collected,time);
+  const previousLevel=level;
   xp += collected;
   while (xp >= needed) {
     xp -= needed;
@@ -479,6 +490,8 @@ function addXP(amount) {
     needed = nextLevelXpRequirement(needed, level);
     pendingLevelUps++;
   }
+  if(level>previousLevel)window.runQaEvent?.("level",{
+    from:previousLevel,level,gained:level-previousLevel,needed,xp},time);
   if (pendingLevelUps > 0 && !paused) choices();
 }
 
