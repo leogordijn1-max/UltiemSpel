@@ -131,7 +131,7 @@ test("low-quality warning and recovery both produce a clear visual cue",()=>{
 
 test("gameplay wiring covers phases, signature warnings and developer shortcuts",()=>{
   assert.match(game,/e\.phaseThree = true/);
-  assert.match(game,/window\.updateBossCombat\?\.\(e, time, player/);
+  assert.match(game,/window\.updateMemeEncounter\?\.\(e, time, dt, player/);
   assert.match(game,/!window\.isBossCombatBusy\?\.\(e, time\)/);
   assert.match(enemies,/window\.initializeBossCombat\?\.\(boss, time\)/);
   assert.match(enemies,/bossCombatDamageMultiplier/);
