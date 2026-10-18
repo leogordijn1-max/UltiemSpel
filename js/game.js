@@ -614,7 +614,10 @@ function continueEndlessAfterVictory() {
 }
 
 function end() {
-  if (!active) return;
+  // A winning blow can resolve partway through a fixed simulation tick.
+  // Residual shots/hazards must not overwrite the earned Victory modal.
+  // Dying in Endless remains allowed after CONTINUE switches back to playing.
+  if (!active || gameState === "victory") return false;
   window.resetGuardianArenaPower?.();
   playSfx("gameover");
   recordRun();
