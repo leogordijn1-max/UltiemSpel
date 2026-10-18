@@ -249,9 +249,18 @@ const wavePatterns = [
   { name: "HUNTER PINCER", kinds: [1, 1, 4, 2, 6], elite: true },
 ];
 const swarmPattern = { name: "SWARM · SMALL ENEMIES", kinds: [0,1,0,1,1,0], swarm: true };
+const earlyWavePatterns = [
+  { name:"DRIFTER SCOUTS", kinds:[0,1,0,0,1], elite:false },
+  { name:"RUNNER FLANK", kinds:[1,0,1,0,1], elite:false },
+  { name:"FIRST DEFENDERS", kinds:[0,1,0,1,0], elite:false }
+];
 function wavePatternFor(number) {
   const index = Math.max(1,Math.floor(number));
-  return index % 4 === 0 ? swarmPattern : wavePatterns[(index - 1) % wavePatterns.length];
+  if(index % 4 === 0)return swarmPattern;
+  // Wave banners, not only spawned bodies, must respect the early enemy roster.
+  if(typeof growthTime==="number" && growthTime<180)
+    return earlyWavePatterns[(index-1)%earlyWavePatterns.length];
+  return wavePatterns[(index - 1) % wavePatterns.length];
 }
 function spawnSpecialWave(number, cap = 95) {
   // Defensive guard: even swarm waves never enter a boss arena.
