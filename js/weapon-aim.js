@@ -69,6 +69,17 @@
    ranked.sort((a,b)=>a.score-b.score||a.order-b.order);
    return ranked.slice(0,Math.max(0,Math.floor(count))).map(v=>v.enemy);
  }
+ // Segment-circle collision avoids fast projectiles skipping thin enemies
+ // when the frame duration is longer than expected.
+ function sweptHit(previousX,previousY,nextX,nextY,target,radius){
+   if(!target||!Number.isFinite(radius)||radius<0)return false;
+   const dx=nextX-previousX,dy=nextY-previousY;
+   const magnitude=dx*dx+dy*dy;
+   const t=magnitude>1e-8?Math.max(0,Math.min(1,
+     ((target.x-previousX)*dx+(target.y-previousY)*dy)/magnitude)):0;
+   const x=previousX+dx*t,y=previousY+dy*t;
+   return (target.x-x)**2+(target.y-y)**2<=radius*radius;
+ }
  function distribute(selected,shots){
    if(!selected?.length||shots<=0)return [];
    const total=Math.max(0,Math.floor(shots)),result=[];
@@ -78,5 +89,6 @@
  window.weaponAimAngle=angle;
  window.weaponAimTargets=targets;
  window.weaponDistributeShots=distribute;
+ window.weaponSweptHit=sweptHit;
  window.weaponTargetVelocity=velocity;
 })();
