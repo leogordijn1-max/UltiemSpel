@@ -1,9 +1,9 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 18 — Encounter Director 3.0: gedeelde gevechtsfasen, rustmomenten en XP-behoud.
-**Volgende update:** 19 — Weapon feel: projectielen, range en precisie.
-**Planningvoortgang:** **8 / 20 afgerond = 40%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 19 — Weapon Feel Overhaul: betrouwbare targeting, bewegingsvoorspelling en snelle projectielcollisies.
+**Volgende update:** 20 — Weapon VFX: eerste visuele kwaliteitslat.
+**Planningvoortgang:** **9 / 20 afgerond = 45%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -30,7 +30,7 @@
 | 16 | Unieke archetypes en 16-richtingen-schilden | AFGEROND · 323/323 tests · speeltest open |
 | 17 | Enemy Attacks & Telegraph Overhaul | AFGEROND · 334/334 tests · speeltest open |
 | 18 | Encounter Director 3.0: één groot gevecht tegelijk en herstelpauzes | AFGEROND · 347/347 tests · speeltest open |
-| 19 | Weapon feel: projectielen, range, precisie | OPEN |
+| 19 | Weapon Feel: voorspellend richten en betrouwbare treffers | AFGEROND · 358/358 tests · speeltest open |
 | 20 | Weapon VFX: eerste visuele kwaliteitslat | OPEN |
 | 21 | Wapens en evoluties: keuze, synergie, feedback | OPEN |
 | 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | OPEN |
@@ -160,3 +160,16 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatige speeltest nog open:** test 10–20 minuten Normal en check of tussen moeilijke groepen ongeveer 11–17 seconden ruimte ontstaat om XP te verzamelen, of er nog genoeg uitdaging blijft, of wereldverdedigers geen tegenaanval tegelijk met een wave beginnen, en of twee evoluties qua verdiende upgrades nog haalbaar blijven. De automatische tests bevestigen scheduling maar geen subjectief speelgevoel of echte gemiddelde XP per run.
 
 **Volgende stap (Update 19):** Weapon Feel Overhaul: targeting, duidelijkheid van projectielen, eerlijke range en stabiele precisie voor de verschillende wapenrollen.
+
+## Update 19 — afgerond (18 oktober 2026)
+**Resultaat:** nieuwe pure controller `js/weapon-aim.js` ondersteunt deterministische selectie van zichtbaar bereikbare doelen, per projectiel begrensde bewegingsvoorspelling en segment-vs-cirkel-botsing zodat snelle shots kleine vijanden niet overslaan bij schommelende framerates. `Arcane Bolt` verdeelt maximaal zeven projectielen over gevaarlijke en nabije vijanden zonder willekeurige bijstanders. `Fireball`, `Water Bolt`, `Ice Shards` en uitgaande `Boomerangs` gebruiken de voorspelling, gebaseerd op daadwerkelijk gemeten vijandbeweging en begrensd op korte horizons. `Frost Orb` blijft een homing-controlwapen en behoudt splash/slow; Chain Lightning blijft instant-hit, andere rollen behouden hun identiteit.
+
+**Scope:** geen aanpassingen aan boss-aanvallen, wave-planning, xp, health/damage van vijanden of het aantal wapens, projectielen en upgrades. Het bestaande maximaal zichtbare attackbereik blijft gehandhaafd. Uit prestatieoverwegingen wordt alleen een beperkte lijst zichtbare vijanden gerangschikt en zijn beweging/voorspelling gecapt.
+
+**Bewijs:** https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39145332475 — **358 tests geslaagd, 0 gefaald**, waaronder 11 nieuwe tests voor threat-targeting, zichtbaarheid, missile-verdeling, zijwaartse voorspellende hoeken, snelheidslimieten, swept hit-testing en integratie met vijf wapenrollen.
+
+**Planningvoortgang:** **9 / 20 = 45%** van de geplande updates richting Update 30. Dit is niet het kwaliteitspercentage van alle graphics/gameplay.
+
+**Handmatige speeltest open:** speel met Arcane, Frost Orb en Boomerang, vergelijk runners die zijwaarts bewegen en vijanden in een groep. Controleer of snelle shots op lagere kwaliteit/framerate minder missen zonder onnatuurlijk bij te sturen. Speel ook tegen een boss voor targetingprioriteit. Het gevoel en daadwerkelijke accuracy zijn niet met een volledige browser-run gemeten.
+
+**Volgende stap (Update 20):** eerste echte Weapon VFX-kwaliteitslat: unieke impact-/shotanimaties voor ten minste een kernset wapens, met duidelijk onderscheid tussen lezen van gevaar en cosmetische effecten.
