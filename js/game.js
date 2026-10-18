@@ -413,8 +413,7 @@ function hud() {
   const finalApproaching =
     runMode === "standard" &&
     !finalBossDefeated &&
-    bossesDefeated >= STANDARD_BOSS_COUNT &&
-    time >= FINAL_BOSS_TIME - 60;
+    bossesDefeated >= STANDARD_BOSS_COUNT;
   const countdown = finalApproaching
     ? Math.max(0, FINAL_BOSS_TIME - time)
     : remaining;
@@ -427,7 +426,7 @@ function hud() {
       : `${runMode === "endless" ? "ENDLESS " : ""}BOSS IN ${Math.floor(countdown / 60)}:${String(Math.ceil(countdown % 60)).padStart(2, "0")}`;
   $("countFill").style.width = `${
     finalApproaching
-      ? Math.min(100, (1 - countdown / 60) * 100)
+      ? Math.min(100, (time / FINAL_BOSS_TIME) * 100)
       : Math.max(0, Math.min(100, (1 - remaining / 180) * 100))
   }%`;
   $("bossCountdown").style.display = boss ? "none" : "block";
