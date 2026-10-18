@@ -33,8 +33,9 @@
     const formation = formations[patrols % formations.length];
     const direction = (patrols * 2.399963 + .9) % (Math.PI * 2);
     const distance = Math.max(600,Math.max(player.viewW||0,player.viewH||0)*.65);
-    const anchorX = player.x + Math.cos(direction)*distance;
-    const anchorY = player.y + Math.sin(direction)*distance;
+    const spawnAt = window.enemyOffscreenSpawn?.(direction, 180);
+    const anchorX = spawnAt?.x ?? (player.x + Math.cos(direction)*distance);
+    const anchorY = spawnAt?.y ?? (player.y + Math.sin(direction)*distance);
     let added = 0;
     const tacticGroup=window.newEncounterTacticGroup?.();
     for(let i=0;i<total;i++){
@@ -42,12 +43,14 @@
       const kind=window.resolveEncounterEnemyKind?.(preferred,growthSeconds,i) ?? preferred;
       const e=spawnEnemy(kind,i===0 && growthSeconds>=480);
       if(!e)break;
-      e.x=anchorX+Math.cos(direction+Math.PI/2)*(i-(total-1)/2)*52;
-      e.y=anchorY+Math.sin(direction+Math.PI/2)*(i-(total-1)/2)*52;
-      const scale=1.65+Math.min(.85,growthSeconds/1400);
+      const along=(i-(total-1)/2)*52;
+      const position=window.enemyOffscreenSpawn?.(direction,180,along);
+      e.x=position?.x ?? (anchorX+Math.cos(direction+Math.PI/2)*along);
+      e.y=position?.y ?? (anchorY+Math.sin(direction+Math.PI/2)*along);
+      const scale=1.9+Math.min(.95,growthSeconds/1400);
       e.hp*=scale;
-      e.speed*=1.03;
-      e.damage*=1.13+Math.min(.18,growthSeconds/2100);
+      e.speed*=1.18;
+      e.damage*=1.26+Math.min(.22,growthSeconds/2100);
       e.encounterRole="patrol";
       e.xpValueMultiplier=2.15;
       window.assignEncounterTactic?.(e,i,tacticGroup);
