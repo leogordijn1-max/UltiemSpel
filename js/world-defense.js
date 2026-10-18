@@ -41,14 +41,16 @@ function composition(t){return t===1
   :["commander","defender","defender","hunter","hunter","hunter","ranger"];
 }
 const KINDS={commander:2,defender:6,hunter:1,ranger:4};
-function createSquad(now,player,enemies,spawnEnemy,t=stage){
+function createSquad(now,player,enemies,spawnEnemy,t=stage,growthSeconds=0){
   if(!running||!player||!t||!WORLDS[window.getWorldConquest?.().original]||
       squads.length>=squadCap(t)||enemies.length> TOTAL_CAP-composition(t).length)return false;
   const roles=composition(t),members=[],id=nextId++,baseAngle=(id*2.399963)%TAU;
   const cx=player.x+Math.cos(baseAngle)*Math.max(360,(player.viewW||0)*.5+60);
   const cy=player.y+Math.sin(baseAngle)*Math.max(310,(player.viewH||0)*.5+60);
   for(let i=0;i<roles.length;i++){
-    const role=roles[i],e=spawnEnemy(KINDS[role]);
+    const role=roles[i];
+    const kind=window.enemyDefenseRoleKind?.(role,growthSeconds) ?? KINDS[role];
+    const e=spawnEnemy(kind);
     if(!e)break;
     const theta=baseAngle+Math.PI+(-2+i)*.34;
     e.x=cx+Math.cos(theta)*(role==="commander"?0:65+(i%2)*18);
@@ -72,7 +74,7 @@ function createSquad(now,player,enemies,spawnEnemy,t=stage){
   window.notifyWorldDefense?.("WORLD DEFENSE · "+WORLDS[squads.at(-1).world].name+" DEPLOYED");
   return true;
 }
-function update(now,player,enemies,spawnEnemy,blocked=false){
+function update(now,player,enemies,spawnEnemy,blocked=false,growthSeconds=0){
   if(!running)return false;
   if(blocked){nextAt=now+18;return false;}
   prune(enemies);
@@ -80,7 +82,7 @@ function update(now,player,enemies,spawnEnemy,blocked=false){
   if(t!==stage){stage=t;nextAt=now+(t?8:Infinity);}
   if(!t||now<nextAt)return false;
   nextAt=now+cooldown(t);
-  return createSquad(now,player,enemies,spawnEnemy,t);
+  return createSquad(now,player,enemies,spawnEnemy,t,growthSeconds);
 }
 function behavior(e,player,now){
   const s=getSquad(e);
@@ -162,10 +164,10 @@ function status(){return {stage,tier:tier(),activeSquads:squads.length,spawned,
   members:squads.reduce((n,s)=>n+s.members.filter(alive).length,0),
   squads:squads.map(s=>({id:s.id,world:s.world,commanderAlive:!!leaderOf(s),
     roles:s.members.filter(alive).map(e=>e.defenseRole)}))};}
-function force(now,player,enemies,spawnEnemy,blocked=false){
+function force(now,player,enemies,spawnEnemy,blocked=false,growthSeconds=0){
   if(blocked||!running)return false;
   prune(enemies);
-  return createSquad(now,player,enemies,spawnEnemy,tier());
+  return createSquad(now,player,enemies,spawnEnemy,tier(),growthSeconds);
 }
 window.resetWorldDefense=reset;window.clearWorldDefense=clear;
 window.updateWorldDefense=update;window.forceWorldDefense=force;
