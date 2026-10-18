@@ -153,13 +153,14 @@
       mark(hooks,x,y,105,.52,17+phase(e));
       const side=s.round%2?1:-1;
       mark(hooks,x+sx*side*160+ax*90,y+sy*side*160+ay*90,89,.52,15);
-      // Behind the player, a second warning catches automatic backtracking.
-      mark(hooks,x-ax*180,y-ay*180,76,.56,15);
+      // Two staggered retreat traps punish autopilot but leave diagonal escapes.
+      mark(hooks,x-ax*180,y-ay*180,84,.62,16);
+      mark(hooks,x+ax*145-sx*side*165,y+ay*145-sy*side*165,74,.62,15);
       for(const off of [-.3,-.1,.1,.3])
         hooks.projectile?.(e,s.aim+off,360+phase(e)*10,12,"fish");
       hooks.puff?.(x,y,"#ff7771",20);
       hooks.shake?.(8);
-      s.stage="ultimatePause";s.until=t+.55;s.round++;
+      s.stage="ultimatePause";s.until=t+.43;s.round++;
     } else if(s.stage==="ultimatePause" && t>=s.until){
       if(s.round>=3){
         s.stage="ultimateFinalTell";s.until=t+1.4;
@@ -170,9 +171,11 @@
     } else if(s.stage==="ultimateFinalTell" && t>=s.until){
       const ax=Math.cos(s.aim),ay=Math.sin(s.aim),sx=-ay,sy=ax;
       const x=s.target.x,y=s.target.y;
-      for(const off of [-1,0,1]){
-        mark(hooks,x+sx*off*150,y+sy*off*150,105,.55,19);
+      for(const off of [-2,-1,0,1,2]){
+        mark(hooks,x+sx*off*145,y+sy*off*145,94,.54,19);
       }
+      // Last beat threatens a retreat, never the entire screen.
+      mark(hooks,x-ax*155,y-ay*155,83,.57,17);
       for(const off of [-.55,-.32,-.12,0,.12,.32,.55])
         hooks.projectile?.(e,s.aim+off,390,14,"fish");
       hooks.puff?.(x,y,"#ffe3a1",32);
@@ -297,12 +300,14 @@
         ctx.beginPath();ctx.arc(e.x,e.y,90+(s.until-t)*115,0,TAU);ctx.stroke();
       }else if(s.stage==="ultimateTell"){
         mark(x,y,105);
-        mark(x-ax*180,y-ay*180,76);
+        mark(x-ax*180,y-ay*180,84);
         const side=s.round%2?1:-1;
         mark(x+sx*side*160+ax*90,y+sy*side*160+ay*90,89);
+        mark(x+ax*145-sx*side*165,y+ay*145-sy*side*165,74);
         ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
       }else if(s.stage==="ultimateFinalTell"){
-        for(const side of [-1,0,1])mark(x+sx*side*150,y+sy*side*150,105);
+        for(const side of [-2,-1,0,1,2])mark(x+sx*side*145,y+sy*side*145,94);
+        mark(x-ax*155,y-ay*155,83);
         ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
       }else{
         ctx.lineWidth=4;ctx.setLineDash([]);
