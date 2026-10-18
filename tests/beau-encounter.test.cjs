@@ -67,7 +67,7 @@ test("The Final Hunt has a cinematic intro, three waves and one finisher",()=>{
   assert.equal(h.e.beauFight.ultimateUsed,true);
   assert.equal(h.e.beauFight.mode,"idle");
   assert.ok(h.events.warnings.some(x=>x[0].includes("FINAL HUNT")));
-  assert.equal(h.events.hazards.length,12);
+  assert.equal(h.events.hazards.length,18);
   assert.equal(h.events.shots.length,19);
   assert.ok(h.e.specialRecoveryUntil>0);
   const prev=h.events.warnings.filter(x=>x[0].includes("FINAL HUNT")).length;
@@ -141,5 +141,5 @@ test("Beau showcase is integrated without breaking arena isolation or F9",()=>{
   assert.match(render,/drawBeauTelegraph/);
   assert.match(developer,/BEAU · THE FINAL HUNT/);
   assert.match(game,/!boss && !window\.isBossIsolationActive\?\.\(\)/);
-  assert.ok(index.includes("js/beau-encounter.js?v=4"));
+  assert.ok(index.includes("js/beau-encounter.js?v=5"));
 });
