@@ -135,7 +135,7 @@ test("The Final Hunt clears old boss projectiles at cinematic start",()=>{
 });
 test("Beau showcase is integrated without breaking arena isolation or L",()=>{
   assert.match(game,/window\.updateBeauEncounter\?\.\(e, time, dt, player, encounterHooks\)/);
-  assert.match(game,/if \(beauActive \|\| shadeActive \|\| bellActive\) \{/);
+  assert.match(game,/if \(beauActive \|\| shadeActive \|\| bellActive \|\| memeActive\) \{/);
   assert.match(enemies,/window\.initializeBeauEncounter\?\.\(boss, time\)/);
   assert.match(render,/drawBeauBackdrop/);
   assert.match(render,/drawBeauTelegraph/);
