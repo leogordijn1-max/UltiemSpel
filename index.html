@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Shadow Survivor</title>
-    <link rel="stylesheet" href="styles.css?v=world-consequences-24" />
+    <link rel="stylesheet" href="styles.css?v=combat-hud-27" />
     <link rel="stylesheet" href="css/cinematic-menu.css?v=5" />
     <link rel="stylesheet" href="css/cinematic-submenus.css?v=world-states-1" />
     <link rel="stylesheet" href="css/living-world-moments.css?v=1" />
@@ -49,6 +49,13 @@
       <div id="bossHud">
         <span id="bossName">BEAU DE HOND</span>
         <div id="bossTrack"><div id="bossFill"></div></div>
+        <div id="bossCombatCue" class="boss-combat-cue" hidden aria-label="Boss attack guidance" aria-live="off">
+          <div id="bossCueTitle"></div>
+          <div id="bossCueClock"></div>
+          <div id="bossCueTrack"><div id="bossCueFill"></div></div>
+          <div id="bossCueAdvice"></div>
+          <div id="bossCueDash"></div>
+        </div>
       </div>
       <div id="hint">
         WASD / Arrow keys to move · P to pause · Weapons attack automatically ·
@@ -97,8 +104,8 @@
     <script src="js/elements.js?v=developer-1"></script>
     <script src="js/characters.js?v=shadow-survivor-update-8-polish"></script>
     <script src="js/quality.js?v=world-conquest-1"></script>
-    <script src="js/render.js?v=guardian-powers-26"></script>
-    <script src="js/game.js?v=guardian-powers-26"></script>
+    <script src="js/render.js?v=combat-hud-27"></script>
+    <script src="js/game.js?v=combat-hud-27"></script>
     <script src="js/hit-feedback.js?v=13"></script>
     <script src="js/player-movement.js?v=12"></script>
     <script src="js/elemental-combat.js?v=balance-22"></script>
@@ -121,7 +128,8 @@
     <script src="js/boss-flow.js?v=25"></script>
     <script src="js/boss-isolation.js?v=boss-flow-25"></script>
     <script src="js/boss-combat.js?v=1"></script>
-    <script src="js/guardian-arena-powers.js?v=26"></script>
+    <script src="js/guardian-arena-powers.js?v=27"></script>
+    <script src="js/combat-hud.js?v=27"></script>
     <script src="js/beau-encounter.js?v=guardian-powers-26"></script>
     <script src="js/shade-encounter.js?v=guardian-powers-26"></script>
     <script src="js/bell-encounter.js?v=guardian-powers-26"></script>
