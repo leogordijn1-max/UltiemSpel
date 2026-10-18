@@ -67,7 +67,7 @@ test("world selection is independent from the run's element", () => {
   assert.equal(h.stored.shadowDominantWorldV1, undefined);
 });
 
-test("first and second bosses cause 15% and 50% takeover but do not save", () => {
+test("three normal bosses conquer 15, 50, then 85 percent without saving", () => {
   const h = harness();
   h.window.beginWorldRun();
   h.context.active = true;
@@ -77,7 +77,10 @@ test("first and second bosses cause 15% and 50% takeover but do not save", () =>
   assert.equal(h.window.onWorldBossDefeated(2, false), true);
   h.advance(2200);
   assert.equal(h.window.getWorldConquest().coverage, 50);
-  assert.equal(h.window.onWorldBossDefeated(3, false), false);
+  assert.equal(h.window.onWorldBossDefeated(3, false), true);
+  h.advance(2200);
+  assert.equal(h.window.getWorldConquest().coverage, 85);
+  assert.equal(h.window.onWorldBossDefeated(4, false), false);
   assert.equal(h.stored.shadowDominantWorldV1, undefined);
 });
 
