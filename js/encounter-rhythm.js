@@ -52,10 +52,20 @@
     // cap remains the final authority on the actual number of enemies.
     return phase==="ready";
   }
-  function started(kind,now,members){
+  function started(kind,now,members,growthSeconds=0){
     if(!running||!Array.isArray(members)||!members.some(live))return false;
     phase="engaged";tracked=members.filter(live);
     lastKind=kind;encounters++;previousAt=now;
+    // The denser previous schedule has become deliberate solo set pieces.
+    // Reward clearing a difficult squad instead of replacing it with trash mobs.
+    // XP still needs to be earned by killing and picking up souls.
+    const bonus=kind==="swarm"?1:
+      1.18+Math.min(.20,Math.max(0,growthSeconds)/1200*.20);
+    for(const e of tracked){
+      if(e.rhythmXpAdjusted)continue;
+      e.xpValueMultiplier=(e.xpValueMultiplier||1)*bonus;
+      e.rhythmXpAdjusted=true;
+    }
     return true;
   }
   function ambientLimit(now,enemies,base){
