@@ -127,6 +127,7 @@ let upgrades = {},
   currentFrameMs = 0,
   performanceMetrics = { enemyAI: 0, collisions: 0, render: 0 },
   simulationAccumulator = 0;
+let cachedLoadoutHtml = null;
 function loadSelectedWeapons() {
   const loadout = elementalLoadout();
   startWeapon = loadout[0];
@@ -140,6 +141,7 @@ function syncElementalLoadout() {
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
+  cachedLoadoutHtml = null;
   window.resetCombatHud?.();
   window.resetGuardianArenaPower?.();
   window.resetBossIsolation?.();
@@ -502,7 +504,7 @@ function hud() {
   const weaponNames = Object.fromEntries(
     weaponCatalog.map((weapon) => [weapon.key, weapon.name]),
   );
-  $("loadout").innerHTML = selectedWeapons
+  const loadoutMarkup = selectedWeapons
     .map((key, index) => {
       const name = weaponNames[key];
       const locked = !unlockedWeapons.includes(key);
@@ -524,6 +526,12 @@ function hud() {
       return `<span class="weapon-slot ${locked ? "weapon-locked" : evolution ? "weapon-evolved" : ""}"><b>${role}</b><strong>${name}</strong><small>${state}</small></span>`;
     })
     .join("");
+  // Replacing the weapon-card DOM eight times a second is expensive, even
+  // when the build has not changed. Keep it stable until the markup changes.
+  if(cachedLoadoutHtml !== loadoutMarkup) {
+    $("loadout").innerHTML = loadoutMarkup;
+    cachedLoadoutHtml = loadoutMarkup;
+  }
   $("fpsCounter").hidden = !showFps;
   if (showFps)
     $("fpsCounter").textContent =
