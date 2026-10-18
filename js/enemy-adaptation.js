@@ -8,11 +8,14 @@
     flooded: Object.freeze({ name: "TIDEBORN", color: "#69d9e9", dark: "#174963", description: "Resists water and surges through puddles. Some leave pools." }),
   });
   const valid = id => Object.prototype.hasOwnProperty.call(variants, id);
+  // Affinity is a population identity, determined when a run starts.
+  // Conquest changes the ground but cannot mutate a defender into an invader.
+  // Once victory persists the new dominant world, the NEXT run will inherit it.
   function biomeAt(x, y) {
-    const world = window.worldBiomeAt?.(x, y) || window.getDominantWorld?.() || "frozen";
+    const world = window.getDominantWorld?.() || "frozen";
     return valid(world) ? world : "frozen";
   }
-  function assign(e, world = biomeAt(e.x, e.y)) {
+  function assign(e, world = biomeAt(e?.x, e?.y)) {
     if (!e || e.kind === 3) return e;
     const value = valid(world) ? world : "frozen";
     if (e.worldAffinity !== value) {
@@ -25,10 +28,11 @@
   function refresh(e, gameTime, onScreen, sampledBiome) {
     if (!e || e.kind === 3 || e.dead || !onScreen) return;
     if (gameTime < (e.nextBiomeCheck || 0)) return;
-    // Deliberately summoned Developer Mode specimens keep their chosen variant.
+    // A deliberately chosen sandbox specimen may showcase a different affinity.
+    // Every normal creature keeps its native world, regardless of conquest %.
     const forced = window.isDeveloperRun?.() && valid(e.developerForcedAffinity)
       ? e.developerForcedAffinity : null;
-    assign(e, forced || (valid(sampledBiome) ? sampledBiome : biomeAt(e.x, e.y)));
+    assign(e, forced || biomeAt(e.x, e.y));
     // Sample 3-4x per second, stagger across enemies using position.
     e.nextBiomeCheck = gameTime + .28 + (Math.abs(e.x*.0027+e.y*.0019)% .12);
   }
