@@ -96,7 +96,8 @@ function weaponIsEvolved(key) {
 }
 function nextEvolutionTime() {
   const evolvedCount = typeof evolutions === "undefined" ? 0 : Object.values(evolutions).filter(Boolean).length;
-  return [600, 1020, 1320][evolvedCount] ?? Infinity;
+  // Two signature evolutions per Standard run; no surprise third at 22 min.
+  return [600, 1020][evolvedCount] ?? Infinity;
 }
 function eligibleEvolutions() {
   if (typeof bossesDefeated === "undefined" || bossesDefeated < 1 || typeof evolutions === "undefined" || (typeof time === "number" ? time : 0) < nextEvolutionTime()) return [];
@@ -176,6 +177,22 @@ function upgradeChoiceWeight(key) {
   return weight;
 }
 
+// Never grant free upgrades. Keep one useful build-progress choice available
+// among the three choices when a player has committed to their weapons.
+function evolutionFocusKey() {
+  if(typeof selectedWeapons==="undefined"||!Array.isArray(selectedWeapons))return null;
+  for(const key of selectedWeapons){
+    if(!isWeaponUnlocked(key)||weaponIsEvolved(key))continue;
+    const recipe=evolutionForWeapon(key);
+    if(!recipe)continue;
+    if(currentUpgradeLevel(key)>=recipe.level &&
+      currentUpgradeLevel(recipe.support)>=recipe.supportLevel)continue;
+    if(currentUpgradeLevel(key)<recipe.level && eligibleUpgrade(key))return key;
+    if(currentUpgradeLevel(recipe.support)<recipe.supportLevel &&
+        eligibleUpgrade(recipe.support))return recipe.support;
+  }
+  return null;
+}
 function makeUpgradeChoice(option, { levels = 1, rare = false } = {}) {
   const [key, name, description] = option;
   const oldLevel = currentUpgradeLevel(key);
@@ -260,6 +277,23 @@ function showEvolutionOffer(recipes = eligibleEvolutions()) {
   });
 }
 
+function offerEarnedEvolution() {
+  if(typeof active==="undefined"||!active||
+    typeof paused==="undefined"||paused||
+    typeof choiceScreenOpen!=="undefined"&&choiceScreenOpen||
+    typeof gameState!=="undefined"&&gameState!=="playing"||
+    typeof pendingLevelUps!=="undefined"&&pendingLevelUps>0||
+    typeof boss!=="undefined"&&boss)return false;
+  const candidates=eligibleEvolutions();
+  if(!candidates.length)return false;
+  showEvolutionOffer(candidates);
+  return true;
+}
+if(typeof window!=="undefined"){
+  window.offerEarnedEvolution=offerEarnedEvolution;
+  window.evolutionFocusKey=evolutionFocusKey;
+}
+
 function evolveWeapon(recipe, { rare = false, consumeLevel = true } = {}) {
   if (!eligibleEvolutions().some((entry) => entry.id === recipe.id)) return false;
   evolutions[recipe.id] = true;
@@ -308,6 +342,17 @@ function choices() {
   const pick = lockedPicks.length
     ? [lockedPicks[Math.floor(Math.random() * lockedPicks.length)], ...chooseWeighted(regularPool.filter(([key]) => !lockedPicks.some(([lockedKey]) => lockedKey === key)), regularSlots - 1)]
     : chooseWeighted(regularPool, regularSlots);
+  // At least one slot may advance a selected weapon's actual recipe.
+  // Locked reserve slots remain guaranteed; focus is an OFFER, not an auto-pick.
+  const focusKey=evolutionFocusKey();
+  const focusOption=regularPool.find(([key])=>key===focusKey);
+  if(focusOption && !pick.some(([key])=>key===focusKey)){
+    const replaceAt=lockedPicks.length && pick[0]?.[0]===lockedPicks[0][0] ? 1 : 0;
+    if(replaceAt<regularSlots){
+      if(pick.length<regularSlots)pick.push(focusOption);
+      else pick[replaceAt]=focusOption;
+    }
+  }
   // Keep three distinct choices whenever the eligible pool can fill the screen.
   const pickedKeys = new Set(pick.map(([key]) => key));
   if (pick.length < regularSlots) {
