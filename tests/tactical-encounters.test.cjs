@@ -35,6 +35,18 @@ test("planned tactical packs evolve through all five unlock stages",()=>{
     assert.ok(plan.members.every(m=>typeof m.tactic==="string"&&m.tactic.length>0));
   }
 });
+test("late-game encounter variety expands without adding more than five enemies",()=>{
+  const h=harness();
+  const fifteen=[0,1,2].map(i=>h.window.chooseTacticalEncounter(900,i));
+  const nineteen=[0,1,2].map(i=>h.window.chooseTacticalEncounter(1140,i));
+  assert.equal(new Set([...fifteen,...nineteen].map(p=>p.name)).size,6);
+  for(const p of [...fifteen,...nineteen]){
+    assert.ok(p.members.length>=4&&p.members.length<=5);
+    assert.ok(p.members.every(m=>h.window.enemyKindAvailable(m.kind,1140)));
+    assert.ok(p.hint);
+    assert.ok(new Set(p.members.map(m=>m.tactic)).size>=3);
+  }
+});
 test("Developer Mode unlocks preview more advanced tactical groups immediately",()=>{
   const h=harness();
   h.window.isDeveloperRun=()=>true;
