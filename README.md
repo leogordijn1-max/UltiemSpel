@@ -1,5 +1,8 @@
 # Shadow Survivor
 
+> **Project voortzetten met een nieuwe AI-chat?** Lees eerst [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md) voor visie, sfeer, gemaakte beslissingen en de werkwijze, en [MILESTONE-30.md](MILESTONE-30.md) voor de actuele updateplanning. Deze README bevat op onderdelen nog informatie over oudere versies; de actieve code op de ontwikkelbranch is leidend.
+
+
 ## Bestandsindeling
 
 - `index.html` bevat de interface en laadt scripts in afhankelijkheidsvolgorde.
