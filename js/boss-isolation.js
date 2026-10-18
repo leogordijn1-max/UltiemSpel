@@ -43,6 +43,7 @@
   function finish(defeatedBoss = null) {
     if (!isolated) return false;
     window.interruptGuardianArenaPower?.(defeatedBoss);
+    window.resetCombatHud?.();
     // Only summons belong to this encounter. The actual boss death is
     // processed by damage(), so this cleanup never awards a second kill.
     removedOnExit = clearEnemies(() => true);
@@ -60,6 +61,7 @@
   }
   function reset() {
     window.resetGuardianArenaPower?.();
+    window.resetCombatHud?.();
     isolated = false;
     removedOnEntry = 0;
     removedOnExit = 0;
