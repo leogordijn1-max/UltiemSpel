@@ -22,9 +22,19 @@ function updateSpecialWeapons(dt) {
   if (upgrades.frost && weaponTimers.frost <= 0) fireFrostOrb();
 }
 
+// Only choose enemies the player can actually see, with compact auto-aim range.
+function playerVisibleTarget(x,y,range,excluded=null) {
+  const max=typeof window!=="undefined"
+    ? window.playerWeaponRange?.(range) ?? range : range;
+  return nearestEnemy(x,y,max,excluded,enemy=>
+    (typeof window!=="undefined" && window.playerWeaponTargetVisible
+      ? window.playerWeaponTargetVisible(enemy)
+      : typeof visibleEnemy!=="function" || visibleEnemy(enemy,50)));
+}
+
 function castChainLightning() {
   weaponTimers.chain = chainLightningCooldown(upgrades.chain);
-  const firstTarget = nearestEnemy(player.x, player.y, 600, null, (enemy) => typeof visibleEnemy !== "function" || visibleEnemy(enemy, -24));
+  const firstTarget = playerVisibleTarget(player.x, player.y, 600);
   if (!firstTarget) return;
   if (typeof playSfx === "function") playSfx("lightning");
   const evolved = evolutions.tempest;
@@ -32,7 +42,7 @@ function castChainLightning() {
   const hitByVolley = new Set();
   const attackCount = evolved ? 2 : 1;
   for (let attack = 0; attack < attackCount; attack++) {
-    const initial = nearestEnemy(player.x, player.y, 600, hitByVolley, (enemy) => typeof visibleEnemy !== "function" || visibleEnemy(enemy, -24)) || firstTarget;
+    const initial = playerVisibleTarget(player.x, player.y, 600, hitByVolley) || firstTarget;
     const visited = new Set();
     let source = player;
     let target = initial;
@@ -44,18 +54,20 @@ function castChainLightning() {
       damage(target, chainDamage, source, "lightning");
       source = target;
       target = nearestEnemy(
-        source.x,
-        source.y,
-        evolved ? 295 : 220,
+        source.x,source.y,
+        evolved ? 255 : 195,
         visited,
-        (enemy) => !hitByVolley.has(enemy) || enemy === firstTarget,
+        enemy => (!hitByVolley.has(enemy) || enemy===firstTarget) &&
+          (typeof window!=="undefined" && window.playerWeaponTargetVisible
+            ? window.playerWeaponTargetVisible(enemy)
+            : typeof visibleEnemy!=="function" || visibleEnemy(enemy,50))
       );
     }
   }
 }
 
 function throwBoomerangs() {
-  const target = nearestEnemy(player.x, player.y, 1100);
+  const target = playerVisibleTarget(player.x, player.y, 1100);
   weaponTimers.boomerang = Math.max(2.5, 6 - upgrades.boomerang * 0.5);
   if (!target) return;
   if (typeof playSfx === "function") playSfx("boomerang");
@@ -98,7 +110,7 @@ function castFlameBurst() {
   const spread = evolved ? 1.9 : 1.35;
   const radius = (165 + upgrades.flame * 28) * (evolved ? 1.2 : 1);
   // Aim the cone at a nearby enemy, using facing direction if the arena is empty.
-  const flameTarget = nearestEnemy(player.x, player.y, radius + 55);
+  const flameTarget = playerVisibleTarget(player.x, player.y, radius + 55);
   const targetDx = flameTarget ? flameTarget.x - player.x : player.facingX;
   const targetDy = flameTarget ? flameTarget.y - player.y : player.facingY;
   const targetLength = Math.hypot(targetDx, targetDy) || 1;
@@ -134,7 +146,7 @@ function fireFrostOrb() {
   // improve cast frequency. Phantom Shots does not grant Frost Orb pierce.
   const level = Math.max(1, upgrades.frost);
   weaponTimers.frost = Math.max(3.2, 4.1 - level * 0.18);
-  const target = nearestEnemy(player.x, player.y, 1300);
+  const target = playerVisibleTarget(player.x, player.y, 1300);
   if (!target || bullets.length >= 300) return;
   if (typeof playSfx === "function") playSfx("frost");
   const angle = Math.atan2(target.y - player.y, target.x - player.x);
