@@ -671,7 +671,7 @@ function update(dt) {
     waveTimer -= dt;
     if (waveTimer <= 0) {
       waveNumber++;
-      waveDuration = Math.max(45, 80 - waveNumber * 2);
+      waveDuration = Math.max(60, 80 - waveNumber * 2);
       waveTimer += waveDuration;
       const wave = spawnSpecialWave(waveNumber);
       notify(
@@ -808,7 +808,7 @@ function update(dt) {
       }
     }
   }
-  window.notifyEncounterPatrol = message => notify(message,"wave",2.6);
+  window.notifyEncounterPatrol ||= message => notify(message,"wave",2.6);
   window.updateEncounterPacing?.(time,growthTime,player,enemies,
     kind => enemySpawn(kind),!!boss || !!window.isBossIsolationActive?.(),difficulty);
   shot -= dt;
