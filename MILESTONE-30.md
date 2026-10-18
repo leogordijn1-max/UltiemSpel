@@ -1,7 +1,7 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 19 — Weapon Feel Overhaul: betrouwbare targeting, bewegingsvoorspelling en snelle projectielcollisies.
+**Laatste afgeronde update:** 19 — Elemental Weapon Feel: verbeterde targeting en trefzekerheid van de daadwerkelijk selecteerbare elementwapens.
 **Volgende update:** 20 — Weapon VFX: eerste visuele kwaliteitslat.
 **Planningvoortgang:** **9 / 20 afgerond = 45%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
@@ -173,3 +173,12 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatige speeltest open:** speel met Arcane, Frost Orb en Boomerang, vergelijk runners die zijwaarts bewegen en vijanden in een groep. Controleer of snelle shots op lagere kwaliteit/framerate minder missen zonder onnatuurlijk bij te sturen. Speel ook tegen een boss voor targetingprioriteit. Het gevoel en daadwerkelijke accuracy zijn niet met een volledige browser-run gemeten.
 
 **Volgende stap (Update 20):** eerste echte Weapon VFX-kwaliteitslat: unieke impact-/shotanimaties voor ten minste een kernset wapens, met duidelijk onderscheid tussen lezen van gevaar en cosmetische effecten.
+
+## Update 19 — correctie na feedback (18 oktober 2026)
+**Gebruikersfeedback:** Arcane Bolt en Boomerang zijn sinds de Living World-elementenupdate niet meer kiesbaar in Standard/Endless-loadouts. De normale run biedt precies 3 vuurwapens (`flame`, `fireball`, `flameOrbit`), 3 waterwapens (`waterBolt`, `tidalWave`, `whirlpool`) of 3 ijswapens (`frost`, `iceShards`, `glacialPulse`). De oude Arcane/Boomerang-code is nog aanwezig voor historische code/tests, maar niet in het huidige keuzemenu. De eerder gerapporteerde focus van Update 19 op die wapens was onterecht.
+
+**Gerichte reparatie:** `js/elemental-combat.js` gebruikt voor *selecteerbare* Fireball, Water Bolt en Ice Shards de verbeterde doelprioriteit én de al aanwezige begrensde bewegingsvoorspelling. Elementaire projectielen controleren bovendien hun afgelegde lijnsegment op botsingen, inclusief bij snelle Water Bolt, zonder meer schade of projectielen toe te voegen. Tidal Wave/Whirlpool blijven bewust bij hun nabijheidsgerichte area-aim en Frost Orb blijft homing. De andere zes selecteerbare wapens behouden hun verschillende rollen en mechanieken.
+
+**Bewijs:** https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39145958214 — **365 tests geslaagd, 0 gefaald**, inclusief 7 nieuwe regressietests die de echte negen kiesbare wapens, actuele elementgerichte targeting, het verschil tussen projectiel- en gebiedsgericht mikken en snelle Water Bolt-collisies controleren.
+
+**Voortgang:** Update 19 blijft **1 update**, dus **9/20 = 45%** richting de Update 30-mijlpaal. De correctie is geen kunstmatige extra stap. Voor toekomstige gameplayverbeteringen altijd éérst controleren of het aangepakte wapen daadwerkelijk via de huidige element-loadout gekozen kan worden.
