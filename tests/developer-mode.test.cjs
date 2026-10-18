@@ -238,3 +238,23 @@ test("sandbox boss kills do not open the gameplay reward overlay", () => {
   const source=fs.readFileSync(path.join(__dirname,"../js/enemies.js"),"utf8");
   assert.match(source,/!killedFinalBoss && !window\.isDeveloperRun\?\.\(\)\) showBossReward\(\)/);
 });
+
+test("F8 toggles developer panel and F9 no longer intercepts keyboard input", () => {
+  const t = environment();
+  t.enable();
+  t.start();
+  let prevented = 0;
+  const key = value => ({ key:value, repeat:false,
+    preventDefault(){prevented++}, stopImmediatePropagation(){} });
+  t.listeners.keydown(key("F9"));
+  assert.equal(t.document.getElementById("developerPanel"), null);
+  assert.equal(prevented,0);
+  t.listeners.keydown(key("F8"));
+  assert.ok(t.document.getElementById("developerPanel"));
+  assert.equal(t.context.paused,true);
+  t.listeners.keydown(key("F8"));
+  assert.equal(t.document.getElementById("developerPanel"), null);
+  assert.equal(t.context.paused,false);
+  assert.equal(t.context.gameState,"playing");
+  assert.equal(prevented,2);
+});
