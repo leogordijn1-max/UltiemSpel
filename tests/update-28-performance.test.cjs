@@ -69,8 +69,8 @@ test("cell queries match brute-force collision distances for dense and sparse ar
         const x=(tick-3)*71,y=(tick-2)*83;
         const expected=h.enemies.filter(e=>!e.dead &&
           (e.x-x)**2+(e.y-y)**2<=radius*radius).map(e=>e.id).sort((a,b)=>a-b);
-        const actual=h.context.nearbyEnemies(x,y,radius)
-          .map(e=>e.id).sort((a,b)=>a-b);
+        const actual=Array.from(h.context.nearbyEnemies(x,y,radius),e=>e.id)
+          .sort((a,b)=>a-b);
         assert.deepEqual(actual,expected,
           "radius "+radius+", density "+density+", tick "+tick);
       }
