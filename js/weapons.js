@@ -169,6 +169,7 @@ function fireFrostOrb() {
 function applyFrostBurst(x, y, projectile) {
   const radius = projectile.frostRadius * (evolutions.glacier ? 1.25 : 1);
   frostZones.push({ x, y, radius, life: 1.4, evolved: !!evolutions.glacier });
+  window.emitWeaponVfxImpact?.("frost", x, y, time);
   window.addWorldScar?.("frost", x, y, radius);
   for (const enemy of nearbyEnemies(x, y, radius + 70)) {
     const dx = enemy.x - x, dy = enemy.y - y;
