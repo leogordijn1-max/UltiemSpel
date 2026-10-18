@@ -213,8 +213,22 @@
       forceBeau("hunt");
       return;
     }
+    if (boss.variant === 1 && !boss.isFinalBoss) {
+      forceShade("collapse");
+      return;
+    }
     boss.specialNextAt = time;
     notify("DEV · SIGNATURE ATTACK READY", "boss", 2);
+    updateHud();
+  }
+  function forceShade(mode) {
+    if (!available() || !boss || boss.variant !== 1 || boss.isFinalBoss) return;
+    if (mode === "eclipse") {
+      if (boss.shadeFight) boss.shadeFight.ultimateUsed = false;
+      forceBossPhaseThree();
+    } else if (!boss.phaseTwo) forceBossPhaseTwo();
+    if (window.forceShadeEncounter?.(boss, mode, time))
+      notify("DEV · SHADE " + mode.toUpperCase() + " READY", "boss", 2);
     updateHud();
   }
   function forceBeau(mode) {
@@ -366,6 +380,10 @@
     addButton(s, "BEAU · HUNTING GROUNDS", () => forceBeau("hunt"), !isBeau);
     addButton(s, "BEAU · PINCER AMBUSH", () => forceBeau("pincer"), !isBeau);
     addButton(s, "BEAU · THE FINAL HUNT", () => forceBeau("ultimate"), !isBeau);
+    const isShade = !!boss && boss.variant === 1 && !boss.isFinalBoss;
+    addButton(s, "SHADE · SHADOW COLLAPSE", () => forceShade("collapse"), !isShade);
+    addButton(s, "SHADE · PHANTOM EXECUTION", () => forceShade("phantoms"), !isShade);
+    addButton(s, "SHADE · ETERNAL ECLIPSE", () => forceShade("eclipse"), !isShade);
     addButton(s, "TRIGGER GUARDIAN POWER", triggerGuardianWarning, !boss || isBeau);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
 
