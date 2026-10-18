@@ -41,9 +41,13 @@ function composition(t){return t===1
   :["commander","defender","defender","hunter","hunter","hunter","ranger"];
 }
 const KINDS={commander:2,defender:6,hunter:1,ranger:4};
-function createSquad(now,player,enemies,spawnEnemy,t=stage,growthSeconds=0){
+function createSquad(now,player,enemies,spawnEnemy,t=stage,growthSeconds=0,budgeted=false){
   if(!running||!player||!t||!WORLDS[window.getWorldConquest?.().original]||
       squads.length>=squadCap(t)||enemies.length> TOTAL_CAP-composition(t).length)return false;
+  // Real runs share the encounter budget with patrols and waves. Developer
+  // Mode's explicit "SPAWN DEFENSE SQUAD" remains an intentional override.
+  if(budgeted&&window.encounterCanStart?.(
+      enemies,growthSeconds,"defense",composition(t).length)===false)return false;
   const roles=composition(t),members=[],id=nextId++,baseAngle=(id*2.399963)%TAU;
   const spawnAt=window.enemyOffscreenSpawn?.(baseAngle,185);
   const cx=spawnAt?.x ?? player.x+Math.cos(baseAngle)*Math.max(700,(player.viewW||0)*.5+200);
@@ -84,8 +88,9 @@ function update(now,player,enemies,spawnEnemy,blocked=false,growthSeconds=0){
   const t=tier();
   if(t!==stage){stage=t;nextAt=now+(t?8:Infinity);}
   if(!t||now<nextAt)return false;
-  nextAt=now+cooldown(t);
-  return createSquad(now,player,enemies,spawnEnemy,t,growthSeconds);
+  const spawnedNow=createSquad(now,player,enemies,spawnEnemy,t,growthSeconds,true);
+  nextAt=now+(spawnedNow?cooldown(t):8);
+  return spawnedNow;
 }
 function behavior(e,player,now){
   const s=getSquad(e);
