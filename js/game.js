@@ -151,6 +151,7 @@ function reset() {
   window.resetEncounterPacing?.();
   window.resetEnemyProgression?.();
   window.resetEncounterTactics?.();
+  window.resetPlayerMovement?.();
   syncElementalLoadout();
   resetElementalCombat();
   for (const key in keys) keys[key] = false;
@@ -387,10 +388,12 @@ function startDash() {
 
   dashDirectionX = dx;
   dashDirectionY = dy;
-  dashTimer = 0.28;
+  dashTimer = window.beginPlayerDash?.(
+    player.x,player.y,dashDirectionX,dashDirectionY,time) ?? .26;
   playSfx("dash");
   dashCooldown = Math.max(3.6, 4.5 - (metaProgress.dashLevel || 0) * 0.2);
-  player.inv = Math.max(player.inv, 0.2);
+  // Protection must cover the FULL dash, not end mid-dodge.
+  player.inv = Math.max(player.inv,dashTimer + .04);
 }
 
 // HUD and overlay helpers.
@@ -782,18 +785,26 @@ function update(dt) {
     }
   }
   const previousPlayerX = player.x, previousPlayerY = player.y;
-  if (dashTimer > 0) {
-    player.x += dashDirectionX * movementSpeed * 4 * dt;
-    player.y += dashDirectionY * movementSpeed * 4 * dt;
-  } else {
-    player.x += (dx / mag) * movementSpeed * dt;
-    player.y += (dy / mag) * movementSpeed * dt;
+  const motion = window.nextPlayerMotion?.(
+    dt,dx,dy,movementSpeed,dashTimer>0,dashDirectionX,dashDirectionY);
+  if(motion){
+    player.x += motion.vx*dt;
+    player.y += motion.vy*dt;
+  }else if(dashTimer>0){
+    player.x += dashDirectionX*movementSpeed*4.35*dt;
+    player.y += dashDirectionY*movementSpeed*4.35*dt;
+  }else{
+    player.x += (dx/mag)*movementSpeed*dt;
+    player.y += (dy/mag)*movementSpeed*dt;
   }
   // Flooded Guardian pushes in a short, visible surge after its warning.
   if (player.guardianTidePushUntil > time) {
     player.x += (player.guardianTidePushX || 0) * dt;
     player.y += (player.guardianTidePushY || 0) * dt;
   }
+  // Tiny afterimages and landing rings make dash direction and timing readable.
+  window.trackPlayerMovement?.(
+    player.x,player.y,time,dashTimer>0,dashDirectionX,dashDirectionY);
   // Exact movement, including dashes: standing still must not be predicted.
   player.combatVX = (player.x - previousPlayerX) / Math.max(dt, .001);
   player.combatVY = (player.y - previousPlayerY) / Math.max(dt, .001);
