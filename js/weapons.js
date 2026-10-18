@@ -74,7 +74,9 @@ function throwBoomerangs() {
 
   const evolved = evolutions.returningStorm;
   const count = 1 + (upgrades.boomerang >= 4 ? 1 : 0) + (evolved ? 1 : 0);
-  const baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
+  const baseAngle=window.weaponAimAngle?.(
+    player,target,310,{maxLead:.42}) ??
+    Math.atan2(target.y-player.y,target.x-player.x);
   for (let i = 0; i < count; i++) {
     if (bullets.length >= 300) break;
     const spread = (i - (count - 1) / 2) * 0.22;
@@ -149,13 +151,14 @@ function fireFrostOrb() {
   const target = playerVisibleTarget(player.x, player.y, 1300);
   if (!target || bullets.length >= 300) return;
   if (typeof playSfx === "function") playSfx("frost");
+  // Frost is the deliberate homing/control weapon, unlike predicted Arcane.
   const angle = Math.atan2(target.y - player.y, target.x - player.x);
   const speed = 245;
   bullets.push({
     type: "frost", evolved: !!evolutions.glacier,
     x: player.x, y: player.y,
     vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-    speed, turnRate: 4.0, life: 7, r: 13,
+    speed, turnRate: 4.0, life: 7, r: 13, target,
     d: (24 + level * 4) * globalDamageMultiplier(),
     pierce: 1, // Detonates on its first impact, even with Phantom Shots.
     frostRadius: 88 + level * 12,
