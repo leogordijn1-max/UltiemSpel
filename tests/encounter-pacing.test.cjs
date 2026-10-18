@@ -52,7 +52,7 @@ test("every 17 seconds the director sends a tightly grouped, stronger patrol",()
     assert.ok(e.hp>=165);
     assert.ok(e.damage>10);
     assert.equal(e.encounterRole,"patrol");
-    assert.equal(e.xpValueMultiplier,2.15);
+    assert.equal(e.xpValueMultiplier,h.window.encounterXpMultiplier(0,"patrol"));
     assert.equal(e.adapted,true);
   }
   assert.equal(h.notices.length,1);
