@@ -866,6 +866,7 @@ function update(dt) {
   const enemyAIStarted = performance.now();
   for (const e of enemies) {
     if (e.dead) continue;
+    const enemyPositionBeforeX=e.x,enemyPositionBeforeY=e.y;
     // Summoned adds are temporary, not an endless secondary horde.
     if (e.summoned && Number.isFinite(e.summonUntil) && time >= e.summonUntil) {
       e.dead = true;
@@ -1257,6 +1258,12 @@ function update(dt) {
       }
     }
 
+    // Snapshot real movement for the next auto-aim decision. The shared
+    // intercept helper caps burst speed and never leads a boss.
+    if(onScreen && dt>0 && e!==boss && !e.summoned){
+      e.combatVX=(e.x-enemyPositionBeforeX)/dt;
+      e.combatVY=(e.y-enemyPositionBeforeY)/dt;
+    }
     e.hit = Math.max(0, e.hit - dt);
     if (e === boss) {
       if (beauActive || shadeActive || bellActive || memeActive) {
@@ -1441,6 +1448,7 @@ function update(dt) {
         continue;
       }
     }
+    const previousBulletX=b.x,previousBulletY=b.y;
     b.x += b.vx * dt;
     b.y += b.vy * dt;
     b.life -= dt;
@@ -1453,7 +1461,10 @@ function update(dt) {
       const dx = e.x - b.x,
         dy = e.y - b.y,
         hitRadius = enemyHitRadius(e) + b.r;
-      if (!b.hit.has(e) && dx * dx + dy * dy < hitRadius * hitRadius) {
+      const collision=window.weaponSweptHit?.(
+        previousBulletX,previousBulletY,b.x,b.y,e,hitRadius) ??
+        dx*dx+dy*dy < hitRadius*hitRadius;
+      if (!b.hit.has(e) && collision) {
         damage(e, b.type === "fish" && e === boss ? b.d * 0.55 : b.d, b);
         b.hit.add(e);
         if (b.type === "frost") {
