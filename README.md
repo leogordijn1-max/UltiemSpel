@@ -1,5 +1,7 @@
 # Shadow Survivor
 
+> **LIVE UPDATE 31 (18 oktober 2026):** De maker leverde twee echte complete browser-JSONs aan: Frost Standard Normal Victory 28:01 (sandboxflag true, maar expliciet géén developer-tools gebruikt; sandbox onderdrukte normale bossrewards) en **Water Standard Normal Victory 26:44, sandboxflag false** (vier Guardians verslagen, twee earned evoluties exact 10:00 en 17:00, drie gewone bossrewards, gemiddelde 143,78 FPS op High). **Update 31 nu technisch én live QA afgerond**; M1/M2 Water aangetoond, M3–M6 slechts gedeeltelijk, **release nog NO-GO**. Zie [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md) en [ROADMAP-31-50.md](ROADMAP-31-50.md). Oudere tekst hieronder over 'nog geen live-run' is historische stand vóór ontvangst van de resultaten.
+
 > **Project voortzetten met een nieuwe AI-chat?** Lees eerst [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md) voor visie, sfeer, gemaakte beslissingen en de werkwijze, en [MILESTONE-30.md](MILESTONE-30.md) voor de actuele updateplanning. Deze README bevat op onderdelen nog informatie over oudere versies; de actieve code op de ontwikkelbranch is leidend.
 
 
