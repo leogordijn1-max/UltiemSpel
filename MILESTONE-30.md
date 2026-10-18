@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 24 — Living World Consequences: invasiefront in HUD, zes rivaliserende werelden, tactisch terreinvoordeel en eerlijke boss-/runuitkomsten.
-**Volgende update:** 25 — Boss-flow: volgorde, arena-isolatie en beloningen.
-**Planningvoortgang:** **14 / 20 afgerond = 70%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 25 — Boss Flow Overhaul: earned drie Guardians voor The Last Meme, veilige soloarena, recovery bij bossbeloning en Beau-rotatie na Standard in Endless.
+**Volgende update:** 26 — Boss attacks: spectaculaire maar leerbare signatuur-aanvallen.
+**Planningvoortgang:** **15 / 20 afgerond = 75%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -39,7 +39,7 @@
 | 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | AFGEROND · 391/391 tests · echte difficulty/play-feeltest open |
 | 23 | Wereldterreinen: gevaren duidelijk en eerlijk | AFGEROND · 402/402 tests · browser-telegraphs/feeltest open |
 | 24 | Living World: terreinreacties en duidelijke consequenties | AFGEROND · 412/412 tests · browserflow/playtest open |
-| 25 | Boss-flow: volgorde, arena-isolatie, beloningen | OPEN |
+| 25 | Boss-flow: volgorde, arena-isolatie, beloningen | AFGEROND · 422/422 tests · volledige bossrun in browser open |
 | 26 | Boss attacks: reactietijd en spectaculariteit | OPEN |
 | 27 | UI/HUD: helderheid en leesbaarheid van combat | OPEN |
 | 28 | Performance: FPS, memory en spawnstabiliteit | OPEN |
@@ -294,3 +294,25 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Browser-QA staat nog open:** speel als Fire/Water/Frost tegenover een *andere* verdedigende wereld; check na Beau, Mourning Shade en Bell Tower hoe de frontlinie en terrain patches veranderen, en of verdedigers zichtbaar verschillen op native vs. occupied terrain. Test Live World-reakties naast de wereld-HUD, en de run-summary na zowel een mislukking als de finale overwinning. Meet of lange HUD-status niet met andere elementen overlapt op small screens. Controleer het terreinvoordeel bij 1×/2×/3× en of het tactisch genoeg aanvoelt. Automatische tests garanderen deze visuele/subjectieve ervaring niet.
 
 **Volgende (Update 25):** controleer daadwerkelijk de **bossvolgorde Beau → Mourning Shade → Bell Tower → The Last Meme**, begin/einde van boss-isolatie, minions uitsluitend door de boss, beloningen, eind-overgang naar Endless, geen voortijdige veroveringsopslag; regressietests én handmatige bossflow waar mogelijk. Behoud spectaculaire en leerbare boss-aanvallen als kernvisie; definitieve VFX-polish nog later.
+
+
+## Update 25 — afgerond (18 oktober 2026)
+**Doel:** een betrouwbare Standard bossroute in een solitaire arena, zonder reguliere vijanden of verborgen dubbele rewards; na de eindbaas een logisch doorlopende Endless-bossrotatie. **Update 26** blijft gereserveerd voor de werkelijk spectaculaire boss-aanvallen.
+
+**Resultaat:**
+- Nieuwe lichte pure module `js/boss-flow.js`, geladen in `index.html` na de bestaande gamecode en vóór de boss-isolatiemodule, met standaardvolgorde **Beau de Hond → The Mourning Shade → The Bell Tower → The Last Meme**. De bestaande `nextBossEncounter()` in `js/enemies.js` gebruikt die autoriteit tijdens echte runs, met veilige legacy fallback voor geïsoleerde tests.
+- `spawnFinalBoss()` controleert nu expliciet: Standard Mode, **precies 3 daadwerkelijk verslagen gewone Guardians**, minuut **25:00** bereikt en final boss nog niet verslagen. **Developer Mode** houdt de opzettelijke Quick Test-mogelijkheid, maar buiten Standard mag de finale ook daar niet zomaar worden gestart.
+- Belangrijke bugfix: na een echte overwinning op **The Last Meme** begint de **Endless**-Guardianrotatie met **Beau**, daarna Shade, daarna Bell, en niet met Shade omdat Standard-boss #4 de teller verschoven had. Voor een verse Endless-run begint de rotatie ook met Beau. Dit verandert niets aan de normale drie-bossvolgorde in Standard.
+- Boss-countdown in de HUD noemt nu expliciet **de volgende Guardian bij naam**, inclusief de eindbaas na de derde reguliere boss. De namen zijn afgestemd op `bossCatalog`: **THE MOURNING SHADE** en **THE BELL TOWER**.
+- De bestaande `js/boss-isolation.js` blijft reguliere vijanden, oude shots en terreinscars verwijderen zonder kill-/XP-/loot-beloning. Gewone spawns, waves, patrols en wereldverdediging blijven geblokkeerd zolang de boss leeft; alleen expliciete boss-summons mogen tijdens de bossgevechten verschijnen.
+- Na `finishBossIsolation()` worden tijdelijke minions en projectielen volledig weggehaald. Als de wavestatus tijdens het gevecht op 0/negatief terechtkwam, geeft de game nu een **minimale herstelruimte van 12 game-seconden in Standard of 8 in Endless** voordat die wave kan beginnen. Bestaande wave-timers langer dan dit worden *niet* onnodig verzet. Dit voorkomt een directe catch-up-horde als de boss-rewardkaart sluit.
+- Bestaande loot blijft de echte `awardBossLoot`-handler gebruiken; `damage()` markeert een gestorven boss onmiddellijk dood, zodat herhaalde treffers diezelfde boss geen tweede beloning geven. De finale gebruikt bestaande `grantFinalVictory()` met een eenmalige victory-/career-unlock; `continueEndlessAfterVictory()` gebruikt dezelfde run zonder dubbele recordcreatie. Het world state systeem blijft uitsluitend **na echte final boss victory** permanent overschrijven.
+- De tests in `tests/boss-isolation.test.cjs` en `tests/boss-sequence-xp.test.cjs` zijn aangepast waar ze op de oude syntaxis van `spawnFinalBoss()` of variantberekening stonden; die tests controleren nu de nieuwe beveiliging, zonder de originele belonings- en XP-regels te veranderen.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39155406864 — **422/422 tests geslaagd, 0 fouten**, inclusief **10 nieuwe boss-flowtests** voor de Standard timeline, finale-gates/Developer-sandbox, echte Beau/Shade/Bell-identiteiten, nieuwe Beau-cyclus in Endless, één bosskill/trophy, geïsoleerde arena zonder XP-wegwerpbeloningen, post-bossherstel, HUD-namen en bestaande Victory/Endless-opslag. JavaScript-syntaxchecks groen.
+
+**Planningvoortgang:** **15/20 = 75%** van geplande updates richting de eerste Combat & Gameplay 2.0-mijlpaal. Dit is *geen* garantie dat de boss-flow al in een complete 25–30 minuten browserrun doorlopen is.
+
+**Handmatige browser-QA open:** doorloop Standard met Beau, Mourning Shade en Bell Tower; check soloarena, alleen door boss gesummonde minions en uitblijven van wave/spawn na reward. Wacht op The Last Meme rond minuut 25 en controleer de echte wereldverovering, finale loot en exact één victorybonus/record. Kies **CONTINUE IN ENDLESS MODE** en bevestig dat Beau de eerste terugkerende Guardian is, gevolgd door Shade en Bell. Test herstart/main menu, Developer Mode quick bosses en late boss-verslagen zonder volgordesprong.
+
+**Volgende stap — Update 26:** elke boss ten minste één of twee goed leesbare normale aanvallen en daarnaast **indrukwekkende, gevaarlijke signature-aanvallen** geven: Arena-transformaties + gigantische aanvallen (Guardian Powers). Boss fights moeten zelfstandig zijn en hun sterke aanvallen moeten aim, timing en toegankelijke dodgepaden hebben. VFX als goede basis, definitieve art-polish later.
