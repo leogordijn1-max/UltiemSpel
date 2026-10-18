@@ -274,6 +274,7 @@ function spawnSpecialWave(number, cap = 95) {
   // A swarm can temporarily exceed the normal ambient cap, but not this hard limit.
   const hardCap = Math.min(95, Math.max(0,cap));
   let spawned = 0;
+  const tacticGroup = swarm ? null : window.newEncounterTacticGroup?.();
   const waveAngle = (number * 2.399963) % (Math.PI * 2);
   const distance = Math.max(W,H) * .68;
   const centerX = player.x + Math.cos(waveAngle) * distance;
@@ -301,6 +302,7 @@ function spawnSpecialWave(number, cap = 95) {
       e.damage *= 1.12 + Math.min(.22,number*.02);
       e.xpValueMultiplier = 1.9;
       e.encounterRole = "patrol";
+      window.assignEncounterTactic?.(e,i,tacticGroup);
     }
     window.initializeEnemyAdaptation?.(e);
     spawned++;
@@ -414,8 +416,9 @@ function damage(e, d, origin = player, damageType = "direct") {
   const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
   const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
   const worldResistance = window.enemyWorldResistance?.(e, damageType) ?? 1;
+  const packResistance = window.encounterTacticDamageMultiplier?.(e,enemies) ?? 1;
   const guardianResistance = window.guardianWorldResistance?.(e, damageType) ?? 1;
-  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * (window.worldDefenseDamageMultiplier?.(e) ?? 1) * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * packResistance * (window.worldDefenseDamageMultiplier?.(e) ?? 1) * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
   const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
   e.hp -= finalDamage;
   if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
