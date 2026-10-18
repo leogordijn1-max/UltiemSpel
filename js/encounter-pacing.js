@@ -65,9 +65,11 @@
   function patrolCount(growthSeconds) {
     return Math.min(5, 3 + Math.floor(Math.max(0,growthSeconds)/450));
   }
-  function spawnPatrol(now, growthSeconds, player, enemies, spawnEnemy, difficulty = "normal") {
+  function spawnPatrol(now, growthSeconds, player, enemies, spawnEnemy,
+    difficulty = "normal", sequenceOverride = null) {
     if (!running || !player || typeof spawnEnemy !== "function") return 0;
-    const plan=window.chooseTacticalEncounter?.(growthSeconds,patrols);
+    const plan=window.chooseTacticalEncounter?.(growthSeconds,
+      sequenceOverride??patrols);
     const total=plan?.members?.length || patrolCount(growthSeconds);
     if(!canStart(enemies,growthSeconds,"patrol",total,difficulty))return 0;
 
@@ -120,8 +122,18 @@
     if(blocked){nextPatrol=Infinity;return 0;}
     if(!Number.isFinite(nextPatrol)){nextPatrol=now+17;return 0;}
     if(now<nextPatrol)return 0;
+    // Only one designed confrontation at a time; explicit sandbox spawns
+    // still call spawnPatrol directly without the shared rhythm gate.
+    if(window.encounterRhythmCanStart?.("patrol",now,enemies)===false){
+      nextPatrol=now+6;return 0;
+    }
     // Skip missed opportunities rather than dumping packs after a paused boss fight.
-    const added=spawnPatrol(now,growthSeconds,player,enemies,spawnEnemy,difficulty);
+    const before=enemies.length;
+    const sequence=window.encounterRhythmPlanIndex?.(patrols)??patrols;
+    const added=spawnPatrol(now,growthSeconds,player,enemies,spawnEnemy,
+      difficulty,sequence);
+    if(added>0)window.recordEncounterRhythmSpawn?.(
+      "patrol",now,enemies.slice(before));
     // Retry a blocked encounter once the current pack is defeated; no catch-up burst.
     nextPatrol=now+(added?Math.max(25,31-Math.min(5,growthSeconds/300)):6);
     return added;
