@@ -34,3 +34,5 @@ jobs:
           done
       - name: Run gameplay regression tests
         run: node --test tests/*.test.js tests/*.test.cjs
+      - name: Audit Update 30 milestone technical gates
+        run: node scripts/milestone-30-audit.cjs
