@@ -54,23 +54,29 @@
     for(const stage of PHASES){
       if(seconds>=stage.seconds)selected=stage;
     }
+    // Sandbox unlocks should actually preview the future encounter combinations.
+    const progress=window.enemyProgressionStatus?.(seconds);
+    if(progress?.preview&&progress.count>2){
+      const index=Math.max(0,Math.min(PHASES.length-1,progress.count-2));
+      if(PHASES[index].seconds>selected.seconds)selected=PHASES[index];
+    }
     return selected;
+  }
+  function plan(result){
+    return {name:result.name,hint:result.hint,
+      members:result.members.map(m=>({...m})),
+      kinds:result.members.map(m=>m.kind),tactical:true};
   }
   function pick(seconds=0,sequence=0){
     const stage=phase(Math.max(0,Number(seconds)||0));
     const index=((Math.floor(sequence)%stage.combos.length)+stage.combos.length)%stage.combos.length;
     const result=stage.combos[index];
-    // Preview overrides in Developer Mode can unlock types early. Ordinary
-    // scheduling, however, never skips the progression gate.
+    // A defensive fallback still refuses kinds that the current roster
+    // has not unlocked, even if an encounter is requested with later time.
     const roster=window.enemyKindAvailable;
     if(typeof roster==="function"&&!result.members.every(m=>roster(m.kind,seconds)))
-      return PHASES[0].combos[index%PHASES[0].combos.length];
-    return {
-      name:result.name,hint:result.hint,
-      members:result.members.map(m=>({...m})),
-      kinds:result.members.map(m=>m.kind),
-      tactical:true
-    };
+      return plan(PHASES[0].combos[index%PHASES[0].combos.length]);
+    return plan(result);
   }
   window.chooseTacticalEncounter=pick;
   window.getTacticalEncounterPhases=()=>PHASES.map(p=>({
