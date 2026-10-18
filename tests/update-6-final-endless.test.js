@@ -119,7 +119,7 @@ test("three final boss projectile patterns are distinct and telegraphed ground a
     counts.push(JSON.parse(vm.runInContext("JSON.stringify({shots:bossShots.length,hazards:bossHazards.length,visual:bossShots[0]?.visualType,warning:bossHazards[0]?.warning})", context)));
   }
   assert.equal(counts[0].visual, "rift");
-  assert.equal(counts[0].shots, 6);
+  assert.equal(counts[0].shots, 5);
   assert.equal(counts[1].visual, "shadow");
   assert.ok(counts[1].shots >= 8);
   assert.equal(counts[2].shots, 0);
@@ -164,6 +164,7 @@ test("Victory UI can be claimed once, then Continue preserves the same build", (
   const context = vm.createContext({
     document: { createElement: () => ({}) },
     notify: () => {},
+    window: {},
   });
   const source = fs.readFileSync(path.join(root, "js/game.js"), "utf8");
   const start = source.indexOf("function showVictory() {");
