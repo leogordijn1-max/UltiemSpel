@@ -6,7 +6,7 @@
 >
 > **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
 
-> **ACTUELE STAND (na Update 26, 18 oktober 2026):** Update 26 is technisch afgerond en gepusht op feature/living-world-prototype. **16/20 = 80% planningsvoortgang** naar mijlpaal 30. **432/432 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39156381005. **Volgende update: 27 — combat UI/HUD, vooral heldere bosswaarschuwingen.** Browserplaytests en volledige Normal-runs staan nog open. Verifieer de laatste branch-HEAD en CI.
+> **ACTUELE STAND (na Update 27, 18 oktober 2026):** Update 27 is technisch afgerond en gepusht op feature/living-world-prototype. **17/20 = 85% planningsvoortgang** naar mijlpaal 30. **441/441 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39157580799. **Volgende update: 28 — performance, FPS en objectlimieten in drukke Normal/Nightmare-runs.** Browserplaytests en volledige Normal-runs staan nog open. Controleer actuele branch-HEAD en CI voor verdere wijzigingen.
 
 ## 1. De ziel van de game — lees dit vóór de code
 
@@ -101,7 +101,7 @@ Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De
 
 We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
 
-**Actuele afgesproken roadmap (na Update 26):**
+**Actuele afgesproken roadmap (na Update 27):**
 - **20 — AFGEROND (CI groen, browser-VFX-test nog open):** Eigen visuele accenten voor de negen huidige elementwapens, met render-culling en kwaliteitslimieten.
 - **21 — AFGEROND (CI groen, browser-test open):** Drie kleine, echte same-element cross-weapon combo's met een begrensde bonus en overzichtelijke evolutiepaden op upgrade-/supportkaarten.
 - **22 — AFGEROND (CI groen, speeltest open):** Difficulty komt uit taktische teamstatistieken en nog leesbare timings, niet extra Nightmare-vijanden. Flame Orbit en Frost-slow tegen bosses begrensd.
@@ -109,14 +109,14 @@ We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eers
 - **24 — AFGEROND (CI groen, browsertest open):** Zes rivaliserende world fronts, duidelijke veroveringsstatus en uitkomst in HUD en resultscherm, kleine tactische terreinconsequenties voor native defenders op invaded ground. Alleen final victory verandert de opgeslagen dominante wereld.
 - **25 — AFGEROND (CI groen, browserflowtest open):** Standard volgt exact Beau → The Mourning Shade → The Bell Tower → The Last Meme. Finale expliciet afgeschermd tot 3 echte bosskills én 25:00; soloarena en post-boss herstel, echte eenmalige rewards. In Endless na de finale restart de gewone Guardianrotatie bij Beau.
 - **26 — AFGEROND (CI groen, boss-playtest open):** Fase-3 ultimates van alle vier bosses krijgen drie extra reusachtige, getargette arena strikes met geometrisch correcte waarschuwingen en bereikbare veilige routes.
-- **27:** HUD en combat-UI: leesbaarheid.
+- **27 — AFGEROND (CI groen, browserleesbaarheid open):** Compact bosswaarschuwingspaneel onder de HP-balk met echte beat-/impactcountdown en dashstatus, na target-lock berekende veilige zone voor **de huidige Guardian Power** met subtiel turquoise Canvas-markering. Groen counterattackvenster uitsluitend wanneer boss echt bonusdamage incasseert.
 - **28:** FPS, performance, memory en stabiele spawns.
 - **29:** Volledige Normal-run(s), bugs en polish.
 - **30:** Mijlpaalreview: Combat & Gameplay 2.0 en besluit over volgende fase.
 
 Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
 
-**Laatste stand:** Update 19 verbeterde de actieve elementwapens, 20 legde hun VFX-basis, 21 voegde kleine elementcombo's en evolutieroutes toe, 22 maakte difficulty eerlijker, 23 verbeterde herhaalde terreinwaarschuwingen, 24 maakte wereldverovering merkbaar en 25 borgde earned bossvolgorde/soloarena/Endless-rotatie. **Update 26 is nu technisch afgerond:** nieuwe js/guardian-arena-powers.js geeft alle vier fase-3 ultimates drie reusachtige, gericht op de speler geplande arena-slags met eigen geometrische patronen. Beau: parallelle hound-corridors; Mourning Shade: eclipse-sectoren; Bell Tower: grote kruislijnen; The Last Meme: wisselende realiteitstegels. Eerste warning 1,45 game-seconde, volgende 1,08, target lock na 0,38; alleen hits binnen de op Canvas getoonde dodelijke zones. Echte dash/onkwetsbaarheid blijft gelden. Bestaande showcase-aanvallen blijven actief, dus **browser-QA van mogelijk overlappende aanvalspatronen is essentieel**. **432 tests groen.** Maker wil eerst functionele graphics, eindpolish later. **Volgende: Update 27 HUD/combatwaarschuwingen.**
+**Laatste stand:** Update 19 verbeterde actieve wapens, Update 20 legde hun VFX-basis, Update 21 introduceerde begrensde combobonussen/evolutiefeedback, Update 22 bracht tactische difficulty, Update 23 eerlijke wereldhazardwaarschuwingen, Update 24 invasieconsequenties, Update 25 boss-flow/soloarena/Endless-cyclus en Update 26 vier gevaarlijke fase-3 Guardian Power-setpieces. **Update 27 is technisch afgerond:** nieuwe `js/combat-hud.js` bouwt een kleine, hiërarchische bosswarning onder de boss-HP-balk: echte waarschuwing en drie-beatcountdown, dashstatus, na target-lock een berekende turquoise ontsnappingsroute naar een zone die veilig is voor **die ene Guardian Power**, en bij `specialRecoveryUntil` een duidelijk tegenaanvalsvenster dat +42% alleen noemt wanneer de echte damagebonus geldig is. Dit voegt geen damage, enemies, nieuwe VFX-lagen of gamebalans toe. De countdown rondt conservatief omhoog, Low graphics behoudt kernwaarschuwingen en de DOM heeft compacte mobiele styling. **441 tests groen**, browserplaytests (vooral simultane bossprojectielen plus safe-routepijl, 1x/2x/3x, kleine screens) blijven belangrijk. **Volgende: Update 28 performance.** Makersbesluit: effects hoeven nu als basis te bestaan, eindpolish later.
 
 ## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
 
@@ -147,6 +147,17 @@ Praktisch werken we zo:
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Update 27: Combat UI & HUD technisch afgerond**
+- Werkbranch: feature/living-world-prototype. Nieuwe **js/combat-hud.js**; de huidige `js/guardian-arena-powers.js` geeft extra lockAt-status terug, `js/game.js` werkt `#bossCombatCue` bij, `js/render.js` tekent de guidance en `js/boss-isolation.js` wist de UI-cache. HTML en CSS bijgewerkt. Nieuwe `tests/update-27-combat-hud.test.cjs` (**9 tests**), één oude resetvolgordetest bijgesteld.
+- **Kern:** de echt belangrijkste, actieve waarschuwing staat onder de boss-HP-balk: Guardian Power > andere waarschuwingen/charges > herstelvensters. Inclusief echte **BEAT 1/3** tot **3/3**, tijd tot impact, dashbeschikbaarheid en geanimeerde voortgang. De tijd wordt conservatief **naar boven** afgerond op tienden, nooit naar beneden door 1.05s-floatafronding.
+- **Legitieme escape guidance:** terwijl de Guardian het doel nog volgt, staat **TARGET TRACKING · BAIT, THEN DODGE**, zonder onbetrouwbare vaste pijl. Vanaf de 0,38s target-lock zoekt een begrensde samplerset van acht richtingen naar een plek die buiten de **ECHTE `guardianArenaPowerThreat` collision** ligt, met 10px extra veiligheidsmarge. Een dunne turquoise stippellijn met klein cirkeltje staat in de arena; de tekst zegt nadrukkelijk `SAFE FROM THIS POWER`, nooit 'safe from every boss projectile'.
+- **Bruikbaar recovery-window:** wanneer `boss.specialRecoveryUntil` loopt is er een distinct groen **COUNTERATTACK**-paneel. Een +42% claim verschijnt alleen als `bossCombatDamageMultiplier()` werkelijk >1 toont. Overige boss-showcasewarnings, normale shots/charges en dashstatus tonen kort hun eigen cue.
+- De helper berekent hoogstens een klein aantal geometrieposities per sample, hergebruikt een resultaat maximaal 0,13 game-seconden of tot >25px player movement, en verandert nooit echte aanvallen, drops, HP, spawn of XP. CSS schaalt naar kleinere viewports en respecteert reduced motion. De gebruiker wil pas later ver doorontwikkelde VFX, dus geen overdreven nieuwe cosmetica.
+- **Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39157580799 — **441/441 automatische tests groen**, 0 fouten. Tests dekken echte simulated-timed tell, alle vier collision-veilige escape-routes, target tracking versus lock, precieze beperkt-veilige claims, uitval van power, update priority, recoverybonus, resetcache en DOM/CSS/Canvas-integratie.
+- **Nog te testen:** browserplaytest met vier fase-3 Guardians, echte overlappende projectielen, 1x/2x/3x, Low/High graphics en 620px viewport. HUD zegt nadrukkelijk geen universeel veilige route; projectielen kunnen de guidance kruisen. Echte 25–30 minuten Normal-run nog open.
+- **Mijlpaal:** **17/20 = 85% van de geplande updates** (geen geverifieerde gamekwaliteit).
+- **VOLGENDE UPDATE 28:** echte performance in zware gevechten, FPS/Canvas/allocaties en objectlimieten, **zonder hitzones/waarschuwingen te schrappen**. Daarna 29 volledige Normal-QA en 30 mijlpaalreview.
 
 **18-10-2026 — Update 26: Guardian Power Arena Overhaul technisch afgerond**
 - Branch: feature/living-world-prototype. Nieuwe **js/guardian-arena-powers.js**, daadwerkelijk gekoppeld aan fase-3 van js/beau-encounter.js, js/shade-encounter.js, js/bell-encounter.js, js/meme-encounter.js; runtime hitverwerking in js/game.js en Canvas-geometrie in js/render.js. Geen extra reguliere vijanden in bossarena; bestaande aanvallen blijven.
