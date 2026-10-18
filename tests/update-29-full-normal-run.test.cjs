@@ -195,6 +195,22 @@ test("Frost Standard: full boss schedule works without fake elemental opposition
   assert.equal(h.window.getWorldConquest().invading,"frozen");
   assert.equal(h.metaProgress.runs[0].runElement,"frost");
 });
+test("late same-frame damage cannot overwrite the earned Victory, but Endless can still end",()=>{
+  const h=simulate("fire");
+  const winPanel=h.panels.at(-1);
+  const previousRecord=h.metaProgress.runs[0].id;
+  assert.equal(h.context.end(),false);
+  assert.equal(h.context.gameState,"victory");
+  assert.equal(h.panels.at(-1),winPanel);
+  assert.equal(h.metaProgress.totals.wins,1);
+  assert.equal(h.metaProgress.runs[0].id,previousRecord);
+  assert.equal(h.context.continueEndlessAfterVictory(),true);
+  h.go(1740);
+  h.context.end();
+  assert.equal(h.context.gameState,"game-over");
+  assert.equal(h.metaProgress.totals.wins,1);
+  assert.equal(h.metaProgress.totals.runs,1);
+});
 test("after a real victory, Endless restarts with Beau and has no second victory bonus",()=>{
   const h=simulate("fire");
   const points=h.metaProgress.points;
