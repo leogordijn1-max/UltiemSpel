@@ -1470,7 +1470,10 @@ function update(dt) {
           ? window.triggerElementalSynergy?.(e,"frost","frost",baseBulletDamage,time,e===boss)
           : null;
         damage(e,frostCombo?.damage ?? baseBulletDamage,b);
-        if(frostCombo?.activated)window.emitWeaponVfxImpact?.("frost",e.x,e.y,time);
+        if(frostCombo?.activated){
+          window.emitWeaponVfxImpact?.("frost",e.x,e.y,time);
+          window.showElementalCombo?.(e,frostCombo,time);
+        }
         b.hit.add(e);
         if (b.type === "frost") {
           b.hitTarget = e;
