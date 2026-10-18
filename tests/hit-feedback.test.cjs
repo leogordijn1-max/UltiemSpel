@@ -8,7 +8,7 @@ function harness(){
 function hit(overrides={}){return {x:100,y:200,radius:15,damage:10,targetKey:"a",now:1,visible:true,nearby:true,direct:true,...overrides};}
 test("ordinary hits use discreet white impact; critical hits glow gold",()=>{
   const w=harness();
-  assert.deepEqual(w.recordEnemyHitFeedback(hit()),{camera:0,sound:null,kind:"hit"});
+  assert.deepEqual({...w.recordEnemyHitFeedback(hit())},{camera:0,sound:null,kind:"hit"});
   const c=w.recordEnemyHitFeedback(hit({critical:true,now:1.1}));
   assert.equal(c.kind,"critical");assert.equal(c.sound,"crit");assert.ok(c.camera>0);
 });
@@ -45,7 +45,7 @@ test("damage-over-time impacts cannot spam huge trails or sound",()=>{
   const first=w.recordEnemyHitFeedback(hit({now:1}));
   assert.equal(first.kind,"hit");
   const repeated=w.recordEnemyHitFeedback(hit({now:1.01}));
-  assert.deepEqual(repeated,{camera:0,sound:null});
+  assert.deepEqual({...repeated},{camera:0,sound:null});
   assert.equal(w.hitFeedbackStatus().active,1);
   const different=w.recordEnemyHitFeedback(hit({targetKey:"b",now:1.02}));
   assert.equal(different.kind,"hit");
