@@ -47,6 +47,22 @@
         combo("SIEGE BREAKERS","ISOLATE THE CRUSHER",[[2,"crusher"],[6,"ward"],[1,"skirmisher"],[5,"volatile"],[4,"crossfire"]]),
         combo("ALL-OUT AMBUSH","KEEP MOVING",[[1,"pouncer"],[4,"crossfire"],[6,"ward"],[5,"volatile"],[0,"binder"]])
       ])
+    }),
+    Object.freeze({
+      seconds:900,
+      combos:Object.freeze([
+        combo("CRACK THE FORMATION","DISABLE THE BINDER FIRST",[[6,"ward"],[0,"binder"],[1,"pouncer"],[4,"crossfire"],[2,"crusher"]]),
+        combo("VOLATILE SCREEN","SEPARATE THE EXPLOSIVE",[[5,"volatile"],[6,"ward"],[1,"skirmisher"],[4,"crossfire"]]),
+        combo("TWIN PRESSURE","DODGE THE STOMP BEFORE THE CHARGE",[[2,"crusher"],[1,"pouncer"],[0,"binder"],[4,"crossfire"]])
+      ])
+    }),
+    Object.freeze({
+      seconds:1140,
+      combos:Object.freeze([
+        combo("THE CAGE","ESCAPE BEFORE THE CROSS-ATTACK",[[0,"binder"],[4,"crossfire"],[1,"pouncer"],[2,"crusher"],[6,"ward"]]),
+        combo("FALSE OPENING","BREAK THE WARD BEFORE THE BURST",[[5,"volatile"],[1,"skirmisher"],[0,"binder"],[4,"crossfire"],[6,"ward"]]),
+        combo("FINAL COUNTERATTACK","FOCUS DOWN THE CRUSHER",[[1,"pouncer"],[1,"skirmisher"],[6,"ward"],[2,"crusher"],[4,"crossfire"]])
+      ])
     })
   ]);
   function phase(seconds){
