@@ -8,6 +8,8 @@
 
 > **ACTUELE STAND (na Update 30, 18 oktober 2026):** **20/20 = 100% van geplande Updates 11–30 afgerond**, maar **een volledig speelgeteste 25–30min Normal release is nog NO-GO**. **468/468 tests plus 10/10 technische milestone-auditchecks groen**, GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39161207142. **Zes handmatige release-gates zijn OPEN**; lees [MILESTONE-30-REVIEW.md](MILESTONE-30-REVIEW.md) en [NORMAL-RUN-QA.md](NORMAL-RUN-QA.md). **Volgende: Update 31 — echte Normal-run-telemetrie en eerste browserplaytest**, daarna fase 31–40 'Verified Playable Run'. XP/evoluties, boss-overlap en FPS zijn niet bewezen met Node-tests. Branch: `feature/living-world-prototype`. Controleer actuele HEAD/CI.
 
+**Visuele richting na nieuw makerbesluit (18 oktober 2026):** **Deze game blijft 2D/top-down, maar wordt een extreem vloeiende stylized 2.5D-game die bijna 3D voelt.** Geen pixelart als doelstijl. Denk aan geloofwaardig volume, contactschaduwen, rimlight, vloeiende lichaams-/hitanimaties, gelaagde Fire/Water/Frost-effecten en diepte in de Living World. De bestaande meme-/originele personages en de leesbare gevechtshitzones blijven leidend. **Een eventueel deel 2 mag later echt 3D worden; daarvoor bouwen we niet nu al een andere engine.** Officieel plan: **[ROADMAP-31-50.md](ROADMAP-31-50.md)**. Updates 31–40: eerst verified gameplay; 41–45: art direction en 2.5D foundation; 46–50: animation/VFX lock-in. Dit is een **planningsbesluit**, geen al uitgevoerde update of reeds gemaakte assets.
+
 ## 1. De ziel van de game — lees dit vóór de code
 
 **Shadow Survivor** (repo heet UltiemSpel) begon als een grappige, eigen HTML/JavaScript survivor-roguelike met bekende/meme-achtige personages, maar moet uitgroeien tot een **echt leuk, uitdagend en onderscheidend spel**. Niet alleen meer wapens, meer vijanden of grotere cijfers toevoegen. We willen een spel dat je onthoudt omdat **de wereld op je reageert** en omdat gevechten echt iets voorstellen.
@@ -22,6 +24,7 @@ De ambitie is een **desktopgerichte, ongeveer 25–30 minuten durende Standard-r
 3. **Een wereld met geheugen.** Jouw element en run hebben waarneembare gevolgen. De spelwereld is meer dan een decor of een willekeurige hazardgenerator.
 4. **Duidelijke build-keuzes.** Drie relevante wapens binnen één element, zichtbare upgradeprogressie en maximaal twee betekenisvolle evoluties in een Standard-run. Geen oude, niet-selecteerbare systemen als nieuwe feature verkopen.
 5. **Itereren op speelgevoel.** Automatische tests zijn essentieel, maar zeggen niet of een aanval er tof uitziet, een boss uitdagend is, XP goed valt of een hele run leuk blijft. Echte speeltestfeedback van de maker weegt zwaar.
+6. **Vloeiende 2.5D-identiteit.** Deze eerste game heeft 2D-gameplay, maar een bijna-3D-presentatie met volume, schaduwen, laagopbouw en vloeiende animaties. Geen pixelart-look; geen echte 3D-omschakeling vóór de maker dat later expliciet kiest. Grootse VFX mogen nooit belangrijke waarschuwingen of veilige routes afdekken.
 
 ## 2. De wereld / het verhaal dat we met gameplay vertellen
 
@@ -146,6 +149,13 @@ Praktisch werken we zo:
 - [ ] Afgeronde update aan de gebruiker samengevat inclusief de echte progressiestand.
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
+**18-10-2026 — Visuele toekomstrichting & ROADMAP 31–50 vastgesteld (PLAN, geen voltooide update)**
+- Maker wil Shadow Survivor 1 **extreem soepel en bijna 3D ogend**, maar de gameplay blijft top-down 2D: **stylized 2.5D**, niet pixelart. Echte 3D is hoogstens een toekomstig **deel 2**.
+- Nieuwe leidende [ROADMAP-31-50.md](ROADMAP-31-50.md): Updates 31–40 _Verified Playable Run_ (bestaande 6 NO-GO gates eerst werkelijk testen), 41–45 _2.5D Visual Foundation_ (vormtaal, belichting, contactschaduwen, character/enemy/boss designs, Living World environment vertical slice), 46–50 _Smooth Animation & VFX Lock-In_ (vloeiende beweging, negen actieve elementwapens, twee evoluties, vier Guardian Powers, visuele performance-/kwaliteitsreview).
+- **Update 41 is het begin van graphics-lock-in**, maar voorbereidend stijlonderzoek mag al tijdens 31–40 zonder speelbaarheidsblokkades te negeren. Bewaar canonieke eigen character-designs, vermijd generieke assets; Low graphics + hitzoneleesbaarheid moeten blijven werken.
+- **Status blijft Update 30 afgerond / 31–50 GEPLAND**, handmatige browser QA en verified release nog OPEN. Werk na echte upgrades deze roadmap en PROJECT-KOMPAS en MILESTONE-30 samen bij.
+
+
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
 
 **18-10-2026 — Update 30: Combat & Gameplay 2.0 TECHNISCHE mijlpaal bereikt**
