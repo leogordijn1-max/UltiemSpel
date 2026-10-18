@@ -676,15 +676,20 @@ function update(dt) {
   if (!boss) {
     waveTimer -= dt;
     if (waveTimer <= 0) {
-      waveNumber++;
-      waveDuration = Math.max(60, 80 - waveNumber * 2);
-      waveTimer += waveDuration;
-      const wave = spawnSpecialWave(waveNumber);
-      notify(
-        `WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES${wave.hint ? " · "+wave.hint : ""}`,
-        "wave",
-        4,
-      );
+      const nextWave=waveNumber+1;
+      const wave=spawnSpecialWave(nextWave);
+      if(wave.deferred){
+        // Never drop another encounter onto the player during an ongoing fight.
+        // Retrying doesn't advance the wave counter or accumulate old waves.
+        waveTimer=6;
+      }else{
+        waveNumber=nextWave;
+        waveDuration=Math.max(60,80-waveNumber*2);
+        waveTimer=waveDuration;
+        notify(
+          `WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES${wave.hint ? " · "+wave.hint : ""}`,
+          "wave",4);
+      }
     }
   }
   if (upgrades.health) {
@@ -799,9 +804,9 @@ function update(dt) {
   // Boss arenas are separate encounters: NO regular spawns or catch-up
   // waves. Only the boss may create minions via its own phase mechanics.
   if (!boss && !window.isBossIsolationActive?.()) {
-    const cap = window.encounterPopulationCap?.(growthTime,difficulty) ?? 52;
-    // Leave population headroom for tactical patrols and World Defense squads.
-    const ambientCap = Math.max(9,cap-12);
+    // Ambient mobs are atmosphere, not the main encounter. Teams get priority.
+    const ambientCap=window.encounterAmbientLimit?.(growthTime,difficulty,enemies) ??
+      Math.max(4,9-Math.floor(growthTime/180));
     if (enemies.length >= ambientCap) {
       // Never accumulate a catch-up horde while at the population limit.
       spawn = Math.max(spawn,.4);
