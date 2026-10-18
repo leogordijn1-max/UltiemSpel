@@ -10,6 +10,7 @@ function resetElementalCombat() {
   elementalAreas = [];
   elementalTimers = {};
   orbitFireAngle = 0;
+  window.resetWeaponVfx?.();
 }
 
 function elementalCooldown(key, seconds) {
@@ -76,6 +77,7 @@ function fireOrbitPositions() {
 }
 function elementalCircle(x, y, radius, damage, kind, duration = 0.65) {
   elementalAreas.push({ type: kind, x, y, radius, life: duration, maxLife: duration });
+  window.emitWeaponVfxImpact?.(kind === "fire" ? "fireball" : "glacialPulse", x, y, time);
   if (elementalAreas.length > 55) elementalAreas.shift();
   const color = kind === "fire" ? "#ff9657" : kind === "frost" ? "#a5eafa" : "#60bcff";
   puff(x, y, color, 8);
@@ -245,6 +247,7 @@ function updateElementalCombat(dt) {
           const kind = shot.type === "iceShards" ? "frost" : "water";
           damageEnemyElemental(enemy, shot.damage, kind,
             shot.x - vx, shot.y - vy, shot.type);
+          window.emitWeaponVfxImpact?.(shot.type, shot.x, shot.y, time);
           if (shot.type === "waterBolt") {
             markWetGround(shot.x, shot.y, evolutions.riptideLance ? 100 : 65);
             elementalAreas.push({ type: "water", x: shot.x, y: shot.y,
