@@ -1,9 +1,9 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 14 — XP & Evolution Balance: gerichte upgrade-opties, tijdige evoluties en betere XP-opbrengst.
-**Volgende update:** 15 — Kleine groepen: attack timing, focus & AI.
-**Planningvoortgang:** **4 / 20 afgerond = 20%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 15 — Enemy Teamwork 3.0: bescherming, voorspellende flankers en tactische openingsmomenten.
+**Volgende update:** 16 — Vijandtypes: onderscheidende sterke/zwakke punten.
+**Planningvoortgang:** **5 / 20 afgerond = 25%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -26,7 +26,7 @@
 | 12 | Movement & dash: gevoel, responsiviteit, input | AFGEROND · 276/276 tests |
 | 13 | Hit feedback: impact, damage, animatie, geluid | AFGEROND · 287/287 tests |
 | 14 | XP/evoluties: XP-model, keuzes en mijlpalen | AFGEROND · 299/299 tests · browser-run open |
-| 15 | Kleine groepen: attack timing, focus & AI | OPEN |
+| 15 | Kleine groepen: attack timing, focus & AI | AFGEROND · 311/311 tests · speeltest open |
 | 16 | Vijandtypes: onderscheidende sterke/zwakke punten | OPEN |
 | 17 | Enemy skills: leesbare telegraphs en combinaties | OPEN |
 | 18 | Encounter director: ritme, spanning, rustige momenten | OPEN |
@@ -100,3 +100,18 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatige speeltest nog open:** check op 10:00 of de eerste evolutie verschijnt na voldoen aan de voorwaarden, op 17:00 de tweede, de voortgang in de HUD en de XP-verwerving tussen 10–25 minuten. Controleer of jouw eigen speelniveau genoeg XP oplevert, zonder verhoogde achtergrondvijandendichtheid. Daarna eventueel XP per moeilijkheid nauwkeuriger balanceren.
 
 **Volgende stap (Update 15):** verder met kleine vijandengroepen: synergieën, focus/prioriteit, aanvallen en betere telegraph-timing.
+
+## Update 15 — afgerond (18 oktober 2026)
+**Resultaat:** de bestaande tactische teams werken daadwerkelijk samen in hun beweging en reactietiming. Vanguard/Ward beweegt tussen speler en kwetsbare Ranged Shade of Binder in plaats van alleen recht op de speler af te lopen. Skirmishers nemen de actuele bewegingssnelheid mee in hun flankhoek en dreigen vanuit verschillende richtingen. Binder- en Crusher-terreinwaarschuwingen beginnen niet tegelijk, zodat zware crowd-control en slam nog te ontwijken zijn; de bestaande Binder→Pouncer en Crusher→Crossfire-combo's blijven bestaan.
+
+**Counterplay:** dood je een Vanguard of Ward, dan verliest de groep onmiddellijk diens beschermingsbonus en ontvangt de rest **drie seconden +16% schade**. Een Pouncer kan daarna sneller een aanval voorbereiden, maar de waarschuwing blijft verplicht. Een gedode Binder kan geen toekomstige combo-dashes versterken. Een zichtbare schildbreuk toont `FORMATION BROKEN · OPENING 3s` maximaal eenmaal per groep en geeft de blootgestelde units een amberkleurige ring.
+
+**Scope/risico:** geen nieuwe types, geen extra gespawnde vijanden, geen wijzigingen aan de hoeveelheid XP, geen extra boss-minions en geen aanvallen buiten beeld. Dit is nog geen menselijke speelbalanstest. Developer Mode heeft al `SPAWN TOUGH PATROL` om de groep te testen.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39140683981 — **311/311 tests geslaagd**. Twaalf nieuwe tests toetsen schildinterceptie, flankvoorspelling, telegrafie, schadevenster, beperkte meldingen, teamgrenzen, offscreen/boss-uitzonderingen en daadwerkelijke integratie.
+
+**Planningvoortgang:** **5 / 20 = 25%** naar Combat & Gameplay 2.0 bij Update 30.
+
+**Handmatige speeltest nog open:** in Developer Mode een patrouille oproepen; eerst de Vanguard/Ward uitschakelen en controleren of de rest drie seconden merkbaar kwetsbaarder wordt; Runner-flanken vergelijken bij stilstand versus bewegen; check of Binder en Crusher niet tegelijk onvermijdelijke cirkels uitvoeren. Gevoel, zichtbaarheid en balans kunnen na echte speeltest worden bijgesteld.
+
+**Volgende stap (Update 16):** uitgesproken unieke vijandtypes met herkenbare sterkten/zwakten en aanvallen die duidelijk verschillen per rol.
