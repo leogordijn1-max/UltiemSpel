@@ -106,6 +106,8 @@
     if (typeof notify === "function") {
       notify("WORLD BARRIER SHATTERED · " + percent + "% " +
         getInvadingWorld().toUpperCase(), "boss", 5);
+      const retaliation=window.worldConsequenceBossStage?.(count);
+      if(retaliation)notify(retaliation.message,"wave",4.5);
     }
     return true;
   }
