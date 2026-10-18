@@ -25,7 +25,8 @@
     if (!running || !player || typeof spawnEnemy !== "function") return 0;
     const cap = populationCap(growthSeconds, difficulty);
     const remaining = cap - enemies.filter(e => !e.dead).length;
-    const total = Math.min(patrolCount(growthSeconds), remaining);
+    const plan=window.chooseTacticalEncounter?.(growthSeconds,patrols);
+    const total = Math.min(plan?.members?.length || patrolCount(growthSeconds), remaining);
     if (total <= 0) return 0;
 
     // One tough leader with actual support types, rather than three identical chasers.
@@ -37,9 +38,11 @@
     const anchorX = spawnAt?.x ?? (player.x + Math.cos(direction)*distance);
     const anchorY = spawnAt?.y ?? (player.y + Math.sin(direction)*distance);
     let added = 0;
+    const team=[];
     const tacticGroup=window.newEncounterTacticGroup?.();
     for(let i=0;i<total;i++){
-      const preferred=formation[i];
+      const member=plan?.members?.[i];
+      const preferred=member?.kind ?? formation[i];
       const kind=window.resolveEncounterEnemyKind?.(preferred,growthSeconds,i) ?? preferred;
       const e=spawnEnemy(kind,i===0 && growthSeconds>=480);
       if(!e)break;
@@ -53,12 +56,19 @@
       e.damage*=1.26+Math.min(.22,growthSeconds/2100);
       e.encounterRole="patrol";
       e.xpValueMultiplier=2.15;
-      window.assignEncounterTactic?.(e,i,tacticGroup);
+      window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
+      if(plan){e.encounterPlan=plan.name;e.encounterHint=plan.hint;}
+      team.push(e);
       // Recheck elemental world affinity after positioning.
       window.initializeEnemyAdaptation?.(e);
       added++;
     }
-    if(added){patrols++;window.notifyEncounterPatrol?.("PATROL · "+added+" ELITE DEFENDERS");}
+    if(added){
+      window.linkEncounterTacticTeam?.(team);
+      patrols++;
+      window.notifyEncounterPatrol?.(
+        (plan?.name || "PATROL")+" · "+added+" ENEMIES · "+(plan?.hint || "STRONG ENEMIES"));
+    }
     return added;
   }
   function update(now,growthSeconds,player,enemies,spawnEnemy,blocked=false,difficulty="normal") {
