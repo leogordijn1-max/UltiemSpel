@@ -135,18 +135,9 @@
     // Local marks take precedence over the baseline biome.
     const ground = local || (base==="burning"?"fire":base==="flooded"?"water":"frost");
     if (type==="fire" && ground==="frost")
-      return {type:"water",effect:"steam"}; // Heat melts existing ice.
-    if (type==="fire" && ground==="water") {
-      // Repeated heat eventually boils the puddle away and chars the ground.
-      // A water world needs sustained fire; a single shot cannot erase a flood.
-      const wetMark=scars.find(s=>s.type==="water" &&
-        (s.x-x)**2+(s.y-y)**2<68**2);
-      if (wetMark) {
-        wetMark.heat=(wetMark.heat||0)+1;
-        if (wetMark.heat>=3) return {type:"fire",effect:"steam"};
-      }
-      return {type:"water",effect:"steam"};
-    }
+      return {type:"fire",effect:"steam"}; // Player fire claims the frozen ground.
+    if (type==="fire" && ground==="water")
+      return {type:"fire",effect:"steam"}; // Steam is the reaction; the new terrain is FIRE.
     if (type==="water" && ground==="fire")
       return {type:"water",effect:"steam"}; // Water extinguishes embers.
     if (type==="frost" && ground==="water")
