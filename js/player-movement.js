@@ -40,8 +40,9 @@
       const steer=.10;
       const forwardX=dir.x*(1-steer)+input.x*steer;
       const forwardY=dir.y*(1-steer)+input.y*steer;
-      const adjusted=normalize(forwardX,forwardY);
-      return {vx:adjusted.x*speed*4.35,vy:adjusted.y*speed*4.35,moving:true};
+      const forwardLength=Math.hypot(forwardX,forwardY)||1;
+      return {vx:forwardX/forwardLength*speed*4.35,
+        vy:forwardY/forwardLength*speed*4.35,moving:true};
     }
     return {vx:velocityX,vy:velocityY,moving:input.active||Math.hypot(velocityX,velocityY)>.5};
   }
