@@ -7,10 +7,13 @@
 
 **Combat & Gameplay 2.0: 20/20 geplande stappen voltooid.** De technische modules en regressietests zijn geïntegreerd, maar de game is **nog niet als volledig speelbaar en uitgebalanceerd vrijgegeven**: een echte doorlopende Normal-browserrun van 25–30 minuten, daadwerkelijk haalbare dubbele evoluties, FPS en overlappende bossaanvallen vereisen nog handmatige speeltests.
 
+- [ROADMAP-31-50.md](ROADMAP-31-50.md): **officiële planning voor Verified Playable Run (31–40), vloeiende stylized 2.5D art direction (41–45), animatie/VFX (46–50)** en het mogelijke toekomstige 3D-vervolg.
 - [MILESTONE-30-REVIEW.md](MILESTONE-30-REVIEW.md): evidence, GO/NO-GO, bekende risico's, plan voor Updates 31–40.
 - [NORMAL-RUN-QA.md](NORMAL-RUN-QA.md): afvinkbare checkpoints voor echte 25–30-minutenspeeltests.
 - [MILESTONE-30.md](MILESTONE-30.md): volledige geschiedenis en tracker Updates 11–30.
 - [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md): spelvisie, grenzen, projectoverdracht en koers.
+
+**Toekomstig grafisch doel (gepland, nog niet gebouwd):** een hoogwaardige, supervloeiende **stylized 2.5D top-down look die bijna 3D voelt** door contactschaduw, volume, dynamische verlichting, gelaagde VFX en soepele animatie. **Geen pixelart** als stijlkeuze; voor een mogelijk deel 2 pas echt 3D. Echte visual-designproductie staat in de roadmap gepland voor **Updates 41–50**, ná geverifieerde gameplay in 31–40.
 
 ### Wat kun je nu spelen?
 
