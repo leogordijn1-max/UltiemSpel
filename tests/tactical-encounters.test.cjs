@@ -42,7 +42,7 @@ test("three distinct plans per progression stage, each with counterplay hints",(
     assert.equal(new Set(plans.map(p=>p.name)).size,3);
     assert.ok(plans.every(p=>p.hint));
     assert.ok(plans.every(p=>p.members.length<=5));
-    assert.deepEqual(Array.from(plans[0].kinds),plans[0].members.map(x=>x.kind));
+    assert.deepEqual(Array.from(plans[0].kinds),Array.from(plans[0].members,x=>x.kind));
   }
 });
 test("locked heavy kinds never slip into encounter plans",()=>{
@@ -59,8 +59,8 @@ test("director deploys designed units and honors roles, offscreen origin and gro
       h.context.player,h.context.enemies,h.context.enemySpawn);
     const selected=h.window.chooseTacticalEncounter(seconds,0);
     assert.equal(result,selected.members.length);
-    assert.deepEqual(h.context.enemies.map(e=>e.kind),selected.members.map(m=>m.kind));
-    assert.deepEqual(h.context.enemies.map(e=>e.encounterTactic),selected.members.map(m=>m.tactic));
+    assert.deepEqual(Array.from(h.context.enemies,e=>e.kind),Array.from(selected.members,m=>m.kind));
+    assert.deepEqual(Array.from(h.context.enemies,e=>e.encounterTactic),Array.from(selected.members,m=>m.tactic));
     assert.ok(h.context.enemies.every(e=>e.x>640));
     assert.ok(h.context.enemies.every(e=>e.encounterPartners?.length===selected.members.length));
     assert.ok(h.context.enemies.every(e=>e.encounterPlan===selected.name));
