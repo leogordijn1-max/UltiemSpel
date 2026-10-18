@@ -245,8 +245,10 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
       (forceElite || Math.random() < Math.min(0.18, 0.02 + growthTime / 12000 + tier * 0.007))) {
     makeEliteEnemy(e);
   }
-  // Adaptation is determined by the actual world patch at the spawn point.
+  // Affinity follows the defending world; archetype skills don't introduce
+  // locked future kinds into the current run.
   window.initializeEnemyAdaptation?.(e);
+  window.initializeEnemyArchetype?.(e);
   enemies.push(e);
   if (typeof trackDiscovery === "function") {
     const seen = typeof enemyDiscoveryId === "function" ? enemyDiscoveryId(e.kind) : null;
@@ -469,11 +471,15 @@ function damage(e, d, origin = player, damageType = "direct") {
   const criticalMultiplier = 1.5 + (upgrades.critDamage || 0) * 0.25 + Math.max(0, (upgrades.critChance || 0) - 2) * 0.05;
   const slowedAreaBonus = e.impactSlowUntil > time && (damageType === "bomb" || damageType === "flame" || damageType === "frost" || damageType === "pulse") ? 1.15 : 1;
   const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
-  const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
+  const defense = (e.kind === 6 && e.shieldActive
+    ? (window.bulwarkShieldMultiplier?.(e,origin,player) ?? .67) : 1)
+    * (e.eliteTrait === "armored" ? 0.82 : 1);
   const worldResistance = window.enemyWorldResistance?.(e, damageType) ?? 1;
   const packResistance = window.encounterTacticDamageMultiplier?.(e,enemies,time) ?? 1;
   const guardianResistance = window.guardianWorldResistance?.(e, damageType) ?? 1;
-  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * packResistance * (window.worldDefenseDamageMultiplier?.(e) ?? 1) * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
+  const archetypeWeakness=window.enemyArchetypeDamageMultiplier?.(
+    e,damageType,origin,player) ?? 1;
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * packResistance * archetypeWeakness * (window.worldDefenseDamageMultiplier?.(e) ?? 1) * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
   const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
   e.hp -= finalDamage;
   if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
