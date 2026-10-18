@@ -6,7 +6,7 @@
 >
 > **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
 
-> **ACTUELE STAND (na Update 20, 18 oktober 2026):** Update 20 is technisch afgerond en gepusht op feature/living-world-prototype. **10/20 = 50% planningsvoortgang** naar mijlpaal 30. **372/372 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39148015522. **Volgende update: 21 — actuele elementwapens/evolutions, synergie en upgradefeedback.** Browserplaytests, visuele VFX-controle en volledige runs staan nog open. Verifieer deze status telkens opnieuw aan de hand van de laatste commits.
+> **ACTUELE STAND (na Update 21, 18 oktober 2026):** Update 21 is technisch afgerond en gepusht op feature/living-world-prototype. **11/20 = 55% planningsvoortgang** naar mijlpaal 30. **381/381 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39149296644. **Volgende update: 22 — wapen- en vijandbalans voor Normal/Easy/Nightmare.** Browserplaytests en volledige runs staan nog open. Verifieer deze status telkens opnieuw aan de hand van de laatste commits.
 
 ## 1. De ziel van de game — lees dit vóór de code
 
@@ -101,9 +101,9 @@ Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De
 
 We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
 
-**Actuele afgesproken roadmap (na Update 20):**
+**Actuele afgesproken roadmap (na Update 21):**
 - **20 — AFGEROND (CI groen, browser-VFX-test nog open):** Eigen visuele accenten voor de negen huidige elementwapens, met render-culling en kwaliteitslimieten.
-- **21:** Wapenkeuzes, evolutions, synergie en feedback.
+- **21 — AFGEROND (CI groen, browser-test open):** Drie kleine, echte same-element cross-weapon combo's met een begrensde bonus en overzichtelijke evolutiepaden op upgrade-/supportkaarten.
 - **22:** Balans wapens en vijanden per moeilijkheid.
 - **23:** Eerlijk leesbare wereldterreingevaren.
 - **24:** Living World-terreinreacties en consequente gevolgen.
@@ -116,7 +116,7 @@ We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eers
 
 Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
 
-**Laatste stand:** Update 19 is **gerepareerd na feedback van de maker**: voorspellend mikken en nauwkeuriger collisions gelden voor **Fireball, Water Bolt, Ice Shards**, dus daadwerkelijk kiesbare wapens. **Update 20 is inmiddels technisch afgerond**: een aparte cosmetische js/weapon-vfx.js-laag voegt unieke vuur-, water- en ijseffecten toe aan alle negen actuele wapens, met impactringen, beperkingen voor Low graphics en schermculling. De renderpass wordt vanuit js/render.js aangeroepen; js/elemental-combat.js en js/weapons.js leveren impactevents. Dit verandert geen schade of vijandgedrag. **372 tests zijn geslaagd**, maar de VFX moeten in de browser nog op kwaliteit, leesbaarheid en FPS worden beoordeeld. **Volgende: Update 21.**
+**Laatste stand:** Update 19 is gerepareerd voor de huidige wapens. Update 20 bouwde een cosmetische VFX-basis voor alle negen huidige elementwapens. **Makerbesluit na Update 20: de effecten hoeven nu nog niet geweldig of definitief gepolijst te zijn; het belangrijkste is dat ze er zijn. Later volgt nog veel VFX-polish.** **Update 21 is technisch afgerond:** js/elemental-synergy.js heeft de begrensde cross-weapon combo's Ignition/Undertow/Shatter. Wapen-/supportkaarten tonen de concrete evolution-progress en echte element-combopartners. De HUD toont een dichte ontgrendelde evolutieroute en ontbrekende boss. De huidige scripts en tests zijn aangesloten; **381 tests groen**, maar de browserplaytest van combinatiegevoel, upgradehelderheid en uiteindelijke FPS staat nog open. **Volgende: Update 22.**
 
 ## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
 
@@ -147,6 +147,17 @@ Praktisch werken we zo:
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Update 21: Elemental Synergy & Evolution Feedback technisch afgerond**
+- Werkbranch: feature/living-world-prototype. js/elemental-synergy.js is toegevoegd; js/elemental-combat.js, js/weapons.js, js/game.js, js/upgrades.js, index.html en tests zijn bijgewerkt.
+- De negen selecteerbare elementwapens kunnen combinaties maken door **afwisselend verschillende wapens van hetzelfde element op dezelfde vijand** te raken. Fire = **IGNITION** (kleine schade-/brandbonus), Water = **UNDERTOW** (kleine schade-/knockbackbonus), Frost = **SHATTER** (kleine schade-/chillbonus).
+- Combo-markeringen verlopen na 3 seconden; max 1 bonus per vijand per 1,25 seconden. Bonus beperkt tot 12 damage op normale vijanden en 4 op bosses. Geen bonus door herhaald schieten met hetzelfde wapen, geen cross-element bonus, geen gratis evolution of XP. Bij een echte combo is er een korte, gekleurde tekst bij het doel, met globale throttling.
+- Het upgrade-/supportmenu toont nu **concrete** voortgang voor wapenlevel, supportlevel, boss vereiste en tijdmijlpaal plus combo-partners. Echte evolutie-supports worden bescheiden vaker aangeboden. Twee evoluties blijven volledig verdiend en pas vanaf 10:00 en 17:00 mogelijk.
+- Voorafgaand makerbesluit: Update 20-VFX hoeven nu alleen te bestaan; het is een **basis**, geen finale art pass. Schuif uitgebreide graphics-polish naar later in plaats van Update 21 ermee te blokkeren.
+- Bewijs: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39149296644 — **381/381 tests groen, 0 fouten**. Totaal 9 nieuwe tests voor Update 21 en één aangepaste oude regelassertie.
+- **Nog niet bewezen:** browser-feel en balans van de drie combo's, progressiescherm in echte run, twee realistisch behaalde evoluties, 25–30 minuten complete run. Ga dat niet als afgerond presenteren.
+- Mijlpaal: **11/20 geplande stappen = 55%** (géén subjectief kwaliteitspercentage).
+- **Volgende: Update 22 — wapen-/vijandbalans Normal/Easy/Nightmare**, uitsluitend actieve Fire/Water/Frost-wapens en eerlijke groepsgevechten.
 
 **18-10-2026 — Update 20: Elemental Weapon VFX technisch afgerond**
 - Werkbranch: feature/living-world-prototype. Nieuwe visual-only module: js/weapon-vfx.js; de andere wijzigingen staan in index.html, js/elemental-combat.js, js/weapons.js, js/render.js en tests/update-20-weapon-vfx.test.cjs.
