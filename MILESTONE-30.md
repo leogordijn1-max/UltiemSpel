@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 20 — Elemental Weapon VFX: herkenbare extra visuele effecten voor de negen actuele selecteerbare elementwapens.
-**Volgende update:** 21 — Wapens en evoluties: keuze, synergie en feedback.
-**Planningvoortgang:** **10 / 20 afgerond = 50%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 21 — Elemental Synergy & Evolution Feedback: drie gecontroleerde combo's en duidelijke routes naar verdiende evoluties.
+**Volgende update:** 22 — Wapen- en vijandbalans: Normal/Easy/Nightmare.
+**Planningvoortgang:** **11 / 20 afgerond = 55%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -35,7 +35,7 @@
 | 18 | Encounter Director 3.0: één groot gevecht tegelijk en herstelpauzes | AFGEROND · 347/347 tests · speeltest open |
 | 19 | Weapon Feel: voorspellend richten en betrouwbare treffers | AFGEROND · 365/365 tests na correctie · speeltest open |
 | 20 | Weapon VFX: eerste visuele kwaliteitslat | AFGEROND · 372/372 tests · browser-visual review open |
-| 21 | Wapens en evoluties: keuze, synergie, feedback | OPEN |
+| 21 | Wapens en evoluties: keuze, synergie, feedback | AFGEROND · 381/381 tests · gecombineerde browser-speeltest open |
 | 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | OPEN |
 | 23 | Wereldterreinen: gevaren duidelijk en eerlijk | OPEN |
 | 24 | Living World: terreinreacties en duidelijke consequenties | OPEN |
@@ -206,3 +206,27 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Nog open voor mijlpaal 30:** complete 25–30 minuten Standard-run, werkelijk verdiende twee evoluties, bossvolgorde en spectaculaire signature-aanvallen in de browser, moeilijkheidsbalans, meetbare late-run FPS en meerdere volledige runs.
 
 **Volgende stap (Update 21):** alleen **actuele** Fire-, Water- en Frost-loadouts en hun evolutions beoordelen op keuzegevoel, onderlinge synergie, progression en duidelijke upgradefeedback; oude Arcane/Boomerang-code niet als speelbaar beschouwen.
+
+
+## Update 21 — afgerond (18 oktober 2026)
+**Doel:** de negen selecteerbare elementwapens daadwerkelijk laten samenwerken en de route naar twee verdiende evoluties begrijpelijk maken, zonder extra wapens, gratis evoluties, vijandenspam of brede balanswijzigingen.
+
+**Resultaat:**
+- Nieuwe compacte module js/elemental-synergy.js met **echte cross-weapon combo's**: **IGNITION** (Fire), **UNDERTOW** (Water), **SHATTER** (Frost). Alleen hits van twee *verschillende* wapens binnen hetzelfde element mogen zo'n bonus activeren. Het eerste wapen zet de markering; een ander wapen kan hem binnen 3 seconden benutten.
+- De bonus is bewust klein en begrensd: Fire +14% tot maximaal +12 damage tegen gewone vijanden en +0,35 sec brandtijd; Water +10% tot maximaal +12 en een bescheiden extra knockback; Frost +16% tot maximaal +12 en +0,35 sec chill. **Op een boss is de damagebonus per activatie maximaal +4**. Per vijand geldt **1,25 game-seconden cooldown**. Geen gratis schade-ticks, geen stapelbare permanente versterkingen.
+- Geïntegreerd in echte aanvallen: Flame Cone en Flame Orbit/Fireball, Water Bolt/Tidal Wave/Whirlpool, Frost Orb/Ice Shards/Glacial Pulse. Ook de Frost Orb-AoE zet het juiste elementmerk zodat vervolgwapens kunnen combineren.
+- Wanneer een combo afgaat verschijnt kort de naam bij het doel (kleur per element, maximaal 1 callout per 0,65 game-seconden over het hele scherm). Bij een nieuwe run wordt de callout-timer gewist. De VFX-impact blijft subtiel extra zichtbaar.
+- De **level-upkeuzes** tonen nu op de echte wapen-/supportkaarten een concrete evolution-route: hoeveel weapon levels en support levels je al hebt, welke boss- en tijdmijlpaal ontbreekt en welk eindwapen je kunt verdienen. Voor elementwapens tonen kaarten hun **werkelijke huidige combo-partners** of leggen uit dat een tweede wapen nodig is.
+- De keuzeweging geeft een bescheiden voorkeur aan **supports die daadwerkelijk passen bij een vrijgespeeld elementwapen en bijna een evolutie opleveren**, in plaats van de oude, onmogelijke Fire+Frost-cross-element bonus. De HUD volgt een dichtstbijzijnde **ontgrendelde** evolutieroute en kan 'BOSS NEEDED' tonen.
+- De bestaande evolutievoorwaarden blijven intact: weapon level 5, echte support level 3, een verslagen boss en mijlpalen op 10 en 17 minuten; max. twee Standard-evoluties. Een combo is **geen evolutie of gratis upgrade**.
+- De scripts en JS-cacheversies zijn bijgewerkt in index.html. Nieuwe integratie- en regressietests: tests/update-21-elemental-synergy.test.cjs plus aanpassing van één oude regelassertie in tests/encounter-visibility.test.cjs.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39149296644 — **381/381 tests geslaagd, 0 gefaald**; JavaScript-syntaxchecks groen. De nieuwe tests controleren alle negen actieve wapenidentiteiten, activatie en cooldown, geen same-weapon of cross-element exploit, duur van marks, boss-damagecap, Water/Frost-effecten, echte elemental-combat integratie, evolution-upgradehints, focus/HUD, scriptvolgorde en zichtbare, begrensde combo-callouts.
+
+**Planningvoortgang:** **11/20 = 55%** van de geplande updates richting Update 30. Dit is geen percentage gameplay- of visuele perfectie.
+
+**Browser-speeltest nog open:** start elk van Fire/Water/Frost; ontgrendel het tweede elementwapen; laat twee **verschillende** wapens kort achter elkaar hetzelfde doel raken; controleer of Ignition/Undertow/Shatter verschijnen zonder tekstspam en of het verschil subtiel genoeg is. Bekijk upgrade-menu en supportkaarten voor evolution-progress; speel door minuut 10 en 17 met werkelijk verdiende requirements. Ook vergelijking Normal/Easy/Nightmare en boss-schade moeten in de browser nog bevestigd worden. Node/CI bewijst geen prettig spelgevoel.
+
+**Open voor mijlpaal 30:** complete Standard 25–30-minuten-run, twee echt verdiende evoluties, bewezen bossvolgorde en isolatie, eerlijke late-game balans, performance en meerdere volledige browserruns.
+
+**Volgende stap (Update 22):** gerichte balansanalyse en aanpassingen van de negen actieve elementwapens en vijanddruk in **Normal/Easy/Nightmare**. Meet werkelijk speelgevoel en damage, voorkom nieuwe spam en let op de beperkte extra combo-bonussen uit Update 21.
