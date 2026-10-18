@@ -1186,6 +1186,8 @@ function draw() {
     ctx.restore();
   }
 
+  // Render dash footprints beneath the character; Low quality keeps it cheap.
+  window.drawPlayerMovement?.(ctx,time,graphicsQuality);
   // Player, particles, and floating damage values.
   const flashing = player.inv > 0 && Math.floor(time * 20) % 2;
 
