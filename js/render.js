@@ -1123,6 +1123,14 @@ function draw() {
     ctx.restore();
   }
   drawElementalCombat();
+  // Update 20: purely visual elemental accents; no combat state is mutated.
+  window.drawWeaponVfx?.(ctx, {
+    time, quality: graphicsQuality, player,
+    view: { left, top, width: W, height: H },
+    shots: elementalShots, areas: elementalAreas,
+    flames: flameBursts, frostOrbs: bullets, frostZones,
+    orbits: fireOrbitPositions(),
+  });
   if (upgrades.orbit)
     for (let i = 0; i < upgrades.orbit; i++) {
       let a = orbitAngle + (i * Math.PI * 2) / upgrades.orbit;
