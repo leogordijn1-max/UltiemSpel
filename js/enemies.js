@@ -349,7 +349,8 @@ function spawnSpecialWave(number, cap = 95) {
       e.hp *= 1.75 + Math.min(.72,number*.065);
       e.damage *= 1.22 + Math.min(.27,number*.023);
       e.speed *= 1.13;
-      e.xpValueMultiplier = 1.9;
+      e.xpValueMultiplier =
+        window.encounterXpMultiplier?.(growthTime,"wave") ?? 2.6;
       e.encounterRole = "patrol";
       window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
       e.encounterGroup ||= tacticGroup || ("wave-"+number);
