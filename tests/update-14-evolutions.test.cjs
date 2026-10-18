@@ -10,6 +10,7 @@ function upgradesHarness(){
   const context=vm.createContext({window,Math,
     document:{createElement:()=>({})},notify:(...x)=>notifications.push(x),
     unlockAchievement:()=>{},trackDiscovery:()=>{},playSfx:()=>{}});
+  context.rendered=rendered;
   vm.runInContext(`let upgrades={arcane:2,orbit:0,bomb:0,pierce:0,bladeBlock:0,damage:0};
     let selectedWeapons=["arcane","orbit","bomb"],unlockedWeapons=["arcane"];
     let evolutions={},bossesDefeated=1,time=450,level=7;
@@ -137,7 +138,7 @@ test("lower kill rate and poor soul collection remain legitimately challenging",
 });
 test("late XP bonus rewards only strong squads, not cheap swarms",()=>{
   const w={};vm.runInNewContext(source("js/encounter-pacing.js"),{window:w,Math});
-  assert.equal(w.encounterXpMultiplier(500,"patrol"),2.8+500/600*2);
+  assert.equal(w.encounterXpMultiplier(500,"patrol"),2.8+Math.min(2,500/600*2));
   assert.equal(w.encounterXpMultiplier(900,"swarm"),.44);
   assert.ok(w.encounterXpMultiplier(1500,"wave")>w.encounterXpMultiplier(600,"wave"));
   assert.ok(w.encounterPopulationCap(1200)<=30);
