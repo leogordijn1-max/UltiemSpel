@@ -4,10 +4,12 @@ const fs=require("node:fs");
 const path=require("node:path");
 const vm=require("node:vm");
 const source=p=>fs.readFileSync(path.join(__dirname,"..",p),"utf8");
-function upgradesHarness(){
+function upgradesHarness(seed=null){
   const rendered=[],notifications=[];
   const window={};
-  const context=vm.createContext({window,Math,
+  const randomMath=Object.create(Math);
+  if(seed!==null)randomMath.random=()=>seed;
+  const context=vm.createContext({window,Math:randomMath,
     document:{createElement:()=>({})},notify:(...x)=>notifications.push(x),
     unlockAchievement:()=>{},trackDiscovery:()=>{},playSfx:()=>{}});
   context.rendered=rendered;
@@ -32,6 +34,18 @@ test("focused upgrade slot preserves a reserve weapon unlock among three choices
   assert.ok(names.some(s=>s.includes("Arcane Bolt")));
   assert.ok(names.some(s=>s.includes("WEAPON UNLOCK")));
   assert.equal(new Set(names).size,3);
+});
+test("either reserved weapon can be guaranteed while keeping an evolution-focus choice",()=>{
+  for(const seed of [0,.999]){
+    const h=upgradesHarness(seed);
+    h.read("choices()");
+    assert.equal(h.rendered.length,3);
+    const buttons=h.rendered.map(x=>x.innerHTML);
+    const unlock=buttons.filter(x=>x.includes("WEAPON UNLOCK"));
+    assert.equal(unlock.length,1);
+    assert.ok(buttons.some(x=>x.includes("Arcane Bolt")));
+    assert.equal(new Set(buttons).size,3);
+  }
 });
 test("after leveling weapon, focus switches to its real recipe support",()=>{
   const h=upgradesHarness();
