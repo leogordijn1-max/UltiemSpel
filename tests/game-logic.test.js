@@ -7,6 +7,7 @@ const vm = require("node:vm");
 const projectRoot = path.resolve(__dirname, "..");
 
 function loadScript(context, relativePath) {
+  context.window ??= {};
   const source = fs.readFileSync(path.join(projectRoot, relativePath), "utf8");
   vm.runInContext(source, context, { filename: relativePath });
 }
