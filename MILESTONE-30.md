@@ -1,9 +1,9 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 13 — Impact & Hit Feedback: kritieke aanvallen, impactringen en geluid.
-**Volgende update:** 14 — XP/evoluties: echte 25-minuten balansruns.
-**Planningvoortgang:** **3 / 20 afgerond = 15%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 14 — XP & Evolution Balance: gerichte upgrade-opties, tijdige evoluties en betere XP-opbrengst.
+**Volgende update:** 15 — Kleine groepen: attack timing, focus & AI.
+**Planningvoortgang:** **4 / 20 afgerond = 20%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -25,7 +25,7 @@
 | 11 | Testfundament en bestaande fouten opschonen | AFGEROND · 266/266 tests |
 | 12 | Movement & dash: gevoel, responsiviteit, input | AFGEROND · 276/276 tests |
 | 13 | Hit feedback: impact, damage, animatie, geluid | AFGEROND · 287/287 tests |
-| 14 | XP/evoluties: echte 25-minuten balansruns | OPEN |
+| 14 | XP/evoluties: XP-model, keuzes en mijlpalen | AFGEROND · 299/299 tests · browser-run open |
 | 15 | Kleine groepen: attack timing, focus & AI | OPEN |
 | 16 | Vijandtypes: onderscheidende sterke/zwakke punten | OPEN |
 | 17 | Enemy skills: leesbare telegraphs en combinaties | OPEN |
@@ -85,3 +85,18 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatige speeltest nog open:** vergelijk normale hit, kritieke hit, een zware aanval, een kill en bossdamage. Controleer leesbaarheid bij meerdere aanvallende vijanden, Low/High-kwaliteit en hoge attackspeed. Pas geluid/impact aan op basis van speelgevoel; tests bewijzen de visuele kwaliteit niet.
 
 **Volgende stap (Update 14):** XP- en evolutiecurve over complete 25-minuten runs vergelijken, controleren dat twee evoluties realistisch haalbaar zijn zonder vijandenspam of gratis levels.
+
+## Update 14 — afgerond (18 oktober 2026)
+**Resultaat:** twee mogelijke evoluties per run, beschikbaar vanaf minuut 10 en 17 zodra beide upgradevoorwaarden én één gedode boss zijn verdiend. Klaarstaande evoluties worden automatisch aangeboden wanneer hun tijdmijlpaal is bereikt, ook zonder nieuwe XP-pickup. De drie level-upkeuzes bevatten waar mogelijk één relevante recipe-upgrade; een gegarandeerde unlock van een gekozen reservewapen blijft altijd behouden. Er worden geen gratis levels/evoluties toegekend. Het HUD toont evolutieteller, tijd en ontbrekende support-/wapenlevels.
+
+**XP-balans:** vanaf minuut 10 maximaal +16% XP bij zware tactische patrouilles/waves en verdedigers; goedkope zwermvijanden blijven ongewijzigd. Waardevolle XP-orbs (waarde ≥6) trekken maximaal 95 pixels verder aan; ze moeten nog fysiek verzameld worden. Normale XP-drops en HP-pickups houden hun gewone afstand.
+
+**Onderbouwing:** elf nieuwe tests + één regressietest bovenop eerdere controles, waaronder de echte evolutieregels, level-upkeuzes met twee willekeurige unlocks en een **vereenvoudigd 25-minuten-Normal-model** dat de bestaande vijandensamenstellingen, XP-waardes, fasen en levelcurve gebruikt. De gemodelleerde 'redelijk actieve run' is haalbaar met ten minste 15 gekozen upgrades zonder extra enemy spam. Een minder actieve run levert aantoonbaar minder XP op. Dit is een balansscenario, **geen gespeelde of gemeten volledige browser-run**, en biedt geen garantie voor elke speler.
+
+**Bewijs:** https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39140141035 — **299 tests geslaagd, 0 gefaald**.
+
+**Planningvoortgang:** **4 / 20 = 20%** van geplande updates richting Update 30.
+
+**Handmatige speeltest nog open:** check op 10:00 of de eerste evolutie verschijnt na voldoen aan de voorwaarden, op 17:00 de tweede, de voortgang in de HUD en de XP-verwerving tussen 10–25 minuten. Controleer of jouw eigen speelniveau genoeg XP oplevert, zonder verhoogde achtergrondvijandendichtheid. Daarna eventueel XP per moeilijkheid nauwkeuriger balanceren.
+
+**Volgende stap (Update 15):** verder met kleine vijandengroepen: synergieën, focus/prioriteit, aanvallen en betere telegraph-timing.
