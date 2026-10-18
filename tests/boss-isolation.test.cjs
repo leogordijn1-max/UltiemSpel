@@ -126,5 +126,5 @@ test("boss phase summons are the only entities explicitly created mid-encounter"
   assert.match(gameSource, /window\.initializeEnemyAdaptation\?\.\(minion\);\s*enemies\.push\(minion\);/);
   assert.match(developerSource, /if \(!available\(\) \|\| !player \|\| boss \|\| window\.isBossIsolationActive\?\.\(\)\) return;/);
   assert.match(developerSource, /"SPAWN 12 " \+ id\.toUpperCase\(\), \(\) => spawnEnemyVariant\(id\), !!boss/);
-  assert.ok(index.includes('js/boss-isolation.js?v=1'));
+  assert.match(index, /js\/boss-isolation\.js\?v=/);
 });
