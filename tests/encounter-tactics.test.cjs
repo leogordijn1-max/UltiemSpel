@@ -64,7 +64,7 @@ test("crossfire shoots a bounded targeted fan after regular ranged attack",()=>{
   e.aimAngle=0;
   assert.equal(h.window.encounterTacticVolley(e,shots,h.player),4);
   assert.equal(shots.length,4);
-  assert.ok(shots[0].vy<0 && shots[1].vy>0);
+  assert.ok(shots[0].vy<0 && shots[1].vy<0 && shots[2].vy>0 && shots[3].vy>0);
   assert.ok(shots.every(s=>s.damage===6&&s.life===3.8&&s.turnRate<.2));
   const stranger={kind:4};assert.equal(h.window.encounterTacticVolley(stranger,shots,h.player),0);
   for(let i=0;i<315;i++)shots.push({});
