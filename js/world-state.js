@@ -191,7 +191,7 @@
   }
   function developerSetWorldCoverage(percent) {
     if (!runActive || !window.isDeveloperRun?.() ||
-        ![0, 15, 50, 100].includes(percent)) return false;
+        ![0, 15, 50, 85, 100].includes(percent)) return false;
     restored = false;
     conquered = false;
     changeCoverage(percent, 800);
@@ -299,7 +299,7 @@
     return tile;
   }
   // Deterministic mosaic: every camera position shares the same conquest patches.
-  // Coverage reaches 15%, 50%, then 100%; no unbounded tile persistence.
+  // Coverage reaches 15%, 50%, 85%, then 100%; no unbounded tile persistence.
   function hashCell(x, y) {
     let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263);
     h = Math.imul(h ^ (h >>> 13), 1274126177);
