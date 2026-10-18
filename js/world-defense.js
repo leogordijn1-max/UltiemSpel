@@ -95,7 +95,7 @@ function update(now,player,enemies,spawnEnemy,blocked=false,growthSeconds=0){
   }
   const spawnedNow=createSquad(now,player,enemies,spawnEnemy,t,growthSeconds,true);
   if(spawnedNow)window.recordEncounterRhythmSpawn?.(
-    "defense",now,squads[squads.length-1].members);
+    "defense",now,squads[squads.length-1].members,growthSeconds);
   nextAt=now+(spawnedNow?cooldown(t):8);
   return spawnedNow;
 }
