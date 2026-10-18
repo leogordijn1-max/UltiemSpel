@@ -133,7 +133,7 @@
     const added=spawnPatrol(now,growthSeconds,player,enemies,spawnEnemy,
       difficulty,sequence);
     if(added>0)window.recordEncounterRhythmSpawn?.(
-      "patrol",now,enemies.slice(before));
+      "patrol",now,enemies.slice(before),growthSeconds);
     // Retry a blocked encounter once the current pack is defeated; no catch-up burst.
     nextPatrol=now+(added?Math.max(25,31-Math.min(5,growthSeconds/300)):6);
     return added;
