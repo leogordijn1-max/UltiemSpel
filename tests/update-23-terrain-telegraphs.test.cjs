@@ -142,3 +142,24 @@ test("rendering and game keep existing elemental world and player-invulnerabilit
   assert.match(source("js/world-retaliation.js"),/if \(r\.elapsed-r\.lastHit < cooldown\) continue/);
   assert.match(source("index.html"),/world-retaliation\.js\?v=terrain-23/);
 });
+
+test("all 24 permanent reactions can spawn without stacking danger zones",()=>{
+  const h=setup("fire","flooded",15);
+  for(let i=1;i<6;i++) assert.equal(h.window.forceWorldReaction(h.p),true);
+  h.window.getWorldConquest=()=>({active:true,target:50,invading:"burning",original:"flooded"});
+  for(let i=0;i<8;i++) assert.equal(h.window.forceWorldReaction(h.p),true);
+  h.window.getWorldConquest=()=>({active:true,target:85,invading:"burning",original:"flooded"});
+  for(let i=0;i<10;i++) assert.equal(h.window.forceWorldReaction(h.p),true);
+  const all=h.window.getWorldRetaliationStatus().rifts;
+  assert.equal(all.length,24);
+  for(let i=0;i<all.length;i++){
+    const a=all[i];
+    assert.ok(Math.hypot(a.x-h.p.x,a.y-h.p.y)>a.radius+h.p.r+25,
+      "new permanent terrain cannot materialize directly on the player");
+    for(let j=i+1;j<all.length;j++){
+      const b=all[j];
+      assert.ok(Math.hypot(a.x-b.x,a.y-b.y)+.001>=(a.radius+b.radius)*.82,
+        "overlapping hazard pair "+i+" / "+j);
+    }
+  }
+});
