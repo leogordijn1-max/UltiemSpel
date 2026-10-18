@@ -196,7 +196,10 @@ function draw(e,ctx,time,quality){
     ctx.strokeStyle=color;ctx.globalAlpha=.82;
   }
   if(role==="vanguard"||role==="ward"){
-    ctx.beginPath();ctx.arc(e.x,e.y,140,-.85,.85);ctx.lineWidth=3;ctx.stroke();
+    const heading=window.enemyShieldFacing16?.(e,
+      typeof player!=="undefined"?player:null)??e.shieldFacing??0;
+    ctx.beginPath();ctx.arc(e.x,e.y,140,heading-.85,heading+.85);
+    ctx.lineWidth=3;ctx.stroke();
   }
   if(role==="skirmisher"||role==="pouncer"){
     ctx.beginPath();ctx.moveTo(e.x-8,e.y-e.r-10);ctx.lineTo(e.x,e.y-e.r-19);
