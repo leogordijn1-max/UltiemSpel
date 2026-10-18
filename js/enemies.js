@@ -471,7 +471,7 @@ function damage(e, d, origin = player, damageType = "direct") {
   const elementalBonus = damageType === "flame" && e.frostUntil > time || damageType === "frost" && e.burnUntil > time ? 1.2 : 1;
   const defense = (e.kind === 6 && e.shieldActive ? 0.67 : 1) * (e.eliteTrait === "armored" ? 0.82 : 1);
   const worldResistance = window.enemyWorldResistance?.(e, damageType) ?? 1;
-  const packResistance = window.encounterTacticDamageMultiplier?.(e,enemies) ?? 1;
+  const packResistance = window.encounterTacticDamageMultiplier?.(e,enemies,time) ?? 1;
   const guardianResistance = window.guardianWorldResistance?.(e, damageType) ?? 1;
   const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * packResistance * (window.worldDefenseDamageMultiplier?.(e) ?? 1) * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
   const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
@@ -535,6 +535,7 @@ function damage(e, d, origin = player, damageType = "direct") {
     window.enemyWorldOnDeath?.(e);
     // Mark the enemy immediately so later hits in this frame cannot reward it twice.
     e.dead = true;
+    window.onTacticalEnemyDeath?.(e,time,hitVisible);
     if(window.recordWorldDestruction?.(e,player,time)) {
       const reaction = window.getWorldRetaliationStatus?.().lastReaction;
       notify("ELEMENTAL CLASH · " + (reaction?.name || "WORLD REACTION"),"wave",2.7);
