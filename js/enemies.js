@@ -162,12 +162,31 @@ function currentEndlessTier() {
   return Math.min(16, Math.floor(Math.max(0, time - startingAt) / 120));
 }
 
+// All non-boss enemies use the same screen-edge spawn geometry.
+// The full group (including its radius and sideways formation) stays unseen.
+function enemyOffscreenSpawn(angle, padding = 90, along = 0) {
+  const xSide = Math.abs(Math.cos(angle)) >= Math.abs(Math.sin(angle));
+  const halfW = Math.max(80, W / 2), halfH = Math.max(80, H / 2);
+  if (xSide) return {
+    x: player.x + Math.sign(Math.cos(angle) || 1) * (halfW + padding),
+    y: player.y + Math.sin(angle) * halfH * .48 + along
+  };
+  return {
+    x: player.x + Math.cos(angle) * halfW * .48 + along,
+    y: player.y + Math.sign(Math.sin(angle) || 1) * (halfH + padding)
+  };
+}
+window.enemyOffscreenSpawn = enemyOffscreenSpawn;
+// Cap auto-targeting to threats already visible and near the player.
+window.playerWeaponRange = max => Math.min(max, Math.max(150, Math.min(W,H)*.62));
+window.playerWeaponTargetVisible = enemy => !!enemy && visibleEnemy(enemy, 50);
+
 // Special waves can request a type; ordinary spawns retain a mixed distribution.
 function enemySpawn(preferredKind = null, forceElite = false, bypassProgression = false) {
   // Only the boss itself may summon enemies during an isolated encounter.
   if (boss || window.isBossIsolationActive?.()) return null;
   const angle = rand(0, Math.PI * 2);
-  const distance = Math.max(W, H) * 0.72;
+  const spawnPoint = enemyOffscreenSpawn(angle, 100);
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
   const roll = Math.random();
   const requested = Number.isInteger(preferredKind) ? preferredKind : null;
@@ -176,8 +195,8 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
       ? (window.resolveEncounterEnemyKind?.(requested,growthTime,Math.floor(roll*10)) ?? requested)
       : (window.pickAmbientEnemyKind?.(growthTime,roll) ?? (roll<.3?1:0));
   const e = {
-    x: player.x + Math.cos(angle) * distance,
-    y: player.y + Math.sin(angle) * distance,
+    x: spawnPoint.x,
+    y: spawnPoint.y,
     r: 13,
     hp: (20 + growthTime * 0.08) * profile.enemyHealth,
     speed: rand(43, 63) + growthTime * 0.06,
@@ -277,8 +296,11 @@ function spawnSpecialWave(number, cap = 95) {
   const tacticGroup = swarm ? null : window.newEncounterTacticGroup?.();
   const waveAngle = (number * 2.399963) % (Math.PI * 2);
   const distance = Math.max(W,H) * .68;
-  const centerX = player.x + Math.cos(waveAngle) * distance;
-  const centerY = player.y + Math.sin(waveAngle) * distance;
+  const base = window.enemyOffscreenSpawn?.(waveAngle, 145) || {
+    x: player.x + Math.cos(waveAngle)*distance,
+    y: player.y + Math.sin(waveAngle)*distance
+  };
+  const centerX = base.x, centerY = base.y;
   for (let i = 0; i < waveSize && enemies.length < hardCap; i++) {
     const preferred = pattern.kinds[i % pattern.kinds.length];
     const kind = window.resolveEncounterEnemyKind?.(preferred,growthTime,i) ?? preferred;
@@ -289,15 +311,17 @@ function spawnSpecialWave(number, cap = 95) {
       const lane = i % 3;
       const angle = waveAngle + (lane - 1) * .5;
       const radius = distance + Math.floor(i / 3) * 9;
-      e.x = player.x + Math.cos(angle)*radius;
-      e.y = player.y + Math.sin(angle)*radius;
+      const wavePosition = window.enemyOffscreenSpawn?.(angle, 110 + Math.floor(i/3)*9, (lane-1)*34);
+      e.x = wavePosition?.x ?? (player.x + Math.cos(angle)*radius);
+      e.y = wavePosition?.y ?? (player.y + Math.sin(angle)*radius);
       e.hp *= .46;e.damage *= .7;e.speed *= 1.1;
       e.xpValueMultiplier = .44;
       e.encounterRole = "swarm";
     } else {
       const spread = (i-(waveSize-1)/2)*58;
-      e.x = centerX - Math.sin(waveAngle)*spread;
-      e.y = centerY + Math.cos(waveAngle)*spread;
+      const position = window.enemyOffscreenSpawn?.(waveAngle, 145, spread);
+      e.x = position?.x ?? (centerX - Math.sin(waveAngle)*spread);
+      e.y = position?.y ?? (centerY + Math.cos(waveAngle)*spread);
       e.hp *= 1.45 + Math.min(.65,number*.06);
       e.damage *= 1.12 + Math.min(.22,number*.02);
       e.xpValueMultiplier = 1.9;
@@ -574,17 +598,17 @@ function enemyHitRadius(enemy) {
 // Player weapons choose visible targets and create projectiles.
 function fire() {
   if (!upgrades.arcane) return;
-  const range = Math.hypot(W, H) * 0.65;
+  const range = window.playerWeaponRange(Math.hypot(W, H) * 0.65);
   const candidates = nearbyEnemies(player.x, player.y, range);
   let visibleCount = 0;
   for (const enemy of candidates) {
-    if (visibleEnemy(enemy, 18)) candidates[visibleCount++] = enemy;
+    if (window.playerWeaponTargetVisible(enemy)) candidates[visibleCount++] = enemy;
   }
   candidates.length = visibleCount;
   const missileCount = Math.min(Math.max(1, upgrades.arcane) + (evolutions.splitDimension ? 2 : 0), 7);
   const targets = visibleCount > missileCount
     ? candidates
-    : nearestEnemies(player.x, player.y, range, missileCount, (enemy) => visibleEnemy(enemy, 18));
+    : nearestEnemies(player.x, player.y, range, missileCount, (enemy) => window.playerWeaponTargetVisible(enemy));
   if (!targets.length) return;
   const missilesPerTarget = Math.floor(missileCount / targets.length);
   const extraMissiles = missileCount % targets.length;
