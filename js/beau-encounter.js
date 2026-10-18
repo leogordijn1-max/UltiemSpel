@@ -100,17 +100,17 @@
     if(s.stage==="huntTell" && t>=s.until) {
       const angle=Math.atan2(s.target.y-e.y,s.target.x-e.x);
       s.chargeX=Math.cos(angle);s.chargeY=Math.sin(angle);
-      s.stage="huntRush";s.until=t+.49;s.trailAt=t;
+      s.stage="huntRush";s.until=t+.58;s.trailAt=t;
       houndShots(e,hooks,angle,335);
       hooks.shake?.(5);
       hooks.puff?.(e.x,e.y,"#ffb86b",15);
     } else if(s.stage==="huntRush") {
       // Real boss movement along the locked charge lane, never teleportation.
-      const step=690*Math.min(dt,.04);
+      const step=760*Math.min(dt,.04);
       e.x+=s.chargeX*step;e.y+=s.chargeY*step;
       if(t>=s.trailAt){
-        mark(hooks,e.x,e.y,61,.3,12+phase(e));
-        s.trailAt=t+.18; // at most three lingering dangerous track marks
+        mark(hooks,e.x,e.y,73,.48,12+phase(e));
+        s.trailAt=t+.14; // visible pursuit trail; dodge perpendicular to charge
       }
       if(t>=s.until){
         s.stage="huntPause";s.until=t+.33;s.round++;
@@ -131,7 +131,13 @@
       // Boss fires down the threatened centre while echoes close both sides.
       const angle=Math.atan2(s.target.y-e.y,s.target.x-e.x);
       houndShots(e,hooks,angle,365);
-      s.stage="pincerPause";s.until=t+.6;s.round++;
+      // The corridor detonates after the fish volleys, creating a timing puzzle:
+      // dodge the flanks, then leave the narrow centre stripe.
+      const ax=Math.cos(s.aim),ay=Math.sin(s.aim),sx=-ay,sy=ax;
+      for(const distance of [-135,0,135]){
+        mark(hooks,s.target.x+sx*distance,s.target.y+sy*distance,67,.62,14+phase(e));
+      }
+      s.stage="pincerPause";s.until=t+.75;s.round++;
     } else if(s.stage==="pincerPause" && t>=s.until){
       if(s.round>=2)finish(e,t,hooks);
       else {
@@ -144,9 +150,11 @@
       const ax=Math.cos(s.aim),ay=Math.sin(s.aim),sx=-ay,sy=ax;
       const x=s.target.x,y=s.target.y;
       // One tracked impact plus offset cuts off the obvious escape direction.
-      mark(hooks,x,y,91,.27,17+phase(e));
+      mark(hooks,x,y,105,.52,17+phase(e));
       const side=s.round%2?1:-1;
-      mark(hooks,x+sx*side*155+ax*80,y+sy*side*155+ay*80,74,.27,15);
+      mark(hooks,x+sx*side*160+ax*90,y+sy*side*160+ay*90,89,.52,15);
+      // Behind the player, a second warning catches automatic backtracking.
+      mark(hooks,x-ax*180,y-ay*180,76,.56,15);
       for(const off of [-.3,-.1,.1,.3])
         hooks.projectile?.(e,s.aim+off,360+phase(e)*10,12,"fish");
       hooks.puff?.(x,y,"#ff7771",20);
@@ -163,7 +171,7 @@
       const ax=Math.cos(s.aim),ay=Math.sin(s.aim),sx=-ay,sy=ax;
       const x=s.target.x,y=s.target.y;
       for(const off of [-1,0,1]){
-        mark(hooks,x+sx*off*150,y+sy*off*150,94,.33,19);
+        mark(hooks,x+sx*off*150,y+sy*off*150,105,.55,19);
       }
       for(const off of [-.55,-.32,-.12,0,.12,.32,.55])
         hooks.projectile?.(e,s.aim+off,390,14,"fish");
@@ -281,19 +289,20 @@
           ctx.beginPath();ctx.moveTo(echo.x,echo.y);ctx.lineTo(x,y);ctx.stroke();
         }
         ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
-        mark(x,y,65);
+        for(const offset of [-135,0,135])mark(x+sx*offset,y+sy*offset,67);
       }
     }else{
       if(s.stage==="ultimateIntro"){
         ctx.lineWidth=8;ctx.setLineDash([]);
         ctx.beginPath();ctx.arc(e.x,e.y,90+(s.until-t)*115,0,TAU);ctx.stroke();
       }else if(s.stage==="ultimateTell"){
-        mark(x,y,91);
+        mark(x,y,105);
+        mark(x-ax*180,y-ay*180,76);
         const side=s.round%2?1:-1;
-        mark(x+sx*side*155+ax*80,y+sy*side*155+ay*80,74);
+        mark(x+sx*side*160+ax*90,y+sy*side*160+ay*90,89);
         ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
       }else if(s.stage==="ultimateFinalTell"){
-        for(const side of [-1,0,1])mark(x+sx*side*150,y+sy*side*150,94);
+        for(const side of [-1,0,1])mark(x+sx*side*150,y+sy*side*150,105);
         ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(x,y);ctx.stroke();
       }else{
         ctx.lineWidth=4;ctx.setLineDash([]);
