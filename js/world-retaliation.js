@@ -111,7 +111,7 @@
     return true;
   }
   function onKill(enemy,player) {
-    if (!state.running || !enemy || enemy.dead || enemy.kind===3 ||
+    if (!state.running || !enemy || enemy.kind===3 ||
         enemy.summoned || enemy.noXp || !player) return false;
     const tier = conquestTier();
     if (tier !== state.tier) { state.tier = tier; state.kills = 0; }
