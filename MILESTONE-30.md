@@ -1,9 +1,9 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 15 — Enemy Teamwork 3.0: bescherming, voorspellende flankers en tactische openingsmomenten.
-**Volgende update:** 16 — Vijandtypes: onderscheidende sterke/zwakke punten.
-**Planningvoortgang:** **5 / 20 afgerond = 25%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 16 — Unique Enemy Archetypes & 16-Direction Shields.
+**Volgende update:** 17 — Enemy skills: leesbare telegraphs en combinaties.
+**Planningvoortgang:** **6 / 20 afgerond = 30%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -27,7 +27,7 @@
 | 13 | Hit feedback: impact, damage, animatie, geluid | AFGEROND · 287/287 tests |
 | 14 | XP/evoluties: XP-model, keuzes en mijlpalen | AFGEROND · 299/299 tests · browser-run open |
 | 15 | Kleine groepen: attack timing, focus & AI | AFGEROND · 311/311 tests · speeltest open |
-| 16 | Vijandtypes: onderscheidende sterke/zwakke punten | OPEN |
+| 16 | Unieke archetypes en 16-richtingen-schilden | AFGEROND · 323/323 tests · speeltest open |
 | 17 | Enemy skills: leesbare telegraphs en combinaties | OPEN |
 | 18 | Encounter director: ritme, spanning, rustige momenten | OPEN |
 | 19 | Weapon feel: projectielen, range, precisie | OPEN |
@@ -115,3 +115,18 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatige speeltest nog open:** in Developer Mode een patrouille oproepen; eerst de Vanguard/Ward uitschakelen en controleren of de rest drie seconden merkbaar kwetsbaarder wordt; Runner-flanken vergelijken bij stilstand versus bewegen; check of Binder en Crusher niet tegelijk onvermijdelijke cirkels uitvoeren. Gevoel, zichtbaarheid en balans kunnen na echte speeltest worden bijgesteld.
 
 **Volgende stap (Update 16):** uitgesproken unieke vijandtypes met herkenbare sterkten/zwakten en aanvallen die duidelijk verschillen per rol.
+
+## Update 16 — afgerond (18 oktober 2026)
+**Resultaat:** de nieuwe `js/enemy-archetypes.js` geeft bestaande vijandtypes herkenbare specifieke rollen en zwaktes, zonder nieuwe vijandenspawns. Runners krijgen af en toe een tijdelijke laterale feint, Zombie Mike een duidelijk aangekondigde grondslag (uitsluitend buiten de al bestaande Crusher-tactiek), Drifters zijn kwetsbaarder voor Pulse, Runners voor Frost, Zombie Mike voor Bomb, Ranged Shades voor schade van dichtbij en Burstlings voor Lightning. Deze verschillen zijn toegevoegd aan de ingame vijandenencyclopedie. Ranged Shade blijft zijn afstandsaanvallen gebruiken, Burstling zijn explosiewaarschuwing en Bulwark zijn bestaande shield-fases.
+
+**Schildfix:** Bulwark-schilden volgen de **positie van de speler met 16 discrete richtingen (22,5° per richting)** in plaats van een vaste oriëntatie. De getekende boog aan de voorkant komt nu overeen met de daadwerkelijke schadebescherming: `×0.55` vanaf de voorkant terwijl het schild actief is, `×1.15` vanaf de zijkant/achterkant, `×1` als het schild uit staat. De visuele bogen van tactische guards en wereldverdedigers gebruiken dezelfde richting. Het schild wordt niet bepaald door de looprichting van de vijand.
+
+**Veiligheid en scope:** geen extra vijanden; geen verborgen gebiedsaanvallen buiten beeld; extra grondslag gebruikt dezelfde dodge-/invulnerabilitychecks als bestaande tactische attacks. Bosses en summons krijgen geen nieuwe archetypevaardigheden. Bestaande testgevallen blijven behouden.
+
+**Bewijs:** https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39142021538 — **323/323 automatische tests geslaagd**, inclusief 12 nieuwe tests voor alle 16 richtingen, richtingsafhankelijke shield damage, unieke zwaktes, telegraph-dodges, boss-isolatie en in-game integratie.
+
+**Planningvoortgang:** **6 / 20 = 30%** van de updates naar mijlpaal 30. Niet het percentage totale gameplay-/visualkwaliteit.
+
+**Handmatige speeltest nog open:** loop rondom een Bulwark of verdediger en kijk of het schild richting jou roteert; probeer projectielen uit verschillende richtingen; test Zombie Mike's grondslag en Runner-feint en vergelijk de ingame encyclopedie. Met volledige browserruns evalueren we vervolgens hoe fair de abilities in echte encounters aanvoelen.
+
+**Volgende stap (Update 17):** nog betere leesbaarheid van vijandelijke aanvalstelegrafie en combinaties, zodat uitdaging niet afhankelijk is van verrassingsschade.
