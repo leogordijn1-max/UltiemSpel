@@ -292,7 +292,9 @@ function wavePatternFor(number) {
   const index = Math.max(1,Math.floor(number));
   if(index % 4 === 0)return swarmPattern;
   const designed=typeof window!=="undefined"
-    ? window.chooseTacticalEncounter?.(typeof growthTime==="number"?growthTime:0,index-1)
+    ? window.chooseTacticalEncounter?.(
+        typeof growthTime==="number"?growthTime:0,
+        window.encounterRhythmPlanIndex?.(index-1)??index-1)
     : null;
   if(designed)return designed;
   // Wave banners, not only spawned bodies, must respect the early enemy roster.
