@@ -163,19 +163,18 @@ function currentEndlessTier() {
 }
 
 // Special waves can request a type; ordinary spawns retain a mixed distribution.
-function enemySpawn(preferredKind = null, forceElite = false) {
+function enemySpawn(preferredKind = null, forceElite = false, bypassProgression = false) {
   // Only the boss itself may summon enemies during an isolated encounter.
   if (boss || window.isBossIsolationActive?.()) return null;
   const angle = rand(0, Math.PI * 2);
   const distance = Math.max(W, H) * 0.72;
   const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
   const roll = Math.random();
-  const kind = Number.isInteger(preferredKind) ? preferredKind
-    : roll < Math.min(0.32, growthTime / 200) ? 1
-    : roll > 0.96 ? 2
-    : roll > 0.89 ? 4
-    : growthTime >= 480 && roll > 0.85 ? 6
-    : growthTime >= 240 && roll > 0.81 ? 5 : 0;
+  const requested = Number.isInteger(preferredKind) ? preferredKind : null;
+  const kind = bypassProgression && requested !== null ? requested
+    : requested !== null
+      ? (window.resolveEncounterEnemyKind?.(requested,growthTime,Math.floor(roll*10)) ?? requested)
+      : (window.pickAmbientEnemyKind?.(growthTime,roll) ?? (roll<.3?1:0));
   const e = {
     x: player.x + Math.cos(angle) * distance,
     y: player.y + Math.sin(angle) * distance,
@@ -210,7 +209,8 @@ function enemySpawn(preferredKind = null, forceElite = false) {
     e.damage *= 1 + tier * 0.065;
     e.speed *= 1 + Math.min(0.3, tier * 0.022);
   }
-  if (forceElite || Math.random() < Math.min(0.18, 0.02 + growthTime / 12000 + tier * 0.007)) {
+  if ((bypassProgression || growthTime >= 360) &&
+      (forceElite || Math.random() < Math.min(0.18, 0.02 + growthTime / 12000 + tier * 0.007))) {
     makeEliteEnemy(e);
   }
   // Adaptation is determined by the actual world patch at the spawn point.
@@ -270,7 +270,8 @@ function spawnSpecialWave(number, cap = 95) {
   const centerX = player.x + Math.cos(waveAngle) * distance;
   const centerY = player.y + Math.sin(waveAngle) * distance;
   for (let i = 0; i < waveSize && enemies.length < hardCap; i++) {
-    const kind = pattern.kinds[i % pattern.kinds.length];
+    const preferred = pattern.kinds[i % pattern.kinds.length];
+    const kind = window.resolveEncounterEnemyKind?.(preferred,growthTime,i) ?? preferred;
     const e = enemySpawn(kind, !swarm && (i === 0 || (number >= 6 && i === 3)));
     if (!e) break;
     if (swarm) {
