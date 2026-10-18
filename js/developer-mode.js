@@ -355,6 +355,7 @@
     weaponTimers = { chain: 0, boomerang: 0, flame: 0, frost: 0 };
     window.resetWorldScars?.();
     window.resetWorldRetaliation?.();
+    window.resetWorldDefense?.();
     notify("DEV · CHANGED TO " + nextElement.toUpperCase(), "wave", 2);
     updateHud();
   }
@@ -363,6 +364,7 @@
     window.developerChangeWorld(original);
     window.resetWorldScars?.();
     window.resetWorldRetaliation?.();
+    window.resetWorldDefense?.();
     updateHud();
   }
   function changeImpact(target) {
@@ -444,6 +446,19 @@
     s = section(root, "WORLD CONQUEST · NO SAVE");
     for (const amount of [0, 15, 50, 85, 100])
       addButton(s, amount + "% IMPACT", () => changeImpact(amount));
+    addButton(s, "SPAWN DEFENSE SQUAD", () => {
+      if (boss || window.isBossIsolationActive?.()) {
+        notify("DEV · BOSS ARENA ISOLATED", "wave", 2);return;
+      }
+      if (!window.forceWorldDefense?.(time,player,enemies,kind => enemySpawn(kind),false)) {
+        notify("DEV · SET 15%+ IMPACT IN AN OPPOSING WORLD", "wave", 2);
+      } else {
+        rebuildEnemyGrid();
+        const info = window.getWorldDefenseStatus?.();
+        notify("DEV · DEFENSE SQUAD DEPLOYED · " + (info?.members || 0) + " ACTIVE", "wave", 2);
+      }
+      updateHud();
+    });
     addButton(s, "SPAWN ELEMENT REACTION", () => {
       if (window.forceWorldReaction?.(player)) {
         const reaction = window.getWorldRetaliationStatus?.().lastReaction;
