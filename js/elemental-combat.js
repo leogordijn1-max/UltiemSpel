@@ -17,8 +17,15 @@ function elementalCooldown(key, seconds) {
 }
 function elementalAim(maxRange = 900, projectileSpeed = 0) {
   const range=window.playerWeaponRange?.(maxRange) ?? maxRange;
-  const enemy = nearestEnemy(player.x, player.y, range, null,
-    e => window.playerWeaponTargetVisible?.(e) ?? true);
+  // Fireball, Water Bolt and Ice Shards are CURRENT selectable weapons.
+  // Prefer a visible dangerous target; never select foes outside the screen.
+  const ranked=projectileSpeed>0
+    ? window.weaponAimTargets?.(player,nearbyEnemies(player.x,player.y,range),
+      1,range,e=>window.playerWeaponTargetVisible?.(e)??true) : null;
+  const enemy=ranked
+    ? ranked[0]||null
+    : nearestEnemy(player.x,player.y,range,null,
+        e=>window.playerWeaponTargetVisible?.(e)??true);
   const dx = enemy ? enemy.x - player.x : player.facingX;
   const dy = enemy ? enemy.y - player.y : player.facingY;
   const base=Math.atan2(dy,dx);
@@ -198,6 +205,7 @@ function updateElementalCombat(dt) {
     const steps = Math.max(1, Math.ceil(Math.hypot(shot.vx, shot.vy) * dt / 16));
     for (let step = 0; step < steps && shot.life > 0; step++) {
       const vx = shot.vx * dt / steps, vy = shot.vy * dt / steps;
+      const oldX=shot.x,oldY=shot.y;
       shot.x += vx;
       shot.y += vy;
       shot.distance += Math.hypot(vx, vy);
@@ -205,10 +213,18 @@ function updateElementalCombat(dt) {
         markWetGround(shot.x, shot.y, evolutions.riptideLance ? 104 : 70);
         shot.nextWaterMark = (shot.nextWaterMark || 155) + 210;
       }
-      for (const enemy of nearbyEnemies(shot.x, shot.y, shot.r + 40)) {
+      // Current elemental projectiles get the same swept accuracy fix as
+      // legacy bolts: a fast lance cannot jump past a thin Runner between frames.
+      const travel=Math.hypot(vx,vy);
+      for(const enemy of nearbyEnemies(
+        (oldX+shot.x)/2,(oldY+shot.y)/2,shot.r+40+travel/2)){
         if (enemy.dead || shot.hit.has(enemy)) continue;
         const dx = enemy.x - shot.x, dy = enemy.y - shot.y;
-        if (dx * dx + dy * dy > (enemyHitRadius(enemy) + shot.r) ** 2) continue;
+        const hitRadius=enemyHitRadius(enemy)+shot.r;
+        const collided=window.weaponSweptHit?.(
+          oldX,oldY,shot.x,shot.y,enemy,hitRadius)
+          ??dx*dx+dy*dy<=hitRadius*hitRadius;
+        if(!collided)continue;
         shot.hit.add(enemy);
         if (shot.type === "fireball") {
           elementalCircle(shot.x, shot.y, 65 + upgrades.fireball * 9, shot.damage, "fire");
