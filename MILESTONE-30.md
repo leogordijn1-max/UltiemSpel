@@ -1,9 +1,9 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 17 — Enemy Attacks & Telegraph Overhaul: nauwkeurige corridors, schietbanen en aftellende gevarenzones.
-**Volgende update:** 18 — Encounter director: ritme, spanning en rustige momenten.
-**Planningvoortgang:** **7 / 20 afgerond = 35%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 18 — Encounter Director 3.0: gedeelde gevechtsfasen, rustmomenten en XP-behoud.
+**Volgende update:** 19 — Weapon feel: projectielen, range en precisie.
+**Planningvoortgang:** **8 / 20 afgerond = 40%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -29,7 +29,7 @@
 | 15 | Kleine groepen: attack timing, focus & AI | AFGEROND · 311/311 tests · speeltest open |
 | 16 | Unieke archetypes en 16-richtingen-schilden | AFGEROND · 323/323 tests · speeltest open |
 | 17 | Enemy Attacks & Telegraph Overhaul | AFGEROND · 334/334 tests · speeltest open |
-| 18 | Encounter director: ritme, spanning, rustige momenten | OPEN |
+| 18 | Encounter Director 3.0: één groot gevecht tegelijk en herstelpauzes | AFGEROND · 347/347 tests · speeltest open |
 | 19 | Weapon feel: projectielen, range, precisie | OPEN |
 | 20 | Weapon VFX: eerste visuele kwaliteitslat | OPEN |
 | 21 | Wapens en evoluties: keuze, synergie, feedback | OPEN |
@@ -145,3 +145,18 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatig nog te testen:** via F9 een Tough Patrol oproepen. Ontwijk de aangewezen Pouncer-corridor, controleer of de doelen van Crossfire daadwerkelijk overeenkomen met de vooraf getoonde richtingen en of Crusher, Binder, Burstling en Zombie Mike genoeg reactietijd geven bij 1x én 2x/3x snelheid. Controleer Low en High graphics in een drukke late-game groep. Nog geen volledige browsertest uitgevoerd.
 
 **Volgende stap (Update 18):** Encounter Director: gecontroleerde opbouw van spanning, variatie in combinaties, rustige momenten en minder onderlinge overlap zonder enemy spam.
+
+## Update 18 — afgerond (18 oktober 2026)
+**Resultaat:** nieuwe `js/encounter-rhythm.js` deelt de automatisch geplande confrontaties op in **ready → engaged → recover**, met een gedeeld budget voor patrols, special waves en automatische wereldverdediging. Zodra een groep (bij een gewone groep) tot maximaal één overlevende is teruggebracht, begint een herstelperiode van **11 tot 17 seconden** afhankelijk van de voortgang; bij een grote swarm begint herstel wanneer hoogstens drie overblijven. Tijdens gevechten en herstel mogen hoogstens twee ambient vijanden tegelijk bestaan. Nieuwe automatische teams worden pas gepland zodra de herstelperiode is verlopen en de bestaande density-limieten het toestaan. Spawnbronnen rouleren hun tactische variant op basis van de totale encountervolgorde, niet alleen hun eigen teller.
+
+**Bosses:** tijdens boss fights wordt de nieuwe director gepauzeerd en het actieve groepsgevecht gewist. Na de boss geldt een nieuwe herstelperiode van 12 seconden; achterstallige waves worden niet met terugwerkende kracht gespawned. Developer Mode kan nog steeds expliciet patrouilles en verdedigers oproepen.
+
+**XP-behoud:** automatisch gestarte zware patrols, waves en defense squads geven **18–38% extra XP per kill** ten opzichte van hun bestaande `xpValueMultiplier`, oplopend met runvoortgang. Zwermen krijgen die premie niet. Dit compenseert een deel van de lagere frequentie van grote gevechten, zonder meer vijanden of gratis levels. De speler moet de vijanden nog verslaan en XP-orbs verzamelen.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39144440436 — **347 tests geslaagd, 0 gefaald**, waaronder 13 nieuwe checks voor shared pacing, herstelduur, swarm-opruiming, boss-pauze, ambientcap, afwisselende plannen, reset, XP-bonus, handmatige versus automatische spawns en echte integratie.
+
+**Planningvoortgang:** **8 / 20 = 40%** van de geplande updates naar Combat & Gameplay 2.0. Geen gemeten kwaliteitspercentage.
+
+**Handmatige speeltest nog open:** test 10–20 minuten Normal en check of tussen moeilijke groepen ongeveer 11–17 seconden ruimte ontstaat om XP te verzamelen, of er nog genoeg uitdaging blijft, of wereldverdedigers geen tegenaanval tegelijk met een wave beginnen, en of twee evoluties qua verdiende upgrades nog haalbaar blijven. De automatische tests bevestigen scheduling maar geen subjectief speelgevoel of echte gemiddelde XP per run.
+
+**Volgende stap (Update 19):** Weapon Feel Overhaul: targeting, duidelijkheid van projectielen, eerlijke range en stabiele precisie voor de verschillende wapenrollen.
