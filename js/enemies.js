@@ -241,33 +241,58 @@ function makeEliteEnemy(e) {
   return e;
 }
 
+// Three tactical waves followed by a rare rush of fragile enemies.
+// Small patrol waves have fewer, sturdier enemies with greater soul rewards.
 const wavePatterns = [
-  { name: "DRIFTER SWARM", kinds: [0, 0, 0, 1], unlocked: 1 },
-  { name: "RUNNER RUSH", kinds: [1, 1, 1, 0], unlocked: 2 },
-  { name: "HEAVY HORDE", kinds: [2, 0, 2, 0], unlocked: 3 },
-  { name: "RANGED RAID", kinds: [4, 0, 4, 1], unlocked: 4 },
-  { name: "ELITE AMBUSH", kinds: [0, 1, 2, 4], unlocked: 5, elite: true },
-  { name: "CHAOS MIX", kinds: [0, 1, 2, 4, 5, 6], unlocked: 6 },
+  { name: "HARDENED PATROL", kinds: [0, 2, 1, 4, 0], elite: true },
+  { name: "SHIELD ESCORT", kinds: [6, 0, 4, 1, 2], elite: true },
+  { name: "HUNTER PINCER", kinds: [1, 1, 4, 2, 6], elite: true },
 ];
+const swarmPattern = { name: "SWARM · SMALL ENEMIES", kinds: [0,1,0,1,1,0], swarm: true };
 function wavePatternFor(number) {
-  const available = wavePatterns.filter((pattern) => number >= pattern.unlocked);
-  const index = (Math.max(1, number) - 1) % available.length;
-  return available[index];
+  const index = Math.max(1,Math.floor(number));
+  return index % 4 === 0 ? swarmPattern : wavePatterns[(index - 1) % wavePatterns.length];
 }
-function spawnSpecialWave(number, cap = 300) {
-  // Defensive guard: scripted wave calls cannot bypass the boss arena.
+function spawnSpecialWave(number, cap = 95) {
+  // Defensive guard: even swarm waves never enter a boss arena.
   if (boss || window.isBossIsolationActive?.())
     return { name: "BOSS ARENA · WAVES PAUSED", spawned: 0, pattern: null };
   const pattern = wavePatternFor(number);
-  const waveSize = Math.min(22, 7 + Math.floor(number * 1.15));
+  const swarm = !!pattern.swarm;
+  const waveSize = swarm
+    ? Math.min(42, 26 + Math.floor(number * 1.2))
+    : Math.min(8, 4 + Math.floor(number / 3));
+  // A swarm can temporarily exceed the normal ambient cap, but not this hard limit.
+  const hardCap = Math.min(95, Math.max(0,cap));
   let spawned = 0;
-  for (let i = 0; i < waveSize && enemies.length < cap; i++) {
-    const roster = pattern.kinds.filter((kind) => kind !== 5 || growthTime >= 240).filter((kind) => kind !== 6 || growthTime >= 480);
-    const kind = roster[i % roster.length];
-    const e = enemySpawn(kind, !!pattern.elite && (i % 3 === 0));
-    const strength = 1 + Math.min(0.55, number * 0.025);
-    e.hp *= strength;
-    e.damage *= 1 + Math.min(0.3, number * 0.012);
+  const waveAngle = (number * 2.399963) % (Math.PI * 2);
+  const distance = Math.max(W,H) * .68;
+  const centerX = player.x + Math.cos(waveAngle) * distance;
+  const centerY = player.y + Math.sin(waveAngle) * distance;
+  for (let i = 0; i < waveSize && enemies.length < hardCap; i++) {
+    const kind = pattern.kinds[i % pattern.kinds.length];
+    const e = enemySpawn(kind, !swarm && (i === 0 || (number >= 6 && i === 3)));
+    if (!e) break;
+    if (swarm) {
+      // Three loosely separated entry lanes, no single giant overlapping blob.
+      const lane = i % 3;
+      const angle = waveAngle + (lane - 1) * .5;
+      const radius = distance + Math.floor(i / 3) * 9;
+      e.x = player.x + Math.cos(angle)*radius;
+      e.y = player.y + Math.sin(angle)*radius;
+      e.hp *= .46;e.damage *= .7;e.speed *= 1.1;
+      e.xpValueMultiplier = .44;
+      e.encounterRole = "swarm";
+    } else {
+      const spread = (i-(waveSize-1)/2)*58;
+      e.x = centerX - Math.sin(waveAngle)*spread;
+      e.y = centerY + Math.cos(waveAngle)*spread;
+      e.hp *= 1.45 + Math.min(.65,number*.06);
+      e.damage *= 1.12 + Math.min(.22,number*.02);
+      e.xpValueMultiplier = 1.9;
+      e.encounterRole = "patrol";
+    }
+    window.initializeEnemyAdaptation?.(e);
     spawned++;
   }
   return { name: pattern.name, spawned, pattern };
