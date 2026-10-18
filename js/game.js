@@ -977,6 +977,7 @@ function update(dt) {
     let beauActive = false;
     let shadeActive = false;
     let bellActive = false;
+    let memeActive = false;
     if (e === boss) {
       // Phase-dependent attack pacing stays isolated to the active Guardian.
       if (e.isFinalBoss) {
@@ -984,6 +985,7 @@ function update(dt) {
           e.hp <= e.maxHp * 0.33 ? 3 : e.hp <= e.maxHp * 0.66 ? 2 : 1;
         if (nextPhase > e.finalPhase) {
           e.finalPhase = nextPhase;
+          window.interruptMemeEncounter?.(e, time);
           e.phaseIntro = 1.25;
           e.shotWarning = 0;
           e.shootCooldown = Math.max(e.shootCooldown, 1.7);
@@ -1046,22 +1048,23 @@ function update(dt) {
         beauActive = window.updateBeauEncounter?.(e, time, dt, player, encounterHooks) || false;
         shadeActive = window.updateShadeEncounter?.(e, time, dt, player, encounterHooks) || false;
         bellActive = window.updateBellEncounter?.(e, time, dt, player, encounterHooks) || false;
+        memeActive = window.updateMemeEncounter?.(e, time, dt, player, encounterHooks) || false;
         // Beau keeps the normal shotgun and charge; dedicated showcase
         // attacks replace his original small Hound's Ambush ability.
-        const specialActive = beauActive || shadeActive || bellActive || (
-          (e.variant === 0 || e.variant === 1 || e.variant === 2) && !e.isFinalBoss ? false :
+        const specialActive = beauActive || shadeActive || bellActive || memeActive || (
+          !e.isFinalBoss || e.isFinalBoss ? false :
           window.updateBossCombat?.(e, time, player, encounterHooks)
         );
-        if (!specialActive && ((e.variant !== 0 && e.variant !== 1 && e.variant !== 2) || e.isFinalBoss))
+        if (!specialActive && !e.isFinalBoss && e.variant !== 0 && e.variant !== 1 && e.variant !== 2)
           window.updateGuardianWorld?.(e, time, player, {
             visible: onScreen,
             scar: (type,x,y,r) => window.addWorldScar?.(type,x,y,r),
             projectile: (source,angle,speed,amount,type) => addBossProjectile(source,angle,speed,amount,type),
             warn: (message,kind,duration) => notify(message,kind,duration),
           });
-        if (beauActive || shadeActive || bellActive || window.isBossCombatBusy?.(e, time)) moveSpeed = 0;
+        if (beauActive || shadeActive || bellActive || memeActive || window.isBossCombatBusy?.(e, time)) moveSpeed = 0;
       }
-      if (beauActive || shadeActive || bellActive) {
+      if (beauActive || shadeActive || bellActive || memeActive) {
         // Showcase combos control boss motion while their patterns execute.
       } else if (e.chargeActive > 0) {
         e.chargeActive = Math.max(0, e.chargeActive - dt);
@@ -1155,7 +1158,7 @@ function update(dt) {
 
     e.hit = Math.max(0, e.hit - dt);
     if (e === boss) {
-      if (beauActive || shadeActive || bellActive) {
+      if (beauActive || shadeActive || bellActive || memeActive) {
         // Normal volleys are suppressed until the showcase pattern ends.
       } else if (e.shotWarning > 0) {
         // Briefly follow the player during the opening of the warning, then
