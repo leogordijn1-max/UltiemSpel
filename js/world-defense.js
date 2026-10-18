@@ -68,6 +68,8 @@ function createSquad(now,player,enemies,spawnEnemy,t=stage,growthSeconds=0,budge
     if(role==="commander"){e.hp*=1.35;e.damage*=1.05;e.speed*=.9;}
     if(role==="hunter"){e.speed*=1.05;}
     if(role==="defender")e.hp*=1.12;
+    window.applyCombatDifficultyToSquad?.(e,
+      typeof difficulty==="string"?difficulty:"normal");
     e.xpValueMultiplier=window.encounterXpMultiplier?.(
       growthSeconds,"defense") ?? 2;
     window.initializeEnemyAdaptation?.(e,window.getWorldConquest?.().original);
