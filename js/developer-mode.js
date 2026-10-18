@@ -367,7 +367,11 @@
   }
   function changeImpact(target) {
     if (!available()) return;
-    window.developerSetWorldCoverage?.(target);
+    if (!window.developerSetWorldCoverage?.(target)) {
+      notify("DEV · COULD NOT SET " + target + "% IMPACT", "wave", 2);
+      return;
+    }
+    notify("DEV · WORLD IMPACT SET TO " + target + "%", "wave", 2);
     updateHud();
   }
 
@@ -379,7 +383,7 @@
         ? (boss ? "ISOLATED BOSS ARENA · " : "") +
           "WORLD " + (window.getDominantWorld?.() || "frozen").toUpperCase() +
           " · ELEMENT " + currentLivingWorldElement().toUpperCase() +
-          " · IMPACT " + (window.getWorldConquest?.().coverage || 0) + "%" +
+          " · IMPACT " + (window.getWorldConquest?.().target || 0) + "%" +
           " · LEVEL " + level
         : "Start a run after enabling Developer Mode to unlock test actions.",
       "developer-status");
