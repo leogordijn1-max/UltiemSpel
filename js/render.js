@@ -1,6 +1,34 @@
 // Draw the scene in layers, from the arena backdrop to the visual effects.
 let backgroundPaintCache = null;
 let ambientTileCache = null;
+let vignettePaintCache = null;
+// Viewport culling is visual-only; game logic, projectiles and boss tells
+// continue to update and collide regardless of whether their VFX are drawn.
+function renderEffectVisible(x,y,radius=0) {
+  if (!player) return false;
+  const pad=Math.max(0,radius)+48; // include shake and stroked boundaries
+  return Math.abs(x-player.x)<=W/2+pad &&
+    Math.abs(y-player.y)<=H/2+pad;
+}
+function renderSegmentVisible(x1,y1,x2,y2,radius=32) {
+  if (!player) return false;
+  const left=player.x-W/2-radius-48,right=player.x+W/2+radius+48;
+  const top=player.y-H/2-radius-48,bottom=player.y+H/2+radius+48;
+  return Math.max(x1,x2)>=left && Math.min(x1,x2)<=right &&
+    Math.max(y1,y2)>=top && Math.min(y1,y2)<=bottom;
+}
+function getVignettePaint() {
+  if(vignettePaintCache?.width===W&&vignettePaintCache?.height===H)
+    return vignettePaintCache.gradient;
+  const gradient=ctx.createRadialGradient(
+    W/2,H/2,Math.min(W,H)*.15,
+    W/2,H/2,Math.max(W,H)*.72
+  );
+  gradient.addColorStop(0,"#0000");
+  gradient.addColorStop(1,"#030310aa");
+  vignettePaintCache={width:W,height:H,gradient};
+  return gradient;
+}
 function glow(blur) {
   return graphicsQuality === "low"
     ? 0
@@ -192,7 +220,7 @@ function draw() {
 
   // Player bombs.
   for (const bomb of bombs) {
-    if (!visibleEnemy({ ...bomb, r: bomb.radius }, -bomb.radius)) continue;
+    if (!renderEffectVisible(bomb.x,bomb.y,0)) continue;
     const blink = bomb.fuse < 0.35 && Math.sin(time * 38) > 0;
     ctx.save();
     ctx.translate(bomb.x, bomb.y);
@@ -247,7 +275,7 @@ function draw() {
 
   // Final-boss marked ground strikes remain visible until they actually detonate.
   for (const hazard of bossHazards) {
-    if (!visibleEnemy({ x: hazard.x, y: hazard.y, r: 0 }, -hazard.radius))
+    if (!renderEffectVisible(hazard.x,hazard.y,hazard.radius))
       continue;
     const pulse = 0.54 + 0.26 * Math.sin(time * 22);
     ctx.save();
@@ -912,6 +940,7 @@ function draw() {
 
   // Brief lightning links and cone-shaped flame bursts.
   for (const zone of frostZones) {
+    if(!renderEffectVisible(zone.x,zone.y,zone.radius))continue;
     ctx.save();
     ctx.globalAlpha = Math.min(0.55, zone.life / 2);
     ctx.fillStyle = zone.evolved
@@ -938,6 +967,7 @@ function draw() {
     ctx.restore();
   }
   for (const segment of lightningSegments) {
+    if(!renderSegmentVisible(segment.x1,segment.y1,segment.x2,segment.y2))continue;
     ctx.save();
     ctx.globalAlpha = Math.min(1, segment.life / 0.24);
     ctx.strokeStyle = segment.evolved ? "#e5a8ff" : "#9cecff";
@@ -966,6 +996,7 @@ function draw() {
     ctx.restore();
   }
   for (const burst of flameBursts) {
+    if(!renderEffectVisible(burst.x,burst.y,burst.radius*1.1))continue;
     ctx.save();
     ctx.globalAlpha = Math.min(1, burst.life / 0.42);
     ctx.fillStyle = burst.evolved
@@ -1198,6 +1229,7 @@ function draw() {
     ctx.restore();
   }
   for (const explosion of explosions) {
+    if(!renderEffectVisible(explosion.x,explosion.y,explosion.radius))continue;
     const progress = 1 - explosion.life / explosion.maxLife;
     ctx.save();
     ctx.globalAlpha = Math.max(0, 1 - progress);
@@ -1415,17 +1447,7 @@ function draw() {
     ctx.lineWidth = 18;
     ctx.strokeRect(0, 0, W, H);
   }
-  let v = ctx.createRadialGradient(
-    W / 2,
-    H / 2,
-    Math.min(W, H) * 0.15,
-    W / 2,
-    H / 2,
-    Math.max(W, H) * 0.72,
-  );
-  v.addColorStop(0, "#0000");
-  v.addColorStop(1, "#030310aa");
-  ctx.fillStyle = v;
+  ctx.fillStyle = getVignettePaint();
   ctx.fillRect(0, 0, W, H);
   performanceMetrics.render = performance.now() - renderStarted;
 }
