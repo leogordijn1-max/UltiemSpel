@@ -30,6 +30,7 @@
     if (isolated || boss) return false;
     isolated = true;
     removedOnEntry = clearEnemies(() => true);
+    window.resetWorldDefense?.();
     removedOnExit = 0;
     clearArenaProjectiles();
     // Local scars left by the horde must not create unavoidable boss hazards.
@@ -43,6 +44,7 @@
     // Only summons belong to this encounter. The actual boss death is
     // processed by damage(), so this cleanup never awards a second kill.
     removedOnExit = clearEnemies(() => true);
+    window.resetWorldDefense?.();
     clearArenaProjectiles();
     window.resetWorldScars?.();
     // Avoid instantly dumping a backlog of enemies after the rewards screen.
