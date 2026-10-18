@@ -66,7 +66,8 @@ test("weapon scars no longer passively harm approaching enemies",()=>{
   assert.doesNotMatch(game,/groundElement==="fire" && time >=/);
   assert.match(game,/Weapon-created terrain scars are visual/);
   assert.match(game,/e\.burnUntil > time/);
-  assert.match(src("js/weapons.js"),/damage\(enemy, damageValue, player, "flame"\)/);
+  assert.match(src("js/weapons.js"),/window\.triggerElementalSynergy\?\.\(/);
+  assert.match(src("js/weapons.js"),/damage\(enemy, combo\.damage, player, "flame"\)/);
   assert.match(src("js/world-retaliation.js"),/\["damage","push"\]/);
   assert.match(src("js/world-visuals.js"),/window\.addWorldScar/);
 });
