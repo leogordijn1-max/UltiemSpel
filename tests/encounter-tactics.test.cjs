@@ -18,7 +18,7 @@ test("small groups assign unique skill roles instead of only extra health",()=>{
     ["vanguard","binder","skirmisher","pouncer","crusher","crossfire","volatile","ward"]);
   assert.equal(e[6].burstRadius,104);
   assert.ok(e.every(x=>x.encounterGroup==="g1"));
-  assert.equal(h.window.assignEncounterTactic({kind:3},0),undefined);
+  assert.equal(h.window.assignEncounterTactic({kind:3},0).encounterTactic,undefined);
 });
 test("charging runners have a visible windup before a high-speed lunge",()=>{
   const h=testbed(),e=h.make(1,1);
