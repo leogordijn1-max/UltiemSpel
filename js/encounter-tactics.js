@@ -7,7 +7,8 @@ const COLORS={vanguard:"#87d8fa",binder:"#a8a6ff",pouncer:"#ffad68",
   skirmisher:"#ffcf7a",crossfire:"#ff79c4",crusher:"#ff6f67",ward:"#80e3cf",
   volatile:"#ffad57"};
 let groupSequence=0;
-function reset(){groupSequence=0;}
+let brokenAnnouncements=new Set();
+function reset(){groupSequence=0;brokenAnnouncements.clear();}
 const validRoles={0:["vanguard","binder"],1:["skirmisher","pouncer"],
   2:["crusher"],4:["crossfire"],5:["volatile"],6:["ward"]};
 function assign(e,position=0,groupId=null,requestedRole=null){
@@ -27,6 +28,55 @@ function assign(e,position=0,groupId=null,requestedRole=null){
   return e;
 }
 function groupId(){return "pack-"+(++groupSequence);}
+function livingPartners(e){
+  return Array.isArray(e?.encounterPartners)?
+    e.encounterPartners.filter(ally=>
+      ally!==e&&!ally.dead&&ally.hp>0&&ally.encounterGroup===e.encounterGroup):[];
+}
+function guardIntercept(e,player){
+  // A living guard actually protects the ranged support instead of mindlessly
+  // following the player. Killing the guard removes this physical obstacle.
+  const support=livingPartners(e).find(a=>a.encounterTactic==="crossfire")||
+    livingPartners(e).find(a=>a.encounterTactic==="binder");
+  if(!support)return null;
+  const playerDx=player.x-support.x,playerDy=player.y-support.y;
+  const distance=Math.hypot(playerDx,playerDy)||1;
+  const targetX=support.x+playerDx/distance*62;
+  const targetY=support.y+playerDy/distance*62;
+  const toX=targetX-e.x,toY=targetY-e.y;
+  if(Math.hypot(toX,toY)>52 && Math.hypot(e.x-support.x,e.y-support.y)<330)
+    return {angle:Math.atan2(toY,toX),speedMult:1.12};
+  return null;
+}
+function onDeath(e,now=0,visible=true){
+  if(!e?.encounterTactic||!Array.isArray(e.encounterPartners))return false;
+  const remaining=livingPartners(e);
+  if(e.encounterTactic==="binder"){
+    // The charge currently under way is not cancelled, but a dead binder
+    // must never continue powering future team attacks.
+    for(const ally of remaining){
+      if(ally.encounterTactic==="pouncer"){
+        ally.tacticComboBoostUntil=0;
+        ally.tacticLastBoostAt=now;
+      }
+    }
+  }
+  if(e.encounterTactic!=="vanguard"&&e.encounterTactic!=="ward")return false;
+  if(!remaining.length)return false;
+  for(const ally of remaining){
+    ally.tacticExposedUntil=Math.max(ally.tacticExposedUntil||0,now+3);
+    if(ally.encounterTactic==="pouncer"&&
+       ally.tacticWarning<=0&&ally.tacticDashTime<=0)
+      ally.tacticCooldown=Math.min(ally.tacticCooldown||0,.65);
+  }
+  // At most one warning per squad, including waves and late-game encounters.
+  if(visible && !brokenAnnouncements.has(e.encounterGroup)){
+    if(brokenAnnouncements.size>=128)brokenAnnouncements.clear();
+    brokenAnnouncements.add(e.encounterGroup);
+    window.notifyEncounterPatrol?.("FORMATION BROKEN · OPENING 3s");
+  }
+  return true;
+}
 function linkTeam(members){
   if(!Array.isArray(members))return 0;
   // Only a handful of squad members; avoid searching every enemy each frame.
@@ -55,8 +105,12 @@ function tick(e,dt,player,now,visible,hooks={}){
   const dx=player.x-e.x,dy=player.y-e.y;
   const distance=Math.hypot(dx,dy)||1;
   if(role==="skirmisher"&&distance>130&&distance<610){
-    // Skirmishers circle instead of stacking behind the player's movement.
-    return {angle:Math.atan2(dy,dx)+(e.encounterSlot%2? .70:-.70),speedMult:1.32};
+    // Aim ahead of moving players and split left/right. This is a positional
+    // threat only: actual damage still requires collision and can be dodged.
+    const leadX=Math.max(-240,Math.min(240,player.combatVX||0))*.17;
+    const leadY=Math.max(-240,Math.min(240,player.combatVY||0))*.17;
+    const aim=Math.atan2(dy+leadY,dx+leadX);
+    return {angle:aim+(e.encounterSlot%2? .70:-.70),speedMult:1.32};
   }
   if(role==="pouncer"&&e.tacticDashTime>0){
     e.tacticDashTime=Math.max(0,e.tacticDashTime-dt);
@@ -78,6 +132,16 @@ function tick(e,dt,player,now,visible,hooks={}){
     return {angle:e.tacticAngle||Math.atan2(dy,dx),speedMult:0};
   }
   e.tacticCooldown=Math.max(0,(e.tacticCooldown||0)-dt);
+  if(role==="vanguard"||role==="ward"){
+    const position=guardIntercept(e,player);
+    if(position)return position;
+  }
+  // Two area warnings at once can produce unavoidable damage. Stagger
+  // their starts while leaving the Pouncer/Binder and Crusher/Crossfire combos.
+  if((role==="binder"||role==="crusher")&&e.tacticCooldown===0&&
+     livingPartners(e).some(a=>
+       (a.encounterTactic==="binder"||a.encounterTactic==="crusher")&&
+       a.tacticWarning>0))return null;
   const minDistance=role==="pouncer"?85:role==="crusher"?0:0;
   const maxDistance=role==="pouncer"?390:role==="crusher"?165:role==="binder"?160:0;
   if(maxDistance&&e.tacticCooldown===0&&distance>minDistance&&distance<maxDistance){
@@ -88,16 +152,17 @@ function tick(e,dt,player,now,visible,hooks={}){
   }
   return null;
 }
-function damageMultiplier(e,enemies){
+function damageMultiplier(e,enemies,now=0){
   if(!e?.encounterGroup||!Array.isArray(enemies)||e.dead)return 1;
+  const exposed=e.tacticExposedUntil>now?1.16:1;
   // One shield-bearing member can defend the nearby squad, but not itself.
   // Defeating the guard immediately removes this mitigation.
   for(const other of enemies){
     if(other===e||other.dead||other.hp<=0||other.encounterGroup!==e.encounterGroup)continue;
     if(other.encounterTactic!=="vanguard"&&other.encounterTactic!=="ward")continue;
-    if((e.x-other.x)**2+(e.y-other.y)**2 < 140**2)return .77;
+    if((e.x-other.x)**2+(e.y-other.y)**2 < 140**2)return .77*exposed;
   }
-  return 1;
+  return exposed;
 }
 function rangedVolley(e,shots,player){
   if(e?.encounterTactic!=="crossfire"||!Array.isArray(shots)||shots.length>=316)return 0;
@@ -120,6 +185,16 @@ function draw(e,ctx,time,quality){
   const color=COLORS[role];ctx.save();
   ctx.strokeStyle=color;ctx.lineWidth=2.6;ctx.globalAlpha=.82;
   ctx.beginPath();ctx.arc(e.x,e.y,e.r+11,0,TAU);ctx.stroke();
+  if(e.tacticExposedUntil>time){
+    // A visible reward for killing a guard: a temporary exposed outline.
+    const remaining=e.tacticExposedUntil-time;
+    ctx.globalAlpha=.38+.28*Math.sin(time*11);
+    ctx.strokeStyle="#ffd58d";
+    ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(e.x,e.y,e.r+17+(3-remaining)*2,0,TAU);
+    ctx.stroke();
+    ctx.strokeStyle=color;ctx.globalAlpha=.82;
+  }
   if(role==="vanguard"||role==="ward"){
     ctx.beginPath();ctx.arc(e.x,e.y,140,-.85,.85);ctx.lineWidth=3;ctx.stroke();
   }
@@ -165,6 +240,7 @@ window.resetEncounterTactics=reset;
 window.newEncounterTacticGroup=groupId;
 window.assignEncounterTactic=assign;
 window.linkEncounterTacticTeam=linkTeam;
+window.onTacticalEnemyDeath=onDeath;
 window.updateEncounterTactic=tick;
 window.encounterTacticDamageMultiplier=damageMultiplier;
 window.encounterTacticVolley=rangedVolley;
