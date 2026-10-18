@@ -1034,8 +1034,10 @@ function update(dt) {
         moveSpeed *= coordinated.speedMult;
       }
     }
-    if (onScreen && e.encounterTactic && !boss) {
-      const ability = window.updateEncounterTactic?.(e,dt,player,time,onScreen,{
+    if(onScreen && !boss && !e.summoned){
+      // Archetype skills and tactical skills share damage handling. No hidden
+      // offscreen attacks and no surprise damage during a protected dash.
+      const abilityHooks={
         chill: seconds => {
           player.guardianChillUntil=Math.max(player.guardianChillUntil||0,time+seconds);
         },
@@ -1048,10 +1050,16 @@ function update(dt) {
           if(player.hp<=0)end();
           return true;
         }
-      });
-      if (ability) {
-        moveAngle=ability.angle;
-        moveSpeed*=ability.speedMult;
+      };
+      const archetype=window.updateEnemyArchetype?.(
+        e,dt,player,time,onScreen,abilityHooks);
+      const teamSkill=e.encounterTactic
+        ? window.updateEncounterTactic?.(e,dt,player,time,onScreen,abilityHooks)
+        : null;
+      const action=teamSkill||archetype;
+      if(action){
+        moveAngle=action.angle;
+        moveSpeed*=action.speedMult;
       }
     }
     let beauActive = false;
