@@ -440,12 +440,12 @@
     const content = panelNode.querySelector(".developer-content");
     if (content) content.replaceWith(renderContent());
   }
-  function showPanel() {
+  function showPanel({ live = false } = {}) {
     if (!enabled) return false;
     if (open) { closePanel(true); return true; }
     if (active && !["playing", "paused"].includes(gameState)) return false;
     wasPlaying = active && gameState === "playing";
-    if (wasPlaying) {
+    if (wasPlaying && !live) {
       paused = true;
       gameState = "paused";
       clearMovementKeys();
@@ -518,7 +518,9 @@
     if (event.code === "KeyL" && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.repeat && enabled && !["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) && !event.target?.isContentEditable) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      showPanel();
+      // The keyboard shortcut is a live overlay, not a pause command.
+      // Settings retains the regular paused-panel behaviour.
+      showPanel({ live: true });
     } else if (event.key === "Escape" && open) {
       event.preventDefault();
       event.stopImmediatePropagation();
