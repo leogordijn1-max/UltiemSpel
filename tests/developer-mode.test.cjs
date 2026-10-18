@@ -159,7 +159,7 @@ test("ending a test run discards modified in-memory career progression", () => {
   assert.equal(t.disk.get("shadowProgress"), '{"points":42}');
 });
 
-test("F8 panel pauses and resumes without opening a normal level-up screen", () => {
+test("Ctrl + Shift + D panel pauses and resumes without opening a normal level-up screen", () => {
   const t = environment();
   t.enable();
   t.start();
@@ -213,7 +213,7 @@ test("element selection remains a per-run override, never alters saved preferenc
   assert.equal(t.context.storageGet("shadowRunElement", "fire"), "fire");
 });
 
-test("deleting a sandbox boss keeps F8 actions and resumes on close", () => {
+test("deleting a sandbox boss keeps Ctrl + Shift + D actions and resumes on close", () => {
   const t = environment();
   t.enable();
   t.start();
@@ -239,20 +239,20 @@ test("sandbox boss kills do not open the gameplay reward overlay", () => {
   assert.match(source,/!killedFinalBoss && !window\.isDeveloperRun\?\.\(\)\) showBossReward\(\)/);
 });
 
-test("F8 toggles developer panel and F9 no longer intercepts keyboard input", () => {
+test("Ctrl + Shift + D toggles developer panel and F9 no longer intercepts keyboard input", () => {
   const t = environment();
   t.enable();
   t.start();
   let prevented = 0;
-  const key = value => ({ key:value, repeat:false,
+  const key = value => ({ key:value, code:value==="D"?"KeyD":value, ctrlKey:value==="D", shiftKey:value==="D", repeat:false,
     preventDefault(){prevented++}, stopImmediatePropagation(){} });
   t.listeners.keydown(key("F9"));
   assert.equal(t.document.getElementById("developerPanel"), null);
   assert.equal(prevented,0);
-  t.listeners.keydown(key("F8"));
+  t.listeners.keydown(key("D"));
   assert.ok(t.document.getElementById("developerPanel"));
   assert.equal(t.context.paused,true);
-  t.listeners.keydown(key("F8"));
+  t.listeners.keydown(key("D"));
   assert.equal(t.document.getElementById("developerPanel"), null);
   assert.equal(t.context.paused,false);
   assert.equal(t.context.gameState,"playing");
