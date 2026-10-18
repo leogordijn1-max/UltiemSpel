@@ -251,10 +251,27 @@ test("L toggles developer panel and F9 no longer intercepts keyboard input", () 
   assert.equal(prevented,0);
   t.listeners.keydown(key("L"));
   assert.ok(t.document.getElementById("developerPanel"));
-  assert.equal(t.context.paused,true);
+  assert.equal(t.context.paused,false);
+  assert.equal(t.context.gameState,"playing");
   t.listeners.keydown(key("L"));
   assert.equal(t.document.getElementById("developerPanel"), null);
   assert.equal(t.context.paused,false);
   assert.equal(t.context.gameState,"playing");
   assert.equal(prevented,2);
+});
+
+test("L shortcut is live while Settings button can still pause", () => {
+  const t=environment();
+  t.enable();t.start();
+  const event={code:"KeyL",key:"l",shiftKey:false,ctrlKey:false,altKey:false,repeat:false,
+    preventDefault(){},stopImmediatePropagation(){}};
+  t.listeners.keydown(event);
+  assert.equal(t.context.paused,false);
+  assert.equal(t.context.gameState,"playing");
+  t.context.window.closeDeveloperPanel();
+  assert.equal(t.context.gameState,"playing");
+  t.context.window.openDeveloperPanel();
+  assert.equal(t.context.paused,true);
+  t.context.window.closeDeveloperPanel();
+  assert.equal(t.context.paused,false);
 });
