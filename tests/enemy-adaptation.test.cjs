@@ -25,26 +25,38 @@ function harness() {
   };
 }
 
-test("regular enemies adopt the world patch under their spawn position", () => {
+test("enemy origin follows the defending world, not 85% invaded terrain", () => {
   const h = harness();
   const frost = {x: 0, y: 0, kind: 0};
-  const fire = {x: 220, y: 0, kind: 1};
+  const invaded = {x: 220, y: 0, kind: 1};
   h.window.initializeEnemyAdaptation(frost);
-  h.window.initializeEnemyAdaptation(fire);
+  h.window.initializeEnemyAdaptation(invaded);
   assert.equal(frost.worldAffinity, "frozen");
-  assert.equal(fire.worldAffinity, "burning");
+  assert.equal(invaded.worldAffinity, "frozen");
 });
 
-test("enemies adapt when they enter a different world patch", () => {
+test("native enemies stay loyal when walking across converted terrain", () => {
   const h = harness();
   const enemy = {x: 10, y: 20, kind: 2};
   h.window.initializeEnemyAdaptation(enemy);
   enemy.x = 230;
-  h.window.refreshEnemyAdaptation(enemy, 2, true);
-  assert.equal(enemy.worldAffinity, "burning");
-  enemy.x = 0;
-  h.window.refreshEnemyAdaptation(enemy, 2.5, true);
+  h.window.refreshEnemyAdaptation(enemy, 2, true, "burning");
   assert.equal(enemy.worldAffinity, "frozen");
+  enemy.x = 0;
+  h.window.refreshEnemyAdaptation(enemy, 2.5, true, "frozen");
+  assert.equal(enemy.worldAffinity, "frozen");
+});
+
+test("only a persistently conquered world changes the next generation of enemies", () => {
+  const h = harness(),old = {x:220,y:0,kind:0};
+  h.window.initializeEnemyAdaptation(old);
+  assert.equal(old.worldAffinity, "frozen");
+  h.setWorld("burning"); // Simulates the NEXT run after permanent conquest.
+  const newcomer = {x:0,y:0,kind:1};
+  h.window.initializeEnemyAdaptation(newcomer);
+  assert.equal(newcomer.worldAffinity, "burning");
+  h.window.refreshEnemyAdaptation(old, 1, true);
+  assert.equal(old.worldAffinity, "burning"); // Unchanged within a run; reset occurs across runs.
 });
 
 test("offscreen enemy updates are skipped and do not change affinity", () => {
@@ -97,7 +109,7 @@ test("only heavy or elite ordinary enemies spread terrain on death", () => {
   assert.deepEqual(h.marks.map(m=>m.type), ["frost","water","fire"]);
 });
 
-test("sandbox variant spawns remain fixed while normal enemies adapt", () => {
+test("sandbox specimens can preview another element without permanent mutations", () => {
   const h = harness();
   h.setDeveloper(true);
   const specimen = {kind:0,x:0,y:0,developerForcedAffinity:"flooded"};
