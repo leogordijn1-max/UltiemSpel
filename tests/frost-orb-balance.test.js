@@ -6,6 +6,7 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 function load(context, file) {
+  context.window ??= {};
   vm.runInContext(fs.readFileSync(path.join(root, file), "utf8"), context, { filename: file });
 }
 
