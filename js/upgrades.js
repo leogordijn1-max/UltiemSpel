@@ -277,6 +277,26 @@ function showEvolutionOffer(recipes = eligibleEvolutions()) {
   });
 }
 
+function evolutionHudStatus() {
+  const count=typeof evolutions==="undefined"?0:
+    Object.values(evolutions).filter(Boolean).length;
+  if(count>=2)return "EVOLUTIONS 2/2 · COMPLETED";
+  const milestone=nextEvolutionTime();
+  const seconds=typeof time==="number"?time:0;
+  const remaining=Math.max(0,Math.ceil(milestone-seconds));
+  const clock=remaining?Math.floor(remaining/60)+":"+String(remaining%60).padStart(2,"0"):"READY";
+  if(typeof selectedWeapons==="undefined"||!Array.isArray(selectedWeapons))
+    return "EVOLUTIONS "+count+"/2 · "+clock;
+  const next=selectedWeapons
+    .map(key=>evolutionForWeapon(key))
+    .find(recipe=>recipe && !evolutions[recipe.id]);
+  if(!next)return "EVOLUTIONS "+count+"/2 · "+clock;
+  const own=currentUpgradeLevel(next.weapon);
+  const support=currentUpgradeLevel(next.support);
+  return "EVOLUTIONS "+count+"/2 · "+clock+" · "+
+    (weaponCatalog.find(w=>w.key===next.weapon)?.name||next.weapon)+
+    " "+own+"/5 · "+next.supportName+" "+support+"/3";
+}
 function offerEarnedEvolution() {
   if(typeof active==="undefined"||!active||
     typeof paused==="undefined"||paused||
@@ -292,6 +312,7 @@ function offerEarnedEvolution() {
 if(typeof window!=="undefined"){
   window.offerEarnedEvolution=offerEarnedEvolution;
   window.evolutionFocusKey=evolutionFocusKey;
+  window.evolutionHudStatus=evolutionHudStatus;
 }
 
 function evolveWeapon(recipe, { rare = false, consumeLevel = true } = {}) {
