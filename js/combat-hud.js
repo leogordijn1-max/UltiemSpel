@@ -10,7 +10,8 @@
   const MAX_STEP=[64,96,130,170,210,260,310,370];
   let routeCache=null;
   function reset(){routeCache=null}
-  const sec = value => Math.max(0,value).toFixed(1);
+  // Never UNDERSTATE remaining reaction time because of float rounding.
+  const sec = value => (Math.ceil(Math.max(0,value-1e-8)*10)/10).toFixed(1);
   function escape(power,player,now) {
     if (!power?.active || power.stage!=="warning" ||
         !player || !window.guardianArenaPowerThreat) return null;
