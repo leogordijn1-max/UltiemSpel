@@ -1,4 +1,6 @@
-# Update 29 — Normal run QA: echte speeltest en gescripte dekking
+# Update 29–31 — Normal run QA: echte speeltest, gescripte dekking en lokale runtime-telemetrie
+**Update-31-runtime-QA:** lokale JSON-recorder nu technisch gebouwd, met echte upgrade-aanbiedingen, gemaakte keuzes, levels, bossfases en browser-FPS. **Volg [RUN-TEST-31.md](RUN-TEST-31.md)** voor de eerste menselijke Normal-speeltest en expliciete export. De checklist hieronder blijft OPEN totdat daadwerkelijk bewijs is geleverd.
+
 **Stand: 18 oktober 2026. Branch:** `feature/living-world-prototype`
 
 ## Wat is bewezen?
