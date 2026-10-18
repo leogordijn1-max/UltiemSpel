@@ -127,6 +127,29 @@ canvas {
   letter-spacing: 0.7px;
 }
 
+/* Compact war-front indicator: no fullscreen effects or arena clutter. */
+#worldFront {
+  margin-top: 7px;
+  padding: 7px 9px;
+  border-left: 2px solid #7fd9f3;
+  border-radius: 3px;
+  background: rgba(9, 24, 40, .57);
+  color: #ceeefa;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .25px;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+.world-consequence-report {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(125,217,243,.35);
+  border-radius: 8px;
+  background: rgba(13,32,45,.62);
+}
+.world-consequence-report h3 { margin: 0 0 5px; color: #bceeff; }
+.world-consequence-report p { margin: 0; line-height: 1.5; }
 #dashStatus {
   position: absolute;
   bottom: 18px;
