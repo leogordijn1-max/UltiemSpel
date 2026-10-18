@@ -1,6 +1,12 @@
 # UPDATE 31 — De eerste ECHTE Normal-run met meetdata
 
+> **LIVE UPDATE 31 (18 oktober 2026):** De maker leverde twee echte complete browser-JSONs aan: Frost Standard Normal Victory 28:01 (sandboxflag true, maar expliciet géén developer-tools gebruikt; sandbox onderdrukte normale bossrewards) en **Water Standard Normal Victory 26:44, sandboxflag false** (vier Guardians verslagen, twee earned evoluties exact 10:00 en 17:00, drie gewone bossrewards, gemiddelde 143,78 FPS op High). **Update 31 nu technisch én live QA afgerond**; M1/M2 Water aangetoond, M3–M6 slechts gedeeltelijk, **release nog NO-GO**. Zie [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md) en [ROADMAP-31-50.md](ROADMAP-31-50.md). Oudere tekst hieronder over 'nog geen live-run' is historische stand vóór ontvangst van de resultaten.
+
 **Status:** technische QA-recorder geïmplementeerd en automatisch getest. **Er is nog geen aantoonbaar daadwerkelijk door een speler gespeelde run uitgevoerd of geüpload.** Deze handleiding is bedoeld om die ontbrekende gegevens te verzamelen.
+
+## Echte browserresultaten inmiddels ontvangen
+
+**Water Standard Normal 26:44 Victory (sandbox:false)**, twee verdiende evoluties exact 10:00/17:00, vier bosskills en gemeten FPS: **eerste echte non-sandbox run geslaagd**. Frost 28:01 Victory sandbox:true maar maker bevestigt geen developerfuncties gebruikt; die sandboxflag skipte gewone bossrewards. Lees [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md). Volgende nuttige test is Fire zonder sandbox, plus eventueel Frost zonder sandbox voor een eerlijke vergelijking.
 
 ## Waarom deze test?
 
