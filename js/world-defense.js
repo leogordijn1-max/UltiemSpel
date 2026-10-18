@@ -158,7 +158,9 @@ function draw(e,ctx,now,quality){
     if(quality!=="low"){ctx.globalAlpha=.28;ctx.beginPath();
       ctx.arc(e.x,e.y,205,0,TAU);ctx.stroke();}
   }else if(role==="defender"){
-    ctx.lineWidth=4;ctx.beginPath();ctx.arc(e.x,e.y,e.r+8,-2.6,-.55);ctx.stroke();
+    const heading=window.enemyShieldFacing16?.(e,typeof player!=="undefined"?player:null)
+      ??e.shieldFacing??0;
+    ctx.lineWidth=4;ctx.beginPath();ctx.arc(e.x,e.y,e.r+8,heading-.8,heading+.8);ctx.stroke();
     if(quality!=="low"){const leader=leaderOf(s);
       if(leader&&dist2(e,leader)<260*260){
         ctx.globalAlpha=.25;ctx.lineWidth=2;ctx.beginPath();
