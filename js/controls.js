@@ -572,7 +572,7 @@ function showPauseMenu() {
     appendMenuButton(parent, "CONTROLS", () => showControlsHelp(true));
     appendMenuButton(parent, "SETTINGS", () => showSettings(true));
     if (window.isDeveloperRun?.())
-      appendMenuButton(parent, "DEVELOPER MODE · Shift + K", () => window.openDeveloperPanel?.());
+      appendMenuButton(parent, "DEVELOPER MODE · L", () => window.openDeveloperPanel?.());
     appendMenuButton(parent, "RESTART RUN", () => {
       if (!window.confirm("Restart this run? Unsaved run rewards will be lost.")) return;
       reset();
@@ -630,7 +630,7 @@ function showControlsHelp(fromPause = false) {
       ["P / Escape", "Pause or resume during normal gameplay."],
       ["1 / 2 / 3", "Choose simulation speed during gameplay."],
       ["F", "Toggle fullscreen without leaving your current screen."],
-      ["Shift + K", "Developer tools, when enabled in Settings."],
+      ["L", "Developer tools, when enabled in Settings."],
       ["Level-up", "Choose from three upgrades when a choice appears."],
     ]) {
       const line = document.createElement("p");
