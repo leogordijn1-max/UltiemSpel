@@ -820,6 +820,7 @@ function update(dt) {
       bladePositions[index * 2 + 1] = player.y + Math.sin(angle) * 67;
     }
   }
+  window.notifyWorldDefense = message => notify(message, "wave", 3.5);
   window.updateWorldDefense?.(time, player, enemies, kind => enemySpawn(kind),
     !!boss || !!window.isBossIsolationActive?.());
   const enemyAIStarted = performance.now();
