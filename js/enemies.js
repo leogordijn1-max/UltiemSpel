@@ -36,7 +36,7 @@ const enemyCatalog = [
 ];
 const bossCatalog = [
   { name: "Beau de Hond", image: "img/BeauDeHond.png", attacks: "MarioVis shotgun and targeted charge; Hunting Grounds triple rush and Pincer Ambush shadow flanks.", phase: "Phase II unlocks signature chains. Below 33% HP, The Final Hunt darkens the arena with three hunts and a massive finale." },
-  { name: "The Mourning Shade", image: "", attacks: "Telegraphed radial shadow rings with a deliberate dodge gap.", phase: "Below half HP, creates larger, faster rotating rings and summons minions." },
+  { name: "The Mourning Shade", image: "", attacks: "Shadow Collapse ring salvos and Phantom Execution crossfire, with visible safe routes.", phase: "Phase II unlocks multi-beat specials; below 33% HP Eternal Eclipse darkens the arena for three marked strikes." },
   { name: "The Bell Tower", image: "", attacks: "Telegraphed aimed bell-bolt fans with a narrow safe lane.", phase: "Below half HP, fires additional side-lane volleys and summons minions." },
   { name: "The Last Meme", image: "", attacks: "Final encounter: safe-gap rifts, a dark projectile ring and marked explosion zones.", phase: "Three phases at 100%, 66% and 33% HP. Appears around minute 25 in Standard Mode." },
 ];
@@ -643,6 +643,7 @@ function spawnBoss() {
   };
   window.initializeBossCombat?.(boss, time);
   window.initializeBeauEncounter?.(boss, time);
+  window.initializeShadeEncounter?.(boss, time);
   window.initializeGuardianWorld?.(boss);
   enemies.push(boss);
   if (typeof trackDiscovery === "function") trackDiscovery("bosses", ["beau", "mourning", "bell"][variant]);
