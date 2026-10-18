@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 19 — Elemental Weapon Feel: verbeterde targeting en trefzekerheid van de daadwerkelijk selecteerbare elementwapens.
-**Volgende update:** 20 — Weapon VFX: eerste visuele kwaliteitslat.
-**Planningvoortgang:** **9 / 20 afgerond = 45%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 20 — Elemental Weapon VFX: herkenbare extra visuele effecten voor de negen actuele selecteerbare elementwapens.
+**Volgende update:** 21 — Wapens en evoluties: keuze, synergie en feedback.
+**Planningvoortgang:** **10 / 20 afgerond = 50%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -33,8 +33,8 @@
 | 16 | Unieke archetypes en 16-richtingen-schilden | AFGEROND · 323/323 tests · speeltest open |
 | 17 | Enemy Attacks & Telegraph Overhaul | AFGEROND · 334/334 tests · speeltest open |
 | 18 | Encounter Director 3.0: één groot gevecht tegelijk en herstelpauzes | AFGEROND · 347/347 tests · speeltest open |
-| 19 | Weapon Feel: voorspellend richten en betrouwbare treffers | AFGEROND · 358/358 tests · speeltest open |
-| 20 | Weapon VFX: eerste visuele kwaliteitslat | OPEN |
+| 19 | Weapon Feel: voorspellend richten en betrouwbare treffers | AFGEROND · 365/365 tests na correctie · speeltest open |
+| 20 | Weapon VFX: eerste visuele kwaliteitslat | AFGEROND · 372/372 tests · browser-visual review open |
 | 21 | Wapens en evoluties: keuze, synergie, feedback | OPEN |
 | 22 | Wapen- en vijandbalans: Normal/Easy/Nightmare | OPEN |
 | 23 | Wereldterreinen: gevaren duidelijk en eerlijk | OPEN |
@@ -185,3 +185,24 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Bewijs:** https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39145958214 — **365 tests geslaagd, 0 gefaald**, inclusief 7 nieuwe regressietests die de echte negen kiesbare wapens, actuele elementgerichte targeting, het verschil tussen projectiel- en gebiedsgericht mikken en snelle Water Bolt-collisies controleren.
 
 **Voortgang:** Update 19 blijft **1 update**, dus **9/20 = 45%** richting de Update 30-mijlpaal. De correctie is geen kunstmatige extra stap. Voor toekomstige gameplayverbeteringen altijd éérst controleren of het aangepakte wapen daadwerkelijk via de huidige element-loadout gekozen kan worden.
+
+
+## Update 20 — afgerond (18 oktober 2026)
+**Doel:** een merkbare visuele kwaliteitsstap voor de **negen werkelijk selecteerbare** Fire-, Water- en Frost-wapens, zonder schade, gamebalans, botsingen, bosswaarschuwingen of vijandendichtheid te veranderen.
+
+**Resultaat:** nieuwe cosmetische module js/weapon-vfx.js, geladen na js/elemental-combat.js en getekend in js/render.js bovenop de bestaande wapenafbeelding. Alle negen actieve families krijgen onderscheidende extra Canvas-effecten:
+- **Fire:** Flame Cone krijgt bewegende vuurstrengen, Fireball een meerlagige hete komeetstaart en explosiespaken, Flame Orbit gloeiende ringen en bewegende vonksporen.
+- **Water:** Water Bolt een dunne drukstraal met parallelle stroming en druppels, Tidal Wave schuimende bewegende kammen, Whirlpool roterende zuigspiralen.
+- **Frost:** Frost Orb kristal-/sneeuwvlokaccenten en een spoor, Ice Shards doorschijnende kristal-afterimages, Glacial Pulse een zesarmige ijzige schokgolf.
+- Beperkte impactringen worden via window.emitWeaponVfxImpact getriggerd bij huidige elementaire treffers en Frost Orb. Deze zijn puur visueel; de bestaande damage-logica blijft leidend.
+- VFX blijven deterministisch, negeren objecten buiten beeld, beperken objectaantallen per render-pass en schalen detail voor Low/Medium/High graphics. Canvas state wordt per effect hersteld. De module verandert geen gameplay objecten.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39148015522 — **372/372 tests geslaagd, 0 gefaald** inclusief **7 nieuwe VFX-regressietests**. Syntaxchecks ook geslaagd. De nieuwe tests controleren de negen actieve wapens, de daadwerkelijke wiring, variatie in tekenprimitieven, geen gameplay-mutatie, viewport-culling, detailverschil Low/High, maximale impact-/projectielvolumes, en reset/expiry.
+
+**Planning:** **10 / 20 = 50%** van geplande updates richting de Update 30-mijlpaal. Dit percentage zegt niets over hoeveel visuele perfectie of definitieve releasekwaliteit al bereikt is.
+
+**Handmatige speeltest staat nog open:** bekijk **elk element** in de browser, met startwapen én twee ontgrendelde wapens; vergelijk Low/Medium/High, 1×/2×/3×, eindeloze en dichte encounters en bossfights. Controleer of trajecten en impacts zichtbaar zijn zonder gevaarstelegraphs of vijanden te verbergen, of FPS niet inzakt en of verschillen visueel overtuigen. De CI-bewijzen zijn geen visuele browsertest. Pas de VFX na gebruikersfeedback gericht aan.
+
+**Nog open voor mijlpaal 30:** complete 25–30 minuten Standard-run, werkelijk verdiende twee evoluties, bossvolgorde en spectaculaire signature-aanvallen in de browser, moeilijkheidsbalans, meetbare late-run FPS en meerdere volledige runs.
+
+**Volgende stap (Update 21):** alleen **actuele** Fire-, Water- en Frost-loadouts en hun evolutions beoordelen op keuzegevoel, onderlinge synergie, progression en duidelijke upgradefeedback; oude Arcane/Boomerang-code niet als speelbaar beschouwen.
