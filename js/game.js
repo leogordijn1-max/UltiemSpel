@@ -146,6 +146,7 @@ function reset() {
   // Lock the dominant environment at run start. Choosing an element never conquers it.
   window.beginWorldRun?.();
   window.resetWorldScars?.();
+  window.resetWorldRetaliation?.();
   syncElementalLoadout();
   resetElementalCombat();
   for (const key in keys) keys[key] = false;
@@ -702,6 +703,19 @@ function update(dt) {
   } else {
     player.inv = Math.max(0, player.inv - dt);
   }
+  window.updateWorldRetaliation?.(dt, player, {
+    damage: amount => {
+      if (player.inv > 0 || window.developerInvincible?.()) return false;
+      player.hp -= amount;
+      recordPlayerHit(amount);
+      player.inv = .85;
+      damageFlash = .5;
+      shake = Math.max(shake, 8);
+      puff(player.x,player.y,"#ff609d",12);
+      if(player.hp <= 0) end();
+      return true;
+    }
+  });
   damageFlash = Math.max(0, damageFlash - dt);
   novaFlash = Math.max(0, novaFlash - dt);
   novaEchoFlash = Math.max(0, novaEchoFlash - dt);
