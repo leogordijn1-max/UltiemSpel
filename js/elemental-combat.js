@@ -15,13 +15,16 @@ function resetElementalCombat() {
 function elementalCooldown(key, seconds) {
   elementalTimers[key] = seconds * weaponCooldownMultiplier();
 }
-function elementalAim(maxRange = 900) {
+function elementalAim(maxRange = 900, projectileSpeed = 0) {
   const range=window.playerWeaponRange?.(maxRange) ?? maxRange;
   const enemy = nearestEnemy(player.x, player.y, range, null,
     e => window.playerWeaponTargetVisible?.(e) ?? true);
   const dx = enemy ? enemy.x - player.x : player.facingX;
   const dy = enemy ? enemy.y - player.y : player.facingY;
-  return { angle: Math.atan2(dy, dx), target: enemy };
+  const base=Math.atan2(dy,dx);
+  return {angle:enemy&&projectileSpeed>0
+    ? window.weaponAimAngle?.(player,enemy,projectileSpeed,{maxLead:.35}) ?? base
+    : base,target:enemy};
 }
 function elementalShot(type, x, y, angle, speed, radius, damage, lifetime = 2.4) {
   if (elementalShots.length >= 160) return null;
@@ -105,7 +108,7 @@ function updateElementalCombat(dt) {
     elementalTimers[key] = Math.max(0, elementalTimers[key] - dt);
 
   if (upgrades.fireball && !elementalTimers.fireball) {
-    const aim = elementalAim(1100);
+    const aim = elementalAim(1100,350);
     if (aim.target) {
       elementalShot("fireball", player.x, player.y, aim.angle, 350, 13,
         (22 + upgrades.fireball * 6) * globalDamageMultiplier(), 2.7);
@@ -113,7 +116,7 @@ function updateElementalCombat(dt) {
     }
   }
   if (upgrades.waterBolt && !elementalTimers.waterBolt) {
-    const aim = elementalAim(1100);
+    const aim = elementalAim(1100,evolutions.riptideLance?760:640);
     if (aim.target) {
       const shot = elementalShot("waterBolt", player.x, player.y, aim.angle, evolutions.riptideLance ? 760 : 640, evolutions.riptideLance ? 10 : 7,
         (14 + upgrades.waterBolt * 6) * globalDamageMultiplier() * (evolutions.riptideLance ? 1.2 : 1), 1.65);
@@ -122,7 +125,7 @@ function updateElementalCombat(dt) {
     }
   }
   if (upgrades.iceShards && !elementalTimers.iceShards) {
-    const aim = elementalAim(950);
+    const aim = elementalAim(950,480);
     if (aim.target) {
       const count = 3 + (upgrades.iceShards >= 4 ? 2 : 0) + (evolutions.crystalStorm ? 2 : 0);
       for (let index = 0; index < count; index++) {
