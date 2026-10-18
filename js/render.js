@@ -813,6 +813,7 @@ function draw() {
     }
     ctx.restore();
   }
+  window.drawHitFeedback?.(ctx,time,graphicsQuality);
   for (const b of bossShots) {
     if (!visibleEnemy(b, -b.r * 2)) continue;
     if (
@@ -1295,7 +1296,6 @@ function draw() {
     ctx.fillRect(p.x, p.y, p.r, p.r);
   }
   ctx.globalAlpha = 1;
-  ctx.font = "bold 13px system-ui";
   ctx.textAlign = "center";
   for (const t of texts) {
     if (
@@ -1303,9 +1303,15 @@ function draw() {
       Math.abs(t.y - player.y) > H / 2 + 40
     )
       continue;
-    ctx.globalAlpha = Math.min(1, t.life * 2);
+    ctx.globalAlpha = Math.min(1, t.life * (t.critical ? 1.55 : 2));
+    ctx.font=t.critical?"900 20px system-ui":t.heavy?"800 16px system-ui":"bold 13px system-ui";
     ctx.fillStyle = t.color || "#fff1ba";
+    if(t.critical && graphicsQuality!=="low"){
+      ctx.shadowColor="#ffdb64";
+      ctx.shadowBlur=glow(12);
+    }
     ctx.fillText(t.n, t.x, t.y);
+    ctx.shadowBlur=0;
   }
   ctx.globalAlpha = 1;
   ctx.restore();
