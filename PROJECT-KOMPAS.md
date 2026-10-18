@@ -6,6 +6,8 @@
 >
 > **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
 
+> **ACTUELE STAND (na Update 20, 18 oktober 2026):** Update 20 is technisch afgerond en gepusht op feature/living-world-prototype. **10/20 = 50% planningsvoortgang** naar mijlpaal 30. **372/372 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39148015522. **Volgende update: 21 — actuele elementwapens/evolutions, synergie en upgradefeedback.** Browserplaytests, visuele VFX-controle en volledige runs staan nog open. Verifieer deze status telkens opnieuw aan de hand van de laatste commits.
+
 ## 1. De ziel van de game — lees dit vóór de code
 
 **Shadow Survivor** (repo heet UltiemSpel) begon als een grappige, eigen HTML/JavaScript survivor-roguelike met bekende/meme-achtige personages, maar moet uitgroeien tot een **echt leuk, uitdagend en onderscheidend spel**. Niet alleen meer wapens, meer vijanden of grotere cijfers toevoegen. We willen een spel dat je onthoudt omdat **de wereld op je reageert** en omdat gevechten echt iets voorstellen.
@@ -99,8 +101,8 @@ Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De
 
 We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
 
-**Actuele afgesproken roadmap (na Update 19):**
-- **20:** Weapon VFX: visuele kwaliteitslat voor de huidige negen elementwapens (minstens een overtuigende kernset).
+**Actuele afgesproken roadmap (na Update 20):**
+- **20 — AFGEROND (CI groen, browser-VFX-test nog open):** Eigen visuele accenten voor de negen huidige elementwapens, met render-culling en kwaliteitslimieten.
 - **21:** Wapenkeuzes, evolutions, synergie en feedback.
 - **22:** Balans wapens en vijanden per moeilijkheid.
 - **23:** Eerlijk leesbare wereldterreingevaren.
@@ -114,7 +116,7 @@ We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eers
 
 Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
 
-**Laatste stand:** Update 19 is **ook gerepareerd na feedback van de maker**: voorspellend mikken en nauwkeuriger collisions gelden nu voor **Fireball, Water Bolt, Ice Shards**, dus daadwerkelijk kiesbare wapens. De oorspronkelijke poging focuste ten onrechte op Arcane/Boomerang. Volgens het milestoneverslag werden na de fix **365 tests** groen; de meest recente branch-run is groen. **Update 20 is nog niet gestart** op de vastgelegde stand van dit document.
+**Laatste stand:** Update 19 is **gerepareerd na feedback van de maker**: voorspellend mikken en nauwkeuriger collisions gelden voor **Fireball, Water Bolt, Ice Shards**, dus daadwerkelijk kiesbare wapens. **Update 20 is inmiddels technisch afgerond**: een aparte cosmetische js/weapon-vfx.js-laag voegt unieke vuur-, water- en ijseffecten toe aan alle negen actuele wapens, met impactringen, beperkingen voor Low graphics en schermculling. De renderpass wordt vanuit js/render.js aangeroepen; js/elemental-combat.js en js/weapons.js leveren impactevents. Dit verandert geen schade of vijandgedrag. **372 tests zijn geslaagd**, maar de VFX moeten in de browser nog op kwaliteit, leesbaarheid en FPS worden beoordeeld. **Volgende: Update 21.**
 
 ## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
 
@@ -145,6 +147,15 @@ Praktisch werken we zo:
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Update 20: Elemental Weapon VFX technisch afgerond**
+- Werkbranch: feature/living-world-prototype. Nieuwe visual-only module: js/weapon-vfx.js; de andere wijzigingen staan in index.html, js/elemental-combat.js, js/weapons.js, js/render.js en tests/update-20-weapon-vfx.test.cjs.
+- Visie toegepast: alleen de negen actuele Fire-, Water- en Frost-wapens zijn verrijkt; geen terugkeer naar niet-selecteerbare Arcane/Boomerang, geen automatische balans- of schadeverandering.
+- Effecten: Fireball-comettrails/explosies, Flame Cone-vuurstrengen, Flame Orbit-gloed; Water Bolt-stroming, Tidal Wave-schuim, Whirlpool-spiralen; Frost Orb-kristallen, Ice Shards-afterimages en Glacial Pulse-ijsspaken.
+- Bewijs: 372/372 tests geslaagd in GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39148015522, waaronder 7 nieuwe VFX-tests. De module cullt buiten beeld, houdt effecten beperkt en schaalt tussen Low/Medium/High.
+- **Nog niet bewezen:** browser-feel, visuele leesbaarheid bij drukke gevechten, impact bij bosses, 2×/3× en gemeten FPS. Test door de maker is nodig.
+- Mijlpaal: **10/20 = 50% van de geplande updates**, geen kwaliteitspercentage.
+- **Volgende: Update 21 — huidige elementwapens en evoluties: keuzegevoel, synergie en upgradefeedback.**
 
 **18-10-2026 — Initieel overdrachtsmoment / na Update 19**
 - Branch: feature/living-world-prototype; geverifieerde head vóór aanleg: 65f0700.
