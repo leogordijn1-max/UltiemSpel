@@ -47,7 +47,7 @@ function campaign(element="fire",mode="standard"){
       panels.push({title,body});
       callback(parent);
     },
-    showMainMenu:()=>{},hud:()=>{},choices:()=>{},
+    showMainMenu:()=>{},reset:()=>{},hud:()=>{},choices:()=>{},
     renderRunSummaryPanel:()=>{},playSfx:key=>sounds.push(key),
     rand:(min,max)=>min,puff:()=>{},trackDiscovery:()=>{},
     notify:(...values)=>notifications.push(values),
