@@ -291,6 +291,11 @@ function reset() {
   $("bossCountdown").style.display = "block";
   $("overlay").style.display = "none";
   $("pause").style.display = "block";
+  // The recorder is LOCAL and optional. No server communication or gameplay
+  // mutation; normal runs and developer sandboxes are clearly distinguished.
+  window.runQaBegin?.({mode:runMode,difficulty,
+    element:currentLivingWorldElement(),character:selectedCharacter,
+    weapons:selectedWeapons.slice(),graphicsQuality});
   hud();
 }
 
@@ -304,6 +309,7 @@ function trackDiscovery(group, key) {
 
 // Account for blocked hits and dodges separately from HP lost.
 function recordPlayerHit(amount) {
+  window.runQaEvent?.("hit",{amount,health:player?.hp},time);
   runDamageTaken += amount;
   if (runStats) runStats.damageTaken += Math.max(0, amount);
 }
@@ -562,6 +568,8 @@ function showVictory() {
     .map((w) => `${w.name}${weaponIsEvolved(w.key) ? " ★" : ""}`)
     .join(", ");
   const survived = `${Math.floor(time / 60)}m ${Math.floor(time % 60)}s`;
+  window.runQaEvent?.("final_boss_victory",{bossesDefeated,level},time);
+  window.runQaEnd?.("victory",time);
   if (typeof playSfx === "function") playSfx("victory");
   panel(
     "VICTORY · THE NIGHT IS YOURS",
@@ -576,6 +584,7 @@ function showVictory() {
       menuButton.textContent = "CLAIM VICTORY · MAIN MENU";
       menuButton.onclick = showMainMenu;
       container.append(menuButton);
+      window.appendRunQaExportButtons?.(container);
     },
   );
   if (typeof renderRunSummaryPanel === "function") renderRunSummaryPanel();
@@ -603,6 +612,7 @@ function continueEndlessAfterVictory() {
   paused = false;
   choiceScreenOpen = false;
   gameState = "playing";
+  window.runQaContinueEndless?.(time);
   $("overlay").style.display = "none";
   $("pause").style.display = "block";
   $("speedControls").style.display = "flex";
@@ -618,6 +628,8 @@ function end() {
   // Residual shots/hazards must not overwrite the earned Victory modal.
   // Dying in Endless remains allowed after CONTINUE switches back to playing.
   if (!active || gameState === "victory") return false;
+  window.runQaEvent?.("run_defeat",{level,kills,bossesDefeated},time);
+  window.runQaEnd?.(victoryClaimed?"endless_defeat":"defeat",time);
   window.resetGuardianArenaPower?.();
   playSfx("gameover");
   recordRun();
@@ -654,6 +666,7 @@ function end() {
       menuButton.textContent = "MAIN MENU";
       menuButton.onclick = showMainMenu;
       el.append(menuButton);
+      window.appendRunQaExportButtons?.(el);
     },
   );
   if (typeof renderRunSummaryPanel === "function") renderRunSummaryPanel();
@@ -1839,6 +1852,23 @@ function update(dt) {
   if(!boss && !paused)window.offerEarnedEvolution?.();
   if (hudUpdateTimer >= 0.12) {
     hudUpdateTimer = 0;
+    if(window.runQaNeedsSnapshot?.(time)){
+      const conquest=window.getWorldConquest?.();
+      window.runQaSnapshot?.({
+        time,mode:runMode,gameSpeed,level,xp,needed,
+        totalXp:runStats?.xpCollected||0,
+        pendingLevelUps,kills,bossesDefeated,
+        evolutions:Object.keys(evolutions).filter(key=>evolutions[key]),
+        upgrades,unlockedWeapons,selectedWeapons,
+        hp:player.hp,maxHp:player.maxHp,
+        damageTaken:runDamageTaken,
+        boss:boss?.bossName||null,
+        bossPhase:boss?(boss.finalPhase|| (boss.phaseThree?3:boss.phaseTwo?2:1)):0,
+        worldTarget:conquest?.target||0,
+        fps:currentFps,graphicsQuality,
+        enemies:enemies.length
+      });
+    }
     hud();
   }
 }
@@ -1878,6 +1908,14 @@ function loop(t) {
   draw();
   // Live benchmark samples real, unpaused browser frames (not the paused F9 menu).
   window.developerPerfFrame?.(elapsed);
+  if(active&&!paused)window.runQaFrame?.(elapsed,time,{
+    enemyAI:performanceMetrics.enemyAI,
+    collisions:performanceMetrics.collisions,
+    render:performanceMetrics.render,
+    enemies:enemies.length,playerProjectiles:bullets.length,
+    enemyProjectiles:enemyShots.length+bossShots.length,
+    effects:particles.length
+  });
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
