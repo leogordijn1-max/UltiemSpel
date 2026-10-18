@@ -51,6 +51,7 @@
       // Start the set-piece clean; old shotgun projectiles and hit markers
       // must not create unexpected hits during the cinematic warning.
       hooks.clearBossAttacks?.();
+      window.beginGuardianArenaPower?.(e,t,player);
       target(e,player);
       hooks.notify?.("THE FINAL HUNT · THERE IS NO HIDING","boss",4);
       hooks.puff?.(e.x,e.y,"#ff665e",26);
@@ -62,6 +63,7 @@
     const ultimate=s.mode==="ultimate";
     s.mode="idle";s.stage="";s.echoes=[];
     s.force=null;s.nextAt=t+(phase(e)===3?10:13);
+    if(ultimate)window.interruptGuardianArenaPower?.(e);
     e.specialRecoveryUntil=t+(ultimate?2.6:2.1);
     e.chargeCooldown=Math.max(e.chargeCooldown||0,2.5);
     e.shootCooldown=Math.max(e.shootCooldown||0,2);
@@ -194,6 +196,7 @@
     // The HP phase transition interrupts the previous pattern instead of
     // skipping its warning frames and delivering an instant, unfair hit.
     s.mode="idle";s.stage="";s.echoes=[];
+    window.interruptGuardianArenaPower?.(e);
     s.until=0;s.lockedAt=0;s.nextAt=t+1.5;
     e.specialRecoveryUntil=0;
     return true;
