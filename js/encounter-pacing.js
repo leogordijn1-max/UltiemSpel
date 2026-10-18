@@ -3,18 +3,48 @@
 (() => {
   "use strict";
   let running = false, nextPatrol = Infinity, patrols = 0, stage = 0;
-  const MAX_LIVE = 62;
+  const MAX_LIVE = 30;
 
   function populationCap(growthSeconds = 0, difficulty = "normal") {
     const time = Math.max(0, Number(growthSeconds) || 0);
-    const base = 28 + Math.min(26, Math.floor(time / 240) * 4);
-    const adjustment = difficulty === "nightmare" ? 8 : difficulty === "easy" ? -4 : 0;
-    return Math.min(MAX_LIVE, Math.max(20, base + adjustment));
+    // Survivors face complex teams, not an ever-expanding background horde.
+    const base = 20 + Math.min(6, Math.floor(time / 360) * 2);
+    const adjustment = difficulty === "nightmare" ? 4 : difficulty === "easy" ? -3 : 0;
+    return Math.min(MAX_LIVE, Math.max(15, base + adjustment));
   }
   function ambientInterval(growthSeconds = 0, difficulty = "normal") {
     const time = Math.max(0, Number(growthSeconds) || 0);
-    const base = Math.max(4.4, 7.3 - time * .002);
+    // Ambient spawns become rarer as tactical formations get more demanding.
+    const base = 7.3 + Math.min(3.3, time / 550 * 1.5);
     return base * (difficulty === "nightmare" ? .88 : difficulty === "easy" ? 1.18 : 1);
+  }
+  function living(enemies) {
+    return Array.isArray(enemies) ? enemies.filter(e => e && !e.dead && e.hp !== 0) : [];
+  }
+  function groups(enemies) {
+    const ids=new Set();
+    for(const e of living(enemies)){
+      if(e.defenseSquadId)ids.add("defense:"+e.defenseSquadId);
+      else if(e.encounterGroup)ids.add("patrol:"+e.encounterGroup);
+    }
+    return ids.size;
+  }
+  function maxGroups(seconds=0) { return seconds>=360?2:1; }
+  function ambientLimit(seconds=0,difficulty="normal",enemies=[]) {
+    const time=Math.max(0,Number(seconds)||0);
+    const base=Math.max(4,9-Math.floor(time/180));
+    const modifier=difficulty==="nightmare"?1:difficulty==="easy"?-1:0;
+    // During a staged fight, keep the arena focused on those specific threats.
+    return Math.max(2,Math.min(populationCap(seconds,difficulty)-10,
+      base+modifier-(groups(enemies)>0?3:0)));
+  }
+  function canStart(enemies,seconds=0,kind="patrol",size=3,difficulty="normal") {
+    const alive=living(enemies),count=alive.length,groupCount=groups(alive);
+    if(kind==="swarm")return groupCount===0&&count<=8;
+    if(groupCount>=maxGroups(seconds))return false;
+    if(count+size>populationCap(seconds,difficulty))return false;
+    // Hold encounters until most stray enemies have been cleared.
+    return count-size <= 14;
   }
   function reset() { running = true; nextPatrol = Infinity; patrols = 0; stage = 0; }
   function clear() { running = false; nextPatrol = Infinity; stage = 0; }
@@ -23,11 +53,9 @@
   }
   function spawnPatrol(now, growthSeconds, player, enemies, spawnEnemy, difficulty = "normal") {
     if (!running || !player || typeof spawnEnemy !== "function") return 0;
-    const cap = populationCap(growthSeconds, difficulty);
-    const remaining = cap - enemies.filter(e => !e.dead).length;
     const plan=window.chooseTacticalEncounter?.(growthSeconds,patrols);
-    const total = Math.min(plan?.members?.length || patrolCount(growthSeconds), remaining);
-    if (total <= 0) return 0;
+    const total=plan?.members?.length || patrolCount(growthSeconds);
+    if(!canStart(enemies,growthSeconds,"patrol",total,difficulty))return 0;
 
     // One tough leader with actual support types, rather than three identical chasers.
     const formations = [[2,1,4,0,6],[6,1,4,0,2],[4,2,1,6,0]];
@@ -57,6 +85,8 @@
       e.encounterRole="patrol";
       e.xpValueMultiplier=2.15;
       window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
+      // A group identity is needed even if the optional skill module is absent.
+      e.encounterGroup ||= tacticGroup || ("director-"+(patrols+1));
       if(plan){e.encounterPlan=plan.name;e.encounterHint=plan.hint;}
       team.push(e);
       // Recheck elemental world affinity after positioning.
@@ -77,8 +107,10 @@
     if(!Number.isFinite(nextPatrol)){nextPatrol=now+17;return 0;}
     if(now<nextPatrol)return 0;
     // Skip missed opportunities rather than dumping packs after a paused boss fight.
-    nextPatrol=now+Math.max(19,26-Math.min(6,growthSeconds/260));
-    return spawnPatrol(now,growthSeconds,player,enemies,spawnEnemy,difficulty);
+    const added=spawnPatrol(now,growthSeconds,player,enemies,spawnEnemy,difficulty);
+    // Retry a blocked encounter once the current pack is defeated; no catch-up burst.
+    nextPatrol=now+(added?Math.max(25,31-Math.min(5,growthSeconds/300)):6);
+    return added;
   }
   function status(growthSeconds=0,difficulty="normal"){
     return {active:running,patrols,nextPatrol,populationCap:populationCap(growthSeconds,difficulty),
@@ -87,5 +119,7 @@
   window.resetEncounterPacing=reset;window.clearEncounterPacing=clear;
   window.updateEncounterPacing=update;window.spawnEncounterPatrol=spawnPatrol;
   window.encounterPopulationCap=populationCap;window.encounterAmbientInterval=ambientInterval;
+  window.encounterAmbientLimit=ambientLimit;window.encounterActiveGroups=groups;
+  window.encounterCanStart=canStart;window.encounterMaxGroups=maxGroups;
   window.getEncounterPacingStatus=status;
 })();
