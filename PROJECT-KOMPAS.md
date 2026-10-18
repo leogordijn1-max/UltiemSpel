@@ -6,7 +6,7 @@
 >
 > **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
 
-> **ACTUELE STAND (na Update 22, 18 oktober 2026):** Update 22 is technisch afgerond en gepusht op feature/living-world-prototype. **12/20 = 60% planningsvoortgang** naar mijlpaal 30. **391/391 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39150233474. **Volgende update: 23 — wereldterreinen: gevaren eerlijk en duidelijk maken.** Browserplaytests en volledige Normal-runs staan nog open. Verifieer telkens de nieuwste branch/commit.
+> **ACTUELE STAND (na Update 23, 18 oktober 2026):** Update 23 is technisch afgerond en gepusht op feature/living-world-prototype. **13/20 = 65% planningsvoortgang** naar mijlpaal 30. **402/402 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39151060369. **Volgende update: 24 — Living World-terreinreacties en gevolgen duidelijker merkbaar maken.** Browserplaytests en volledige Normal-runs staan nog open. Verifieer de actuele HEAD en CI voordat je verder bouwt.
 
 ## 1. De ziel van de game — lees dit vóór de code
 
@@ -101,11 +101,11 @@ Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De
 
 We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
 
-**Actuele afgesproken roadmap (na Update 22):**
+**Actuele afgesproken roadmap (na Update 23):**
 - **20 — AFGEROND (CI groen, browser-VFX-test nog open):** Eigen visuele accenten voor de negen huidige elementwapens, met render-culling en kwaliteitslimieten.
 - **21 — AFGEROND (CI groen, browser-test open):** Drie kleine, echte same-element cross-weapon combo's met een begrensde bonus en overzichtelijke evolutiepaden op upgrade-/supportkaarten.
 - **22 — AFGEROND (CI groen, speeltest open):** Difficulty komt uit taktische teamstatistieken en nog leesbare timings, niet extra Nightmare-vijanden. Flame Orbit en Frost-slow tegen bosses begrensd.
-- **23:** Eerlijk leesbare wereldterreingevaren.
+- **23 — AFGEROND (CI groen, browsertest open):** Permanente rifts tonen duidelijke aanvallen, herhaalde oplaadwaarschuwingen van 0,95s, zichtbare veilige tussenfases, ook op Low graphics, en ontstaan zonder onderlinge overlap.
 - **24:** Living World-terreinreacties en consequente gevolgen.
 - **25:** Boss-volgorde, isolatie, beloningen en flow.
 - **26:** Boss attacks — moeilijkheid, timings, spectaculariteit.
@@ -116,7 +116,7 @@ We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eers
 
 Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
 
-**Laatste stand:** Update 19 verbeterde de echte elementwapens; Update 20 legde hun cosmetische VFX-basis; Update 21 bracht beperkte same-element combo's en heldere evolutieroutes. **Makerbesluit over VFX: effecten hoeven nu alleen te bestaan; echte eindpolish komt later.** **Update 22** is technisch afgerond: js/combat-difficulty.js differentieert Easy/Normal/Nightmare via tactische druk, ranged/bursttelegraphs en shield-openingen. **Nightmare krijgt geen grotere horde dan Normal** en heeft minder opgeblazen HP; Flame Orbit boss-damage is bescheiden ingeperkt, net als extreem trage Frost-bossmovement. **391 tests zijn groen**; echte browser-speeltests blijven nodig. **Volgende: Update 23 — leesbare/eerlijke terreingevaren.**
+**Laatste stand:** Update 19 verbeterde de echte elementwapens; Update 20 legde hun cosmetische VFX-basis; Update 21 bracht kleine, verdiende same-element combo's en heldere evolutieroutes; Update 22 verschoof difficulty van horde-/HP-spam naar leesbare tactische dreiging. **Makerbesluit over VFX: effecten hoeven nu te bestaan, niet volledig gepolijst te zijn; definitieve art komt later.** **Update 23** is technisch afgerond: Living World-rifts waarschuwen vóór **iedere** herhaalde uitbarsting, tonen visueel het verschil tussen actieve, oplaad- en rustfases, ook op Low graphics. Nieuwe rifts zoeken een niet-overlappende plek; tot 24 permanente zones blijven mogelijk. Boss-isolatie bevriest de hazardtimer. **402 tests groen**; nog te bewijzen in browser: leesbaarheid bij 2×/3× speed, Low graphics, drukke gevechten en echt navigeren tussen rifts. **Volgende: Update 24 — Living World-gevolgen.**
 
 ## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
 
@@ -147,6 +147,17 @@ Praktisch werken we zo:
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Update 23: Terrain Hazards Overhaul technisch afgerond**
+- Branch: feature/living-world-prototype. In js/world-retaliation.js krijgen alle zes elementparen op elk van drie conqueststadia een expliciete hazardfase. De reacties zelf (18), fases 15%/50%/85% en permanente rifts blijven ongewijzigd.
+- **Fix voor oneerlijke schade:** zwaar terrein dat elke 3,8 gameseconden gedurende 1,05 seconde uitbarst, waarschuwt **ook voor herhaalde** eruptions vanaf 0,95 seconde vóór de volgende burst. Eerst waarschuwden alleen nieuw ontstane zones. Danger is pas actief nadat de countdown afloopt.
+- Op het Canvas betekenen **krimpende heldere ringen: waarschuwing**, **volle gekleurde zone met centrumring: actief**, **dof/gestippeld: een burst is in rustfase en momenteel veilig**. Ook op Low zijn de basiswaarschuwingen zichtbaar; high krijgt extra elementdetails. js/render.js geeft de viewport door om offscreen-rifts niet te tekenen.
+- Nieuwe rifts worden in oplopend ruimere ringen geplaatst zonder op oude gevarenzones te stapelen of direct op de speler te ontstaan. Alle 24 permanente fasezones blijven technisch mogelijk. Boss-isolatie blijft gerespecteerd; rift-timers pauzeren tijdens bosses. Wapen-terreinsporen worden niet plots gevaarlijk.
+- Leesbaar inspecteerbaar in getWorldRetaliationStatus(): warningPhase, secondsUntilChange en currentlyDangerous. Dit geeft developer/browser-QA precieze fase-informatie.
+- Bewijs: **402/402 geslaagde automatische tests** en syntax groen: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39151060369. 11 nieuwe tests dekken alle 18 reacties, warning → active, repeat/recovery/charge, Low waarschuwingen, afstandsculling, 24 zones zonder overlap en pausestand.
+- **Nog niet bewezen:** echte browser-vibe / dodgemogelijkheid, 2×/3× speed, meerdere rifts op het scherm, visuele prioriteit naast andere aanvallen, late-run performance en een volledige 25–30 min Standard-run.
+- Mijlpaal: **13/20 = 65% van geplande updates**, géén subjectieve gamekwaliteit.
+- **Volgende Update 24:** de gevolgen van invasie-element versus verdedigde wereld, bosswins en dynamische terreingedragingen duidelijker merkbaar maken; geen grote eind-VFX-polish of nieuwe vijandenspam.
 
 **18-10-2026 — Update 22: Weapon & Enemy Balance technisch afgerond**
 - Werkbranch: feature/living-world-prototype. Nieuwe js/combat-difficulty.js; wijzigingen in js/enemies.js, js/encounter-pacing.js, js/world-defense.js, js/game.js, js/elemental-combat.js, index.html en tests.
