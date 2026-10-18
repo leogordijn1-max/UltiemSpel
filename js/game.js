@@ -1051,10 +1051,7 @@ function update(dt) {
         memeActive = window.updateMemeEncounter?.(e, time, dt, player, encounterHooks) || false;
         // Beau keeps the normal shotgun and charge; dedicated showcase
         // attacks replace his original small Hound's Ambush ability.
-        const specialActive = beauActive || shadeActive || bellActive || memeActive || (
-          !e.isFinalBoss || e.isFinalBoss ? false :
-          window.updateBossCombat?.(e, time, player, encounterHooks)
-        );
+        const specialActive = beauActive || shadeActive || bellActive || memeActive;
         if (!specialActive && !e.isFinalBoss && e.variant !== 0 && e.variant !== 1 && e.variant !== 2)
           window.updateGuardianWorld?.(e, time, player, {
             visible: onScreen,
