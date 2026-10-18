@@ -1,0 +1,168 @@
+# SHADOW SURVIVOR — PROJECTKOMPAS & AI-OVERDRACHT
+
+> **LEES DIT EERST IN EEN NIEUWE CHAT.** Dit document bewaart niet alleen de techniek, maar vooral de **visie, spelidentiteit, gemaakte keuzes, sfeer en manier van samenwerken**. Het is bedoeld om een volgende AI zonder herstart of verkeerde aannames het project te laten voortzetten.
+>
+> **Live bron van waarheid:** GitHub-repo https://github.com/leogordijn1-max/UltiemSpel — ontwikkelbranch **feature/living-world-prototype** (tenzij die later bewust is vervangen). **MILESTONE-30.md** bevat de gedetailleerde roadmap, updatebewijzen en resterende kwaliteitschecks. Lees altijd de nieuwste GitHub-versie van beide documenten én de daadwerkelijke code voordat je wijzigingen doet.
+>
+> **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
+
+## 1. De ziel van de game — lees dit vóór de code
+
+**Shadow Survivor** (repo heet UltiemSpel) begon als een grappige, eigen HTML/JavaScript survivor-roguelike met bekende/meme-achtige personages, maar moet uitgroeien tot een **echt leuk, uitdagend en onderscheidend spel**. Niet alleen meer wapens, meer vijanden of grotere cijfers toevoegen. We willen een spel dat je onthoudt omdat **de wereld op je reageert** en omdat gevechten echt iets voorstellen.
+
+**De unieke omkering:** de speler is vanuit het perspectief van de spelwereld eigenlijk de indringer/verwoester. De zogenaamde vijanden zijn de verdedigers van hun thuiswereld. Terwijl jij sterker wordt, blijft de wereld niet passief: ze verdedigt zichzelf, verandert en reageert op de schade die je aanricht. Dit mag grappig, absurd en een beetje duister zijn, zonder dat de gameplay onduidelijk wordt. De werktitel voor dit onderscheidende systeem is **The Living World**.
+
+De ambitie is een **desktopgerichte, ongeveer 25–30 minuten durende Standard-run** die op Normal uitdagend maar leerbaar voelt. Het is de eerste game van de maker; focus op **daadwerkelijk speelplezier en originaliteit**, niet op het zo snel mogelijk releasen op Steam. Graphics mogen iteratief groeien, maar de aanvallen, personages en wereld moeten uiteindelijk spectaculair en samenhangend aanvoelen.
+
+### Ontwerpprincipes waar we niet zomaar van afwijken
+1. **Kwaliteit boven hoeveelheid.** Geen vijandenspam als makkelijke moeilijkheidsknop. Liever kleine herkenbare teams met rollen, synergie, waarschuwingen, tegenmaatregelen en ademruimte.
+2. **Spectaculair én fair.** De speler moet gevaar kunnen lezen, maar niet zo eenvoudig alles ontwijken dat bossfights betekenisloos worden. Grote aanvallen moeten er ziek uitzien en vragen om echte beweging/timing.
+3. **Een wereld met geheugen.** Jouw element en run hebben waarneembare gevolgen. De spelwereld is meer dan een decor of een willekeurige hazardgenerator.
+4. **Duidelijke build-keuzes.** Drie relevante wapens binnen één element, zichtbare upgradeprogressie en maximaal twee betekenisvolle evoluties in een Standard-run. Geen oude, niet-selecteerbare systemen als nieuwe feature verkopen.
+5. **Itereren op speelgevoel.** Automatische tests zijn essentieel, maar zeggen niet of een aanval er tof uitziet, een boss uitdagend is, XP goed valt of een hele run leuk blijft. Echte speeltestfeedback van de maker weegt zwaar.
+
+## 2. De wereld / het verhaal dat we met gameplay vertellen
+
+### The Living World
+- De wereld heeft een **dominante elementtoestand**; de speler kiest per run een **eigen invasie-element**. **Element kiezen verandert NIET meteen de wereld.**
+- Na de eerste, tweede en derde normale Guardian/boss-overwinning groeit de invasie naar **15%, 50% en 85%**. Na de eindoverwinning kan dat **100% permanent** worden.
+- Tijdens een run mogen lokale sporen ontstaan (bijv. ijs, brandplekken, kraters, watervlaktes, elementaire scheuren). De **definitieve verandering van de dominante wereld** wordt pas na een gewonnen run voor volgende runs opgeslagen. Bij verlies herstelt de verdedigde wereld.
+- Er zijn **zes gerichte invasie/wereld-combinaties** voor Fire, Water en Frost (richting maakt uit) en **drie escalatiefasen** met verschillende terreinreacties: in de huidige code **18 reacties**. Niet behandelen als 18 verschillende, handmatig geplaatste permanente niveaus.
+- Tegenstanders en Guardians mogen zich aanpassen aan de elementaire indringer. De verdediging is een reactie op wat de speler doet, niet een los, willekeurig systeempje.
+- De humoristische lore is belangrijk: de speler denkt de held te zijn, maar de vijanden redden eigenlijk hun wereld van de speler. Laat dat steeds subtiel terugkomen in gevechten, visuele verandering, meldingen en eventueel later de eindrunreflectie.
+- Houd **tijdelijke lokale sporen**, **reactief terrein tijdens de run** en **permanent opgeslagen dominante wereld** conceptueel apart.
+
+### Huidige element-loadouts — harde afspraak
+De normale Standard/Endless-weaponselectie geeft **exact drie wapens van één gekozen element**, waarvan één startwapen en twee via level-up ontgrendeld:
+
+| Element | Huidige selecteerbare wapens |
+| --- | --- |
+| Fire | Flame Cone (flame), Fireball (fireball), Flame Orbit (flameOrbit) |
+| Water | Water Bolt (waterBolt), Tidal Wave (tidalWave), Whirlpool (whirlpool) |
+| Frost | Frost Orb (frost), Ice Shards (iceShards), Glacial Pulse (glacialPulse) |
+
+**LET OP — de fout die eerder is gemaakt:** Arcane Bolt en Boomerang zijn **sinds de elementenupdate geen selecteerbare wapens meer** in een normale run. Er bestaat nog historische code voor Arcane, Boomerang, Bomb, Chain enz. voor legacy-/testdoeleinden. **Werk bij nieuwe gameplay-/VFX-updates eerst aan de negen hierboven genoemde daadwerkelijk speelbare wapens**, tenzij de maker uitdrukkelijk beslist dat het wapenaanbod verandert. Gebruik daarvoor de echte selectie- en upgradecode, niet alleen de oude README of de weaponCatalog.
+
+De maker wil herkenbaar verschillende aanvalstypen, geen negen cosmetische varianten van hetzelfde projectiel. Fire moet branden/druk zetten, Water moet verplaatsen/stromen/controle geven, Frost moet vertragen/bevriezen/ruimte beheersen. De concrete uitvoeringen en evoluties staan in de code en kunnen met feedback worden verbeterd.
+
+### Evolutions
+- Normal/Standard richt zich op **maximaal twee evoluties per run**, tijdsmijlpalen **10:00** en **17:00**.
+- Een evolutie moet **verdiend** worden: normaal gesproken wapenlevel 5 + juiste support op level 3 + minstens één verslagen boss + het tijdsvenster. Geen gratis evolutie om een simulatie te laten slagen.
+- Drie level-upkeuzes, waar mogelijk een relevante upgrade richting een echte evolutie; reservewapens blijven ontgrendelbaar.
+- Balansdoel: twee evoluties moeten bij redelijk actieve gameplay **haalbaar** zijn zonder extra vijandenspam. Dat moet nog in volledige browserruns bevestigd worden.
+
+### Bosses / Guardians — heel belangrijk voor de sfeer
+Gewenste volgorde Standard: **Beau de Hond → Mourning Shade → Bell Tower → The Last Meme** (de finale rond minuut 25). De daadwerkelijke volgorde is geïmplementeerd maar moet nog met een volledige run worden bewezen.
+
+**Boss fights zijn hun eigen evenement:** geen gewone vijanden in de arena, **behalve minions die de boss zelf bewust oproept**. Guardians hebben veel HP, meerdere fases, een paar relatief gewone aanvallen en daarnaast een paar **extreem opvallende, grote, moeilijk te ontwijken signature-aanvallen**. Dus NIET alleen simpele projectielwaaiers waar je zonder nadenken tussen gaat staan. De gebruiker wees die te makkelijke boss-aanvallen expliciet af.
+
+Gekozen richting voor **Guardian Powers: COMBINATIE C — arena-transformaties plus gigantische aanvallen**. Grote patronen, veranderende veilige/gevaarlijke stukken terrein, indrukwekkende visuele aankondigingen en een voelbare counterattack-window nadat je een zware aanval overleeft. Telegraphs moeten eerlijk blijven: gevaar duidelijk zichtbaar, doelen vergrendeld voordat de klap valt, geen gratis onverwachte schade. Maar maak de patronen niet triviaal; de speler moet kunnen leren en vervolgens goed reageren.
+
+Meme-identiteit: Beau de Hond (met MarioVis-visprojectielen), Zombie Mike, Emmer Mayo/The Mayo Master en Eiad Bom vormen een deel van de humor, eigen personages en kunst. Bestaande eigen assets niet zomaar vervangen. De filmische main menu-stijl en de themakeuze **Original/Friends** bestaan in het menu, maar een complete alternatieve assetset is **nog niet** gerealiseerd.
+
+## 3. Hoe deze game aan moet voelen
+
+- Aan het begin duidelijk en uitnodigend; later gevaarlijker en spannender, niet alleen drukker.
+- Goede beweging en dash: snel reageren, skill-based uitwijkmogelijkheden, logische bewegingsrichting en zichtbare impact.
+- Verschillende vijandrollen (schild, ranged, pouncer, binder, crusher, etc.) laten je tactisch prioriteiten stellen. Een schild dat draait moet **daadwerkelijk naar de speler draaien**, niet alleen visueel lijken te draaien; in Update 16 is hiervoor een 16-richtingenfix gemaakt.
+- Vijandenteams hebben herkenbare combinaties en daarna herstelpauzes; houd de arena leesbaar.
+- Schade voelt als schade: goede hitfeedback, animaties, scherpe VFX, passende SFX, niet te veel visuele ruis.
+- Hoge FPS en goed gedrag in drukke situaties blijven nodig. Ook in late game geen ongecontroleerde objectspam.
+- Easy / Normal / Nightmare moeten elk logisch aanvoelen. **Normal** is het belangrijkste balansdoel.
+- Bestaande features zoals 1×/2×/3× speed, dash, level-ups, characters, unlocks, Collection, records en Endless behouden, behalve als samen wordt besloten ze te veranderen.
+
+## 4. Waar de echte code staat
+
+Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De scripts gebruiken gedeelde globale state en worden via **index.html in afhankelijkheidsvolgorde** geladen. Verkeerde scriptvolgorde kan ongemerkt problemen geven.
+
+| Onderdeel | Begin bij |
+| --- | --- |
+| Scriptvolgorde, UI | index.html |
+| Hoofdloop, spawns, bossplanning, runstate | js/game.js |
+| Upgrades, recepten, level-ups | js/upgrades.js |
+| Huidige elementkeuze / actieve loadouts | js/elements.js, js/controls.js, js/cinematic-menu.js |
+| Speelbare elementaire wapens | js/elemental-combat.js; bestaande Flame/Frost in js/weapons.js |
+| Mikken, voorspellen, swept hit | js/weapon-aim.js |
+| Living World en permanente conquest | js/world-state.js, js/living-world.js |
+| Reactief terrein, elementreacties, verdediging | js/world-retaliation.js, js/world-visuals.js, js/world-defense.js |
+| Adaptatie vijanden en Guardian | js/enemy-adaptation.js, js/guardian-adaptation.js |
+| Boss-isolatie / bijzondere patronen | js/boss-isolation.js, js/boss-combat.js |
+| Specifieke bosses | js/beau-encounter.js, js/shade-encounter.js, js/bell-encounter.js, js/meme-encounter.js |
+| Teams, waves, encounters, telegraphs | js/encounter-pacing.js, js/encounter-rhythm.js, js/encounter-tactics.js, js/enemy-archetypes.js |
+| Movement, feedback, rendering, geluid | js/player-movement.js, js/hit-feedback.js, js/render.js, js/audio.js |
+| Sandbox / testen zonder permanente save | js/developer-mode.js |
+| QA, progressie, storage | tests/, .github/workflows/, js/progression.js, js/storage.js |
+
+**README.md beschrijft deels een oudere spelversie** en bevat bijvoorbeeld oude wapen- en evolutieclaims. Vertrouw voor actuele gameplay méér op de live code + tests + dit kompas + MILESTONE-30.md. Maak documentatie weer consistent wanneer dat bij de update hoort.
+
+## 5. Ontwikkelstrategie: 100 updates als richtlijn, maar geen nepvoortgang
+
+We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
+
+**Actuele afgesproken roadmap (na Update 19):**
+- **20:** Weapon VFX: visuele kwaliteitslat voor de huidige negen elementwapens (minstens een overtuigende kernset).
+- **21:** Wapenkeuzes, evolutions, synergie en feedback.
+- **22:** Balans wapens en vijanden per moeilijkheid.
+- **23:** Eerlijk leesbare wereldterreingevaren.
+- **24:** Living World-terreinreacties en consequente gevolgen.
+- **25:** Boss-volgorde, isolatie, beloningen en flow.
+- **26:** Boss attacks — moeilijkheid, timings, spectaculariteit.
+- **27:** HUD en combat-UI: leesbaarheid.
+- **28:** FPS, performance, memory en stabiele spawns.
+- **29:** Volledige Normal-run(s), bugs en polish.
+- **30:** Mijlpaalreview: Combat & Gameplay 2.0 en besluit over volgende fase.
+
+Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
+
+**Laatste stand:** Update 19 is **ook gerepareerd na feedback van de maker**: voorspellend mikken en nauwkeuriger collisions gelden nu voor **Fireball, Water Bolt, Ice Shards**, dus daadwerkelijk kiesbare wapens. De oorspronkelijke poging focuste ten onrechte op Arcane/Boomerang. Volgens het milestoneverslag werden na de fix **365 tests** groen; de meest recente branch-run is groen. **Update 20 is nog niet gestart** op de vastgelegde stand van dit document.
+
+## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
+
+Communiceer **in het Nederlands**, informeel, als een enthousiaste co-creator. De gebruiker praat graag met woorden als **maat, bro, neef, chef, happa, volgendeeee**. Een energieke stijl mag, zolang de inhoud scherp blijft. Geen stijve projectmanagerpraat, geen eindeloze herhaling, geen nep-enthousiasme over half werk. Juist de combinatie van **creatieve ambitie + technische uitvoering + eerlijke feedback** maakt de samenwerking leuk.
+
+Praktisch werken we zo:
+1. De maker zegt bijvoorbeeld **'volgende update'**. De AI controleert **eerst de actuele GitHub-branch**, de huidige roadmap en de actieve gameplaycode.
+2. De AI bouwt de volgende **afgesproken update echt**, met een concrete zichtbare/spelbare verbetering. Niet alleen ideeën opschrijven of een plan geven als uitvoering gevraagd wordt.
+3. Zo nodig worden **gerichte tests** toegevoegd. Controleer JS-syntax en de bestaande suite/CI. Een melding 'tests groen' is uitsluitend juist als die checks daadwerkelijk succesvol draaiden.
+4. Werk normaal op **feature/living-world-prototype** of de later overeengekomen werkbranch. **Niet ongemerkt naar main overschakelen**, niet blind mergen of force-pushen. Controleer de actuele head vóór writes.
+5. Werk bij dezelfde update óók **MILESTONE-30.md en DIT PROJECT-KOMPAS** bij, met correcte voortgang en nieuwe belangrijke ontwerpbeslissingen/feedback. Houd dat bij voorkeur in dezelfde werkcyclus.
+6. Rapporteer bondig: **Update N / 30**, **X/20 en percentage planningsvoortgang**, wat er echt veranderd is, bewijs/tests, welke browsertest nog openstaat, volgende update.
+7. De maker **test zelf** en geeft feedback. Bugs, ontbrekende trefzekerheid, te makkelijke bosses, verkeerde loadouts of ontbrekende sfeer moeten serieus worden genomen — pas aan, niet wegredeneren.
+8. Kleine extra correcties mogen met een lopende update mee als de gebruiker daarom vraagt. Een reparatie wordt **niet artificieel als extra update geteld**. Houd de teller eerlijk.
+
+**Belangrijk:** AI kan GitHub niet zelfstandig tussen chats door controleren of bijwerken. Dit bestand wordt bijgewerkt **wanneer er in een actieve chat een update wordt uitgevoerd**, niet automatisch op de achtergrond. In een nieuwe chat: vraag de AI expliciet beide documenten te lezen en in toekomstige updatecommits bij te werken.
+
+## 7. Checklist voor iedere toekomstige game-update
+
+- [ ] De huidige branch/head en MILESTONE-30.md gelezen.
+- [ ] Zeker dat de beoogde feature **speelbaar/bereikbaar** is vanuit het huidige element-/runmenu.
+- [ ] Geen fundamentele visie of eerder besloten beperking stilzwijgend teruggedraaid.
+- [ ] Relevante code, scriptvolgorde en oude tests op regressies gecontroleerd.
+- [ ] Nieuwe tests/CI-resultaten eerlijk vermeld; browsertest niet als gedaan voorgesteld als alleen Node-tests liepen.
+- [ ] MILESTONE-30.md geactualiseerd met bewijs, voortgang en open punten.
+- [ ] PROJECT-KOMPAS.md geactualiseerd **indien status, ontwerpbeslissing, architectuur, spelvisie of open risico veranderde**; werk ten minste het statusblok en logboek bij bij elke update.
+- [ ] Afgeronde update aan de gebruiker samengevat inclusief de echte progressiestand.
+
+### Update-log voor contextoverdracht (nieuwste bovenaan)
+Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Initieel overdrachtsmoment / na Update 19**
+- Branch: feature/living-world-prototype; geverifieerde head vóór aanleg: 65f0700.
+- Laatste update: 19, inclusief fix voor de negen echte Fire/Water/Frost-wapens.
+- Roadmap: 9/20 = 45% van geplande stappen naar Update 30.
+- Tests: CI groen; milestone vermeldt 365 geslaagde automatische tests na de fix. Volledige Normal-runs en daadwerkelijke balans-/feeltests nog open.
+- Belangrijkste ontwerpwaarschuwing: **Arcane Bolt en Boomerang niet als huidige normale wapens behandelen**.
+- Volgende: **Update 20 — Weapon VFX**, met focus op leesbare, spectaculaire visuele feedback van de huidige elementwapens.
+- Nog open voor milestone: echte volledige bossreeks, twee behaalde evoluties in Normal, balans van moeilijke tactische gevechten, boss-spectaculariteit, late-game FPS en meerdere echte runs.
+
+## 8. Voor de volgende AI: wat te doen bij het eerste bericht
+
+**Als de maker zegt 'we gaan verder met de game' of 'volgende update':**
+1. Open de GitHub-repo en verifieer de **nieuwste** branch/head. Begin niet automatisch met oude main.
+2. Lees PROJECT-KOMPAS.md én MILESTONE-30.md volledig, inclusief nieuwste log en correcties. De status in deze tekst is een **momentopname**; recente commits kunnen intussen verder zijn.
+3. Bekijk de bestanden die het volgende geplande onderdeel in werkelijkheid aansturen.
+4. Respecteer de visie: **Living World, vijanden als wereldverdedigers, drie wapens per element, boss-isolatie, spectaculaire Guardian Powers, vaardigheidsgerichte gevechten, echte speeltests en onze informele samenwerking**.
+5. Voer de gevraagde update uit in GitHub, check tests en werk **beide documenten** mee bij.
+6. Vraag de maker niet eerst om de hele vorige chat opnieuw uit te leggen. Dit document bestaat juist om dat te voorkomen.
+
+**De kern in één zin:** bouw geen generieke Vampire Survivors-kloon met méér chaos; bouw een grappig-duistere survivor waarin de **wereld terugvecht, de speler haar verandert, de bosses memorabel zijn en iedere update merkbaar dichter bij een bijzonder spel brengt**.
