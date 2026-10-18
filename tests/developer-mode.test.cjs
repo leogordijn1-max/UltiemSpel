@@ -159,7 +159,7 @@ test("ending a test run discards modified in-memory career progression", () => {
   assert.equal(t.disk.get("shadowProgress"), '{"points":42}');
 });
 
-test("Shift + K panel pauses and resumes without opening a normal level-up screen", () => {
+test("L panel pauses and resumes without opening a normal level-up screen", () => {
   const t = environment();
   t.enable();
   t.start();
@@ -213,7 +213,7 @@ test("element selection remains a per-run override, never alters saved preferenc
   assert.equal(t.context.storageGet("shadowRunElement", "fire"), "fire");
 });
 
-test("deleting a sandbox boss keeps Shift + K actions and resumes on close", () => {
+test("deleting a sandbox boss keeps L actions and resumes on close", () => {
   const t = environment();
   t.enable();
   t.start();
@@ -239,20 +239,20 @@ test("sandbox boss kills do not open the gameplay reward overlay", () => {
   assert.match(source,/!killedFinalBoss && !window\.isDeveloperRun\?\.\(\)\) showBossReward\(\)/);
 });
 
-test("Shift + K toggles developer panel and F9 no longer intercepts keyboard input", () => {
+test("L toggles developer panel and F9 no longer intercepts keyboard input", () => {
   const t = environment();
   t.enable();
   t.start();
   let prevented = 0;
-  const key = value => ({ key:value, code:value==="K"?"KeyK":value, ctrlKey:false, shiftKey:value==="K", repeat:false,
+  const key = value => ({ key:value, code:value==="L"?"KeyL":value, ctrlKey:false, shiftKey:false, repeat:false,
     preventDefault(){prevented++}, stopImmediatePropagation(){} });
   t.listeners.keydown(key("F9"));
   assert.equal(t.document.getElementById("developerPanel"), null);
   assert.equal(prevented,0);
-  t.listeners.keydown(key("K"));
+  t.listeners.keydown(key("L"));
   assert.ok(t.document.getElementById("developerPanel"));
   assert.equal(t.context.paused,true);
-  t.listeners.keydown(key("K"));
+  t.listeners.keydown(key("L"));
   assert.equal(t.document.getElementById("developerPanel"), null);
   assert.equal(t.context.paused,false);
   assert.equal(t.context.gameState,"playing");
