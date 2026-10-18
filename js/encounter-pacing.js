@@ -12,6 +12,15 @@
     const adjustment = difficulty === "nightmare" ? 4 : difficulty === "easy" ? -3 : 0;
     return Math.min(MAX_LIVE, Math.max(15, base + adjustment));
   }
+  // Threat-based soul rewards replace the XP previously earned from horde spam.
+  // Tactical enemies take much more effort to defeat, so each kill matters more.
+  function xpMultiplier(growthSeconds=0,source="patrol") {
+    const elapsed=Math.max(0,Number(growthSeconds)||0);
+    if(source==="swarm")return .44;
+    if(source==="wave")return 2.6+Math.min(1.5,elapsed/800);
+    if(source==="defense")return 2.0+Math.min(1.5,elapsed/850);
+    return 2.8+Math.min(2.0,elapsed/600);
+  }
   function ambientInterval(growthSeconds = 0, difficulty = "normal") {
     const time = Math.max(0, Number(growthSeconds) || 0);
     // Ambient spawns become rarer as tactical formations get more demanding.
@@ -85,7 +94,7 @@
       e.speed*=1.18;
       e.damage*=1.26+Math.min(.22,growthSeconds/2100);
       e.encounterRole="patrol";
-      e.xpValueMultiplier=2.15;
+      e.xpValueMultiplier=xpMultiplier(growthSeconds,"patrol");
       window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
       // A group identity is needed even if the optional skill module is absent.
       e.encounterGroup ||= tacticGroup || ("director-"+(patrols+1));
@@ -121,6 +130,7 @@
   window.resetEncounterPacing=reset;window.clearEncounterPacing=clear;
   window.updateEncounterPacing=update;window.spawnEncounterPatrol=spawnPatrol;
   window.encounterPopulationCap=populationCap;window.encounterAmbientInterval=ambientInterval;
+  window.encounterXpMultiplier=xpMultiplier;
   window.encounterAmbientLimit=ambientLimit;window.encounterActiveGroups=groups;
   window.encounterCanStart=canStart;window.encounterMaxGroups=maxGroups;
   window.encounterSwarmLimit=48;
