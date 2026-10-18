@@ -35,6 +35,21 @@ test("planned tactical packs evolve through all five unlock stages",()=>{
     assert.ok(plan.members.every(m=>typeof m.tactic==="string"&&m.tactic.length>0));
   }
 });
+test("Developer Mode unlocks preview more advanced tactical groups immediately",()=>{
+  const h=harness();
+  h.window.isDeveloperRun=()=>true;
+  assert.equal(h.window.chooseTacticalEncounter(0,0).name,"BREAK THE LINE");
+  assert.equal(h.window.developerUnlockNextEnemy(0),true);
+  assert.equal(h.window.chooseTacticalEncounter(0,0).name,"SUPPRESS & POUNCE");
+  assert.equal(h.window.developerUnlockNextEnemy(0),true);
+  assert.equal(h.window.chooseTacticalEncounter(0,0).name,"HAMMER & ANVIL");
+  assert.equal(h.window.developerUnlockNextEnemy(0),true);
+  assert.equal(h.window.chooseTacticalEncounter(0,0).name,"VOLATILE TRAP");
+  assert.equal(h.window.developerUnlockNextEnemy(0),true);
+  assert.equal(h.window.chooseTacticalEncounter(0,0).name,"LAST DEFENSIVE LINE");
+  h.window.resetEnemyProgression();
+  assert.equal(h.window.chooseTacticalEncounter(0,0).name,"BREAK THE LINE");
+});
 test("three distinct plans per progression stage, each with counterplay hints",()=>{
   const h=harness();
   for(const time of [0,180,360,540,720]){
