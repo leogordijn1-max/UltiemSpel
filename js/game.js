@@ -1465,7 +1465,12 @@ function update(dt) {
         previousBulletX,previousBulletY,b.x,b.y,e,hitRadius) ??
         dx*dx+dy*dy < hitRadius*hitRadius;
       if (!b.hit.has(e) && collision) {
-        damage(e, b.type === "fish" && e === boss ? b.d * 0.55 : b.d, b);
+        const baseBulletDamage=b.type === "fish" && e === boss ? b.d * 0.55 : b.d;
+        const frostCombo=b.type==="frost"
+          ? window.triggerElementalSynergy?.(e,"frost","frost",baseBulletDamage,time,e===boss)
+          : null;
+        damage(e,frostCombo?.damage ?? baseBulletDamage,b);
+        if(frostCombo?.activated)window.emitWeaponVfxImpact?.("frost",e.x,e.y,time);
         b.hit.add(e);
         if (b.type === "frost") {
           b.hitTarget = e;
