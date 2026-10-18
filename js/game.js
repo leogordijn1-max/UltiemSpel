@@ -681,7 +681,7 @@ function update(dt) {
       waveTimer += waveDuration;
       const wave = spawnSpecialWave(waveNumber);
       notify(
-        `WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES`,
+        `WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES${wave.hint ? " · "+wave.hint : ""}`,
         "wave",
         4,
       );
