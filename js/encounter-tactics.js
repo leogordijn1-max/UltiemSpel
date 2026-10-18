@@ -24,6 +24,7 @@ function assign(e,position=0,groupId=null,requestedRole=null){
   e.encounterGroup=groupId||("pack-"+(++groupSequence));
   e.tacticCooldown=1.6+(position%3)*.7;
   e.tacticWarning=0;e.tacticDashTime=0;
+  e.tacticWarningDuration=0;e.tacticDashLength=0;e.tacticDashWidth=0;
   if(role==="volatile")e.burstRadius=Math.max(e.burstRadius||86,104);
   return e;
 }
@@ -147,7 +148,14 @@ function tick(e,dt,player,now,visible,hooks={}){
   if(maxDistance&&e.tacticCooldown===0&&distance>minDistance&&distance<maxDistance){
     e.tacticAngle=Math.atan2(dy,dx);
     e.tacticRadius=role==="crusher"?174:role==="binder"?158:0;
-    e.tacticWarning=role==="pouncer"?.63:role==="crusher"?.88:.78;
+    e.tacticWarning=role==="pouncer"?.68:role==="crusher"?.95:.85;
+    e.tacticWarningDuration=e.tacticWarning;
+    if(role==="pouncer"){
+      // Warn the player about a corridor, not just the centerline. The
+      // forward distance conservatively covers a full boosted dash.
+      e.tacticDashLength=Math.min(460,Math.max(270,(e.speed||80)*5.4*.58*1.35));
+      e.tacticDashWidth=(e.r||12)+(player.r||12)+4;
+    }
     return {angle:e.tacticAngle,speedMult:0};
   }
   return null;
@@ -164,20 +172,39 @@ function damageMultiplier(e,enemies,now=0){
   }
   return exposed;
 }
-function rangedVolley(e,shots,player){
-  if(e?.encounterTactic!=="crossfire"||!Array.isArray(shots)||shots.length>=316)return 0;
-  const aim=Number.isFinite(e.aimAngle)?e.aimAngle:Math.atan2(player.y-e.y,player.x-e.x);
-  let created=0;
-  const crusherWarning=e.encounterPartners?.some(ally=>
+function volleyOffsets(e){
+  const crusherWarning=e?.encounterPartners?.some(ally=>
     ally!==e&&!ally.dead&&ally.hp>0&&
     ally.encounterTactic==="crusher"&&ally.tacticWarning>0);
-  // The Crusher occupies the center; crossfire cuts off wide escape angles.
-  for(const offset of (crusherWarning?[-.57,-.29,.29,.57]:[-.38,-.14,.14,.38])){
+  return crusherWarning?[-.57,-.29,.29,.57]:[-.38,-.14,.14,.38];
+}
+function prepareVolley(e){
+  if(e?.encounterTactic!=="crossfire")return [];
+  // Commit to the warned fan BEFORE the 0.7-second aim delay. Never change
+  // four safe corridors into an untelegraphed wider volley at fire time.
+  e.tacticVolleyOffsets=volleyOffsets(e);
+  e.tacticVolleyAngle=Number.isFinite(e.aimAngle)?e.aimAngle:0;
+  return e.tacticVolleyOffsets;
+}
+function cancelVolley(e){
+  if(!e)return;
+  e.tacticVolleyOffsets=null;
+  e.tacticVolleyAngle=null;
+}
+function rangedVolley(e,shots,player){
+  if(e?.encounterTactic!=="crossfire"||!Array.isArray(shots)||shots.length>=316)return 0;
+  const aim=Number.isFinite(e.tacticVolleyAngle)?e.tacticVolleyAngle:
+    Number.isFinite(e.aimAngle)?e.aimAngle:Math.atan2(player.y-e.y,player.x-e.x);
+  const offsets=e.tacticVolleyOffsets||volleyOffsets(e);
+  let created=0;
+  for(const offset of offsets){
+    if(shots.length>=316)break;
     shots.push({type:"enemyOrb",x:e.x,y:e.y,vx:Math.cos(aim+offset)*188,
       vy:Math.sin(aim+offset)*188,speed:188,turnRate:.12,
       life:3.8,r:6,damage:6,tacticShot:true});
     created++;
   }
+  cancelVolley(e);
   return created;
 }
 function draw(e,ctx,time,quality){
@@ -210,18 +237,60 @@ function draw(e,ctx,time,quality){
     ctx.moveTo(e.x,e.y-15);ctx.lineTo(e.x,e.y+15);ctx.stroke();
   }
   if(e.tacticWarning>0){
-    const ratio=Math.min(1,e.tacticWarning/(role==="crusher"?.88:role==="binder"?.78:.63));
-    ctx.globalAlpha=.48+.4*Math.sin(time*12);
+    const duration=e.tacticWarningDuration||
+      (role==="crusher"?.95:role==="binder"?.85:.68);
+    const progress=1-Math.min(1,e.tacticWarning/duration);
+    ctx.globalAlpha=.48+.25*progress;
     if(role==="pouncer"){
-      ctx.setLineDash([8,7]);ctx.lineWidth=3;
-      ctx.beginPath();ctx.moveTo(e.x,e.y);
-      ctx.lineTo(e.x+Math.cos(e.tacticAngle)*260,e.y+Math.sin(e.tacticAngle)*260);
+      const angle=e.tacticAngle||0;
+      const forwardX=Math.cos(angle),forwardY=Math.sin(angle);
+      const sideX=-forwardY,sideY=forwardX;
+      const length=e.tacticDashLength||290;
+      const halfWidth=e.tacticDashWidth||26;
+      // The warning rectangle matches the collision width of the charge.
+      const startX=e.x,startY=e.y;
+      const endX=startX+forwardX*length,endY=startY+forwardY*length;
+      ctx.fillStyle="rgba(255,123,76,.16)";
+      ctx.strokeStyle="#ffad68";ctx.lineWidth=2.6;
+      if(quality!=="low"){
+        ctx.beginPath();
+        ctx.moveTo(startX+sideX*halfWidth,startY+sideY*halfWidth);
+        ctx.lineTo(endX+sideX*halfWidth,endY+sideY*halfWidth);
+        ctx.lineTo(endX-sideX*halfWidth,endY-sideY*halfWidth);
+        ctx.lineTo(startX-sideX*halfWidth,startY-sideY*halfWidth);
+        ctx.closePath();ctx.fill();
+      }
+      ctx.setLineDash([9,6]);ctx.beginPath();
+      ctx.moveTo(startX+sideX*halfWidth,startY+sideY*halfWidth);
+      ctx.lineTo(endX+sideX*halfWidth,endY+sideY*halfWidth);
+      ctx.moveTo(startX-sideX*halfWidth,startY-sideY*halfWidth);
+      ctx.lineTo(endX-sideX*halfWidth,endY-sideY*halfWidth);
       ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(startX,startY);
+      ctx.lineTo(startX+forwardX*length*progress,startY+forwardY*length*progress);
+      ctx.lineWidth=3.5;ctx.stroke();
+      ctx.beginPath();ctx.arc(endX,endY,halfWidth,0,TAU);ctx.stroke();
     }else if(role==="crusher"||role==="binder"){
-      ctx.beginPath();ctx.arc(e.x,e.y,e.tacticRadius,0,TAU);
+      // Two colors and a filling ring make the exact blast radius and timer
+      // legible even under Low quality and against elemental terrain.
+      const radius=e.tacticRadius||158;
+      ctx.strokeStyle=color;ctx.lineWidth=3.3;
       ctx.fillStyle=role==="crusher"?"rgba(255,97,57,.15)":"rgba(143,135,255,.12)";
-      ctx.fill();ctx.lineWidth=4;ctx.stroke();
-      ctx.beginPath();ctx.arc(e.x,e.y,e.tacticRadius*(1-ratio*.68),0,TAU);ctx.stroke();
+      ctx.beginPath();ctx.arc(e.x,e.y,radius,0,TAU);
+      ctx.fill();ctx.stroke();
+      ctx.strokeStyle="#fff3d3";ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(e.x,e.y,radius*(.18+progress*.82),0,TAU);ctx.stroke();
+      if(quality!=="low"){
+        ctx.strokeStyle=color;ctx.globalAlpha=.7;
+        for(let i=0;i<8;i++){
+          const a=i*TAU/8;
+          ctx.beginPath();
+          ctx.moveTo(e.x+Math.cos(a)*(radius-14),e.y+Math.sin(a)*(radius-14));
+          ctx.lineTo(e.x+Math.cos(a)*radius,e.y+Math.sin(a)*radius);
+          ctx.stroke();
+        }
+      }
     }
   }
   if(e.encounterTactic==="binder"&&e.tacticWarning>0&&quality!=="low"){
@@ -247,5 +316,8 @@ window.onTacticalEnemyDeath=onDeath;
 window.updateEncounterTactic=tick;
 window.encounterTacticDamageMultiplier=damageMultiplier;
 window.encounterTacticVolley=rangedVolley;
+window.prepareEncounterTacticVolley=prepareVolley;
+window.cancelEncounterTacticVolley=cancelVolley;
+window.encounterTacticVolleyOffsets=volleyOffsets;
 window.drawEncounterTactic=draw;
 })();
