@@ -119,7 +119,7 @@
       active:true,variant:state.variant,name:NAMES[state.variant],
       stage:state.stage,beat:state.beat,strikes:state.strikes,
       centerX:state.centerX,centerY:state.centerY,
-      angle:state.angle,warningLength:state.warningLength,
+      angle:state.angle,lockAt:state.lockAt,warningLength:state.warningLength,
       warningUntil:state.stage==="warning"?state.until:0
     };
   }
