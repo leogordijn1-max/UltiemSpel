@@ -1,9 +1,9 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 16 — Unique Enemy Archetypes & 16-Direction Shields.
-**Volgende update:** 17 — Enemy skills: leesbare telegraphs en combinaties.
-**Planningvoortgang:** **6 / 20 afgerond = 30%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 17 — Enemy Attacks & Telegraph Overhaul: nauwkeurige corridors, schietbanen en aftellende gevarenzones.
+**Volgende update:** 18 — Encounter director: ritme, spanning en rustige momenten.
+**Planningvoortgang:** **7 / 20 afgerond = 35%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -28,7 +28,7 @@
 | 14 | XP/evoluties: XP-model, keuzes en mijlpalen | AFGEROND · 299/299 tests · browser-run open |
 | 15 | Kleine groepen: attack timing, focus & AI | AFGEROND · 311/311 tests · speeltest open |
 | 16 | Unieke archetypes en 16-richtingen-schilden | AFGEROND · 323/323 tests · speeltest open |
-| 17 | Enemy skills: leesbare telegraphs en combinaties | OPEN |
+| 17 | Enemy Attacks & Telegraph Overhaul | AFGEROND · 334/334 tests · speeltest open |
 | 18 | Encounter director: ritme, spanning, rustige momenten | OPEN |
 | 19 | Weapon feel: projectielen, range, precisie | OPEN |
 | 20 | Weapon VFX: eerste visuele kwaliteitslat | OPEN |
@@ -130,3 +130,18 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatige speeltest nog open:** loop rondom een Bulwark of verdediger en kijk of het schild richting jou roteert; probeer projectielen uit verschillende richtingen; test Zombie Mike's grondslag en Runner-feint en vergelijk de ingame encyclopedie. Met volledige browserruns evalueren we vervolgens hoe fair de abilities in echte encounters aanvoelen.
 
 **Volgende stap (Update 17):** nog betere leesbaarheid van vijandelijke aanvalstelegrafie en combinaties, zodat uitdaging niet afhankelijk is van verrassingsschade.
+
+## Update 17 — afgerond (18 oktober 2026)
+**Resultaat:** vijandelijke gevaren worden vóór hun uitvoering nauwkeuriger aangegeven, met een zichtbare aftelling. Pouncers tonen nu de **volledige breedte van hun dash-corridor** (lichaamsradius + spelersradius + marge) en een conservatieve, gebonden chargelengte in plaats van een misleidende dunne lijn. De chargehoek ligt vanaf het begin van de waarschuwing vast. Crusher en Binder hebben voortaan helder gemarkeerde cirkels die naar het exacte impactmoment vollopen. Zombie Mike's stomp en de Burstling-explosie tonen een extra voortgangsring en optioneel randmarkeringen. Zelfs op Low graphics blijven de hoofdcontouren zichtbaar.
+
+**Crossfire:** de Ranged Shade toont nu vooraf **de centrumschotlijn plus de vier tactische fanbanen**, en een radiale tijdindicator. De extra schietrichtingen worden vastgelegd zodra de 0,7s waarschuwing begint. Een Crusher die pas tijdens die waarschuwing start/stopt, kan de fan daarom niet onverwacht veranderen. Wanneer de vijand de attack range verlaat worden de geplande richtingen gewist; er schiet dan niets alsnog buiten beeld.
+
+**Fairness en performance:** waarschuwingen 0,68s Pouncer, 0,85s Binder, 0,95s Crusher; geen nieuw type, nieuwe vijanden of projectielspam. De bestaande limieten op projectielen en encounters blijven van kracht. Boss-aanvallen en XP blijven ongewijzigd. Nieuwe visuals zijn Canvas-paden binnen de bestaande renderingloop, geen extra object-/particlespawns.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39143053126 — **334 tests geslaagd, 0 gefaald**, waaronder 11 nieuwe regressietests voor chargewidth, echte bewegingsrichting, waarschuwingen op Low/High, Crossfire-windups, vergrendelde aanvalshoeken, projectile-caps en boss-/spawngrenzen.
+
+**Planningvoortgang:** **7 / 20 = 35%** van geplande updates naar Combat & Gameplay 2.0, **niet** een kwaliteitsscore.
+
+**Handmatig nog te testen:** via F9 een Tough Patrol oproepen. Ontwijk de aangewezen Pouncer-corridor, controleer of de doelen van Crossfire daadwerkelijk overeenkomen met de vooraf getoonde richtingen en of Crusher, Binder, Burstling en Zombie Mike genoeg reactietijd geven bij 1x én 2x/3x snelheid. Controleer Low en High graphics in een drukke late-game groep. Nog geen volledige browsertest uitgevoerd.
+
+**Volgende stap (Update 18):** Encounter Director: gecontroleerde opbouw van spanning, variatie in combinaties, rustige momenten en minder onderlinge overlap zonder enemy spam.
