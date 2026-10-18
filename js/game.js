@@ -1716,6 +1716,9 @@ function update(dt) {
   window.updateHitFeedback?.(dt,time);
   shake = Math.max(0, shake - 35 * dt);
   checkRunAchievements();
+  // A fully earned evolution is offered at its milestone, even if no XP
+  // pickup happens right afterward. It never awards the prerequisite levels.
+  if(!boss && !paused)window.offerEarnedEvolution?.();
   if (hudUpdateTimer >= 0.12) {
     hudUpdateTimer = 0;
     hud();
