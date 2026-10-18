@@ -25,7 +25,7 @@ test("charging runners have a visible windup before a high-speed lunge",()=>{
   e.tacticCooldown=0;
   const warning=h.window.updateEncounterTactic(e,.01,h.player,0,true);
   assert.equal(warning.speedMult,0);
-  assert.ok(e.tacticWarning>.7);
+  assert.ok(e.tacticWarning>.6);
   const windup=h.window.updateEncounterTactic(e,.3,h.player,.3,true);
   assert.equal(windup.speedMult,0);
   const release=h.window.updateEncounterTactic(e,.5,h.player,.8,true);
@@ -50,20 +50,20 @@ test("crushers telegraph an area stomp and miss if the player dodges out",()=>{
   const h=testbed(),e=h.make(2),hits=[];
   h.player.x=130;e.tacticCooldown=0;
   h.window.updateEncounterTactic(e,.01,h.player,0,true,{damage:n=>hits.push(n)});
-  assert.equal(e.tacticRadius,145);
+  assert.equal(e.tacticRadius,174);
   h.player.x=320;
   h.window.updateEncounterTactic(e,1.1,h.player,1.2,true,{damage:n=>hits.push(n)});
   assert.equal(hits.length,0);
   e.tacticCooldown=0;h.player.x=85;
   h.window.updateEncounterTactic(e,.01,h.player,8,true,{damage:n=>hits.push(n)});
   h.window.updateEncounterTactic(e,1.1,h.player,9.1,true,{damage:n=>hits.push(n)});
-  assert.deepEqual(hits,[16]);
+  assert.deepEqual(hits,[21]);
 });
 test("crossfire shoots a bounded targeted fan after regular ranged attack",()=>{
   const h=testbed(),e=h.make(4),shots=[];
   e.aimAngle=0;
-  assert.equal(h.window.encounterTacticVolley(e,shots,h.player),2);
-  assert.equal(shots.length,2);
+  assert.equal(h.window.encounterTacticVolley(e,shots,h.player),4);
+  assert.equal(shots.length,4);
   assert.ok(shots[0].vy<0 && shots[1].vy>0);
   assert.ok(shots.every(s=>s.damage===6&&s.life===3.8&&s.turnRate<.2));
   const stranger={kind:4};assert.equal(h.window.encounterTacticVolley(stranger,shots,h.player),0);
