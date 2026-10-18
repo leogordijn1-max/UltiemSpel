@@ -6,7 +6,7 @@
 >
 > **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
 
-> **ACTUELE STAND (na Update 21, 18 oktober 2026):** Update 21 is technisch afgerond en gepusht op feature/living-world-prototype. **11/20 = 55% planningsvoortgang** naar mijlpaal 30. **381/381 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39149296644. **Volgende update: 22 — wapen- en vijandbalans voor Normal/Easy/Nightmare.** Browserplaytests en volledige runs staan nog open. Verifieer deze status telkens opnieuw aan de hand van de laatste commits.
+> **ACTUELE STAND (na Update 22, 18 oktober 2026):** Update 22 is technisch afgerond en gepusht op feature/living-world-prototype. **12/20 = 60% planningsvoortgang** naar mijlpaal 30. **391/391 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39150233474. **Volgende update: 23 — wereldterreinen: gevaren eerlijk en duidelijk maken.** Browserplaytests en volledige Normal-runs staan nog open. Verifieer telkens de nieuwste branch/commit.
 
 ## 1. De ziel van de game — lees dit vóór de code
 
@@ -101,10 +101,10 @@ Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De
 
 We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
 
-**Actuele afgesproken roadmap (na Update 21):**
+**Actuele afgesproken roadmap (na Update 22):**
 - **20 — AFGEROND (CI groen, browser-VFX-test nog open):** Eigen visuele accenten voor de negen huidige elementwapens, met render-culling en kwaliteitslimieten.
 - **21 — AFGEROND (CI groen, browser-test open):** Drie kleine, echte same-element cross-weapon combo's met een begrensde bonus en overzichtelijke evolutiepaden op upgrade-/supportkaarten.
-- **22:** Balans wapens en vijanden per moeilijkheid.
+- **22 — AFGEROND (CI groen, speeltest open):** Difficulty komt uit taktische teamstatistieken en nog leesbare timings, niet extra Nightmare-vijanden. Flame Orbit en Frost-slow tegen bosses begrensd.
 - **23:** Eerlijk leesbare wereldterreingevaren.
 - **24:** Living World-terreinreacties en consequente gevolgen.
 - **25:** Boss-volgorde, isolatie, beloningen en flow.
@@ -116,7 +116,7 @@ We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eers
 
 Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
 
-**Laatste stand:** Update 19 is gerepareerd voor de huidige wapens. Update 20 bouwde een cosmetische VFX-basis voor alle negen huidige elementwapens. **Makerbesluit na Update 20: de effecten hoeven nu nog niet geweldig of definitief gepolijst te zijn; het belangrijkste is dat ze er zijn. Later volgt nog veel VFX-polish.** **Update 21 is technisch afgerond:** js/elemental-synergy.js heeft de begrensde cross-weapon combo's Ignition/Undertow/Shatter. Wapen-/supportkaarten tonen de concrete evolution-progress en echte element-combopartners. De HUD toont een dichte ontgrendelde evolutieroute en ontbrekende boss. De huidige scripts en tests zijn aangesloten; **381 tests groen**, maar de browserplaytest van combinatiegevoel, upgradehelderheid en uiteindelijke FPS staat nog open. **Volgende: Update 22.**
+**Laatste stand:** Update 19 verbeterde de echte elementwapens; Update 20 legde hun cosmetische VFX-basis; Update 21 bracht beperkte same-element combo's en heldere evolutieroutes. **Makerbesluit over VFX: effecten hoeven nu alleen te bestaan; echte eindpolish komt later.** **Update 22** is technisch afgerond: js/combat-difficulty.js differentieert Easy/Normal/Nightmare via tactische druk, ranged/bursttelegraphs en shield-openingen. **Nightmare krijgt geen grotere horde dan Normal** en heeft minder opgeblazen HP; Flame Orbit boss-damage is bescheiden ingeperkt, net als extreem trage Frost-bossmovement. **391 tests zijn groen**; echte browser-speeltests blijven nodig. **Volgende: Update 23 — leesbare/eerlijke terreingevaren.**
 
 ## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
 
@@ -147,6 +147,16 @@ Praktisch werken we zo:
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Update 22: Weapon & Enemy Balance technisch afgerond**
+- Werkbranch: feature/living-world-prototype. Nieuwe js/combat-difficulty.js; wijzigingen in js/enemies.js, js/encounter-pacing.js, js/world-defense.js, js/game.js, js/elemental-combat.js, index.html en tests.
+- **Visie bevestigd: moeilijke gevechten = gevaarlijke kleine teams, niet méér vijandenspam of onnatuurlijk veel HP.** Normal blijft de baseline; Easy heeft lagere squadstats en langere, goed leesbare ranged/burstwaarschuwingen; Nightmare krijgt iets scherpere timing en gevaarlijkere teams, maar **niet meer gelijktijdige vijanden of meer ambient spawns** dan Normal.
+- Nightmare-HP factor verlaagd 1,28 → 1,16 (boss 1,20 → 1,16), terwijl ploegstats een beetje stijgen; normaal vijandenschadeprofiel Nightmare blijft 1,18. Ranged waarschuwing minstens 0,64 s, Burstling 0,86 s, schild laat een echt countervenster. Easy telegraphs zijn rustiger. Geen nieuwe enemy types, geen andere bossvolgorde, geen gratis XP.
+- **Wapenbijstelling, beperkt tot twee duidelijke uitschieters:** Flame Orbit heeft ×0,82 hitdamage tegen bosses (gewoon vijanden niet), Frost-slow bosses ×0,78 movement in plaats van ×0,48 (gewone vijanden behouden ×0,48).
+- Tests: 10 extra regressietests, 1 oude difficulty-snapshot bijgewerkt. **391/391 groen, 0 fouten** in https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39150233474. Dit bewijst codeverhoudingen/integratie, NIET de subjectieve ervaring.
+- Open QA: een vergelijkbare Easy/Normal/Nightmare-run (liefst ook over minuut 15), Frost tegen Guardian, Flame Orbit dichtbij een boss, reactietijd ranged/burst en impact van de kleinere Nightmare density. Geen volledige Standard-run bewezen.
+- Mijlpaal: **12/20 = 60% geplande updates**, NIET het gamekwaliteitpercentage.
+- **Volgende: Update 23 — terreintelegraphs en eerlijke reactietijd.** Uitgebreide cosmetische weapon-VFX-polish later.
 
 **18-10-2026 — Update 21: Elemental Synergy & Evolution Feedback technisch afgerond**
 - Werkbranch: feature/living-world-prototype. js/elemental-synergy.js is toegevoegd; js/elemental-combat.js, js/weapons.js, js/game.js, js/upgrades.js, index.html en tests zijn bijgewerkt.
