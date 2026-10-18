@@ -26,7 +26,8 @@ test("completed standard guardians cannot cycle back to Beau",()=>{
   assert.equal(vm.runInContext("spawnBoss()",h.context),false);
   assert.equal(vm.runInContext("bossNumber",h.context),3);
   assert.match(read("js/enemies.js"),/STANDARD_BOSS_COUNT = 3/);
-  assert.match(read("js/enemies.js"),/bossNumber\s*-\s*1\) % 3/);
+  assert.match(read("js/enemies.js"),/bossFlowOrdinaryVariant\?\.\(runMode,bossNumber\)/);
+  assert.match(read("js/boss-flow.js"),/index-5\)%ORDINARY_COUNT/);
   assert.match(read("js/game.js"),/nextBossEncounter\(/);
   assert.match(read("js/enemies.js"),/bossesDefeated>=STANDARD_BOSS_COUNT[\s\S]{0,100}FINAL_BOSS_TIME/);
 });
