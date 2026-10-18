@@ -121,5 +121,6 @@
   window.encounterPopulationCap=populationCap;window.encounterAmbientInterval=ambientInterval;
   window.encounterAmbientLimit=ambientLimit;window.encounterActiveGroups=groups;
   window.encounterCanStart=canStart;window.encounterMaxGroups=maxGroups;
+  window.encounterSwarmLimit=48;
   window.getEncounterPacingStatus=status;
 })();
