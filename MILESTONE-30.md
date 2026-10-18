@@ -4,9 +4,9 @@
 
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
-**Laatste afgeronde update:** 25 — Boss Flow Overhaul: earned drie Guardians voor The Last Meme, veilige soloarena, recovery bij bossbeloning en Beau-rotatie na Standard in Endless.
-**Volgende update:** 26 — Boss attacks: spectaculaire maar leerbare signatuur-aanvallen.
-**Planningvoortgang:** **15 / 20 afgerond = 75%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
+**Laatste afgeronde update:** 26 — Guardian Power Arena Overhaul: vier verschillende fase-3 arena-aanvallen met drie eerlijk gewaarschuwde slagen, speelbare veilige routes en echte collision.
+**Volgende update:** 27 — UI/HUD: heldere combatwaarschuwingen en leesbaarheid tijdens drukke fights.
+**Planningvoortgang:** **16 / 20 afgerond = 80%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
 **Scope:** Updates 11 t/m 30. Later mag een update worden opgesplitst wanneer echte speeltests dat nodig maken.
 
@@ -40,7 +40,7 @@
 | 23 | Wereldterreinen: gevaren duidelijk en eerlijk | AFGEROND · 402/402 tests · browser-telegraphs/feeltest open |
 | 24 | Living World: terreinreacties en duidelijke consequenties | AFGEROND · 412/412 tests · browserflow/playtest open |
 | 25 | Boss-flow: volgorde, arena-isolatie, beloningen | AFGEROND · 422/422 tests · volledige bossrun in browser open |
-| 26 | Boss attacks: reactietijd en spectaculariteit | OPEN |
+| 26 | Boss attacks: reactietijd en spectaculariteit | AFGEROND · 432/432 tests · handmatige spectaculaire bossplaytest open |
 | 27 | UI/HUD: helderheid en leesbaarheid van combat | OPEN |
 | 28 | Performance: FPS, memory en spawnstabiliteit | OPEN |
 | 29 | Volledige Normal-run tests: polish en grootste issues | OPEN |
@@ -316,3 +316,27 @@ Zie: https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39135144082
 **Handmatige browser-QA open:** doorloop Standard met Beau, Mourning Shade en Bell Tower; check soloarena, alleen door boss gesummonde minions en uitblijven van wave/spawn na reward. Wacht op The Last Meme rond minuut 25 en controleer de echte wereldverovering, finale loot en exact één victorybonus/record. Kies **CONTINUE IN ENDLESS MODE** en bevestig dat Beau de eerste terugkerende Guardian is, gevolgd door Shade en Bell. Test herstart/main menu, Developer Mode quick bosses en late boss-verslagen zonder volgordesprong.
 
 **Volgende stap — Update 26:** elke boss ten minste één of twee goed leesbare normale aanvallen en daarnaast **indrukwekkende, gevaarlijke signature-aanvallen** geven: Arena-transformaties + gigantische aanvallen (Guardian Powers). Boss fights moeten zelfstandig zijn en hun sterke aanvallen moeten aim, timing en toegankelijke dodgepaden hebben. VFX als goede basis, definitieve art-polish later.
+
+
+## Update 26 — afgerond (18 oktober 2026)
+**Doel:** de vier echte solo-bossgevechten qua dreiging en vorm naar een hoger niveau brengen. Niet alleen makkelijk te ontwijken projectielen, maar **arena-transformaties gecombineerd met grote, spelergerichte Guardian Powers**, duidelijk gemarkeerde dodgeroutes en zelfverzekerde collision. De maker wil later nog veel VFX-polish; deze update maakt de gameplay en duidelijke basis-Canvas-signaturen concreet, niet de definitieve illustratiekwaliteit.
+
+**Werkelijk gebouwd:**
+- Nieuwe zelfstandige module `js/guardian-arena-powers.js` naast de bestaande gedetailleerde modules `js/beau-encounter.js`, `js/shade-encounter.js`, `js/bell-encounter.js` en `js/meme-encounter.js`. Elke bestaande fase-3 ultimate start nu een extra **eigen arena-Set Piece**. De gewone aanvallen, bestaande unique attacks, boss-HP en soloarena zijn NIET vervangen.
+- **Beau de Hond — HOUND'S KILL ZONES:** drie reusachtige parallelle dodelijke charge-corridors; de speler moet zijwaarts uit de aanvalsweg stappen, door een brede opening tussen de gangen.
+- **The Mourning Shade — ECLIPSE OF THE LOST:** dodelijke schaduwkern en drie brede donkere zones; daartussen zijn veilige, zichtbaar open lichte sectoren waar de speler gericht heen kan bewegen.
+- **The Bell Tower — THE FINAL TOLL:** een arena-brede resonante kruisaanval (verticale en horizontale slag), met brede diagonale veilige kwadranten waar de speler naartoe moet dodgen.
+- **The Last Meme — REALITY FRACTURE:** een 5×5 rooster van enorme wisselende gevaarlijke en veilige werkelijkheidstegels; het gevaar wisselt per beat, zodat de speler telkens opnieuw positie moet kiezen.
+- **Elk van deze vier powers heeft drie grote slagen**, met aanvankelijke waarschuwing van **1,45 game-seconden**, daarna **1,08 seconde per herhaalde waarschuwing**. Het doel volgt de speler alleen tijdens de eerste 0,38 seconde en wordt vervolgens vastgezet; de aanval mag daarna niet alsnog heimelijk van richting veranderen. Alleen bij het einde van de aangekondigde waarschuwing kan een slag raken, en een andere plek dan het zichtbare gevarengebied blijft veilig.
+- Het gevaar wordt **direct met dezelfde geometriefunctie berekend als de getekende vormen**; de nieuwe aanvallen respecteren player-dash, tryDodge, bestaande invulnerability, Developer invincibility en bestaande `recordPlayerHit`/Game-Over-afhandeling. Een per-aanval getriggerde slag kan maximaal één keer damage aanbrengen. Basis damage per slag 16/18/20 (finale 19/21/23), geschaald met de bestaande difficulty enemyDamage, niet een aparte onbegrensde multiplier.
+- **Arena-getransformeerde backdrop** (Fire/Shadow/Bell/Reality) én groot, contrastrijk contour van werkelijk gevaarlijke zones. De impactring en alle gevaarlijke contouren blijven ook op **Low graphics** zichtbaar. High heeft extra gekleurde grondvulling. Bestaande boss-showcase tekenen en projectielen blijven actief.
+- De boss zelf bezit de enige actieve extra aanval. De helper heeft **geen nieuwe enemies, minions, XP, loot, timers of persistent storage**. Nieuwe run, bossdeaf, phase-interrupt en bossarena-exit wissen de state. Geen hits van een oude Guardian die naar de volgende fight doorsijpelen.
+- `index.html` laadt `js/guardian-arena-powers.js` vóór de showcase encountermodules. `js/game.js` roept de aanvallen in de bestaande boss-tick aan en verwerkt hun hits via het gewone damage-/dodgesysteem. `js/render.js` tekent de transformatie onder de speler en de warnings rond de boss. Cacheversies bijgewerkt. Oude testasserties voor de vorige Beau-scriptversie en exacte resetregel zijn aangepast.
+
+**Bewijs:** GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39156381005 — **432/432 tests geslaagd, 0 gefaald**, incl. 10 nieuwe integratie-/vormtests in `tests/update-26-guardian-arena-powers.test.cjs`. Ze controleren vier visueel/mechanisch verschillende sets, echte gevaarlijke centrumpositie, **bereikbare veilige zones** binnen 1,45 seconden basisloopsnelheid, voorspellend volgen en targetlock, exact drie schadekansen zonder dubbele hits, weglopen voor impact, reset/owner-isolatie, Low-graphics tekenen, werkelijke Phase-III-encounterstart en damage via gewone dodge/invuln-pipeline.
+
+**Planning:** **16 / 20 = 80%** van de geplande updates richting Mijlpaal 30; GEEN uitspraak dat alle art/combat nu 80% gepolijst zijn.
+
+**Nog te bewijzen in een echte browserrun:** Force Phase III via Developer Mode voor ieder van de vier Guardians. Bekijk de enorme lanes/eclips/plus/kruis/tegels op Low/High, kijk of het spel de waarschuwingen en 1×/2×/3× snelheidsstanden werkelijk leesbaar toont, of de escape routes tijdens overlappende bestaande showcasetelegraphs nog eerlijk blijven, en of de drie beats heftig maar niet oneerlijk zijn. Controleer of één gewone attack plus deze ultimate daadwerkelijk gevaarlijk genoeg voelt zonder dat een onzichtbare collision de speler raakt. Als eerdere showcase-hazards de nieuwe fase-3-powers laten overlappen op onvermijdbare wijze, verlaag overlappende druk in een volgende gerichte balanspass. Automatische tests zijn **geen** complete 25–30 min browserplaytest.
+
+**Volgende Update 27:** leesbaarheid/hiërarchie van combat-HUD en **bosswaarschuwingen**. Prioriteit bij extreem drukke bossfights: niet méér cosmetische VFX maar duidelijk onderscheid tussen levensgevaar, veilige paden, recovery, HP en dashstatus. Daarna Update 28 performance; Update 29 full Normal QA; Update 30 milestone review.
