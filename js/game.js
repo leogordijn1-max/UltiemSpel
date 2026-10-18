@@ -149,6 +149,7 @@ function reset() {
   window.resetWorldRetaliation?.();
   window.resetWorldDefense?.();
   window.resetEncounterPacing?.();
+  window.resetEnemyProgression?.();
   syncElementalLoadout();
   resetElementalCombat();
   for (const key in keys) keys[key] = false;
@@ -662,6 +663,7 @@ function update(dt) {
   updateCharacterAbility(dt);
   hudUpdateTimer += dt;
   if (!boss) growthTime += dt;
+  window.updateEnemyProgression?.(growthTime, message=>notify(message,"wave",4));
   updateSpecialWeapons(dt);
 
   dashTimer = Math.max(0, dashTimer - dt);
@@ -827,7 +829,7 @@ function update(dt) {
   }
   window.notifyWorldDefense = message => notify(message, "wave", 3.5);
   window.updateWorldDefense?.(time, player, enemies, kind => enemySpawn(kind),
-    !!boss || !!window.isBossIsolationActive?.());
+    !!boss || !!window.isBossIsolationActive?.(),growthTime);
   const enemyAIStarted = performance.now();
   for (const e of enemies) {
     if (e.dead) continue;
