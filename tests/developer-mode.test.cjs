@@ -275,3 +275,24 @@ test("L shortcut is live while Settings button can still pause", () => {
   t.context.window.closeDeveloperPanel();
   assert.equal(t.context.paused,false);
 });
+
+
+test("85% IMPACT button updates the actual world coverage and the panel status", () => {
+  const t = environment();
+  t.enable();
+  t.start();
+  assert.equal(t.context.window.developerChangeWorld("flooded"), true);
+  assert.equal(t.context.window.openDeveloperPanel({ live: true }), true);
+  const button = t.find(t.document.getElementById("developerPanel"),
+    node => node.tagName === "BUTTON" && node.textContent === "85% IMPACT");
+  assert.ok(button, "the 85% button must exist in the live panel");
+  button.listeners.click();
+  assert.equal(t.context.window.getWorldConquest().target, 85);
+  const status = t.find(t.document.getElementById("developerPanel"),
+    node => node.className === "developer-status");
+  assert.match(status.textContent, /IMPACT 85%/);
+  t.advance(900);
+  assert.equal(t.context.window.getWorldConquest().coverage, 85);
+  assert.equal(t.disk.has("shadowDominantWorldV1"), false);
+  assert.equal(t.context.window.developerSetWorldCoverage(35), false);
+});
