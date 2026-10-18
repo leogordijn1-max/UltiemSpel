@@ -125,7 +125,7 @@ function guarding(e){
 }
 function protection(e){
   if(!e||!getSquad(e))return 1;
-  return guarding(e)?.70:1;
+  return guarding(e) ? .70 : 1;
 }
 function buffs(e){
   const s=getSquad(e),leader=leaderOf(s);
