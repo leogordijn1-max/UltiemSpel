@@ -370,7 +370,7 @@ function choices() {
   const focusKey=evolutionFocusKey();
   const focusOption=regularPool.find(([key])=>key===focusKey);
   if(focusOption && !pick.some(([key])=>key===focusKey)){
-    const replaceAt=lockedPicks.length && pick[0]?.[0]===lockedPicks[0][0] ? 1 : 0;
+    const replaceAt=pick.length && lockedPicks.some(([key])=>key===pick[0]?.[0]) ? 1 : 0;
     if(replaceAt<regularSlots){
       if(pick.length<regularSlots)pick.push(focusOption);
       else pick[replaceAt]=focusOption;
