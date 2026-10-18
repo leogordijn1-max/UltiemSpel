@@ -30,13 +30,13 @@
   }catch{}
   let current=null,completed=null;
   let nextSnapshot=0,perfElapsed=0,perfFrames=0,perfIndex=0;
-  let frameRing=[];
+  let frameRing=[],lastBoss=null,lastBossPhase=0;
   const telemetryTime=()=>finite(current?.lastTime)?current.lastTime:0;
   function begin(meta={}){
     // The previous report stays available until a NEW run intentionally begins.
     completed=null;
     frameRing=[];perfIndex=0;perfElapsed=0;perfFrames=0;
-    nextSnapshot=0;
+    nextSnapshot=0;lastBoss=null;lastBossPhase=0;
     current=enabled?{
       schema:VERSION,source:"local-browser-runtime-not-manually-verified",
       startedAt:new Date().toISOString(),
@@ -113,6 +113,17 @@
     });
     perfFrames=0;perfElapsed=0;
     return true;
+  }
+  function bossPhase(boss,t){
+    if(!current||current.outcome!=="in_progress")return false;
+    if(!boss){lastBoss=null;lastBossPhase=0;return false;}
+    const phase=Math.max(1,Math.floor(boss.finalPhase||
+      (boss.phaseThree?3:boss.phaseTwo?2:1)));
+    if(boss===lastBoss&&phase===lastBossPhase)return false;
+    lastBoss=boss;lastBossPhase=phase;
+    return event("boss_phase",{name:boss.bossName,phase,
+      health:number(boss.hp||0),maxHealth:number(boss.maxHp||0),
+      final:!!boss.isFinalBoss},t);
   }
   function end(outcome,t){
     if(!current)return false;
@@ -225,6 +236,7 @@
   window.runQaEvent=event;
   window.runQaXp=xp;
   window.runQaFrame=frame;
+  window.runQaBossPhase=bossPhase;
   window.runQaEnd=end;
   window.runQaContinueEndless=continueEndless;
   window.runQaGetReport=getReport;
