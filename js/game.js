@@ -1649,8 +1649,10 @@ function update(dt) {
   }
   bossShots = bossShots.filter((b) => b.life > 0 && !projectileOutsideArena(b));
   let collectedGem = false;
+  // Slightly wider soul pickup compensates for scattered low-density fights.
+  // Picking up gems remains a movement and positioning decision.
   const pickupRange =
-    90 + upgrades.magnet * 55 + (metaProgress.magnetLevel || 0) * 12;
+    115 + upgrades.magnet * 55 + (metaProgress.magnetLevel || 0) * 12;
   for (const g of nearbyGems(player.x, player.y, pickupRange)) {
     const oldX = g.x,
       oldY = g.y;
