@@ -140,6 +140,7 @@ function syncElementalLoadout() {
 
 // Start a fresh run and reset every timer, entity, and upgrade.
 function reset() {
+  window.resetGuardianArenaPower?.();
   window.resetBossIsolation?.();
   // Start a fresh sandbox before any discovery or rewards can be written.
   window.developerBeginRun?.();
@@ -591,6 +592,7 @@ function continueEndlessAfterVictory() {
 
 function end() {
   if (!active) return;
+  window.resetGuardianArenaPower?.();
   playSfx("gameover");
   recordRun();
   if (!victoryClaimed) window.restoreWorldOnDefeat?.();
@@ -1168,6 +1170,22 @@ function update(dt) {
         shadeActive = window.updateShadeEncounter?.(e, time, dt, player, encounterHooks) || false;
         bellActive = window.updateBellEncounter?.(e, time, dt, player, encounterHooks) || false;
         memeActive = window.updateMemeEncounter?.(e, time, dt, player, encounterHooks) || false;
+        window.updateGuardianArenaPower?.(e,time,player,{
+          hit: amount => {
+            // Geometry tested against the rendered warning at the impact frame.
+            // Same dash, dodge and invulnerability rules as other boss hazards.
+            if(player.inv>0 || window.developerInvincible?.() || tryDodge())return false;
+            const damage=amount*(difficultyProfiles[difficulty]||difficultyProfiles.normal).enemyDamage;
+            player.hp-=damage;
+            recordPlayerHit(damage);
+            player.inv=.84;damageFlash=.52;shake=Math.max(shake,14);
+            puff(player.x,player.y,"#ffc8ef",16);
+            if(player.hp<=0)end();
+            return true;
+          },
+          puff:(x,y,color,amount)=>puff(x,y,color,amount),
+          shake:amount=>{shake=Math.max(shake,amount);}
+        });
         // Beau keeps the normal shotgun and charge; dedicated showcase
         // attacks replace his original small Hound's Ambush ability.
         const specialActive = beauActive || shadeActive || bellActive || memeActive;
