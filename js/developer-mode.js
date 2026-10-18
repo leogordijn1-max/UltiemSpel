@@ -354,6 +354,7 @@
     frostZones = [];
     weaponTimers = { chain: 0, boomerang: 0, flame: 0, frost: 0 };
     window.resetWorldScars?.();
+    window.resetWorldRetaliation?.();
     notify("DEV · CHANGED TO " + nextElement.toUpperCase(), "wave", 2);
     updateHud();
   }
@@ -361,6 +362,7 @@
     if (!available() || !window.developerChangeWorld) return;
     window.developerChangeWorld(original);
     window.resetWorldScars?.();
+    window.resetWorldRetaliation?.();
     updateHud();
   }
   function changeImpact(target) {
@@ -436,9 +438,17 @@
     for (const id of ["frozen", "burning", "flooded"])
       addButton(s, id.toUpperCase() + " WORLD", () => startWorldState(id));
     s = section(root, "WORLD CONQUEST · NO SAVE");
-    for (const amount of [0, 15, 50, 100])
+    for (const amount of [0, 15, 50, 85, 100])
       addButton(s, amount + "% IMPACT", () => changeImpact(amount));
+    addButton(s, "SPAWN ELEMENT REACTION", () => {
+      if (window.forceWorldReaction?.(player)) {
+        const reaction = window.getWorldRetaliationStatus?.().lastReaction;
+        notify("DEV · " + (reaction?.name || "REACTION") + " CREATED", "wave", 2);
+      } else notify("DEV · SET 15%+ IMPACT AND OPPOSING WORLD", "wave", 2);
+      updateHud();
+    });
     addButton(s, "CLEAR LOCAL TERRAIN", () => {
+      window.resetWorldRetaliation?.();
       window.resetWorldScars?.();
       updateHud();
     });
