@@ -118,9 +118,22 @@
       ctx.save();ctx.strokeStyle="#ffa36d";ctx.fillStyle="rgba(255,135,65,.11)";
       ctx.lineWidth=3;ctx.beginPath();
       ctx.arc(e.x,e.y,e.stompRadius||149,0,TAU);ctx.fill();ctx.stroke();
-      ctx.globalAlpha=.42;ctx.beginPath();
-      ctx.arc(e.x,e.y,(e.stompRadius||149)*(.36+progress*.64),0,TAU);
-      ctx.stroke();ctx.restore();
+      ctx.globalAlpha=.72;ctx.strokeStyle="#fff1cb";
+      ctx.beginPath();
+      ctx.arc(e.x,e.y,(e.stompRadius||149)*(.20+progress*.80),0,TAU);
+      ctx.stroke();
+      if(quality!=="low"){
+        ctx.globalAlpha=.64;ctx.strokeStyle="#ffac6f";ctx.lineWidth=2;
+        const radius=e.stompRadius||149;
+        for(let i=0;i<8;i++){
+          const a=i*TAU/8;
+          ctx.beginPath();ctx.moveTo(e.x+Math.cos(a)*(radius-13),
+            e.y+Math.sin(a)*(radius-13));
+          ctx.lineTo(e.x+Math.cos(a)*radius,e.y+Math.sin(a)*radius);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
     }
   }
   window.enemyArchetypeProfiles=PROFILES;
