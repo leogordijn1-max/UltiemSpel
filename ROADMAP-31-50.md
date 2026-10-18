@@ -31,17 +31,21 @@
 | Update | Werkpakket | Klaar wanneer / toetsbare uitkomst |
 |---|---|---|
 | **31** | **Run Telemetry & First Live Test — CODE + EERSTE LIVE SPEELTEST AFGEROND** | De game bevat nu `js/run-telemetry.js` (lokale recorder, 30s checkpoints, 5s echte FPS/P95, upgrade-aanbod én gekozen optie, bossphases/kill, einde en JSON-export). **479 tests groen.** **Twee echte browser-JSON's beoordeeld:** Water 26:44 non-sandbox Normal Victory, 4 bosses, 2 earned evolutions op 10:00 en 17:00 en gemeten FPS; Frost 28:01 Victory, sandboxflag ondanks bevestiging dat geen developer tools gebruikt zijn. [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md). M3–M6 blijven deels OPEN. |
-| **32** | **XP & Evolution Economy** | Met echte rungegevens wapen L5 + support L3 bereiken bij 10:00 en 17:00; juiste upgrade-aanbiedingen en maximaal twee evoluties, geen gratis unlocks. |
-| **33** | **Beau & Mourning Shade Live Boss QA** | Echte fase-3-overlap, telegraphs, dodgeroutes, recovery en minionregels beoordelen bij 1×/2×/3×; gevonden oneerlijke combinaties herstellen. |
-| **34** | **Bell Tower & The Last Meme Live QA** | Zelfde beoordeling voor laatste twee bosses, met finale pas na 25:00 en drie echte voorgaande kills; geen onvermijdbare chained attacks. |
-| **35** | **Enemy Pressure & Difficulty Feel** | Normal blijft uitdagend en fair, Easy toegankelijk en Nightmare gevaarlijk door tactiek/timing — niet extra hordes; 15–25min pacing geobserveerd. |
+| **32** | **XP & Evolution Economy + vroege Water/Frost-balanstransparantie** | Werkelijke Water/Frost-data gebruiken: Water Bolt met attackspeed+knockback+damage maakt Normal véél te makkelijk. Geen globale XP-buff (Water verdiende evoluties exact 10/17min). Check waterpush/Whirlpool tegen heavy resistance, upgrade-keuzeaanbod en behoud max 2 earned evolutions. Zie [PLAYTEST-FEEDBACK-COMBAT-31.md](PLAYTEST-FEEDBACK-COMBAT-31.md). |
+| **33** | **Beau & Mourning Shade Live Boss QA + secundaire moves** | Maker vindt hun **twee sterkste aanvallen** al ziek leuk: bewaren! Vooral **overige** aanvallen tactisch cooler en duidelijker maken, met faire warning/dodge/recovery; fase-3-overlap op 1×/2×/3× testen. |
+| **34** | **Bell Tower & The Last Meme: overige aanvallen redesign** | Maker vindt bijna alleen hun **laatste ultimate** echt moeilijk en vet, vooral Meme's finale: **behouden als benchmark**. De niet-ultimate attacks horen ook uitdagende, memorabele en ontwijkbaar gesignaleerde setpieces te worden. Geen unavoidable overlap; finale pas na 25:00 en drie earned Guardians. |
+| **35** | **Duidelijk ontworpen unieke enemies + echte tegenstrategie** | Gewone enemies waren veel te makkelijk. Prototypeer max. **drie herkenbare counterrollen** via bestaande Zombie Mike (Anchor: nauwelijks push/Whirlpool), Runner/Pouncer (Phase Stalker: telegraphed flank), Bulwark/Ward (teamprotector). Uiterlijk toont vaardigheid; weerstand/zwakte/waarschuwing zijn echte code. Easy/Normal/Nightmare via slimme tactiek, **geen horde-spam**. |
 | **36** | **Measured FPS & Memory** | Werkelijke FPS, P95 frame, AI/collision/draw en geheugengedrag vergelijken op Low/Medium/High, inclusief drukke late game en bosses; concrete regressies repareren. |
 | **37** | **World, Save & Endless in Browser** | Invasie, verlies/herstel, winst, save na refresh, unieke bossrewards, eenmalig runrecord en Endless-overgang in live browser nalopen. |
-| **38** | **All Nine Weapons & Build Balance** | Fire/Water/Frost met alle negen actieve wapens en evoluties eerlijk beoordelen; sterke/zwakke builds aanpakken met data. |
+| **38** | **All Nine Weapons + Water Bolt/Frost Orb pressure balance** | Fire/Water/Frost en alle 9 wapens over gewone, heavy, flanker en shield enemies beoordelen; specifiek **Water Bolt attack speed × knockback × damage** en sterke Frost Orb. Bouw mag sterk blijven maar moet niet alle enemies buiten bereik houden. |
 | **39** | **Three Complete Normal Runs & UX Fixes** | Minstens drie gedocumenteerde complete runs met bewijs; kritieke bugs opgelost; UI en combat warnings in drukte leesbaar. |
 | **40** | **Verified Playable Run Gate Review** | De 6 release-gates stuk voor stuk beoordelen met bewijs en bewust GO / NO-GO beslissen. Bij NO-GO prioriteren we fixes vóór grote graphicsproductie. |
 
 **Afhankelijkheidsregel:** als na Update 40 een P0-speelbaarheidsbug resteert, mag grafische productie **voorbereid** worden maar moet de gameplayfix voorrang houden. We mogen Visual Foundation niet verwarren met releasebewijs.
+
+---
+
+**Nieuwe gameplay-designrichting na twee live runs:** normale enemies zijn te gemakkelijk, met name door Water Bolt + rate + knockback; eerste twee Guardians hebben al twee sterke signature moves, maar overige attacks mogen cooler; Bell en Meme hebben vooral één indrukwekkende ultimate en hebben meer interessante basis-/mediumattacks nodig. **Nieuwe unieke enemyrollen met leesbaar uiterlijk, abilities en counters** opnemen rond Update 35, 2.5D-visuele uitwerking later. Gedetailleerde bron en codehaken: [PLAYTEST-FEEDBACK-COMBAT-31.md](PLAYTEST-FEEDBACK-COMBAT-31.md). De voorgestelde vijanden zijn **niet geïmplementeerd**.
 
 ---
 
