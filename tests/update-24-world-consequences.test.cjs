@@ -168,7 +168,8 @@ test("failure restores the defending world and reports peak invasion honestly",(
   assert.equal(h.window.restoreWorldOnDefeat(),true);
   assert.equal(h.window.worldConsequenceEndReport().after,"FROZEN");
   assert.equal(h.window.worldConsequenceEndReport().outcome,"RECLAIMED BY THE DEFENDERS");
-  assert.equal(h.window.worldConsequenceEndReport().peak>=1,true);
+  assert.equal(h.window.worldConsequenceEndReport().peak,50,
+    "earned boss-stage invasion counts even if visual transition has not finished");
   assert.equal(JSON.parse(h.disk.shadowDominantWorldV1).dominant,"frozen");
   assert.equal(h.window.onWorldBossDefeated(3,false),false);
   assert.equal(h.window.completeWorldConquest(),false);
