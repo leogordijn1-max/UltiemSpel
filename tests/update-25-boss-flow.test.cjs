@@ -55,7 +55,7 @@ test("standard guardians are Beau, Shade, Bell, then final after 25 minutes",()=
   ]) assert.equal(h.bossFlowSchedule("standard",defeated,clock,ordinaryAt),expected);
   assert.equal(h.bossFlowSchedule("standard",4,1500,0,true),null);
   assert.deepEqual(Array.from(h.bossFlowBossNames),
-    ["BEAU DE HOND","THE MOURNING SHADE","BELL TOWER","THE LAST MEME"]);
+    ["BEAU DE HOND","THE MOURNING SHADE","THE BELL TOWER","THE LAST MEME"]);
 });
 test("the finale cannot be spawned early or twice, but developer sandbox may quick-test",()=>{
   const f=flow(),can=f.bossFlowCanFinale;
@@ -91,7 +91,7 @@ test("real boss identities align with earned guardians in Normal Standard",()=>{
     h.run("spawnBoss()");
     assert.equal(h.run("boss.variant"),i);
     assert.equal(h.run("boss.bossName"),
-      ["BEAU DE HOND","THE MOURNING SHADE","BELL TOWER"][i]);
+      ["BEAU DE HOND","THE MOURNING SHADE","THE BELL TOWER"][i]);
     h.run("boss=null;enemies=[];bossesDefeated++");
   }
   assert.equal(h.run("spawnBoss()"),false);
@@ -100,7 +100,7 @@ test("real boss identities align with earned guardians in Normal Standard",()=>{
 });
 test("Endless starts a FRESH Beau-then-Shade-then-Bell rotation after the Last Meme",()=>{
   const h=flow();
-  const expected=["BEAU DE HOND","THE MOURNING SHADE","BELL TOWER"];
+  const expected=["BEAU DE HOND","THE MOURNING SHADE","THE BELL TOWER"];
   for(let i=0;i<3;i++){
     assert.equal(h.bossFlowOrdinaryVariant("standard",i+1),i);
     assert.equal(h.bossFlowOrdinaryVariant("endless",i+1),i);
@@ -117,7 +117,7 @@ test("real boss death counts and awards the trophy only once",()=>{
   const h=arenaState();
   // A real third ordinary Guardian, with just enough health to be defeated.
   h.run("bossNumber=2;bossesDefeated=2;time=740;spawnBoss()");
-  assert.equal(h.run("boss.bossName"),"BELL TOWER");
+  assert.equal(h.run("boss.bossName"),"THE BELL TOWER");
   h.run("boss.hp=1;damage(boss,1000)");
   assert.equal(h.run("bossesDefeated"),3);
   assert.equal(h.run("nextBossTime"),1500);
@@ -167,7 +167,7 @@ test("the UI names the actual NEXT guardian during Standard and Endless modes",(
   const f=flow();
   assert.equal(f.bossFlowNextName("standard",0,0),"BEAU DE HOND");
   assert.equal(f.bossFlowNextName("standard",1,1),"THE MOURNING SHADE");
-  assert.equal(f.bossFlowNextName("standard",2,2),"BELL TOWER");
+  assert.equal(f.bossFlowNextName("standard",2,2),"THE BELL TOWER");
   assert.equal(f.bossFlowNextName("standard",3,3),"THE LAST MEME");
   assert.equal(f.bossFlowNextName("standard",4,4,true),"WORLD CONQUERED");
   const game=src("js/game.js");
