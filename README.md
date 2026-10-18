@@ -8,6 +8,7 @@
 **Combat & Gameplay 2.0: 20/20 geplande stappen voltooid.** De technische modules en regressietests zijn geïntegreerd, maar de game is **nog niet als volledig speelbaar en uitgebalanceerd vrijgegeven**: een echte doorlopende Normal-browserrun van 25–30 minuten, daadwerkelijk haalbare dubbele evoluties, FPS en overlappende bossaanvallen vereisen nog handmatige speeltests.
 
 - [ROADMAP-31-50.md](ROADMAP-31-50.md): **officiële planning voor Verified Playable Run (31–40), vloeiende stylized 2.5D art direction (41–45), animatie/VFX (46–50)** en het mogelijke toekomstige 3D-vervolg.
+- [RUN-TEST-31.md](RUN-TEST-31.md): **vanaf Update 31 werkende, lokale run-telemetrie**; Settings → QA recording, Standard Normal spelen, pauzeren of uitspelen, **DOWNLOAD QA REPORT · JSON** en zelf delen. Het eerste live bewijs staat nog OPEN.
 - [MILESTONE-30-REVIEW.md](MILESTONE-30-REVIEW.md): evidence, GO/NO-GO, bekende risico's, plan voor Updates 31–40.
 - [NORMAL-RUN-QA.md](NORMAL-RUN-QA.md): afvinkbare checkpoints voor echte 25–30-minutenspeeltests.
 - [MILESTONE-30.md](MILESTONE-30.md): volledige geschiedenis en tracker Updates 11–30.
@@ -27,6 +28,10 @@
 - **Bossroute:** Beau de Hond → The Mourning Shade → The Bell Tower → The Last Meme (de finale na minimaal drie echte Guardian-overwinningen én minuut **25:00**).
 - **Bossgevechten:** geïsoleerde arena's. Alleen door de boss zelf gesummonde minions mogen verschijnen. Vier bijzondere fase-3 Guardian Powers plus hun eigen, eerder bestaande aanvallen; waarschuwingen, dodge en schadezones blijven actief.
 - **Living World:** bij de eerste drie bosses groeit de tijdelijke invasie naar 15%, 50%, 85%; alleen een echte Standard-finalevictory schrijft de nieuwe dominante wereld permanent weg. Na Victory verdergaan in Endless bewaart je build en huidige run.
+
+### Speeltest / QA-opname sinds Update 31
+
+De game registreert tijdens normale browserruns optioneel **lokale meetgegevens**: level- en XP-voortgang, echte upgrade-aanbiedingen en gekozen keuzes, bossfases en -kills, evoluties, schade, 30-seconden-checkpoints en iedere 5 seconden uit browserframes berekende FPS/P95. Via **Settings** staat `Record local run QA data` aan/uit (standaard aan, **geen automatische upload**). Tijdens pauze, Victory of Game Over kun je een **JSON-rapport downloaden** of een samenvatting kopiëren; bij verlaten ook op het hoofdmenu. Volg [RUN-TEST-31.md](RUN-TEST-31.md). **Technisch ingebouwd en automatisch getest; nog geen door een speler bewezen volledige Normal-run.**
 
 ### Besturing
 
