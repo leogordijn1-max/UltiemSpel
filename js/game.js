@@ -148,6 +148,7 @@ function reset() {
   window.resetWorldScars?.();
   window.resetWorldRetaliation?.();
   window.resetWorldDefense?.();
+  window.resetWorldConsequences?.();
   window.resetEncounterPacing?.();
   window.resetEncounterRhythm?.();
   window.resetEnemyProgression?.();
@@ -465,6 +466,8 @@ function hud() {
   $("xp").style.width = (100 * xp) / needed + "%";
   const evolutionStatus=$("evolutionProgress");
   if(evolutionStatus)evolutionStatus.textContent=window.evolutionHudStatus?.()||"";
+  const worldFront=$("worldFront");
+  if(worldFront)worldFront.textContent=window.worldConsequenceHudText?.(player,time)||"";
   const conqueredPercent = window.getWorldConquest?.().coverage || 0;
   $("stats").textContent =
     `${(window.getDominantWorld?.() || "frozen").toUpperCase()} WORLD · ${conqueredPercent}% IMPACT · ${currentLivingWorldElement().toUpperCase()} ELEMENT · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
@@ -916,6 +919,7 @@ function update(dt) {
       (insidePulse ? 1 - upgrades.novaSlow * 0.11 : 1) *
       (walkingGround==="water" ? .86 : walkingGround==="frost" ? .74 : 1) *
       (window.enemyWorldMovement?.(e, walkingGround, time, dt) ?? 1) *
+      (window.worldOccupationMovement?.(e,e.groundBiome) ?? 1) *
       (window.guardianWorldSpeed?.(e, walkingGround) ?? 1) *
       (e.soakedUntil > time ? 0.82 : 1) *
       (e.frostUntil > time ? (window.frostMoveMultiplier?.(e,boss) ?? 0.48) : 1) *
