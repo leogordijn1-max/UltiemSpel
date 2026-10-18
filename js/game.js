@@ -626,7 +626,9 @@ function emitDeathPulse(isEcho = false) {
 // Advance the simulation by one frame.
 // Automatic character abilities are independent of the three weapon slots.
 function fireBeauFishBarrage() {
-  const target = nearestEnemy(player.x, player.y, 550);
+  const target = nearestEnemy(player.x, player.y,
+    window.playerWeaponRange?.(550) ?? 550, null,
+    e => window.playerWeaponTargetVisible?.(e) ?? true);
   if (!target) return false;
   const angle = Math.atan2(target.y - player.y, target.x - player.x);
   for (const offset of [-0.2, 0, 0.2]) {
@@ -872,11 +874,9 @@ function update(dt) {
     const worldGround = e.groundBiome === "frozen" ? "frost"
       : e.groundBiome === "flooded" ? "water" : "fire";
     const walkingGround = groundElement || (onScreen ? worldGround : null);
-    if (groundElement==="fire" && time >= (e.nextGroundBurn || 0)) {
-      e.nextGroundBurn = time + .85;
-      damage(e,e===boss?1.3:3.8,player,"flame");
-      if(e.dead)continue;
-    }
+    // Weapon-created terrain scars are visual and can affect movement,
+    // but never inflict passive damage on enemies (including bosses).
+    // Explicit hits, burns and dangerous elemental reaction zones still work.
     let moveSpeed =
       e.speed *
       (e.impactSlowUntil > time
@@ -1354,8 +1354,10 @@ function update(dt) {
   for (const b of bullets) {
     if (b.type === "orb" || b.type === "frost") {
       if (!b.target || b.target.dead) {
-        b.target = nearestEnemy(b.x, b.y, 1500);
+        b.target = nearestEnemy(b.x, b.y, window.playerWeaponRange?.(650) ?? 650,
+          null, e => window.playerWeaponTargetVisible?.(e) ?? true);
       }
+      if(b.target && window.playerWeaponTargetVisible?.(b.target)===false)b.target=null;
       if (b.target) {
         const desired = Math.atan2(b.target.y - b.y, b.target.x - b.x);
         const current = Math.atan2(b.vy, b.vx);
