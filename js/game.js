@@ -147,6 +147,7 @@ function reset() {
   window.beginWorldRun?.();
   window.resetWorldScars?.();
   window.resetWorldRetaliation?.();
+  window.resetWorldDefense?.();
   syncElementalLoadout();
   resetElementalCombat();
   for (const key in keys) keys[key] = false;
@@ -819,6 +820,8 @@ function update(dt) {
       bladePositions[index * 2 + 1] = player.y + Math.sin(angle) * 67;
     }
   }
+  window.updateWorldDefense?.(time, player, enemies, kind => enemySpawn(kind),
+    !!boss || !!window.isBossIsolationActive?.());
   const enemyAIStarted = performance.now();
   for (const e of enemies) {
     if (e.dead) continue;
@@ -996,6 +999,13 @@ function update(dt) {
           e.eliteChargeWarning = 0.75;
           moveSpeed = 0;
         }
+      }
+    }
+    if (onScreen && e.defenseSquadId) {
+      const coordinated = window.worldDefenseMovement?.(e, player, time);
+      if (coordinated) {
+        moveAngle = coordinated.angle;
+        moveSpeed *= coordinated.speedMult;
       }
     }
     let beauActive = false;
@@ -1274,8 +1284,9 @@ function update(dt) {
       player.inv <= 0
     ) {
       if (tryDodge()) continue;
-      player.hp -= e.damage;
-      recordPlayerHit(e.damage);
+      const contactDamage = e.damage * (window.worldDefenseAttackMultiplier?.(e) ?? 1);
+      player.hp -= contactDamage;
+      recordPlayerHit(contactDamage);
       player.inv = 0.85;
       damageFlash = 0.55;
       shake = 13;
