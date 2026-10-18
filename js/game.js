@@ -458,6 +458,8 @@ function hud() {
   $("hp").style.width = (100 * player.hp) / player.maxHp + "%";
   $("levelText").textContent = level;
   $("xp").style.width = (100 * xp) / needed + "%";
+  const evolutionStatus=$("evolutionProgress");
+  if(evolutionStatus)evolutionStatus.textContent=window.evolutionHudStatus?.()||"";
   const conqueredPercent = window.getWorldConquest?.().coverage || 0;
   $("stats").textContent =
     `${(window.getDominantWorld?.() || "frozen").toUpperCase()} WORLD · ${conqueredPercent}% IMPACT · ${currentLivingWorldElement().toUpperCase()} ELEMENT · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
