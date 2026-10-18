@@ -217,8 +217,22 @@
       forceShade("collapse");
       return;
     }
+    if (boss.variant === 2 && !boss.isFinalBoss) {
+      forceBell("sweep");
+      return;
+    }
     boss.specialNextAt = time;
     notify("DEV · SIGNATURE ATTACK READY", "boss", 2);
+    updateHud();
+  }
+  function forceBell(mode) {
+    if (!available() || !boss || boss.variant !== 2 || boss.isFinalBoss) return;
+    if (mode === "peal") {
+      if (boss.bellFight) boss.bellFight.ultimateUsed = false;
+      forceBossPhaseThree();
+    } else if (!boss.phaseTwo) forceBossPhaseTwo();
+    if (window.forceBellEncounter?.(boss, mode, time))
+      notify("DEV · BELL " + mode.toUpperCase() + " READY", "boss", 2);
     updateHud();
   }
   function forceShade(mode) {
@@ -384,6 +398,10 @@
     addButton(s, "SHADE · SHADOW COLLAPSE", () => forceShade("collapse"), !isShade);
     addButton(s, "SHADE · PHANTOM EXECUTION", () => forceShade("phantoms"), !isShade);
     addButton(s, "SHADE · ETERNAL ECLIPSE", () => forceShade("eclipse"), !isShade);
+    const isBell = !!boss && boss.variant === 2 && !boss.isFinalBoss;
+    addButton(s, "BELL · RESONANT SWEEP", () => forceBell("sweep"), !isBell);
+    addButton(s, "BELL · CLOCKWORK JUDGMENT", () => forceBell("clock"), !isBell);
+    addButton(s, "BELL · THE GRAND PEAL", () => forceBell("peal"), !isBell);
     addButton(s, "TRIGGER GUARDIAN POWER", triggerGuardianWarning, !boss || isBeau);
     addButton(s, "DEFEAT ACTIVE BOSS", defeatTestBoss, !boss, true);
 
