@@ -96,7 +96,8 @@
     if(frameRing.length<FRAME_WINDOW)frameRing.push(ms);
     else {frameRing[perfIndex]=ms;perfIndex=(perfIndex+1)%FRAME_WINDOW;}
     perfFrames++;perfElapsed+=seconds;
-    if(perfElapsed<5)return false;
+    // Fractional browser-frame durations may sum to 4.99999999999999.
+    if(perfElapsed+1e-8<5)return false;
     const ordered=[...frameRing].sort((a,b)=>a-b);
     const p95=ordered[Math.max(0,Math.ceil(ordered.length*.95)-1)]||0;
     if(current.performance.length>=MAX_PERF)current.performance.shift();
