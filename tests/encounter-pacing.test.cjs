@@ -32,12 +32,12 @@ function waveHarness(){
 }
 test("ambient population stays low and spawns slow down instead of accelerating to spam",()=>{
   const h=director();
-  assert.equal(h.window.encounterPopulationCap(0,"normal"),28);
-  assert.ok(h.window.encounterPopulationCap(1200,"normal")<=62);
-  assert.ok(h.window.encounterPopulationCap(1200,"nightmare")<=62);
-  assert.ok(h.window.encounterPopulationCap(0,"easy")<28);
+  assert.equal(h.window.encounterPopulationCap(0,"normal"),20);
+  assert.ok(h.window.encounterPopulationCap(1200,"normal")<=30);
+  assert.ok(h.window.encounterPopulationCap(1200,"nightmare")<=30);
+  assert.ok(h.window.encounterPopulationCap(0,"easy")<20);
   assert.ok(h.window.encounterAmbientInterval(0,"normal")>=7);
-  assert.ok(h.window.encounterAmbientInterval(1500,"normal")>=4);
+  assert.ok(h.window.encounterAmbientInterval(1500,"normal")>=9);
   assert.ok(h.window.encounterAmbientInterval(1500,"nightmare")<h.window.encounterAmbientInterval(1500,"easy"));
 });
 test("every 17 seconds the director sends a tightly grouped, stronger patrol",()=>{
@@ -74,9 +74,10 @@ test("patrols obey population cap and avoid half-spawned invalid groups",()=>{
   const h=director();
   for(let i=0;i<28;i++)h.enemies.push({hp:1,dead:false});
   assert.equal(h.window.spawnEncounterPatrol(0,0,h.player,h.enemies,h.spawn),0);
-  h.enemies.splice(0,2);
-  assert.equal(h.window.spawnEncounterPatrol(0,0,h.player,h.enemies,h.spawn),2);
-  assert.equal(h.enemies.length,28);
+  h.enemies.splice(0,14);
+  // Only spawn the complete three-unit team when space really exists.
+  assert.equal(h.window.spawnEncounterPatrol(0,0,h.player,h.enemies,h.spawn),3);
+  assert.equal(h.enemies.length,17);
 });
 test("reset and clear cannot leave old timers or spawn extra enemies",()=>{
   const h=director();h.update(0);h.update(17);
@@ -119,7 +120,7 @@ test("wave population hard cap and boss isolation block all extra spawns",()=>{
   assert.equal(h.sandbox.spawnSpecialWave(9).spawned,0);
 });
 test("new pacing is connected to gameplay, wave notification, XP and boss isolation",()=>{
-  assert.match(read("js/game.js"),/encounterPopulationCap/);
+  assert.match(read("js/game.js"),/encounterAmbientLimit/);
   assert.match(read("js/game.js"),/encounterAmbientInterval/);
   assert.match(read("js/game.js"),/updateEncounterPacing/);
   assert.match(read("js/game.js"),/spawn = Math.max\(spawn,\.4\)/);
