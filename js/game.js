@@ -149,6 +149,7 @@ function reset() {
   window.resetWorldRetaliation?.();
   window.resetWorldDefense?.();
   window.resetEncounterPacing?.();
+  window.resetEncounterRhythm?.();
   window.resetEnemyProgression?.();
   window.resetEncounterTactics?.();
   window.resetPlayerMovement?.();
@@ -449,9 +450,13 @@ function hud() {
     runMode === "endless"
       ? `ENDLESS · TIER ${currentEndlessTier() + 1} · `
       : "";
+  const rhythmStatus=window.getEncounterRhythmStatus?.(time);
+  const phaseLabel=rhythmStatus?.phase==="recover"
+    ? `RECOVER ${Math.ceil(rhythmStatus.remaining)}s · `
+    : rhythmStatus?.phase==="engaged"?"FORMATION ACTIVE · ":"";
   $("waveText").textContent = boss
     ? `${endlessLabel}WAVE ${waveNumber || 1} · PAUSED DURING BOSS`
-    : `${endlessLabel}WAVE ${waveNumber || 1} · ${currentPattern} · NEXT ${upcomingWave} IN ${waveClock}`;
+    : `${endlessLabel}WAVE ${waveNumber || 1} · ${phaseLabel}${currentPattern} · NEXT ${upcomingWave} IN ${waveClock}`;
   $("waveFill").style.width =
     `${Math.max(0, Math.min(100, (1 - waveTimer / waveDuration) * 100))}%`;
   $("healthText").textContent = Math.ceil(player.hp) + " / " + player.maxHp;
@@ -675,6 +680,9 @@ function update(dt) {
   if (!boss) growthTime += dt;
   window.updateEnemyProgression?.(growthTime, message=>notify(message,"wave",4));
   updateSpecialWeapons(dt);
+  // Observe deaths before any of the three automatic encounter sources runs.
+  window.updateEncounterRhythm?.(
+    time,enemies,!!boss||!!window.isBossIsolationActive?.(),growthTime);
 
   dashTimer = Math.max(0, dashTimer - dt);
   dashCooldown = Math.max(0, dashCooldown - dt);
@@ -683,12 +691,16 @@ function update(dt) {
     waveTimer -= dt;
     if (waveTimer <= 0) {
       const nextWave=waveNumber+1;
-      const wave=spawnSpecialWave(nextWave);
+      const waveStart=enemies.length;
+      const mayStart=window.encounterRhythmCanStart?.("wave",time,enemies)!==false;
+      const wave=mayStart?spawnSpecialWave(nextWave):{deferred:true,spawned:0};
       if(wave.deferred){
         // Never drop another encounter onto the player during an ongoing fight.
         // Retrying doesn't advance the wave counter or accumulate old waves.
         waveTimer=6;
       }else{
+        if(wave.spawned>0)window.recordEncounterRhythmSpawn?.(
+          wave.pattern?.swarm?"swarm":"wave",time,enemies.slice(waveStart));
         waveNumber=nextWave;
         waveDuration=Math.max(60,80-waveNumber*2);
         waveTimer=waveDuration;
@@ -815,8 +827,10 @@ function update(dt) {
   // waves. Only the boss may create minions via its own phase mechanics.
   if (!boss && !window.isBossIsolationActive?.()) {
     // Ambient mobs are atmosphere, not the main encounter. Teams get priority.
-    const ambientCap=window.encounterAmbientLimit?.(growthTime,difficulty,enemies) ??
+    const ordinaryCap=window.encounterAmbientLimit?.(growthTime,difficulty,enemies) ??
       Math.max(4,9-Math.floor(growthTime/180));
+    const ambientCap=window.encounterRhythmAmbientLimit?.(time,enemies,ordinaryCap)
+      ??ordinaryCap;
     if (enemies.length >= ambientCap) {
       // Never accumulate a catch-up horde while at the population limit.
       spawn = Math.max(spawn,.4);
