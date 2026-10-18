@@ -17,12 +17,12 @@ const difficultyProfiles = {
     bossHealth: 1,
   },
   nightmare: {
-    enemyHealth: 1.28,
+    enemyHealth: 1.16,
     enemyDamage: 1.18,
-    spawnRate: 1.18,
+    spawnRate: 1,
     xpReward: 1.1,
     healthDropChance: 0.1,
-    bossHealth: 1.2,
+    bossHealth: 1.16,
   },
 };
 
@@ -357,6 +357,7 @@ function spawnSpecialWave(number, cap = 95) {
         window.encounterXpMultiplier?.(growthTime,"wave") ?? 2.6;
       e.encounterRole = "patrol";
       window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
+      window.applyCombatDifficultyToSquad?.(e, difficulty);
       e.encounterGroup ||= tacticGroup || ("wave-"+number);
       e.encounterPlan=pattern.name;
       e.encounterHint=pattern.hint||null;
