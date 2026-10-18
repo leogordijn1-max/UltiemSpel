@@ -4,7 +4,7 @@
 (() => {
   "use strict";
   const STANDARD = Object.freeze([
-    "BEAU DE HOND","THE MOURNING SHADE","BELL TOWER","THE LAST MEME"
+    "BEAU DE HOND","THE MOURNING SHADE","THE BELL TOWER","THE LAST MEME"
   ]);
   const ORDINARY_COUNT = 3;
   const FINALE_AT = 25*60;
