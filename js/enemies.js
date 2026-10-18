@@ -158,7 +158,8 @@ function nearestEnemies(x, y, radius, limit, include = null) {
 const FINAL_BOSS_TIME = 25 * 60;
 const STANDARD_BOSS_COUNT = 3; // Beau → Mourning Shade → Bell Tower → The Last Meme
 function nextBossEncounter(mode,defeated,clock,nextOrdinaryTime,finalDefeated=false){
-  if(mode==="standard"&&!finalDefeated){
+  if(mode==="standard"){
+    if(finalDefeated)return null;
     // The finale cannot jump ahead of one of the three world guardians.
     if(defeated>=STANDARD_BOSS_COUNT)
       return clock>=FINAL_BOSS_TIME?"final":null;
