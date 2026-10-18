@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/living-world-prototype
       - feature/update-4-weapons-evolutions
       - feature/update-5-enemies-waves-bosses
       - feature/update-6-final-boss-endless
@@ -12,6 +13,7 @@ on:
   pull_request:
     branches:
       - main
+      - feature/living-world-prototype
       - feature/update-4-weapons-evolutions
 
 permissions:
@@ -27,8 +29,8 @@ jobs:
           node-version: '22'
       - name: Check JavaScript syntax
         run: |
-          for file in js/*.js tests/*.test.js; do
+          for file in js/*.js tests/*.test.js tests/*.test.cjs; do
             node --check "$file"
           done
       - name: Run gameplay regression tests
-        run: node --test tests/*.test.js
+        run: node --test tests/*.test.js tests/*.test.cjs
