@@ -11,6 +11,7 @@ function resetElementalCombat() {
   elementalTimers = {};
   orbitFireAngle = 0;
   window.resetWeaponVfx?.();
+  window.resetElementalComboFeedback?.();
 }
 
 function elementalCooldown(key, seconds) {
@@ -95,7 +96,10 @@ function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKe
   const combo=window.triggerElementalSynergy?.(
     enemy,element,weaponKey,amount,time,enemy===boss) || {damage:amount,activated:false};
   damage(enemy, combo.damage, { x: originX, y: originY, type: weaponKey }, element);
-  if (combo.activated) window.emitWeaponVfxImpact?.(weaponKey,enemy.x,enemy.y,time);
+  if (combo.activated) {
+    window.emitWeaponVfxImpact?.(weaponKey,enemy.x,enemy.y,time);
+    window.showElementalCombo?.(enemy,combo,time);
+  }
   if (enemy.dead) return;
   if (element === "fire") {
     enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + 2.2 + (combo.bonusBurn || 0));
@@ -350,6 +354,7 @@ function updateElementalCombat(dt) {
         damage(enemy,combo.damage,{x:area.x,y:area.y,type:"whirlpool"},"water");
         if(combo.activated){
           window.emitWeaponVfxImpact?.("whirlpool",enemy.x,enemy.y,time);
+          window.showElementalCombo?.(enemy,combo,time);
           enemy.knockbackX=(enemy.knockbackX||0)+dx/distance*(combo.bonusKnockback||0);
           enemy.knockbackY=(enemy.knockbackY||0)+dy/distance*(combo.bonusKnockback||0);
         }
