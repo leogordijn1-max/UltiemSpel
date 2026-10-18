@@ -17,7 +17,7 @@ function assign(e,position=0,groupId=null){
   if(!role)return e;
   e.encounterTactic=role;
   e.encounterGroup=groupId||("pack-"+(++groupSequence));
-  e.tacticCooldown=2.4+(position%3)*1.1;
+  e.tacticCooldown=1.6+(position%3)*.7;
   e.tacticWarning=0;e.tacticDashTime=0;
   if(role==="volatile")e.burstRadius=Math.max(e.burstRadius||86,104);
   return e;
@@ -30,22 +30,22 @@ function tick(e,dt,player,now,visible,hooks={}){
   const distance=Math.hypot(dx,dy)||1;
   if(role==="skirmisher"&&distance>130&&distance<610){
     // Skirmishers circle instead of stacking behind the player's movement.
-    return {angle:Math.atan2(dy,dx)+(e.encounterGroup?.length%2? .65:-.65),speedMult:1.15};
+    return {angle:Math.atan2(dy,dx)+(e.encounterGroup?.length%2? .58:-.58),speedMult:1.32};
   }
   if(role==="pouncer"&&e.tacticDashTime>0){
     e.tacticDashTime=Math.max(0,e.tacticDashTime-dt);
-    return {angle:e.tacticAngle||0,speedMult:3.4};
+    return {angle:e.tacticAngle||0,speedMult:4.55};
   }
   if(e.tacticWarning>0){
     e.tacticWarning=Math.max(0,e.tacticWarning-dt);
     if(e.tacticWarning===0){
-      e.tacticCooldown=role==="pouncer"?5.8:role==="crusher"?7:7.6;
+      e.tacticCooldown=role==="pouncer"?4.7:role==="crusher"?6:6.4;
       if(role==="pouncer"){
-        e.tacticDashTime=.44;
+        e.tacticDashTime=.58;
       }else if(role==="crusher"){
-        if(distance<e.tacticRadius+(player.r||0))hooks.damage?.(16,e);
+        if(distance<e.tacticRadius+(player.r||0))hooks.damage?.(21,e);
       }else if(role==="binder"){
-        if(distance<e.tacticRadius+(player.r||0))hooks.chill?.(1.7,e);
+        if(distance<e.tacticRadius+(player.r||0))hooks.chill?.(2.4,e);
       }
     }
     return {angle:e.tacticAngle||Math.atan2(dy,dx),speedMult:0};
@@ -55,8 +55,8 @@ function tick(e,dt,player,now,visible,hooks={}){
   const maxDistance=role==="pouncer"?390:role==="crusher"?165:role==="binder"?160:0;
   if(maxDistance&&e.tacticCooldown===0&&distance>minDistance&&distance<maxDistance){
     e.tacticAngle=Math.atan2(dy,dx);
-    e.tacticRadius=role==="crusher"?145:role==="binder"?135:0;
-    e.tacticWarning=role==="pouncer"?.72:role==="crusher"?1.05:.92;
+    e.tacticRadius=role==="crusher"?174:role==="binder"?158:0;
+    e.tacticWarning=role==="pouncer"?.63:role==="crusher"?.88:.78;
     return {angle:e.tacticAngle,speedMult:0};
   }
   return null;
@@ -76,9 +76,9 @@ function rangedVolley(e,shots,player){
   if(e?.encounterTactic!=="crossfire"||!Array.isArray(shots)||shots.length>=316)return 0;
   const aim=Number.isFinite(e.aimAngle)?e.aimAngle:Math.atan2(player.y-e.y,player.x-e.x);
   let created=0;
-  for(const offset of [-.3,.3]){
-    shots.push({type:"enemyOrb",x:e.x,y:e.y,vx:Math.cos(aim+offset)*166,
-      vy:Math.sin(aim+offset)*166,speed:166,turnRate:.12,
+  for(const offset of [-.38,-.14,.14,.38]){
+    shots.push({type:"enemyOrb",x:e.x,y:e.y,vx:Math.cos(aim+offset)*188,
+      vy:Math.sin(aim+offset)*188,speed:188,turnRate:.12,
       life:3.8,r:6,damage:6,tacticShot:true});
     created++;
   }
@@ -101,7 +101,7 @@ function draw(e,ctx,time,quality){
     ctx.moveTo(e.x,e.y-15);ctx.lineTo(e.x,e.y+15);ctx.stroke();
   }
   if(e.tacticWarning>0){
-    const ratio=Math.min(1,e.tacticWarning/(role==="crusher"?1.05:role==="binder"?.92:.72));
+    const ratio=Math.min(1,e.tacticWarning/(role==="crusher"?.88:role==="binder"?.78:.63));
     ctx.globalAlpha=.48+.4*Math.sin(time*12);
     if(role==="pouncer"){
       ctx.setLineDash([8,7]);ctx.lineWidth=3;
