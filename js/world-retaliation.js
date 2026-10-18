@@ -85,16 +85,22 @@
     if (!template || !player || !Number.isFinite(player.x) || !Number.isFinite(player.y)) return false;
     if (state.rifts.filter(r => r.tier === tier).length >= PHASE_LIMITS[tier]) return false;
     const seq = ++state.sequence;
-    let x = player.x, y = player.y;
-    // Multiple tries avoid stacking permanent hazards in the same spot.
-    for (let attempt = 0; attempt < 8; attempt++) {
+    let x = player.x, y = player.y,free = false;
+    // Never accept a stacked, unavoidable hazard on the final failed attempt.
+    // Search progressively wider terrain rings instead. Old rifts remain
+    // permanent; the search doesn't remove them or change conquest rules.
+    for (let attempt = 0; attempt < 48; attempt++) {
       const angle = (seq * 2.399963 + attempt * 1.4) % TAU;
-      const distance = 205 + ((seq + attempt) % 3) * 83;
-      x = player.x + Math.cos(angle) * distance;
-      y = player.y + Math.sin(angle) * distance;
-      if (!state.rifts.some(r => Math.hypot(r.x-x,r.y-y) < (r.radius + template.radius)*.82))
-        break;
+      const distance = 205 + Math.floor(attempt/6)*126 + ((seq + attempt) % 3)*42;
+      const candidateX = player.x + Math.cos(angle)*distance;
+      const candidateY = player.y + Math.sin(angle)*distance;
+      if (state.rifts.some(r =>
+          Math.hypot(r.x-candidateX,r.y-candidateY) < (r.radius + template.radius)*.82))
+        continue;
+      x=candidateX; y=candidateY; free=true;
+      break;
     }
+    if (!free) return false;
     const rift = {
       x,y,radius:template.radius,warning:tier===3?3.1:tier===2?2.6:2.2,
       elapsed:0,lastHit:-Infinity,type:template.id,name:template.name,
