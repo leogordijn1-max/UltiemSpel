@@ -10,15 +10,15 @@ function load(context, file) {
   vm.runInContext(source, context, { filename: file });
 }
 
-test("the six themed wave patterns cycle in a predictable order", () => {
+test("three tactical wave types alternate with a rare fourth-wave swarm", () => {
   const context = vm.createContext({});
   load(context, "js/enemies.js");
   const actual = JSON.parse(vm.runInContext(
     "JSON.stringify([1,2,3,4,5,6,7].map(n => wavePatternFor(n).name))", context,
   ));
   assert.deepEqual(actual, [
-    "DRIFTER SWARM", "RUNNER RUSH", "HEAVY HORDE",
-    "RANGED RAID", "ELITE AMBUSH", "CHAOS MIX", "DRIFTER SWARM",
+    "HARDENED PATROL", "SHIELD ESCORT", "HUNTER PINCER",
+    "SWARM · SMALL ENEMIES", "SHIELD ESCORT", "HUNTER PINCER", "HARDENED PATROL",
   ]);
 });
 
@@ -29,11 +29,13 @@ test("special waves never exceed the spawn cap and generate legitimate kinds", (
     context,
   );
   load(context, "js/enemies.js");
-  vm.runInContext("spawnSpecialWave(6,10)", context);
+  // Test wave composition in isolation from the full game setup.
+  vm.runInContext(`window={isBossIsolationActive:()=>false,initializeEnemyAdaptation:()=>{}};
+    enemySpawn=(kind,elite=false)=>{let e={kind,elite,hp:100,damage:10,speed:60,x:0,y:0};enemies.push(e);return e;};`, context);
+  vm.runInContext("spawnSpecialWave(4,10)", context);
   assert.equal(vm.runInContext("enemies.length", context), 10);
-  assert.equal(vm.runInContext("enemies.every(e => [0,1,2,4,5,6].includes(e.kind))", context), true);
-  assert.equal(vm.runInContext("enemies.some(e => e.kind === 5)", context), true);
-  assert.equal(vm.runInContext("enemies.some(e => e.kind === 6)", context), true);
+  assert.equal(vm.runInContext("enemies.every(e => [0,1].includes(e.kind))", context), true);
+  assert.equal(vm.runInContext("enemies.every(e => e.hp === 46)", context), true);
 });
 
 test("Burstling and Bulwark initialize their abilities and elites receive a trait", () => {
