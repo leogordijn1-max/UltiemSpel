@@ -158,7 +158,8 @@ function draw() {
   window.drawWorldEnvironment?.(left, top);
   // Terrain scars live behind characters, enemies, pickups and projectiles.
   window.drawWorldScars?.(left, top);
-  if (!boss) window.drawWorldRetaliation?.(ctx, time, graphicsQuality);
+  if (!boss) window.drawWorldRetaliation?.(ctx, time, graphicsQuality,
+    {left,top,width:W,height:H});
   // Cinematic Beau arena effects stay beneath player, projectiles and tells.
   window.drawBeauBackdrop?.(boss, ctx, time, player, graphicsQuality, W, H);
   window.drawShadeBackdrop?.(boss, ctx, time, player, graphicsQuality, W, H);
