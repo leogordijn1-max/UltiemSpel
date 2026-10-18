@@ -9,7 +9,9 @@
     const time = Math.max(0, Number(growthSeconds) || 0);
     // Survivors face complex teams, not an ever-expanding background horde.
     const base = 20 + Math.min(6, Math.floor(time / 360) * 2);
-    const adjustment = difficulty === "nightmare" ? 4 : difficulty === "easy" ? -3 : 0;
+    // Nightmare challenge comes from the strength and cadence of attacks,
+    // never a bigger population budget or hidden catch-up enemy pile.
+    const adjustment = difficulty === "easy" ? -3 : 0;
     return Math.min(MAX_LIVE, Math.max(15, base + adjustment));
   }
   // Threat-based soul rewards replace the XP previously earned from horde spam.
@@ -28,7 +30,7 @@
     const time = Math.max(0, Number(growthSeconds) || 0);
     // Ambient spawns become rarer as tactical formations get more demanding.
     const base = 7.3 + Math.min(3.3, time / 550 * 1.5);
-    return base * (difficulty === "nightmare" ? .88 : difficulty === "easy" ? 1.18 : 1);
+    return base * (difficulty === "easy" ? 1.18 : 1);
   }
   function living(enemies) {
     return Array.isArray(enemies) ? enemies.filter(e => e && !e.dead && e.hp !== 0) : [];
@@ -47,7 +49,7 @@
   function ambientLimit(seconds=0,difficulty="normal",enemies=[]) {
     const time=Math.max(0,Number(seconds)||0);
     const base=Math.max(4,9-Math.floor(time/180));
-    const modifier=difficulty==="nightmare"?1:difficulty==="easy"?-1:0;
+    const modifier=difficulty==="easy"?-1:0;
     // During a staged fight, keep the arena focused on those specific threats.
     return Math.max(2,Math.min(populationCap(seconds,difficulty)-10,
       base+modifier-(groups(enemies)>0?3:0)));
@@ -98,6 +100,7 @@
       e.hp*=scale;
       e.speed*=1.18;
       e.damage*=1.26+Math.min(.22,growthSeconds/2100);
+      window.applyCombatDifficultyToSquad?.(e, difficulty);
       e.encounterRole="patrol";
       e.xpValueMultiplier=xpMultiplier(growthSeconds,"patrol");
       window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
