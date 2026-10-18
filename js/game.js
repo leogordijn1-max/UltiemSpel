@@ -436,6 +436,11 @@ function hud() {
       : Math.max(0, Math.min(100, (1 - remaining / 180) * 100))
   }%`;
   $("bossCountdown").style.display = boss ? "none" : "block";
+  if(!boss){
+    const nextName=window.bossFlowNextName?.(
+      runMode,bossesDefeated,bossNumber,finalBossDefeated);
+    if(nextName)$("countText").textContent+=" · NEXT "+nextName;
+  }
   const dashStatus = $("dashStatus");
   dashStatus.textContent =
     dashCooldown <= 0
@@ -565,6 +570,7 @@ function continueEndlessAfterVictory() {
   menuRunMode = "endless";
   endlessStartTime = time;
   nextBossTime = time + 180;
+  // The next Endless boss (#5) restarts the Beau -> Shade -> Bell cycle.
   boss = null;
   bossShots = [];
   bossHazards = [];
