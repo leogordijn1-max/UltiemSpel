@@ -92,15 +92,18 @@ function elementalCircle(x, y, radius, damage, kind, duration = 0.65) {
 }
 function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKey = element) {
   if (enemy.dead) return;
-  damage(enemy, amount, { x: originX, y: originY, type: weaponKey }, element);
+  const combo=window.triggerElementalSynergy?.(
+    enemy,element,weaponKey,amount,time,enemy===boss) || {damage:amount,activated:false};
+  damage(enemy, combo.damage, { x: originX, y: originY, type: weaponKey }, element);
+  if (combo.activated) window.emitWeaponVfxImpact?.(weaponKey,enemy.x,enemy.y,time);
   if (enemy.dead) return;
   if (element === "fire") {
-    enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + 2.2);
+    enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + 2.2 + (combo.bonusBurn || 0));
     enemy.burnWeapon = weaponKey;
     enemy.burnDps = Math.max(enemy.burnDps || 0, 7 + (upgrades.fireball || upgrades.flameOrbit || 1) * 3);
     enemy.nextBurnTick = Math.min(enemy.nextBurnTick || Infinity, time + 0.5);
   } else if (element === "frost") {
-    enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + (evolutions.absoluteZero && weaponKey === "glacialPulse" ? 3 : 1.7));
+    enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + (evolutions.absoluteZero && weaponKey === "glacialPulse" ? 3 : 1.7) + (combo.bonusChill || 0));
     if (evolutions.absoluteZero && weaponKey === "glacialPulse" && enemy !== boss)
       enemy.deepFreezeUntil = Math.max(enemy.deepFreezeUntil || 0, time + 0.85);
   } else if (element === "water") {
@@ -108,8 +111,8 @@ function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKe
     const dx = enemy.x - originX, dy = enemy.y - originY;
     const length = Math.hypot(dx, dy) || 1;
     const force = enemy === boss ? 35 : 170;
-    enemy.knockbackX = (enemy.knockbackX || 0) + dx / length * force;
-    enemy.knockbackY = (enemy.knockbackY || 0) + dy / length * force;
+    enemy.knockbackX = (enemy.knockbackX || 0) + dx / length * (force + (combo.bonusKnockback || 0));
+    enemy.knockbackY = (enemy.knockbackY || 0) + dy / length * (force + (combo.bonusKnockback || 0));
   }
 }
 function updateElementalCombat(dt) {
@@ -340,8 +343,17 @@ function updateElementalCombat(dt) {
       enemy.knockbackX=(enemy.knockbackX||0)+dx/distance*force*dt;
       enemy.knockbackY=(enemy.knockbackY||0)+dy/distance*force*dt;
       enemy.soakedUntil=Math.max(enemy.soakedUntil||0,time+.6);
-      if(pulse) damage(enemy,(5+upgrades.whirlpool*2)*globalDamageMultiplier()*
-        (area.evolved?1.2:1),{x:area.x,y:area.y,type:"whirlpool"},"water");
+      if(pulse){
+        const raw=(5+upgrades.whirlpool*2)*globalDamageMultiplier()*(area.evolved?1.2:1);
+        const combo=window.triggerElementalSynergy?.(
+          enemy,"water","whirlpool",raw,time,enemy===boss) || {damage:raw,activated:false};
+        damage(enemy,combo.damage,{x:area.x,y:area.y,type:"whirlpool"},"water");
+        if(combo.activated){
+          window.emitWeaponVfxImpact?.("whirlpool",enemy.x,enemy.y,time);
+          enemy.knockbackX=(enemy.knockbackX||0)+dx/distance*(combo.bonusKnockback||0);
+          enemy.knockbackY=(enemy.knockbackY||0)+dy/distance*(combo.bonusKnockback||0);
+        }
+      }
     }
   }
   elementalAreas = elementalAreas.filter((area) => area.life > 0).slice(-55);
