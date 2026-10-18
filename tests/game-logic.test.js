@@ -94,7 +94,7 @@ test("the game resumes when every upgrade is capped", () => {
     context,
   );
   loadScript(context, "js/upgrades.js");
-  vm.runInContext("choices();", context);
+  vm.runInContext("selectedWeapons=['arcane','orbit','bomb'];unlockedWeapons=[...selectedWeapons];evolutions={};bossesDefeated=0; for(const [key] of opts)upgrades[key]=maxUpgradeLevel(key);choices();", context);
 
   assert.equal(vm.runInContext("paused", context), false);
   assert.equal(vm.runInContext("pendingLevelUps", context), 0);
@@ -152,6 +152,7 @@ test("bosses spawn with health scaling and telegraphed charge state", () => {
     difficulty: "normal",
     growthTime: 240,
     bossNumber: 0,
+    boss: null,
     rand: (min) => min,
     $: () => ({ style: {} }),
     playSfx: () => {},
@@ -238,7 +239,7 @@ test("a run unlocks only its two reserves and lets one weapon reach its final ev
   loadScript(context, "js/upgrades.js");
   assert.deepEqual(
     JSON.parse(vm.runInContext("JSON.stringify(Object.values(makeStartingWeaponLevels('arcane'))) ", context)),
-    [1, 0, 0, 0, 0, 0, 0, 0],
+    [1, ...Array.from({length:vm.runInContext("weaponCatalog.length-1",context)},()=>0)],
   );
   vm.runInContext(
     "function take(key) { pendingLevelUps = 1; const button = makeUpgradeChoice(opts.find(([id]) => id === key)); button.onclick(); } take('orbit'); take('bomb'); for (let i = 0; i < 4; i++) take('arcane'); for (let i = 0; i < 3; i++) take('pierce'); bossesDefeated = 1;",
@@ -266,9 +267,9 @@ test("Frost Orb and Flame Cone define distinct crowd-control and burn roles", ()
   assert.match(vm.runInContext("opts.find(([key]) => key === 'flame')[2]", context), /burn/i);
   assert.deepEqual(
     JSON.parse(vm.runInContext("JSON.stringify(evolutionRecipes.map((r) => [r.level, r.supportLevel, !!r.visual]))", context)),
-    Array.from({ length: 8 }, () => [5, 3, true]),
+    Array.from({ length: vm.runInContext("evolutionRecipes.length", context) }, () => [5, 3, true]),
   );
-  assert.equal(vm.runInContext("new Set(evolutionRecipes.map((r) => r.visual)).size", context), 8);
+  assert.equal(vm.runInContext("new Set(evolutionRecipes.map((r) => r.visual)).size", context), vm.runInContext("evolutionRecipes.length",context));
 });
 
 test("off-screen enemies are excluded from the visible arena bounds", () => {
@@ -547,12 +548,12 @@ test("Death Pulse reaches level 5 and unlocks Eclipse with Expanding Aura", () =
   assert.equal(vm.runInContext("novaRadius() > 95", context), true);
 });
 
-test("all eight weapons have their own evolution and maximum level five", () => {
+test("all registered weapons have distinct evolutions and maximum level five", () => {
   const context = vm.createContext({});
   vm.runInContext("let upgrades = {}, evolutions = {}, selectedWeapons = [], unlockedWeapons = [];", context);
   loadScript(context, "js/upgrades.js");
-  assert.equal(vm.runInContext("weaponCatalog.length", context), 8);
-  assert.equal(vm.runInContext("evolutionRecipes.length", context), 8);
+  assert.equal(vm.runInContext("weaponCatalog.length", context), 15);
+  assert.equal(vm.runInContext("evolutionRecipes.length", context), 15);
   assert.equal(vm.runInContext("evolutionRecipes.every(r => maxUpgradeLevel(r.weapon) === 5)", context), true);
-  assert.equal(vm.runInContext("new Set(evolutionRecipes.map(r => r.weapon)).size", context), 8);
+  assert.equal(vm.runInContext("new Set(evolutionRecipes.map(r => r.weapon)).size", context), 15);
 });
