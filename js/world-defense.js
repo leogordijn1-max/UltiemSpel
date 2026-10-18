@@ -45,16 +45,19 @@ function createSquad(now,player,enemies,spawnEnemy,t=stage,growthSeconds=0){
   if(!running||!player||!t||!WORLDS[window.getWorldConquest?.().original]||
       squads.length>=squadCap(t)||enemies.length> TOTAL_CAP-composition(t).length)return false;
   const roles=composition(t),members=[],id=nextId++,baseAngle=(id*2.399963)%TAU;
-  const cx=player.x+Math.cos(baseAngle)*Math.max(360,(player.viewW||0)*.5+60);
-  const cy=player.y+Math.sin(baseAngle)*Math.max(310,(player.viewH||0)*.5+60);
+  const spawnAt=window.enemyOffscreenSpawn?.(baseAngle,185);
+  const cx=spawnAt?.x ?? player.x+Math.cos(baseAngle)*Math.max(700,(player.viewW||0)*.5+200);
+  const cy=spawnAt?.y ?? player.y+Math.sin(baseAngle)*Math.max(650,(player.viewH||0)*.5+200);
   for(let i=0;i<roles.length;i++){
     const role=roles[i];
     const kind=window.enemyDefenseRoleKind?.(role,growthSeconds) ?? KINDS[role];
     const e=spawnEnemy(kind);
     if(!e)break;
     const theta=baseAngle+Math.PI+(-2+i)*.34;
-    e.x=cx+Math.cos(theta)*(role==="commander"?0:65+(i%2)*18);
-    e.y=cy+Math.sin(theta)*(role==="commander"?0:65+(i%2)*18);
+    const along=(i-(roles.length-1)/2)*54;
+    const position=window.enemyOffscreenSpawn?.(baseAngle,185,along);
+    e.x=position?.x ?? cx+Math.cos(theta)*(role==="commander"?0:65+(i%2)*18);
+    e.y=position?.y ?? cy+Math.sin(theta)*(role==="commander"?0:65+(i%2)*18);
     e.defenseSquadId=id;e.defenseRole=role;e.defenseSlot=i;
     e.defenseLeaderLost=false;
     // Existing Bulwark shield/elite traits remain intact.
