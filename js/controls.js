@@ -22,6 +22,7 @@ function backButton(parent) {
   parent.append(button);
 }
 function showMainMenu() {
+  window.runQaEnd?.("abandoned",typeof time==="number"?time:0);
   window.resetBossIsolation?.();
   window.developerEndRun?.();
   window.abandonWorldRun?.();
@@ -79,6 +80,7 @@ function bindMainMenu() {
   $("encyclopediaButton").onclick = () => showEncyclopedia();
   $("collectionButton").onclick = () => showCollection();
   $("controlsButton").onclick = () => showControlsHelp(false);
+  window.appendRunQaExportButtons?.($("menuActions"));
 }
 
 function showCharacterSelection() {
@@ -196,6 +198,17 @@ function showSettings(fromPause = false) {
   panel("SETTINGS", "Audio, graphics quality, and performance options", (parent) => {
     parent.innerHTML = `<fieldset id="audioSettings"><legend>Sound settings</legend><label>Effects <input id="effectVolume" type="range" min="0" max="0.6" step="0.01"></label><label>Ambient music <input id="musicVolume" type="range" min="0" max="0.5" step="0.01"></label><label><input id="muteAudio" type="checkbox"> Mute all sound</label><label><input id="showFps" type="checkbox"> Show FPS, frametime and object timings</label><label>Graphics quality <select id="graphicsQuality"><option value="low">Low · reduced glow and particles</option><option value="medium">Medium</option><option value="high">High</option></select></label></fieldset>`;
     configureAudio();
+    const qaLabel=document.createElement("label");
+    const qaInput=document.createElement("input");
+    qaInput.type="checkbox";
+    qaInput.id="qaRecording";
+    qaInput.checked=window.runQaEnabled?.()??true;
+    qaInput.onchange=()=>window.runQaSetEnabled?.(qaInput.checked);
+    qaLabel.append(qaInput,document.createTextNode(
+      " Record local run QA data (no uploads; export JSON manually)"));
+    const qaInfo=document.createElement("p");
+    qaInfo.textContent="Records game-time checkpoints, XP, level-up options, bosses, hits and sampled real FPS. Enabled for the next run; Developer Mode reports are marked sandbox.";
+    parent.append(qaLabel,qaInfo);
     $("showFps").checked = showFps;
     $("showFps").onchange = () => {
       showFps = $("showFps").checked;
@@ -584,6 +597,7 @@ function showPauseMenu() {
   panel("PAUSED", "Your run is safe while the game is paused.", (parent) => {
     appendMenuButton(parent, "RESUME · P", resumePausedRun);
     appendMenuButton(parent, "CURRENT BUILD", showCurrentBuild);
+    window.appendRunQaExportButtons?.(parent);
     appendMenuButton(parent, "CONTROLS", () => showControlsHelp(true));
     appendMenuButton(parent, "SETTINGS", () => showSettings(true));
     if (window.isDeveloperRun?.())
