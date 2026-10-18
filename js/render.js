@@ -268,6 +268,7 @@ function draw() {
     window.drawEnemyWorldAura?.(e, ctx, time, graphicsQuality);
     window.drawEncounterTactic?.(e,ctx,time,graphicsQuality);
     window.drawWorldDefense?.(e, ctx, time, graphicsQuality);
+    window.drawEnemyArchetype?.(e,ctx,time,graphicsQuality);
     window.drawGuardianWorldWarning?.(e, ctx, time, graphicsQuality === "low");
     window.drawBossCombat?.(e, ctx, time, graphicsQuality);
     window.drawBeauTelegraph?.(e, ctx, time, graphicsQuality);
@@ -640,9 +641,23 @@ function draw() {
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = "#d5eeff";
-      ctx.fillRect(-4, -11, 8, 22);
-      ctx.fillRect(-12, -3, 24, 6);
+      // Distinct 16-angle shield, always locked to the PLAYER rather than
+      // the enemy's walking direction. Draw the arc on its actual blocking side.
+      ctx.save();
+      const shieldHeading=window.enemyShieldFacing16?.(e,player) ??
+        Math.atan2(player.y-e.y,player.x-e.x);
+      ctx.rotate(shieldHeading);
+      ctx.fillStyle=e.shieldActive?"rgba(115,236,255,.16)":"rgba(100,111,139,.10)";
+      ctx.strokeStyle=e.shieldActive?"#b5f8ff":"#60728a";
+      ctx.lineWidth=e.shieldActive?6:3;
+      ctx.beginPath();
+      ctx.arc(0,0,e.r+10,-.88,.88);
+      ctx.lineTo(Math.cos(.88)*(e.r+2),Math.sin(.88)*(e.r+2));
+      ctx.arc(0,0,e.r+2,.88,-.88,true);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#d5eeff";
+      ctx.fillRect(e.r+6,-4,11,8);
+      ctx.restore();
       ctx.restore();
       continue;
     }
