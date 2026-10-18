@@ -1850,6 +1850,7 @@ function update(dt) {
   // A fully earned evolution is offered at its milestone, even if no XP
   // pickup happens right afterward. It never awards the prerequisite levels.
   if(!boss && !paused)window.offerEarnedEvolution?.();
+  window.runQaBossPhase?.(boss,time);
   if (hudUpdateTimer >= 0.12) {
     hudUpdateTimer = 0;
     if(window.runQaNeedsSnapshot?.(time)){
