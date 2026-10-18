@@ -22,12 +22,14 @@
     return Array.isArray(enemies) ? enemies.filter(e => e && !e.dead && e.hp !== 0) : [];
   }
   function groups(enemies) {
-    const ids=new Set();
+    const ids=new Map();
     for(const e of living(enemies)){
-      if(e.defenseSquadId)ids.add("defense:"+e.defenseSquadId);
-      else if(e.encounterGroup)ids.add("patrol:"+e.encounterGroup);
+      const id=e.defenseSquadId?"defense:"+e.defenseSquadId:
+        e.encounterGroup?"patrol:"+e.encounterGroup:null;
+      if(id)ids.set(id,(ids.get(id)||0)+1);
     }
-    return ids.size;
+    // A single surviving straggler shouldn't lock the next encounter forever.
+    return [...ids.values()].filter(size=>size>=2).length;
   }
   function maxGroups(seconds=0) { return seconds>=360?2:1; }
   function ambientLimit(seconds=0,difficulty="normal",enemies=[]) {
@@ -44,7 +46,7 @@
     if(groupCount>=maxGroups(seconds))return false;
     if(count+size>populationCap(seconds,difficulty))return false;
     // Hold encounters until most stray enemies have been cleared.
-    return count-size <= 14;
+    return count<=12;
   }
   function reset() { running = true; nextPatrol = Infinity; patrols = 0; stage = 0; }
   function clear() { running = false; nextPatrol = Infinity; stage = 0; }
