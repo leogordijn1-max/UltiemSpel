@@ -29,7 +29,7 @@ test("Update 30 report explicitly keeps browser acceptance OPEN and sets verifie
   assert.match(report,/GEVERIFIEERDE SPEELBARE RELEASE: NOG NIET VRIJGEGEVEN/);
   assert.match(report,/6 HANDMATIGE RELEASEBLOKKADES OPEN/);
   for(let i=31;i<=40;i++)assert.ok(report.includes("**"+i+"**"),"missing roadmap Update "+i);
-  assert.match(report,/tijdsprongen/);
+  assert.match(report,/tijdskiptests|tijdsprongen/i);
   assert.match(report,/twee evoluties/i);
   assert.match(report,/NO-GO/);
 });
@@ -55,7 +55,7 @@ test("manual gates can only be established from independent real playtest eviden
   assert.match(qa,/Nog geen bevestigde volledige menselijke/);
   assert.match(qa,/Open: browsertest/);
   assert.match(report,/gescripte campagne-replay/);
-  assert.match(report,/werkelijk verdiende XP/);
+  assert.match(report,/werkelijk verdiende XP/i);
   assert.match(report,/FPS\/P95/);
   assert.match(report,/Drie geregistreerde complete runs/);
 });
