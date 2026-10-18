@@ -6,7 +6,7 @@
 >
 > **Stand bij aanleg:** 18 oktober 2026; afgerond t/m **Update 19 (inclusief reparatie voor de actieve elementwapens)**. Volgende is **Update 20: Weapon VFX**. Mijlpaal Update 30: **9 van 20 geplande updates = 45% planningsvoortgang**, géén percentage uiteindelijke gamekwaliteit. Laatst vastgestelde CI: **365 geslaagde tests**, en GitHub Actions stond groen op commit 65f0700. Verifieer dit opnieuw bij iedere nieuwe sessie.
 
-> **ACTUELE STAND (na Update 28, 18 oktober 2026):** Update 28 is technisch afgerond en gepusht op feature/living-world-prototype. **18/20 = 90% planningsvoortgang** naar mijlpaal 30. **451/451 automatische tests geslaagd**, GitHub Actions-run https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39158717600. **Volgende update: 29 — volledige 25–30 minuten Normal-run QA, bugs en polish.** Geclaimde FPS-winst of complete browserplaytests zijn nog niet geverifieerd. Controleer eerst actuele HEAD en CI.
+> **ACTUELE STAND (na Update 29, 18 oktober 2026):** Update 29 technisch afgerond en gepusht op feature/living-world-prototype. **19/20 = 95% planningsvoortgang** naar mijlpaal 30. **462/462 automatische tests geslaagd**, GitHub Actions https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39159657297. **Volgende: Update 30 — Combat & Gameplay 2.0 milestone review.** `NORMAL-RUN-QA.md` benoemt expliciet open browsertests. De gescripte 26:40-replay is geen live gespeelde 26 minuten. Controleer de huidige HEAD/CI voordat je begint.
 
 ## 1. De ziel van de game — lees dit vóór de code
 
@@ -101,7 +101,7 @@ Dit is **vanille HTML/CSS/JavaScript met een Canvas-game**, geen game-engine. De
 
 We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eerste goede spelversie besproken. Het is geen bindend eindgetal. De huidige grote tussenmijlpaal is **Update 30 — Combat & Gameplay 2.0**: een volledige 25–30 min Standard-run die technisch betrouwbaar, uitdagend, fair en fijn aanvoelt.
 
-**Actuele afgesproken roadmap (na Update 28):**
+**Actuele afgesproken roadmap (na Update 29):**
 - **20 — AFGEROND (CI groen, browser-VFX-test nog open):** Eigen visuele accenten voor de negen huidige elementwapens, met render-culling en kwaliteitslimieten.
 - **21 — AFGEROND (CI groen, browser-test open):** Drie kleine, echte same-element cross-weapon combo's met een begrensde bonus en overzichtelijke evolutiepaden op upgrade-/supportkaarten.
 - **22 — AFGEROND (CI groen, speeltest open):** Difficulty komt uit taktische teamstatistieken en nog leesbare timings, niet extra Nightmare-vijanden. Flame Orbit en Frost-slow tegen bosses begrensd.
@@ -111,12 +111,12 @@ We hebben een **ruwe ambitie van circa 100 kleine/medium updates** voor een eers
 - **26 — AFGEROND (CI groen, boss-playtest open):** Fase-3 ultimates van alle vier bosses krijgen drie extra reusachtige, getargette arena strikes met geometrisch correcte waarschuwingen en bereikbare veilige routes.
 - **27 — AFGEROND (CI groen, browserleesbaarheid open):** Compact bosswaarschuwingspaneel onder de HP-balk met echte beat-/impactcountdown en dashstatus, na target-lock berekende veilige zone voor **de huidige Guardian Power** met subtiel turquoise Canvas-markering. Groen counterattackvenster uitsluitend wanneer boss echt bonusdamage incasseert.
 - **28 — AFGEROND (CI groen, browserbenchmark open):** Spatial hash Map/cellen hergebruiken, offscreen Canvas-cosmetics cullen, dark-vignette per viewportsize cachen, world-scars direct doorlopen en build-HUD niet onnodig heropbouwen. **Geen spawn/damage/XP/waarschuwing geschrapt.**
-- **29:** Volledige Normal-run(s), bugs en polish.
+- **29 — AFGEROND (462/462 CI, handmatige 25–30 min browserrun OPEN):** Fire/Water/Frost scripted campaign-replay door echte bossconstructors/death/evolution/world/victory/endlessfuncties; twee eindschermblockers in game.js gefixt. `NORMAL-RUN-QA.md` beschrijft de resterende echte playtests; leveleisen zijn in replayfixtures direct ingesteld, niet door normale XP bewezen.
 - **30:** Mijlpaalreview: Combat & Gameplay 2.0 en besluit over volgende fase.
 
 Updates 11–19 zijn afgerond in de **planning**, maar speeltests staan bij meerdere onderdelen nog open. Houd een strikte scheiding tussen **code afgerond**, **CI groen**, **browsertest gedaan** en **spelgevoel bewezen**. Geen vooruitgang claimen zonder bewijs.
 
-**Laatste stand:** Update 19–27 hebben de actieve elementwapens, functionele VFX, beperkte echte combo's, verdiende evoluties, eerlijke tactical difficulty, gesignaleerde Living World-hazards, veroveringsconsequenties, earnable bossflow, vier spectaculaire fase-3 Guardian Powers en een prioriteitsbewuste boss-HUD technisch uitgebreid. **Update 28 is afgerond:** js/enemies.js hergebruikt nu dezelfde `enemyGrid` Map en tot maximaal 256 vrijgemaakte, gewiste spatial-bucket-arrays in plaats van iedere sim-tick alles opnieuw te alloceren; js/render.js tekent geen volledig offscreen Frost Zones, lightning-link, Flame Cones of explosieringen meer en cachet de vignette Canvas gradient per schermgrootte; js/world-visuals.js maakt geen tijdelijke viewport-array meer voor scars; js/game.js vervangt de 3-weapon loadout DOM alleen als de echte markup verandert. **Damage, hitzones, boss/gevaren-waarschuwingen, gameticks, enemy counts, loot en XP zijn onveranderd.** 451 tests groen incl. exact vergelijkbare spatial queries met brute force onder grote enemy-counts. **Meetbare browser-FPS-verbetering nog open**, niet als bewezen claimen. **Volgende: Update 29 echte volledige Normal QA**, daarna 30 milestone review. Maker wil voorlopig VFX-basis, niet eindpolish.
+**Laatste stand:** Update 19–28 bouwden actieve elementwapens, functionele VFX, synergie, evolutieroutes, fair combat, Living World, bossvolgorde en -powers, leesbare HUD en performance. **Update 29 is nu technisch afgerond**: `tests/update-29-full-normal-run.test.cjs` simuleert Fire/Water/Frost Standard tot **26:40 via tijdsprongen**, maar roept echte boss-/damage-/evolution-/world-/victory-/Endless-functies aan. Twee ware fixes: (1) het Game-Over-scherm na Standard-win gevolgd door Endless-verlies noemt nu de werkelijk gewonnen invaderwereld plus bereikte piek, niet onterecht de oorspronkelijke verdediger; (2) schade binnen dezelfde simulatietick als The Last Meme-kill mag de verdiende Victory-modal niet meer overschrijven — overlijden in Endless blijft toegestaan. **462/462 automatische tests groen**. `NORMAL-RUN-QA.md` geeft het volledige open handmatige browserprotocol; daadwerkelijk 25–30m survivability, voldoende XP voor twee evoluties, FPS en overlappende Guardian Powers blijven **ONGETEST**. **Volgende: Update 30 eerste mijlpaalreview** en een nieuwe roadmap richting echte volledig speelgeteste release. Maker wil nu functionele VFX, polish komt later.
 
 ## 6. Samenwerking en de 'vibe' die moet meegaan naar de volgende chat
 
@@ -147,6 +147,16 @@ Praktisch werken we zo:
 
 ### Update-log voor contextoverdracht (nieuwste bovenaan)
 Gebruik per update dit compacte stramien en bewaar de belangrijkste beslissingen. Laat oude commits het technische detail leveren.
+
+**18-10-2026 — Update 29: Gescripte Full Normal Campaign QA + twee eindfixes**
+- Branch: `feature/living-world-prototype`. Bestanden: `js/game.js`, `tests/update-29-full-normal-run.test.cjs` (**11 extra regressietests**), nieuw `NORMAL-RUN-QA.md`, plus MILESTONE-30.md/PROJECT-KOMPAS.md.
+- **Scenario Fire/Water/Frost Normal tot 26:40:** echte constructors en `damage()` verslaan Beau, The Mourning Shade, The Bell Tower, The Last Meme; earned bossstages 15/50/85%, finale pas na drie Guardians én 25:00, final world conquest 100%. Daarna Endless zonder tweede winbonus of extra runrecord; Beau start Endless-rotatie. Standard-defeat herstelt originele wereld, peak-coverage uit echte bosskills blijft zichtbaar.
+- **Twee evoluties op 10:00 en 17:00 worden via werkelijke `eligibleEvolutions()`/`evolveWeapon()`-voorwaarden gecontroleerd**, inclusief levels 5/3 en minimaal één boss. NOOIT doen alsof hiermee gewoon XP-aanbod of speelbare 25–30-minuten-combat is aangetoond: vereiste levels worden rechtstreeks in de testfixture gezet en timestamps worden vooruitgesprongen.
+- **Bugfix 1:** het Game-Over-scherm na Standard-victory + Endless-death toont nu de juiste *invaderworld* die inmiddels dominant is; normale mislukte Standard-run toont oorspronkelijke wereld plus daadwerkelijk verdiende peak.
+- **Bugfix 2:** een resterende projectile-/hazardhit tijdens dezelfde 1/60s simulatietick als The Last Meme-death mag `VICTORY` niet overruilen voor Game Over. Na gekozen Endless hervat `gameState=playing` en kan sterven gewoon weer.
+- **Bewijs:** https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39159657297 — **462 tests groen, 0 fouten**, inclusief 11 nieuwe scenario/regressietests. Dit is gescripte **26:40-gameklok**, NIET 26:40 echte browserplay.
+- **Open:** browser-run volledige 25–30min; level-up aanbod en daadwerkelijk verdienbare twee evoluties; overlap van bestaande en nieuwe Guardian ultimates, 2x/3x moeilijkheid, levende FPS-benchmark, echte win-/verlieservaring. Zie de uitgebreide acceptatietabel in `NORMAL-RUN-QA.md`.
+- **Planning: 19/20 = 95% geplande updates** (niet afwerkingsscore). Volgende: **Update 30 Combat & Gameplay 2.0 review, release/no-release evidence en next-phase roadmap**. VFX voorlopig basis, eindpolish later.
 
 **18-10-2026 — Update 28: Performance Overhaul technisch afgerond**
 - Branch: feature/living-world-prototype. Belangrijkste wijzigingen: `js/enemies.js`, `js/render.js`, `js/world-visuals.js`, `js/game.js`, `index.html`. Nieuwe regressietests `tests/update-28-performance.test.cjs` (10 nieuwe tests). Vóór iedere volgende wijziging verse branch HEAD en CI controleren.
