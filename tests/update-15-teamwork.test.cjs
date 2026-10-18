@@ -71,7 +71,7 @@ test("binder and crusher telegraphs are staggered, never surprise-doublecast",()
   assert.ok(binder.tacticWarning>0);
   assert.equal(h.window.updateEncounterTactic(crusher,.016,h.player,.02,true),null);
   assert.equal(crusher.tacticWarning,0);
-  h.window.updateEncounterTactic(binder,.8,h.player,1,true,{chill:()=>{}});
+  h.window.updateEncounterTactic(binder,.9,h.player,1,true,{chill:()=>{}});
   assert.equal(binder.tacticWarning,0);
   assert.ok(h.window.updateEncounterTactic(crusher,.016,h.player,1.02,true));
   assert.ok(crusher.tacticWarning>0);
@@ -161,5 +161,5 @@ test("real kill flow applies guard death and live damage checks exposed window",
   assert.match(read("js/encounter-pacing.js"),/linkEncounterTacticTeam/);
   assert.match(read("js/enemies.js"),/linkEncounterTacticTeam/);
   assert.match(read("js/game.js"),/updateEncounterTactic/);
-  assert.match(read("index.html"),/encounter-tactics\.js\?v=(?:teamwork-15|archetypes-16)/);
+  assert.match(read("index.html"),/encounter-tactics\.js\?v=(?:teamwork-15|archetypes-16|telegraphs-17)/);
 });
