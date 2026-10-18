@@ -626,9 +626,10 @@ function emitDeathPulse(isEcho = false) {
 // Advance the simulation by one frame.
 // Automatic character abilities are independent of the three weapon slots.
 function fireBeauFishBarrage() {
-  const target = nearestEnemy(player.x, player.y,
-    window.playerWeaponRange?.(550) ?? 550, null,
-    e => window.playerWeaponTargetVisible?.(e) ?? true);
+  const range=typeof window!=="undefined" ? window.playerWeaponRange?.(550)??550 : 550;
+  const target = nearestEnemy(player.x, player.y,range,null,
+    e => typeof window==="undefined"||!window.playerWeaponTargetVisible
+      ||window.playerWeaponTargetVisible(e));
   if (!target) return false;
   const angle = Math.atan2(target.y - player.y, target.x - player.x);
   for (const offset of [-0.2, 0, 0.2]) {
