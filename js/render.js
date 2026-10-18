@@ -162,6 +162,7 @@ function draw() {
   window.drawBeauBackdrop?.(boss, ctx, time, player, graphicsQuality, W, H);
   window.drawShadeBackdrop?.(boss, ctx, time, player, graphicsQuality, W, H);
   window.drawBellBackdrop?.(boss, ctx, time, player, graphicsQuality, W, H);
+  window.drawMemeBackdrop?.(boss, ctx, time, player, graphicsQuality, W, H);
   // XP and health pickups.
   for (const g of nearbyGems(player.x, player.y, Math.hypot(W, H) * 0.65)) {
     if (!visibleEnemy(g, -30)) continue;
@@ -269,6 +270,7 @@ function draw() {
     window.drawBeauTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawShadeTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawBellTelegraph?.(e, ctx, time, graphicsQuality);
+    window.drawMemeTelegraph?.(e, ctx, time, graphicsQuality);
     if (e.pulseSlowUntil > time) {
       ctx.save();
       ctx.strokeStyle = "rgba(191, 108, 255, 0.85)";
