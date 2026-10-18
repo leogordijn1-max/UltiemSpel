@@ -152,6 +152,7 @@ function reset() {
   window.resetEnemyProgression?.();
   window.resetEncounterTactics?.();
   window.resetPlayerMovement?.();
+  window.resetHitFeedback?.();
   syncElementalLoadout();
   resetElementalCombat();
   for (const key in keys) keys[key] = false;
@@ -1712,6 +1713,7 @@ function update(dt) {
     t.life -= dt;
   }
   texts = texts.filter((t) => t.life > 0);
+  window.updateHitFeedback?.(dt,time);
   shake = Math.max(0, shake - 35 * dt);
   checkRunAchievements();
   if (hudUpdateTimer >= 0.12) {
