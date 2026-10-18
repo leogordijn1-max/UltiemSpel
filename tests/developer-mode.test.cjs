@@ -159,7 +159,7 @@ test("ending a test run discards modified in-memory career progression", () => {
   assert.equal(t.disk.get("shadowProgress"), '{"points":42}');
 });
 
-test("F9 panel pauses and resumes without opening a normal level-up screen", () => {
+test("F8 panel pauses and resumes without opening a normal level-up screen", () => {
   const t = environment();
   t.enable();
   t.start();
@@ -213,7 +213,7 @@ test("element selection remains a per-run override, never alters saved preferenc
   assert.equal(t.context.storageGet("shadowRunElement", "fire"), "fire");
 });
 
-test("deleting a sandbox boss keeps F9 actions and resumes on close", () => {
+test("deleting a sandbox boss keeps F8 actions and resumes on close", () => {
   const t = environment();
   t.enable();
   t.start();
