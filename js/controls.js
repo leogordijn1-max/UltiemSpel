@@ -696,6 +696,7 @@ addEventListener("keyup", (event) => {
 
 function clearMovementKeys() {
   for (const key in keys) keys[key] = false;
+  window.clearPlayerMovementInput?.();
   touchMoveX = 0;
   touchMoveY = 0;
   $("virtualStick")?.querySelector("span")?.style.setProperty("transform", "translate(0, 0)");
