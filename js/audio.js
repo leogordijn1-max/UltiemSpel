@@ -8,6 +8,7 @@ let activeSoundVoices = 0;
 const sfxLastByName = new Map();
 const soundPresets = {
   shot: [420, 0.035, "triangle"], hit: [170, 0.07, "square"],
+  crit: [385, 0.13, "triangle"], impact: [115, 0.13, "sawtooth"],
   block: [610, 0.06, "sine"], kill: [240, 0.10, "sine"],
   xp: [730, 0.045, "sine"], level: [910, 0.2, "triangle"],
   bomb: [79, 0.30, "sawtooth"], boss: [101, 0.48, "sawtooth"],
@@ -52,6 +53,7 @@ function playSfx(name = "hit") {
   const now = audioContext.currentTime;
   const critical = ["victory", "evolution", "gameover", "boss", "boss-warn"].includes(name);
   const delay = name === "hit" ? 0.095 :
+    name === "crit" ? .16 : name === "impact" ? .19 :
     name === "xp" ? 0.065 : name === "shot" ? 0.05 : name === "kill" ? 0.065 :
       critical ? 0.32 : 0.09;
   if (now - (sfxLastByName.get(name) ?? -100) < delay) return;
@@ -63,7 +65,9 @@ function playSfx(name = "hit") {
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, now);
   oscillator.frequency.exponentialRampToValueAtTime(Math.max(35, frequency * 0.55), now + duration);
-  const loudness = critical ? 0.6 : name === "hit" ? 0.25 : name === "xp" ? 0.2 : 0.42;
+  const loudness = critical ? 0.6 : name === "hit" ? 0.25 :
+    name === "crit" ? .48 : name === "impact" ? .32 :
+    name === "xp" ? 0.2 : 0.42;
   gain.gain.setValueAtTime(Math.min(0.18, effectVolume * loudness), now);
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
   oscillator.connect(gain).connect(audioContext.destination);
