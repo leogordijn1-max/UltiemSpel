@@ -664,57 +664,31 @@ function enemyHitRadius(enemy) {
 function fire() {
   if (!upgrades.arcane) return;
   const range = window.playerWeaponRange(Math.hypot(W, H) * 0.65);
-  const candidates = nearbyEnemies(player.x, player.y, range);
-  let visibleCount = 0;
-  for (const enemy of candidates) {
-    if (window.playerWeaponTargetVisible(enemy)) candidates[visibleCount++] = enemy;
-  }
-  candidates.length = visibleCount;
-  const missileCount = Math.min(Math.max(1, upgrades.arcane) + (evolutions.splitDimension ? 2 : 0), 7);
-  const targets = visibleCount > missileCount
-    ? candidates
-    : nearestEnemies(player.x, player.y, range, missileCount, (enemy) => window.playerWeaponTargetVisible(enemy));
-  if (!targets.length) return;
-  const missilesPerTarget = Math.floor(missileCount / targets.length);
-  const extraMissiles = missileCount % targets.length;
-  // Partial Fisher–Yates shuffle selects the uneven bonus targets without sorting.
-  for (let i = 0; i < extraMissiles; i++) {
-    const pick = i + Math.floor(Math.random() * (targets.length - i));
-    [targets[i], targets[pick]] = [targets[pick], targets[i]];
-  }
-  for (let index = 0; index < targets.length; index++) {
-    const target = targets[index];
-    const assignedCount = missilesPerTarget + (index < extraMissiles ? 1 : 0);
-    for (let missile = 0; missile < assignedCount && bullets.length < 300; missile++) {
-    const lead = Math.min(0.35, dist(target, player) / 560),
-      tx =
-        target.x +
-        (target === boss
-          ? 0
-          : ((player.x - target.x) / Math.max(1, dist(target, player))) *
-            target.speed *
-            lead),
-      ty =
-        target.y +
-        (target === boss
-          ? 0
-          : ((player.y - target.y) / Math.max(1, dist(target, player))) *
-            target.speed *
-            lead),
-      a = Math.atan2(ty - player.y, tx - player.x);
+  const count = Math.min(Math.max(1, upgrades.arcane) +
+    (evolutions.splitDimension ? 2 : 0), 7);
+  const near = nearbyEnemies(player.x, player.y, range);
+  const targets = window.weaponAimTargets?.(player, near, count, range,
+    e => window.playerWeaponTargetVisible(e)) ||
+    nearestEnemies(player.x, player.y, range, count,
+      e => window.playerWeaponTargetVisible(e));
+  if(!targets.length)return;
+  // Repeat only when too few opponents are available. In crowds, every bolt
+  // has an intentional visible target instead of a randomly chosen bystander.
+  const assigned=window.weaponDistributeShots?.(targets,count) ||
+    Array.from({length:count},(_,i)=>targets[i%targets.length]);
+  for(const target of assigned){
+    if(bullets.length>=300)break;
+    const a=window.weaponAimAngle?.(player,target,560,{maxLead:.33}) ??
+      Math.atan2(target.y-player.y,target.x-player.x);
     bullets.push({
-      type: evolutions.splitDimension ? "split" : "arcane",
-      x: player.x,
-      y: player.y,
-      vx: Math.cos(a) * 560,
-      vy: Math.sin(a) * 560,
-      life: 1.8,
-      r: 5,
-      d: (12 + upgrades.arcane * 2) * globalDamageMultiplier() * (evolutions.splitDimension ? 1.25 : 1),
-      pierce: upgrades.pierce + 1,
-      hit: new Set(),
+      type:evolutions.splitDimension?"split":"arcane",
+      x:player.x,y:player.y,
+      vx:Math.cos(a)*560,vy:Math.sin(a)*560,
+      life:1.8,r:5,
+      d:(12+upgrades.arcane*2)*globalDamageMultiplier()*
+        (evolutions.splitDimension?1.25:1),
+      pierce:upgrades.pierce+1,hit:new Set()
     });
-    }
   }
 }
 // Enemy and boss projectile attacks.
