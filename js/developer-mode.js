@@ -443,7 +443,12 @@
       window.updateEnemyProgression?.(growthTime,message=>notify("DEV · "+message, "wave", 4));
       updateHud();
     }, (roster?.count || 0) >= (roster?.total || 6));
-    s = section(root, "ENCOUNTER PACING · SMALL PACKS VS SWARM");
+    s = section(root, "TACTICAL ENCOUNTERS · SMALL PACKS VS SWARM");
+    const nextPack=window.chooseTacticalEncounter?.(
+      growthTime,window.getEncounterPacingStatus?.().patrols || 0);
+    if(nextPack)root.append(small("p",
+      "NEXT TEAM · "+nextPack.name+" · "+nextPack.members.length+
+      " ENEMIES · "+nextPack.hint,"developer-note"));
     addButton(s, "SPAWN TOUGH PATROL", () => {
       if(boss || window.isBossIsolationActive?.())return;
       const spawned=window.spawnEncounterPatrol?.(time,growthTime,player,enemies,
