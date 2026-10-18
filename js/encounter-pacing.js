@@ -37,7 +37,9 @@
     const anchorY = player.y + Math.sin(direction)*distance;
     let added = 0;
     for(let i=0;i<total;i++){
-      const kind=formation[i],e=spawnEnemy(kind,i===0 && growthSeconds>=480);
+      const preferred=formation[i];
+      const kind=window.resolveEncounterEnemyKind?.(preferred,growthSeconds,i) ?? preferred;
+      const e=spawnEnemy(kind,i===0 && growthSeconds>=480);
       if(!e)break;
       e.x=anchorX+Math.cos(direction+Math.PI/2)*(i-(total-1)/2)*52;
       e.y=anchorY+Math.sin(direction+Math.PI/2)*(i-(total-1)/2)*52;
