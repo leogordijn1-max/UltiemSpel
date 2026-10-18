@@ -975,6 +975,7 @@ function update(dt) {
       }
     }
     let beauActive = false;
+    let shadeActive = false;
     if (e === boss) {
       // Phase-dependent attack pacing stays isolated to the active Guardian.
       if (e.isFinalBoss) {
@@ -1009,6 +1010,7 @@ function update(dt) {
                  e.hp <= e.maxHp * 0.33) {
         e.phaseThree = true;
         window.interruptBeauEncounter?.(e, time);
+        window.interruptShadeEncounter?.(e, time);
         e.phaseIntro = 1.25;
         e.shotWarning = 0;
         e.chargeWarning = 0;
@@ -1040,23 +1042,24 @@ function update(dt) {
           shake: amount => { shake = Math.max(shake, amount); },
         };
         beauActive = window.updateBeauEncounter?.(e, time, dt, player, encounterHooks) || false;
+        shadeActive = window.updateShadeEncounter?.(e, time, dt, player, encounterHooks) || false;
         // Beau keeps the normal shotgun and charge; dedicated showcase
         // attacks replace his original small Hound's Ambush ability.
-        const specialActive = beauActive || (
-          e.variant === 0 && !e.isFinalBoss ? false :
+        const specialActive = beauActive || shadeActive || (
+          (e.variant === 0 || e.variant === 1) && !e.isFinalBoss ? false :
           window.updateBossCombat?.(e, time, player, encounterHooks)
         );
-        if (!specialActive && (e.variant !== 0 || e.isFinalBoss))
+        if (!specialActive && ((e.variant !== 0 && e.variant !== 1) || e.isFinalBoss))
           window.updateGuardianWorld?.(e, time, player, {
             visible: onScreen,
             scar: (type,x,y,r) => window.addWorldScar?.(type,x,y,r),
             projectile: (source,angle,speed,amount,type) => addBossProjectile(source,angle,speed,amount,type),
             warn: (message,kind,duration) => notify(message,kind,duration),
           });
-        if (beauActive || window.isBossCombatBusy?.(e, time)) moveSpeed = 0;
+        if (beauActive || shadeActive || window.isBossCombatBusy?.(e, time)) moveSpeed = 0;
       }
-      if (beauActive) {
-        // Scripted Hunting Grounds rush has moved the boss already.
+      if (beauActive || shadeActive) {
+        // Showcase combos control boss motion while their patterns execute.
       } else if (e.chargeActive > 0) {
         e.chargeActive = Math.max(0, e.chargeActive - dt);
         e.x += e.chargeX * e.chargeSpeed * dt;
@@ -1149,7 +1152,7 @@ function update(dt) {
 
     e.hit = Math.max(0, e.hit - dt);
     if (e === boss) {
-      if (beauActive) {
+      if (beauActive || shadeActive) {
         // Normal volleys are suppressed until the showcase pattern ends.
       } else if (e.shotWarning > 0) {
         // Briefly follow the player during the opening of the warning, then
