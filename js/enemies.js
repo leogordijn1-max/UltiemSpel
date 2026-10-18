@@ -278,6 +278,10 @@ const earlyWavePatterns = [
 function wavePatternFor(number) {
   const index = Math.max(1,Math.floor(number));
   if(index % 4 === 0)return swarmPattern;
+  const designed=typeof window!=="undefined"
+    ? window.chooseTacticalEncounter?.(typeof growthTime==="number"?growthTime:0,index-1)
+    : null;
+  if(designed)return designed;
   // Wave banners, not only spawned bodies, must respect the early enemy roster.
   if(typeof growthTime==="number" && growthTime<180)
     return earlyWavePatterns[(index-1)%earlyWavePatterns.length];
@@ -291,11 +295,12 @@ function spawnSpecialWave(number, cap = 95) {
   const swarm = !!pattern.swarm;
   const waveSize = swarm
     ? Math.min(42, 26 + Math.floor(number * 1.2))
-    : Math.min(8, 4 + Math.floor(number / 3));
+    : pattern.members?.length || Math.min(8, 4 + Math.floor(number / 3));
   // A swarm can temporarily exceed the normal ambient cap, but not this hard limit.
   const hardCap = Math.min(95, Math.max(0,cap));
   let spawned = 0;
   const tacticGroup = swarm ? null : window.newEncounterTacticGroup?.();
+  const team=[];
   const waveAngle = (number * 2.399963) % (Math.PI * 2);
   const distance = Math.max(W,H) * .68;
   const base = window.enemyOffscreenSpawn?.(waveAngle, 145) || {
@@ -304,7 +309,8 @@ function spawnSpecialWave(number, cap = 95) {
   };
   const centerX = base.x, centerY = base.y;
   for (let i = 0; i < waveSize && enemies.length < hardCap; i++) {
-    const preferred = pattern.kinds[i % pattern.kinds.length];
+    const member=pattern.members?.[i];
+    const preferred = member?.kind ?? pattern.kinds[i % pattern.kinds.length];
     const kind = window.resolveEncounterEnemyKind?.(preferred,growthTime,i) ?? preferred;
     const e = enemySpawn(kind, !swarm && (i === 0 || (number >= 6 && i === 3)));
     if (!e) break;
@@ -329,12 +335,16 @@ function spawnSpecialWave(number, cap = 95) {
       e.speed *= 1.13;
       e.xpValueMultiplier = 1.9;
       e.encounterRole = "patrol";
-      window.assignEncounterTactic?.(e,i,tacticGroup);
+      window.assignEncounterTactic?.(e,i,tacticGroup,member?.tactic);
+      e.encounterPlan=pattern.name;
+      e.encounterHint=pattern.hint||null;
+      team.push(e);
     }
     window.initializeEnemyAdaptation?.(e);
     spawned++;
   }
-  return { name: pattern.name, spawned, pattern };
+  if(!swarm)window.linkEncounterTacticTeam?.(team);
+  return { name: pattern.name, hint: pattern.hint||null, spawned, pattern };
 }
 
 // Shared spatial hash resolution for pickup storage and merging.
