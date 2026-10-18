@@ -2,7 +2,7 @@
 // Reuses the existing enemy kinds, collision, pickups and elemental affinities.
 (() => {
 "use strict";
-const TAU=Math.PI*2, TOTAL_CAP=280;
+const TAU=Math.PI*2, TOTAL_CAP=84;
 const WORLDS={
   frozen:{name:"FROST WARDENS",color:"#a9ebff",shade:"#29647a"},
   flooded:{name:"TIDE GUARD",color:"#77d9ee",shade:"#176075"},
