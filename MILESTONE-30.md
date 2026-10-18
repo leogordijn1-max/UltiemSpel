@@ -1,4 +1,7 @@
 # SHADOW SURVIVOR — MIJLPAAL UPDATE 30
+
+> **Overdracht naar een nieuwe chat:** lees ook [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md) voor onze creatieve visie, expliciete afspraken, huidige elementloadouts, workflow en de AI-overdracht. Werk dit kompas samen met de milestone-tracker bij na elke nieuwe update.
+
 **Doel:** een volledig speelbare, uitdagende, begrijpelijke en prettig aanvoelende 25–30 minuten Standard-run. De graphics hoeven nog geen definitieve releasekwaliteit te hebben; alle essentiële systemen moeten wel betrouwbaar zijn.
 
 **Laatste afgeronde update:** 19 — Elemental Weapon Feel: verbeterde targeting en trefzekerheid van de daadwerkelijk selecteerbare elementwapens.
