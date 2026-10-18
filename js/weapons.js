@@ -131,9 +131,13 @@ function castFlameBurst() {
     const distanceSquared = dx * dx + dy * dy;
     if (distanceSquared > hitRadius * hitRadius) continue;
     if (distanceSquared === 0 || dx * facingX + dy * facingY >= coneThreshold * Math.sqrt(distanceSquared)) {
-      damage(enemy, damageValue, player, "flame");
+      const combo=window.triggerElementalSynergy?.(
+        enemy,"fire","flame",damageValue,time,enemy===boss) || {damage:damageValue,activated:false};
+      damage(enemy, combo.damage, player, "flame");
+      if(combo.activated)window.emitWeaponVfxImpact?.("flame",enemy.x,enemy.y,time);
       if (!enemy.dead) {
-        enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + burnDuration);
+        enemy.burnUntil = Math.max(enemy.burnUntil || 0, time + burnDuration + (combo.bonusBurn || 0));
+        enemy.burnWeapon = "flame";
         enemy.burnDps = Math.max(enemy.burnDps || 0, burnDps);
         enemy.nextBurnTick = Math.min(enemy.nextBurnTick || Infinity, time + 0.5);
       }
@@ -176,6 +180,7 @@ function applyFrostBurst(x, y, projectile) {
     const hitRadius = radius + enemyHitRadius(enemy);
     if (dx * dx + dy * dy > hitRadius * hitRadius) continue;
     enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + (evolutions.glacier ? 5.2 : 3.5 + upgrades.frost * 0.25));
+    window.markElementalSynergy?.(enemy,"frost","frost",time);
     if (enemy !== projectile.hitTarget) {
       // No extra AoE damage to the directly hit enemy. Glacier gains a modest
       // splash bonus, but neither version gains additional piercing projectiles.
