@@ -287,7 +287,7 @@
     const missing = Math.max(0, max - enemies.filter(e=>!e.dead).length);
     const kinds = [0, 1, 0, 2, 4, 0, 6, 5];
     for (let i = 0; i < missing; i++) {
-      const e = enemySpawn(kinds[i % kinds.length], false);
+      const e = enemySpawn(kinds[i % kinds.length], false, true);
       const angle = i * 2.399963229728653; // golden angle: reproducible spread
       const radius = 145 + (i % 9) * Math.max(12, Math.min(W,H)*.03);
       e.x = player.x + Math.cos(angle)*radius;
@@ -306,7 +306,7 @@
         boss || window.isBossIsolationActive?.()) return;
     const missing = Math.min(count, Math.max(0, 250 - enemies.filter(e=>!e.dead).length));
     for (let i = 0; i < missing; i++) {
-      const e = enemySpawn([0,1,2,4,6,0][i % 6], false);
+      const e = enemySpawn([0,1,2,4,6,0][i % 6], false, true);
       const angle = i * 2.399963229728653;
       const radius = 165 + (i % 3) * 68;
       e.x = player.x + Math.cos(angle) * radius;
@@ -430,6 +430,19 @@
     s = section(root, "TEST ELEMENTAL ENEMY TYPES");
     for (const id of ["frozen", "burning", "flooded"])
       addButton(s, "SPAWN 12 " + id.toUpperCase(), () => spawnEnemyVariant(id), !!boss);
+    s = section(root, "ENEMY INTRODUCTIONS · THIS RUN");
+    const roster=window.enemyProgressionStatus?.(growthTime);
+    root.append(small("p",
+      roster ? "UNLOCKED " + roster.count + "/" + roster.total +
+      (roster.next ? " · NEXT: " + roster.next.name + " (" + Math.floor(roster.next.seconds/60) + " MIN)" : " · ALL UNLOCKED")
+      : "Enemy progression loading", "developer-note"));
+    addButton(s, "UNLOCK NEXT ENEMY TYPE", () => {
+      if (!window.developerUnlockNextEnemy?.(growthTime)) {
+        notify("DEV · ALL ENEMY TYPES ALREADY UNLOCKED", "wave", 2);return;
+      }
+      window.updateEnemyProgression?.(growthTime,message=>notify("DEV · "+message, "wave", 4));
+      updateHud();
+    }, (roster?.count || 0) >= (roster?.total || 6));
     s = section(root, "ENCOUNTER PACING · SMALL PACKS VS SWARM");
     addButton(s, "SPAWN TOUGH PATROL", () => {
       if(boss || window.isBossIsolationActive?.())return;
@@ -466,7 +479,7 @@
       if (boss || window.isBossIsolationActive?.()) {
         notify("DEV · BOSS ARENA ISOLATED", "wave", 2);return;
       }
-      if (!window.forceWorldDefense?.(time,player,enemies,kind => enemySpawn(kind),false)) {
+      if (!window.forceWorldDefense?.(time,player,enemies,kind => enemySpawn(kind),false,growthTime)) {
         notify("DEV · SET 15%+ IMPACT IN AN OPPOSING WORLD", "wave", 2);
       } else {
         rebuildEnemyGrid();
