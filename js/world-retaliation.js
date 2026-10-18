@@ -133,7 +133,7 @@
     return cycle < 1.05;
   }
   function tick(dt,player,hooks={}) {
-    if (!state.running || !Number.isFinite(dt) || dt<=0) return;
+    if (!state.running || !Number.isFinite(dt) || dt<=0 || hooks.suspended) return;
     for (const r of state.rifts) {
       r.elapsed += dt;
       if (r.elapsed < r.warning || !player || !erupting(r)) continue;
