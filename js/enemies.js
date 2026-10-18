@@ -477,7 +477,10 @@ function damage(e, d, origin = player, damageType = "direct") {
       $("bossHud").style.display = "none";
       bossShots = [];
       if (typeof bossHazards !== "undefined") bossHazards = [];
-      if (!killedFinalBoss) showBossReward();
+      // Developer boss deletion must not open a modal behind the F9 panel.
+      // Keep the sandbox in its existing paused/playing state so all test
+      // controls remain available and F9 can resume the simulation.
+      if (!killedFinalBoss && !window.isDeveloperRun?.()) showBossReward();
     }
     if (kills > highest) {
       highest = kills;
