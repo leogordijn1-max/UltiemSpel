@@ -1,6 +1,6 @@
 // Developer Mode — intentional, local-only test sandbox. Enabled through Settings.
 // A test run never writes career progression or permanent world conquest.
-// Ctrl + Shift + D opens tools during a sandbox run; Escape closes tools before pause logic.
+// Shift + K opens tools during a sandbox run; Escape closes tools before pause logic.
 (() => {
   "use strict";
   const PREF = "shadowDeveloperEnabledV1";
@@ -51,7 +51,7 @@
     const badge = ensureBadge();
     badge.hidden = !sandbox;
     badge.textContent = invincible
-      ? "DEV SANDBOX · GOD MODE · Ctrl + Shift + D" : "DEV SANDBOX · Ctrl + Shift + D";
+      ? "DEV SANDBOX · GOD MODE · Shift + K" : "DEV SANDBOX · Shift + K";
     const overlay = ensurePerformanceOverlay();
     overlay.hidden = !sandbox;
     if (sandbox) {
@@ -415,7 +415,7 @@
     root.append(small("p",
       boss
         ? "BOSS ISOLATION ACTIVE · Only the Guardian can summon minions. Defeat the boss to resume horde stress tests."
-        : "Close Ctrl + Shift + D to resume the game and measure real FPS. Bottom-left overlay shows FPS, P95 frametime and engine costs.",
+        : "Close Shift + K to resume the game and measure real FPS. Bottom-left overlay shows FPS, P95 frametime and engine costs.",
       "developer-note"));
 
     s = section(root, "WORLD ENVIRONMENT · TEMPORARY");
@@ -431,7 +431,7 @@
 
     s = section(root, "TEST RUN");
     addButton(s, "RESET CURRENT RUN", () => { closePanel(false); reset(); }, false, true);
-    root.append(small("p", "Test runs do not write career points, achievements, records, high scores or world conquest. Ctrl + Shift + D to open/close.", "developer-note"));
+    root.append(small("p", "Test runs do not write career points, achievements, records, high scores or world conquest. Shift + K to open/close.", "developer-note"));
     return root;
   }
 
@@ -459,7 +459,7 @@
     panelNode.setAttribute("aria-label", "Developer Mode");
     const header = document.createElement("header");
     header.append(small("h2", "DEVELOPER MODE"));
-    const close = small("button", "CLOSE · Ctrl + Shift + D");
+    const close = small("button", "CLOSE · Shift + K");
     close.className = "developer-close";
     close.addEventListener("click", () => closePanel(true));
     header.append(close);
@@ -494,7 +494,7 @@
     checkbox.addEventListener("change", () => {
       if (!setEnabled(checkbox.checked)) checkbox.checked = enabled;
       info.textContent = enabled
-        ? "ENABLED · New runs are isolated test runs. Press Ctrl + Shift + D while playing."
+        ? "ENABLED · New runs are isolated test runs. Press Shift + K while playing."
         : "DISABLED · New runs save progress normally.";
       openButton.hidden = !enabled;
     });
@@ -502,7 +502,7 @@
     area.append(label);
     const info = small("p",
       enabled
-        ? "ENABLED · New runs are isolated test runs. Press Ctrl + Shift + D while playing."
+        ? "ENABLED · New runs are isolated test runs. Press Shift + K while playing."
         : "DISABLED · New runs save progress normally.", "developer-help");
     area.append(info);
     if (active) area.append(small("p", "This setting is locked during a run.", "developer-help"));
@@ -515,7 +515,7 @@
   window.appendDeveloperSettings = appendSettings;
 
   window.addEventListener("keydown", event => {
-    if (event.code === "KeyD" && event.ctrlKey && event.shiftKey && !event.repeat && enabled) {
+    if (event.code === "KeyK" && event.shiftKey && !event.ctrlKey && !event.altKey && !event.repeat && enabled) {
       event.preventDefault();
       showPanel();
     } else if (event.key === "Escape" && open) {
