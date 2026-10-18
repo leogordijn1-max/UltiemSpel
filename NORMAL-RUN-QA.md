@@ -1,4 +1,6 @@
 # Update 29–31 — Normal run QA: echte speeltest, gescripte dekking en lokale runtime-telemetrie
+
+> **LIVE UPDATE 31 (18 oktober 2026):** De maker leverde twee echte complete browser-JSONs aan: Frost Standard Normal Victory 28:01 (sandboxflag true, maar expliciet géén developer-tools gebruikt; sandbox onderdrukte normale bossrewards) en **Water Standard Normal Victory 26:44, sandboxflag false** (vier Guardians verslagen, twee earned evoluties exact 10:00 en 17:00, drie gewone bossrewards, gemiddelde 143,78 FPS op High). **Update 31 nu technisch én live QA afgerond**; M1/M2 Water aangetoond, M3–M6 slechts gedeeltelijk, **release nog NO-GO**. Zie [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md) en [ROADMAP-31-50.md](ROADMAP-31-50.md). Oudere tekst hieronder over 'nog geen live-run' is historische stand vóór ontvangst van de resultaten.
 **Update-31-runtime-QA:** lokale JSON-recorder nu technisch gebouwd, met echte upgrade-aanbiedingen, gemaakte keuzes, levels, bossfases en browser-FPS. **Volg [RUN-TEST-31.md](RUN-TEST-31.md)** voor de eerste menselijke Normal-speeltest en expliciete export. De checklist hieronder blijft OPEN totdat daadwerkelijk bewijs is geleverd.
 
 **Stand: 18 oktober 2026. Branch:** `feature/living-world-prototype`
@@ -36,7 +38,11 @@ Start op **Normal, 1×** met standaard, zonder Developer God Mode. Noteer tijd, 
 - **Memory / FPS:** vergelijk een zware golf, een boss en een drukke terreinzone, bij Low/Medium/High. Neem de echte P95-frame, AI-, hit- en draw-tijden op. Node-regressies bewijzen geen numerieke FPS-winst.
 - **Refresh/start opnieuw:** saved world en earned trophies/records blijven, tijdelijke conquest/scars verdwijnen; geen blijvende sandbox rewards.
 
-## Vrijgavebesluit
+## Vrijgavebesluit — actuele live QA op 18 oktober 2026
+
+**M1 PASS voor Water** (26:44 non-sandbox Standard Normal Victory), **M2 PASS voor Water** (evoluties 10:00/17:00 met echt verdiende weapon/supportlevels). Frost 28:01 heeft sandboxflag true zonder developerfuncties door de maker, waardoor gewone bossrewardkeuzes ontbraken. **M3–M6 gedeeltelijk OPEN**, wegens onbewezen telegraph-fairness, refresh/Endless, Low/Medium/memory, en ontbrekende Fire-run. [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md).
+
+## Vrijgavebesluit (historische checklisttekst vóór live QA)
 **Nog geen bevestigde volledige menselijke 25–30-minuten browserrun.** Technisch doorlopen de gescripte scenario's de betrokken bestaande JS-functies en zijn alle regressies groen, maar werkelijk speelgevoel, level-up-aanbod, fight pacing, boss-telegraph overlap, stabiliteit en FPS kunnen pas na een live browserrun als geslaagd worden afgevinkt.
 
 **Voor Update 30:** eerst de lijst open browsertests prioriteren; geen release-/speelbaarheidsclaim baseren op uitsluitend de CI. De maker wil eerst alle gameplay-effecten aanwezig hebben; definitieve VFX-polish is een latere fase.
