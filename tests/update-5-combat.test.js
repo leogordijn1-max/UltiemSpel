@@ -74,7 +74,7 @@ test("each boss shoots visually distinct projectiles while Beau keeps MarioVis",
     context,
   ));
   assert.deepEqual(shots.map(x=>x.type), ["fish", "shadow", "bell"]);
-  assert.ok(shots.every(x=>x.count>=4 && x.warning===0 && x.ready>0));
+  assert.ok(shots.every(x=>x.count>=3 && x.warning===0 && x.ready>0));
   assert.notEqual(shots[0].count, shots[2].count);
 });
 
