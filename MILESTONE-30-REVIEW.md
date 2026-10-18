@@ -85,6 +85,10 @@ De audit wordt **bij iedere push** op deze branch uitgevoerd. Lokale opdracht: `
 
 **Hierna, als M1–M6 geslaagd zijn:** verder werken aan onderscheidende gameplay / levende wereld en unieke interactie, sterkere animaties, audiovisuele afwerking, UX en eigen identiteit. De eerder besproken **±100 updates** blijft een grove ambitie, geen contract of voltooiingspercentage.
 
+### Aansluitend grafisch traject — Updates 41–50
+
+**Nieuw makerbesluit:** de eerste Shadow Survivor blijft 2D top-down met een **vloeiende stylized 2.5D-look, bijna 3D-gevoel, geen pixelart**. Een mogelijke latere sequel mag werkelijk 3D worden. De concrete art direction, contactschaduwen, volume, character/enemy/boss-redesign en Living World-diepte staan gepland voor **41–45**; animaties, negen weapon-VFX, evoluties en grote boss-setpieces voor **46–50**. **[ROADMAP-31-50.md](ROADMAP-31-50.md)** is nu het officiële vervolgplan. Het besluit maakt NO-GO-manuele gameplaychecks 31–40 niet automatisch PASS en verandert de voltooide teller 11–30 niet.
+
 ## 6. Hoe we deze review blijven bijwerken
 
 - De enige bron van spelwaarheid blijft de **werkelijke code op GitHub**. De CI is bewijs voor automatische checks.
