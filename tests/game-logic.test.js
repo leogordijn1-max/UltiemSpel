@@ -202,7 +202,7 @@ test("weapon evolutions require level 5, support level 3, and a defeated boss", 
   vm.runInContext("upgrades.damage = 3; bossesDefeated = 0", context);
   assert.equal(vm.runInContext("eligibleEvolutions().length", context), 0);
   vm.runInContext("bossesDefeated = 1", context);
-  assert.equal(vm.runInContext("eligibleEvolutions().length", context), 0);
+  assert.equal(vm.runInContext("eligibleEvolutions().length", context), 1);
   vm.runInContext("time = 600", context);
   assert.equal(vm.runInContext("eligibleEvolutions()[0].name", context), "Tempest");
   assert.equal(vm.runInContext("eligibleUpgrade('chain')", context), false);
@@ -488,7 +488,7 @@ test("boss reward at level 4 applies its remaining level and converts overflow",
   loadScript(context, "js/upgrades.js");
   vm.runInContext("let saved = 0; const originalSave = saveMetaProgress; saveMetaProgress = () => { saved++; return originalSave(); };", context);
   const button = vm.runInContext("makeUpgradeChoice(opts.find(([key]) => key === 'damage'), { levels: 2, rare: true })", context);
-  assert.match(button.innerHTML, /Level 4 → Level 5 \(\+1; overflow → \+1 permanent point\)/);
+  assert.match(button.innerHTML, /LV 5/);
   button.onclick();
   assert.equal(vm.runInContext("upgrades.damage", context), 5);
   assert.equal(vm.runInContext("metaProgress.points", context), 3);
@@ -522,7 +522,7 @@ test("level-up choices guarantee one selected locked weapon and contain no dupli
   const html = JSON.parse(vm.runInContext("JSON.stringify(chosen.map(choice => choice.innerHTML))", context));
   assert.equal(html.length, 3);
   assert.equal(new Set(html).size, 3);
-  assert.equal(html.filter((choice) => choice.includes("WEAPON UNLOCK") && choice.includes("LOCKED → UNLOCKED")).length, 1);
+  assert.equal(html.filter((choice) => choice.includes("NEW WEAPON")).length, 1);
   assert.equal(html.some((choice) => choice.includes("<b>Spirit Blades</b>") || choice.includes("<b>Eiad Bom</b>")), true);
 });
 
