@@ -121,7 +121,7 @@ test("firing directions and cancellation hooks are called in the real simulation
  const code=read("js/game.js");
  assert.match(code,/window\.prepareEncounterTacticVolley\?\.\(e\)/);
  assert.match(code,/window\.cancelEncounterTacticVolley\?\.\(e\)/);
- assert.match(code,/window\.encounterTacticVolley\?\.\(e,enemyShots,player\)/);
+ assert.doesNotMatch(code,/window\.encounterTacticVolley\?\.\(e,enemyShots,player\)/);
  const render=read("js/render.js");
  assert.match(render,/tacticVolleyOffsets/);
  assert.match(render,/attackAngle=angle\+offset/);
