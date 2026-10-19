@@ -311,9 +311,11 @@ function trackDiscovery(group, key) {
 }
 
 // Account for blocked hits and dodges separately from HP lost.
-function recordPlayerHit(amount) {
+function recordPlayerHit(amount, source = "unknown") {
   lastPlayerHitAt=time;
-  window.runQaEvent?.("hit",{amount,health:player?.hp},time);
+  // Source labels are local-only QA metadata. Older schema-2 exports without
+  // this field remain valid; damage is never credited to a speculative move.
+  window.runQaEvent?.("hit",{amount,health:player?.hp,source},time);
   runDamageTaken += amount;
   if (runStats) runStats.damageTaken += Math.max(0, amount);
 }
@@ -1471,7 +1473,7 @@ function update(dt) {
       if (tryDodge()) continue;
       const contactDamage = e.damage * (window.worldDefenseAttackMultiplier?.(e) ?? 1);
       player.hp -= contactDamage;
-      recordPlayerHit(contactDamage);
+         recordPlayerHit(contactDamage, e === boss ? "guardian_contact" : "enemy_contact");
       player.inv = 0.68;
       damageFlash = 0.55;
       shake = 13;
@@ -1729,7 +1731,7 @@ function update(dt) {
         continue;
       }
       player.hp -= shot.damage;
-      recordPlayerHit(shot.damage);
+         recordPlayerHit(shot.damage, "enemy_projectile");
       player.inv = 0.7;
       damageFlash = 0.4;
       shake = 8;
@@ -1756,7 +1758,7 @@ function update(dt) {
     const reach = hazard.radius + player.r;
     if (dx * dx + dy * dy <= reach * reach && player.inv <= 0 && !tryDodge()) {
       player.hp -= hazard.damage;
-      recordPlayerHit(hazard.damage);
+         recordPlayerHit(hazard.damage, "guardian_hazard");
       player.inv = 0.8;
       damageFlash = 0.5;
       shake = Math.max(shake, 11);
@@ -1799,7 +1801,7 @@ function update(dt) {
       }
       const projectileDamage = b.damage ?? 13;
       player.hp -= projectileDamage;
-      recordPlayerHit(projectileDamage);
+         recordPlayerHit(projectileDamage, "guardian_projectile");
       player.inv = 0.64;
       damageFlash = 0.55;
       shake = 13;
