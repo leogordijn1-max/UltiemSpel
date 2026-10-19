@@ -880,6 +880,27 @@ function addBossProjectile(e, angle, speed, damage = 13, type = "shadow") {
 }
 
 function bossFire(e) {
+  // Update 34: Bell and the final Guardian get real alternate NORMAL shots.
+  // Their showcase routines and ultimate powers are never rewritten here.
+  const late=(e.isFinalBoss||e.variant===2) &&
+    window.fireGuardianLateSecondary?.(e,{
+      projectile:(source,a,s,d,type)=>addBossProjectile(source,a,s,d,type),
+      hazard:(x,y,radius,warning,amount)=>{
+        if(bossHazards.length<14)bossHazards.push({
+          x,y,radius,warning,
+          damage:amount*(difficultyProfiles[difficulty]||difficultyProfiles.normal).enemyDamage
+        });
+      },
+      puff:(x,y,color,amount)=>{if(typeof puff==="function")puff(x,y,color,amount);}
+    },time);
+  if(late){
+    e.volleyCount=(e.volleyCount||0)+1;
+    e.shotWarning=0;
+    e.shootCooldown=e.isFinalBoss?
+      Math.max(1.65,3.0-0.35*(e.finalPhase||1)):
+      e.phaseThree?2.08:e.phaseTwo?2.35:2.9;
+    return;
+  }
   if (e.isFinalBoss) return finalBossFire(e);
   const angle = Number.isFinite(e.shotAngle) ? e.shotAngle : Math.atan2(player.y - e.y, player.x - e.x);
   e.volleyCount = (e.volleyCount || 0) + 1;
