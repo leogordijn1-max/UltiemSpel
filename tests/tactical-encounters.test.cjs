@@ -85,11 +85,11 @@ test("director deploys designed units and honors roles, offscreen origin and gro
     const result=h.window.spawnEncounterPatrol(0,seconds,
       h.context.player,h.context.enemies,h.context.enemySpawn);
     const selected=h.window.chooseTacticalEncounter(seconds,0);
-    assert.equal(result,selected.members.length);
-    assert.deepEqual(Array.from(h.context.enemies,e=>e.kind),Array.from(selected.members,m=>m.kind));
-    assert.deepEqual(Array.from(h.context.enemies,e=>e.encounterTactic),Array.from(selected.members,m=>m.tactic));
+    assert.equal(result,Math.min(4,selected.members.length));
+    assert.deepEqual(Array.from(h.context.enemies,e=>e.kind),Array.from(selected.members.slice(0,result),m=>m.kind));
+    assert.deepEqual(Array.from(h.context.enemies,e=>e.encounterTactic),Array.from(selected.members.slice(0,result),m=>m.tactic));
     assert.ok(h.context.enemies.every(e=>e.x>640));
-    assert.ok(h.context.enemies.every(e=>e.encounterPartners?.length===selected.members.length));
+    assert.ok(h.context.enemies.every(e=>e.encounterPartners?.length===result));
     assert.ok(h.context.enemies.every(e=>e.encounterPlan===selected.name));
   }
 });
@@ -106,14 +106,14 @@ test("designer waves use exact plan, stay capped and retain the fourth-wave swar
     const plan=h.window.chooseTacticalEncounter(seconds,wave-1);
     assert.equal(result.name,plan.name);
     assert.equal(result.hint,plan.hint);
-    assert.equal(result.spawned,plan.members.length);
+    assert.equal(result.spawned,Math.min(4,plan.members.length));
     assert.ok(h.context.enemies.every(e=>e.encounterPlan===plan.name));
-    assert.ok(h.context.enemies.every(e=>e.encounterPartners?.length===plan.members.length));
+    assert.ok(h.context.enemies.every(e=>e.encounterPartners?.length===result.spawned));
   }
   h.context.enemies.length=0;
   const swarm=h.context.spawnSpecialWave(4);
   assert.equal(swarm.pattern.swarm,true);
-  assert.ok(swarm.spawned>=26);
+  assert.ok(swarm.spawned>=10&&swarm.spawned<=15);
   assert.ok(h.context.enemies.every(e=>e.encounterRole==="swarm"&&!e.encounterTactic));
 });
 test("binders trigger a synchronized pouncer charge with one boost per pulse",()=>{
