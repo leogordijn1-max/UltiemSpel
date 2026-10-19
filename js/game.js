@@ -991,6 +991,11 @@ function update(dt) {
       (e.frostUntil > time ? (window.frostMoveMultiplier?.(e,boss) ?? 0.48) : 1) *
       (e.deepFreezeUntil > time && e !== boss ? 0.16 : 1) *
       (e.pulseSlowUntil > time ? 0.77 : 1);
+    // Pressuring enemies have to close the gap before they can deal REAL hits.
+    // Never boost ranged retreaters, Guardians or temporarily summoned adds.
+    if (e !== boss && e.kind !== 4 && !e.summoned)
+      moveSpeed *= window.enemyPursuitMultiplier?.(
+        growthTime,difficulty,playerDistance) ?? 1;
     if (e.burnUntil > time && e.nextBurnTick <= time) {
       e.nextBurnTick = time + 0.5;
       damage(e, e.burnDps * 0.5, e.burnWeapon ? { x: player.x, y: player.y, type: e.burnWeapon } : player, "burn");
@@ -1389,7 +1394,7 @@ function update(dt) {
           const target = window.bossCombatPredictTarget?.(e, player) || player;
           e.shotAngle = Math.atan2(target.y - e.y, target.x - e.x);
           e.warningX=target.x;e.warningY=target.y;
-          e.shotTrackUntil = time + .35;
+          e.shotTrackUntil = time + .57;
           if (e.isFinalBoss) {
             e.shotPattern = (e.volleyCount || 0) % 3;
             e.shotRotation = time * 0.45;
@@ -1467,7 +1472,7 @@ function update(dt) {
       const contactDamage = e.damage * (window.worldDefenseAttackMultiplier?.(e) ?? 1);
       player.hp -= contactDamage;
       recordPlayerHit(contactDamage);
-      player.inv = 0.85;
+      player.inv = 0.68;
       damageFlash = 0.55;
       shake = 13;
       puff(player.x, player.y, "#f76685", 12);
@@ -1795,7 +1800,7 @@ function update(dt) {
       const projectileDamage = b.damage ?? 13;
       player.hp -= projectileDamage;
       recordPlayerHit(projectileDamage);
-      player.inv = 0.7;
+      player.inv = 0.64;
       damageFlash = 0.55;
       shake = 13;
       b.life = 0;
