@@ -3,10 +3,10 @@ const fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
 const source=p=>fs.readFileSync(path.join(__dirname,"..",p),"utf8");
 function tuning(){const window={};vm.runInNewContext(source("js/combat-difficulty.js"),{window,Math,Number});return window;}
 function approx(a,b){assert.ok(Math.abs(a-b)<.000001,String(a)+" != "+String(b));}
-test("Normal enemy contact damage starts fair, climbs after 5 min and caps at +50%",()=>{
+test("Normal contact pressure ramps progressively through +65% without extra spawns",()=>{
  const m=tuning().enemyThreatMultiplier;
  approx(m(0,"normal"),1);approx(m(299,"normal"),1);approx(m(300,"normal"),1);
- approx(m(900,"normal"),1.25);approx(m(1500,"normal"),1.5);approx(m(3000,"normal"),1.5);
+ approx(m(900,"normal"),1.325);approx(m(1500,"normal"),1.65);approx(m(3000,"normal"),1.65);
 });
 test("Easy stays accessible and Nightmare remains dangerous",()=>{
  const m=tuning().enemyThreatMultiplier;
@@ -27,7 +27,7 @@ test("Vitality recovery starts only after three seconds without a hit",()=>{
 });
 test("single Vitality heals slowly and stacked levels have diminishing returns",()=>{
  const v=tuning().vitalityRegenPerSecond;
- approx(v(1,3),.23);
+ approx(v(1,3),.25);
  assert.ok(v(4,4)<1,"Vitality 4 should no longer recover 3.2 HP/s");
  assert.ok(v(5,4)<1.05);
  assert.ok(v(4,4)>v(3,4) && v(3,4)>v(2,4));
@@ -62,11 +62,11 @@ test("Vitality UI descriptions show the actual amount and recovery delay",()=>{
  assert.match(upgrade,/3 seconds without damage/);
  assert.match(upgrade,/window\.vitalityRegenPerSecond\?\.\(value,Infinity\)/);
 });
-test("Water Bolt keeps damage and pierce, but high casting rate has 0.78s minimum",()=>{
+test("Water Bolt rate and pierce stay capped after the latest nerf",()=>{
  const s=source("js/elemental-combat.js");
- assert.match(s,/key==="waterBolt"\?Math\.max\(\.98,effective\):effective/);
- assert.match(s,/shot\.pierce = evolutions\.riptideLance \? 3 : 2/);
- assert.match(s,/elementalCooldown\("waterBolt", Math\.max\(1\.05, 1\.6 - upgrades\.waterBolt \* 0\.1\)\)/);
+ assert.match(s,/key==="waterBolt"\?Math\.max\(1\.12,effective\):effective/);
+ assert.match(s,/shot\.pierce = evolutions\.riptideLance \? 2 : 1/);
+ assert.match(s,/elementalCooldown\("waterBolt", Math\.max\(1\.18, 1\.72 - upgrades\.waterBolt \* 0\.1\)\)/);
 });
 test("script versions update and difficulty loads before enemies",()=>{
  const html=source("index.html");
