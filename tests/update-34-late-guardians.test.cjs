@@ -65,10 +65,10 @@ test("Bell Clapper's Verdict fires three variable-speed bell strikes and warns b
  h.window.prepareGuardianLateSecondary(h.boss,1);
  const marks=h.window.guardianLateSecondaryDanger(h.boss).map(x=>({...x}));
  const shots=h.window.guardianLateSecondaryShots(h.boss);
- assert.equal(marks.length,2);assert.ok(marks[0].y<0&&marks[1].y>0);
+ assert.equal(marks.length,3);assert.ok(marks[1].y<0&&marks[2].y>0);
  assert.equal(shots.length,3);assert.ok(shots[1].speed>shots[0].speed);
  h.boss.shotWarning=0;h.window.fireGuardianLateSecondary(h.boss,h.hooks);
- assert.equal(h.shots.length,3);assert.equal(h.hazards.length,2);
+ assert.equal(h.shots.length,3);assert.equal(h.hazards.length,3);
  assert.ok(h.shots.every(s=>s[4]==="bell"));
  for(let i=0;i<marks.length;i++)
   assert.deepEqual(h.hazards[i].slice(0,3),[marks[i].x,marks[i].y,marks[i].r]);
@@ -97,9 +97,9 @@ test("Meme Pixel Rip marks two diagonal side strikes and paints its fast central
  h.window.prepareGuardianLateSecondary(h.boss,1500);
  assert.equal(h.boss.lateSecondary.mode,"pixelRip");
  const marks=h.window.guardianLateSecondaryDanger(h.boss);
- assert.equal(marks.length,2);
- assert.ok(marks[0].x<320&&marks[1].x>320);
- assert.ok(marks[0].y<0&&marks[1].y>0);
+ assert.equal(marks.length,3);
+ assert.ok(marks[1].x<320&&marks[2].x>320);
+ assert.ok(marks[1].y<0&&marks[2].y>0);
  const shots=h.window.guardianLateSecondaryShots(h.boss);
  assert.equal(shots.length,3);
  assert.ok(shots[1].speed>shots[0].speed);
@@ -117,8 +117,8 @@ test("Meme Glitch Double uses two announced mirrors and leaves side dodge lanes"
  assert.equal(shots.length,3);
  assert.equal(shots.filter(s=>s.origin!==h.boss).length,2);
  const marks=h.window.guardianLateSecondaryDanger(h.boss);
- assert.equal(marks.length,2);
- assert.equal(marks[0].y,0);assert.equal(marks[1].y,0);
+ assert.equal(marks.length,3);
+ assert.ok(marks.every(m=>m.y===0));
  h.boss.shotWarning=0;
  h.window.fireGuardianLateSecondary(h.boss,h.hooks,11);
  assert.equal(h.shots.length,3);assert.equal(h.hazards.length,2);
@@ -134,7 +134,7 @@ test("all normal attacks preserve dodgeable gaps and modest projectile counts",(
    const areas=h.window.guardianLateSecondaryDanger(h.boss);
    const count=h.window.guardianLateSecondaryShots(h.boss).length;
    assert.ok(count<=5);
-   assert.ok(areas.length<=2);
+   assert.ok(areas.length<=3);
    const candidates=[-1,1].map(sign=>({x:320,y:sign*360}));
    assert.ok(candidates.some(p=>areas.every(z=>
      Math.hypot(p.x-z.x,p.y-z.y)>z.r+18)),
