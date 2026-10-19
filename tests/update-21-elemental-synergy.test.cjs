@@ -101,27 +101,25 @@ test("elemental combat actually consumes earned combos without free damage",()=>
   assert.ok(Math.abs(hits[1]-45.6)<.0001);
   assert.ok(context.target.burnUntil>5);
 });
-test("upgrade cards preview real evolution route progress and genuine combo hints",()=>{
+test("upgrade cards show the important evolution requirement without old information overload",()=>{
   const h=upgradesHarness();
   const main=h.run('makeUpgradeChoice(opts.find(([key])=>key==="fireball"))');
-  assert.match(main.innerHTML,/EVOLUTION PATH/);
   assert.match(main.innerHTML,/Meteor Rain/);
-  assert.match(main.innerHTML,/Weapon 5\/5/);
+  assert.match(main.innerHTML,/EVOLVE:/);
+  assert.match(main.innerHTML,/Fireball 5\/5/);
   assert.match(main.innerHTML,/Critical Eye 1\/3/);
-  assert.match(main.innerHTML,/Boss needed/);
-  assert.match(main.innerHTML,/IGNITION COMBO/);
+  assert.match(main.innerHTML,/defeat a Guardian/);
+  assert.doesNotMatch(main.innerHTML,/IGNITION COMBO/);
   const support=h.run('makeUpgradeChoice(opts.find(([key])=>key==="critChance"))');
-  assert.match(support.innerHTML,/EVOLUTION PATH/);
   assert.match(support.innerHTML,/Critical Eye 2\/3/);
   assert.match(support.innerHTML,/Meteor Rain/);
 });
-test("focus chooses real selected recipes and HUD reports boss gate",()=>{
+test("focus selects the real recipe but HUD only shows the number of earned evolutions",()=>{
   const h=upgradesHarness();
   assert.equal(h.run("evolutionFocusKey()"),"fireball");
   h.run("upgrades.fireball=5");
   assert.equal(h.run("evolutionFocusKey()"),"critChance");
-  assert.match(h.window.evolutionHudStatus(),/Fireball 5\/5/);
-  assert.match(h.window.evolutionHudStatus(),/BOSS NEEDED/);
+  assert.equal(h.window.evolutionHudStatus(),"EVOLUTIONS 0/3");
   h.run("bossesDefeated=1;upgrades.critChance=3;time=600");
   const next=h.run('makeUpgradeChoice(opts.find(([key])=>key==="health"))');
   assert.match(next.innerHTML,/Solar Crown/);
@@ -129,7 +127,7 @@ test("focus chooses real selected recipes and HUD reports boss gate",()=>{
   h.run("evolutions.meteorRain=true;evolutions.solarCrown=true");
   assert.equal(h.run("evolutionFocusKey()"),null);
   assert.equal(h.run("eligibleEvolutions().length"),0);
-  assert.equal(h.window.evolutionHudStatus(),"EVOLUTIONS 2/2 · COMPLETED");
+  assert.equal(h.window.evolutionHudStatus(),"EVOLUTIONS 2/3");
 });
 test("real game wiring covers flame, frost burst, elemental shots and whirlpool",()=>{
   const index=read("index.html"),combos=read("js/elemental-combat.js"),
