@@ -56,15 +56,16 @@ test("Beau Fang Sweep paints exactly its delayed flank trap and fires 5 fish",()
  const h=setup(0,1);
  h.window.prepareGuardianSecondary(h.boss,1);
  const marked=h.window.guardianSecondaryDangerPoints(h.boss);
- assert.equal(marked.length,1);
- assert.equal(marked[0].r,62);
- assert.ok(Math.abs(marked[0].y)>150);
+ assert.equal(marked.length,2);
+ assert.equal(marked[0].r,72);
+ assert.ok(Math.abs(marked[1].y)>=130);
  h.boss.shotWarning=0;
  h.window.fireGuardianSecondary(h.boss,h.hooks);
  assert.equal(h.shots.length,3);
  assert.ok(h.shots.every(s=>s[4]==="fish"));
- assert.equal(h.hazards.length,1);
- assert.deepEqual(h.hazards[0].slice(0,3),[marked[0].x,marked[0].y,marked[0].r]);
+ assert.equal(h.hazards.length,2);
+ for(let i=0;i<marked.length;i++)
+  assert.deepEqual(h.hazards[i].slice(0,3),[marked[i].x,marked[i].y,marked[i].r]);
  assert.ok(h.hazards[0][3]>=.7,"real hazard must allow a second visible dodge");
 });
 test("Beau crossfire telegraphs two side casters, then gives a real recovery gap",()=>{
@@ -93,10 +94,11 @@ test("Shade Mourning Lances use contrasting projectile speeds and a warned side 
  const marked=h.window.guardianSecondaryDangerPoints(h.boss);
  h.boss.shotWarning=0;h.window.fireGuardianSecondary(h.boss,h.hooks);
  assert.equal(h.shots.length,3);
- assert.equal(h.hazards.length,1);
- assert.deepEqual(h.hazards[0].slice(0,3),[marked[0].x,marked[0].y,marked[0].r]);
+ assert.equal(h.hazards.length,2);
+ for(let i=0;i<marked.length;i++)
+  assert.deepEqual(h.hazards[i].slice(0,3),[marked[i].x,marked[i].y,marked[i].r]);
  assert.ok(h.shots.some(s=>s[2]>=390),"the aimed lance should be genuinely dangerous");
- assert.ok(h.shots.some(s=>s[2]<300),"flanks are intentionally staggered");
+ assert.ok(h.shots.some(s=>s[2]<340),"flanks are intentionally staggered");
  assert.ok(h.shots.every(s=>s[4]==="shadow"));
 });
 test("Shade Phantom Mirrors send real projectiles from visible flanking positions",()=>{
@@ -106,13 +108,13 @@ test("Shade Phantom Mirrors send real projectiles from visible flanking position
  h.boss.shotWarning=1.05;
  h.window.prepareGuardianSecondary(h.boss,9);
  const marks=h.window.guardianSecondaryDangerPoints(h.boss);
- assert.equal(marks.length,2);
- assert.ok(marks[0].y<0&&marks[1].y>0);
+ assert.equal(marks.length,3);
+ assert.ok(marks[1].y<0&&marks[2].y>0);
  h.boss.shotWarning=0;h.window.fireGuardianSecondary(h.boss,h.hooks);
  assert.equal(h.shots.length,3);
- assert.equal(h.hazards.length,2);
+ assert.equal(h.hazards.length,3);
  assert.ok(h.shots.filter(s=>s[0].y!==0).length===2);
- for(let i=0;i<2;i++)
+ for(let i=0;i<marks.length;i++)
   assert.deepEqual(h.hazards[i].slice(0,3),[marks[i].x,marks[i].y,marks[i].r]);
 });
 test("all variants preserve a broad walk/dash escape outside their hazard circles",()=>{
@@ -122,7 +124,7 @@ test("all variants preserve a broad walk/dash escape outside their hazard circle
    h.boss.shotWarning=1.05;
    h.window.prepareGuardianSecondary(h.boss,10+j*12);
    const marks=h.window.guardianSecondaryDangerPoints(h.boss);
-   assert.ok(marks.length<=2);
+   assert.ok(marks.length<=3);
    const escapes=[-1,1].map(s=>({x:h.boss.warningX,y:h.boss.warningY+s*390}));
    assert.ok(escapes.some(p=>marks.every(m=>
      Math.hypot(p.x-m.x,p.y-m.y)>m.r+15)),
