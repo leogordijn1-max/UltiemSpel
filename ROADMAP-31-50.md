@@ -1,175 +1,31 @@
-# SHADOW SURVIVOR — OFFICIËLE ROADMAP UPDATES 31–50
+# Roadmap & changelog — updates 31–50
 
-> **DESIGNBESLUIT · UPDATE 38.4 (19 oktober 2026): de eerdere 'iedere soort meteen hetzelfde evolution level na een boss' uit Update 38.3 is VERVANGEN door [Cohort Evolution](UPDATE-38-4-COHORT-EVOLUTION.md).** Het aantal verslagen Guardians bepaalt altijd de gedeelde wereldfase/vibe; het eigen **LV1–LV4** van een familie begint pas in haar **debuuthoofdstuk**. Concreet: start Drifter+Runner LV1; na Beau Drifter+Runner LV2, nieuwe Ranged Shade+Mike LV1; na Shade veteranen LV3, Shade+Mike LV2, nieuwe Burstling+Bulwark LV1; na Bell respectievelijk LV4/LV3/LV2. Jonge LV1-vijanden zien er wél even dreigend uit als de wereldfase (accentkleur/spikes), maar houden herkenbaar **één** rangmarkering en nog geen eigen geëvolueerde familie-ability. Nieuw soort arriveert pas na zowel tijdslot als vereiste echte bosskill, dus vertragingen zijn safe. Nieuwe code/syntax- en rooktesten bestaan; browser-QA en volledige CI blijven apart te verifiëren. **Dit staat boven oudere globale-tiersbeschrijvingen in het archief.**
+**Status 19 October 2026:** active development on `feature/living-world-prototype`. **Not release-approved.** Automated tests, especially older assertions from the pre-evolution design, require a fresh CI pass after code changes. Human Normal pressure acceptance remains OPEN.
 
-> **NIEUW · UPDATE 38.3 — EVOLVED DEFENDERS (19 oktober 2026; na Fire 38.2-run):** [Volledig verslag](UPDATE-38-3-EVOLVED-DEFENDERS.md). Maker won Fire Normal op 26:08 met 1.040 kills en 39 hits, waarvan 26 vijandcontacten; late game was ondanks eerdere horde-hotfix vaak weer full HP. Daarom zijn **drie vijandengeneraties** na Beau, Shade en Bell geïmplementeerd: voor elk van zes originele enemies vier eigen namen/vormen en nieuwe Canvas-silhouetten (basis+3 mutaties), met HP/snelheids-/damage-power die zichtbaar hoort bij die mutatie i.p.v. alleen steeds sneller per minuut. Drifter en Burstling aanvankelijk steviger; Burstling moet werkelijk binnen zijn explosiebereik komen. Kleinere Normal fieldpopulatie (7–9), micro-packs max 2, specialistische formaties 3–4 met hogere overlevingskans en geëvolueerde flank-AI, zeldzame mini-swarms 10–15 i.p.v. 26–42; XP-factor bij daadwerkelijk verslagen sterke monsters helpt 10:00/17:00 weapon evolutions bereikbaar te houden. Beau vier langere/snellere achtervolgingscharges en sterkere gewone charge, Shade nauwere sneller draaiende, zichtbaar gemarkeerde radial gap en snellere fallback. Gemarkeerde hitzones/boss isolation bestaande spelregels blijven; **nieuwe runtimebalans, sprites in echte browser, Fire/Water/Frost finale-runs nog NIET gevalideerd. Actions op branch zijn momenteel queued; GEEN groene CI claim.** Status release: **NO-GO**.
+## Concise milestone history
 
-**Vastgelegd op 18 oktober 2026 · Werkbranch:** `feature/living-world-prototype`  
-**Gebruikersvisie:** Shadow Survivor Deel 1 blijft een **2D, top-down survivor-roguelike**, maar krijgt een **extreem vloeiende, hoogwaardige gestileerde 2.5D-presentatie** die **bijna 3D voelt**. **Geen pixelart als doelstijl.** Een mogelijke *Shadow Survivor 2* kan later **werkelijk 3D** worden, maar is geen onderdeel van deze 20 updates.
+| Update | What it delivered |
+|---|---|
+| 1–30 | Playable Canvas roguelike, four Guardians, weapon upgrades/evolutions, a persistent world, run/meta progression and original MVP gate. |
+| 31 | Early Frost/Water player QA, baseline strength, warning readability. |
+| 32–32.1 | Normal encounter/health-pressure balancing and movement fixes. |
+| 33–34 | Separate Beau/Shade/Bell/Meme secondary Guardian attacks. |
+| 35 | More meaningful counterplay for heavyweight, shield and dash enemy roles. |
+| 36–36.1 | FPS/QA schema 2 and Water Bolt/Frost/guardian attack tuning. |
+| 37–37.2 | Save v4, permanent world restoration, Endless idempotence, and stronger survivability pressure. |
+| 38–38.2 | 9×4 weapon matchups, Normal mastery, constant (bounded) waves and unique boss attack geometry. |
+| 38.3–38.4 | Six enemy families, three post-Guardian mutation steps; world-era appearance separate from per-family debut rank. |
+| **Current combat & UX polish** | Deterministic family-level ability escalation, stronger moving Burstlings, scarier Meme orbit and Shade gaps, simple equal-height cards, readable HUD, unrestricted earned weapon evolution, concise docs. **Pending human QA.** |
+| **39** | Three recorded non-sandbox complete Fire/Water/Frost Normal runs, UX/pattern corrections from evidence. **OPEN.** |
+| **40** | Release gate: gameplay difficulty, mechanics, world save, fairness, crash-free runs, performance and accessible menus. **NO-GO until human sign-off.** |
+| **41–50** | Stylized 2.5D look (not pixel art), retaining top-down 2D gameplay; only after the mechanics are validated. |
 
-> **Status:** deze roadmap is het **AFGESPROKEN PLAN**, geen claim dat Updates 31–50 al uitgevoerd zijn. Na Update 30 zijn **11–30 technisch afgerond**; de verified-playable browser-release staat **NO-GO** zolang 6 manuele QA-gates ontbreken. Zie [MILESTONE-30-REVIEW.md](MILESTONE-30-REVIEW.md) en [NORMAL-RUN-QA.md](NORMAL-RUN-QA.md). Houd deze bestanden samen met [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md) bij.
+## What remains deliberately open
 
-## De visuele ambitie: 2D gameplay, bijna-3D gevoel
+1. **Combat:** Normal novice shouldn't casually win first runs; waves must continue to threaten after full weapon builds; evolved skills must be recognizably different.
+2. **Guardians:** early attacks dangerous, specials have a real narrow counter-route, Meme orbit shouldn't have a giant safe circle; warning == collider.
+3. **Builds:** all available 3 elemental weapon evolutions may be earned with max weapon/support; XP balance and boss rewards remain fair.
+4. **UX:** same-size scan-friendly cards, quiet HUD, no lengthy popup instructions or unreadable text.
+5. **Stability:** smoke-test all combos in real Chrome at Low/High, normal/3×; check reload/persistence, boss kill count, Endless, no animation hitch, and test suite results.
 
-**Beoogde art direction:** *Stylized 2.5D dark-fantasy arcade-survivor*, vloeiend getekend in plaats van pixelated, met personages die volume, massa en lichaamsbeweging uitstralen. Een absurde/grappige kern met memorabele eigen personages blijft bestaan; visuele verbetering betekent niet het vervangen van Beau of de andere originele identiteiten door generieke fantasy-assets.
-
-**Illusies van diepte die daadwerkelijk in 2D kunnen:**
-- **Contactschaduwen:** zachte schaduw/ambient-occlusion onder personages, bosses en objecten; schaduw schuift/strekt bij bewegen, springen of zweven.
-- **Volume:** meerdere kleurwaarden per materiaal, consistente lichtbron, sterk silhouette, rimlight en highlights op duidelijk herkenbare vormen.
-- **Laagopbouw:** vloer → sporen/onderliggende magie → contactschaduw → personage → projectielen/impact → gecontroleerde foregrounddeeltjes/UI; dieptesortering waar nuttig.
-- **Vloeiende beweging:** frame-interpolatie, poses/animatiecurves, squash-and-stretch, anticipatie, follow-through en kleine visuele terugslag zonder hitboxverandering.
-- **Wereld met hoogte:** opstaande brokstukken, randen, schaduwverloop, perspectivische decals en variatie in de arena; map blijft functioneel volledig top-down.
-- **Juicy combat:** warmte-/water-/ijsglow, projectieltrails, snelle maar leesbare impactflashes, shockwaves, subtiele camerareacties en grootse Guardian Powers.
-- **Living World-verovering:** de omgeving transformeert merkbaar wanneer invasies Fire/Water/Frost sterker worden: **15%, 50%, 85% en alleen na echte winst 100% permanent**.
-
-**Wat we nadrukkelijk NIET doen:** van de huidige game ongemerkt een perspectief-3D-game maken, pixelart als definitieve look kiezen, echte hitzones veranderen voor mooiere effecten, schermvullende blur/bloom toevoegen die gevaar afdekt, vijandenspam toevoegen voor visuele druk, of direct alles omschrijven naar een zware 3D-engine.
-
-**Technische aanpak:** bestaande HTML/JS/Canvas 2D-game als basis. Waar nuttig offscreen buffers en gelaagde sprite-/decal-assets, tween/animatiestate en transparante schaduwen. Eventuele WebGL/enginewissel **alleen** na expliciete prestatie-/scopebeslissing en een kleine proof-of-concept; geen verplicht onderdeel van deze roadmap. Object-/renderpools en Low/Medium/High kwaliteitsstanden moeten bruikbaar blijven.
-
----
-
-### Nieuw: technische Update 32.1 balance-hotfix na tweede live Water-test (19 oktober 2026)
-
-De maker leverde ná Update 32 een nieuwe Normal Water JSON aan: **27:01 non-sandbox Victory, 52 hits en 843,71 totale schade maar 242,53/260 HP** vlak voor de overwinning. **Zombie Mike komt nu wél dichterbij**, maar de gewone enemies doen nog veel te weinig damage, ook bij 3× speed; Water Bolt blijft volgens maker te sterk. Deze specifieke run kreeg twee dubbele healthbossrewards en eindigde op **Vitality 4** (oude regen 3,2HP/s); maker noemt ook dat **Vitality 1 in het algemeen al veel te goed** is. **Hotfix 32.1 gebouwd**: vertraagde, afvlakkende Vitality-heal (na 3s safe; level 1 0,35 HP/s, level 4 ~0,89), Normal gewone enemy damage groeit na minuut 5 geleidelijk naar +50% bij 25min (geen extra hordes/boss-ultimates), Water Bolt Rapid Casting minimumcooldown 0,78s plus evolved pierce 4 i.p.v. 5. Extra healing/regen-QA-meetpunten toegevoegd. **Dit is een code-hotfix, nog géén bewezen nieuwe moeilijke browserrun.** Bron/acceptatie in [UPDATE-32-1-SURVIVAL-BALANCE.md](UPDATE-32-1-SURVIVAL-BALANCE.md); 33 blijft Beau/Shade. **Update 31 live PASS, 32/32.1 CODE PASS waar CI bevestigd; live difficulty-gate OPEN.**
-
-## FASE 2 — UPDATES 31–40: VERIFIED PLAYABLE RUN
-
-**Mijlpaaldoel Update 40:** de **echte** Normal-run kunnen spelen, meten, controleren en verbeteren. Niet alleen tijdskiptests: minstens **drie geregistreerde complete browserruns**, verdeeld over Fire/Water/Frost, met twee **daadwerkelijk verdiende** evoluties, faire solo-bossfights, werkelijk save-/Endless-gedrag en meetbare FPS/frametimes. De 6 gates uit Update 30 zijn releaseblokkades totdat er werkelijk bewijs is.
-
-| Update | Werkpakket | Klaar wanneer / toetsbare uitkomst |
-|---|---|---|
-| **31** | **Run Telemetry & First Live Test — CODE + EERSTE LIVE SPEELTEST AFGEROND** | De game bevat nu `js/run-telemetry.js` (lokale recorder, 30s checkpoints, 5s echte FPS/P95, upgrade-aanbod én gekozen optie, bossphases/kill, einde en JSON-export). **479 tests groen.** **Twee echte browser-JSON's beoordeeld:** Water 26:44 non-sandbox Normal Victory, 4 bosses, 2 earned evolutions op 10:00 en 17:00 en gemeten FPS; Frost 28:01 Victory, sandboxflag ondanks bevestiging dat geen developer tools gebruikt zijn. [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md). M3–M6 blijven deels OPEN. |
-| **32** | **Water/Evolution Balance — CODE AFGEROND, LIVE HERTEST OPEN** | Werkelijke Frost/Water-data gebruikt. Nieuwe [UPDATE-32-BALANCE.md](UPDATE-32-BALANCE.md): centrale Water/Bolt/Tidal/Whirlpool crowd-controlweerstand (zware Zombie Mike kan nauwelijks teruggeduwd worden), afnemende herhaalde Water Bolt-push, minder verplichte locked-weapon-keuzes, echte evolutiefocus behouden, bossrewards bij passieve Developer Mode hersteld. **491/491 CI groen.** Normale Water/Frost-browsertests ná de balanswijziging zijn nog **NIET** gespeeld: balance-acceptatie OPEN. **Geen algemene XP-buff.** |
-| **33** | **Beau & Mourning Shade secundaire aanvallen — CODE AFGEROND, LIVE QA OPEN** | **[UPDATE-33-GUARDIAN-SECONDARY.md](UPDATE-33-GUARDIAN-SECONDARY.md)**: elk 2 nieuwe afwisselende, gemarkeerde normale volley-patronen, échte collisiongeometrie en minimaal .76s extra grondhazard-warn; Fang Sweep/Pack Crossfire bij Beau en Mourning Lances/Phantom Mirrors bij Shade. Alle bestaande geweldige specials/Phase III behouden. **514/514 tests groen; 13 nieuwe regressies.** Nog niet handmatig gezien op 1×/2×/3×, Low/High of in combinatie met fase-3-powers. |
-| **34** | **Bell Tower & The Last Meme: CODE AFGEROND, LIVE BOSS QA OPEN** | [UPDATE-34-LATE-GUARDIANS.md](UPDATE-34-LATE-GUARDIANS.md) — twee nieuwe afwisselende normale aanvallen per boss: Bell **CLAPPER'S VERDICT / SPLIT HOUR**, Meme **PIXEL RIP / GLITCH DOUBLE**. Echt getekende targetmarkeringen, side-emitter-projectielen, delayed impactzones, fase-interrupt, geen extra hordes of oneerlijke directe schade; alle bestaande showcase-/Phase III-ultimates en geliefde Meme-finale blijven intact. **527/527 CI PASS**; echte live 1×/2×/3×-, low/high- en overlapbeoordeling nog OPEN. |
-| **35** | **Unieke counter-enemies — CODE AFGEROND, LIVE WATER QA OPEN** | [UPDATE-35-ENEMY-COUNTERS.md](UPDATE-35-ENEMY-COUNTERS.md): bestaande Zombie Mike → **THE ANCHOR** (4,2% normale Whirlpool pull, 7,8% gewone knockback, Bomb breekt pantser tijdelijk open), tactische Pouncer-Runner → **PHASE STALKER** (0,86s aangekondigde diagonale dash + 1,6s kwetsbaar herstel), Ward-Bulwark → **THE WARDEN** (beschermt maximaal twee nabije teamleden tegen fysieke knockback zolang schild omhoog; zichtbare links, flank-/shield-down-counter). Low/High functionele silhouettes, QA-checkpoints per rol. **539/539 CI groen, 12 nieuwe tests.** Geen extra spawns, nog geen handmatig gespeelde browserrun na deze code. |
-| **36** | **Measured FPS & Memory — code gebouwd, live QA open** | FPS/P95 en gemiddelde AI/collision/render per 5s, optionele Chromium-heap, quality/speed/Guardian-labels, offline report-tool en in-place effects-arraycompaction; zie [UPDATE-36-PERFORMANCE.md](UPDATE-36-PERFORMANCE.md). De echte Low/Medium/High- en Guardianstresstests zijn nog open. |
-| **37** | **World, Save & Endless — CODE/CI GEREED, LIVE BROWSER-QA OPEN** | [UPDATE-37-WORLD-SAVE-ENDLESS.md](UPDATE-37-WORLD-SAVE-ENDLESS.md): save v4 bewaart 9 elemental loadout-/worldvelden na refresh, records tonen wereldreis, één Standard→Endless-run-ID/winbonus, bossloot blijft uniek na reload, wereldsave-fouten melden eerlijk dat verovering niet permanent is. Integratietests incl. 15/50/85%-verlies/herstel, echte win-/Endlessfuncties, blocked storage en sandbox. **Menselijke browser-flow en refresh nog niet live gespeeld.** |
-| **38** | **All Nine Weapons + Water Bolt/Frost Orb — CODE/CI GEREED, LIVE QA OPEN** | [UPDATE-38-ALL-NINE-WEAPONS.md](UPDATE-38-ALL-NINE-WEAPONS.md): **9×4 = 36** concrete matchups voor gewone, Runner, heavy/Anchor en Bulwark/Warden, daadwerkelijk doorgerekend in production `damage()`. Water Bolt doet minder tegen zware/geschildde targets en laat kleiner/minder wet terrain achter; Frost Orb behoudt één homing orb maar heeft **2,65s echte min-cooldown bij max Rate**, korter/diminishing chill, kleinere radius en minder homing-bereik. Ice Shards/Glacial Pulse/alle Fire-wapens blijven hun eigen role behouden. **573/573 tests groen vóór documentatieslot**, maker-Fire/Water/Frost browserruns blijven OPEN. |
-| **39** | **Three Complete Normal Runs & UX Fixes** | Minstens drie gedocumenteerde complete runs met bewijs; kritieke bugs opgelost; UI en combat warnings in drukte leesbaar. |
-| **40** | **Verified Playable Run Gate Review** | De 6 release-gates stuk voor stuk beoordelen met bewijs en bewust GO / NO-GO beslissen. Bij NO-GO prioriteren we fixes vóór grote graphicsproductie. |
-
-**Afhankelijkheidsregel:** als na Update 40 een P0-speelbaarheidsbug resteert, mag grafische productie **voorbereid** worden maar moet de gameplayfix voorrang houden. We mogen Visual Foundation niet verwarren met releasebewijs.
-
----
-
-**Nieuwe gameplay-designrichting na twee live runs:** normale enemies zijn te gemakkelijk, met name door Water Bolt + rate + knockback; eerste twee Guardians hebben al twee sterke signature moves, maar overige attacks mogen cooler; Bell en Meme hebben vooral één indrukwekkende ultimate en hebben meer interessante basis-/mediumattacks nodig. **Nieuwe unieke enemyrollen met leesbaar uiterlijk, abilities en counters** opnemen rond Update 35, 2.5D-visuele uitwerking later. Gedetailleerde bron en codehaken: [PLAYTEST-FEEDBACK-COMBAT-31.md](PLAYTEST-FEEDBACK-COMBAT-31.md). De voorgestelde vijanden zijn **niet geïmplementeerd**.
-
----
-
-## FASE 3 — UPDATES 41–45: VISUAL IDENTITY & 2.5D FOUNDATION
-
-**Mijlpaaldoel Update 45:** één samenhangende, vloeiende visuele taal en een representatieve **vertical slice** met een player, een enemytype, een boss en een Living World-omgeving, voordat alle assets massaal worden geproduceerd.
-
-| Update | Werkpakket | Klaar wanneer / toetsbare uitkomst |
-|---|---|---|
-| **41** | **Art Direction Lock-In** | Visuele stijlgids + moodboard/schetsen: kleurpalet, contrast, camera, lichtbron, vormen, materialen, 2.5D-regels, humor en herkenbare Fire/Water/Frost-identiteit. **Geen pixelart**. Maker keurt een heldere referentierichting goed. |
-| **42** | **Depth, Lighting & Shadows** | Contactschaduwen en gelaagde verlichting: speler/enemies zweven niet meer op vlakke grond; rimlights, highlights, dieptesortering en duidelijke silhouetten zonder gameplayhitboxes te veranderen. |
-| **43** | **Player & Character Redesign** | Nieuwe vloeiende 2.5D-look van de speelbare characters, schaalbare losse lichaamsdelen/sprites en herkenbare idle/run/dash-poses. Eigen personage-identiteiten behouden. |
-| **44** | **Enemy & Guardian Designs** | Enemies en vier Guardians krijgen nieuwe zichtbare volume-/kleurtaal, herkenbare rang/silhouetten en karakteristieke vormen. Attacks blijven op achtergrond leesbaar; geen generieke vervanging van de eigen figuren. |
-| **45** | **Living World 2.5D Environments + Vertical Slice** | Gelaagde arena, schaduw, hoogte-illusie, Fire/Water/Frost-biomes en de 15/50/85% world-reacties in één werkelijk speelbare testomgeving. Maker beoordeelt of het **bijna 3D voelt** bij volle combat. |
-
-**Visuele kwaliteitsgate Update 45:** (1) duidelijke consistentie; (2) player en boss direct van de achtergrond te onderscheiden; (3) de arena toont diepte; (4) gameplay bij Low blijft eerlijk; (5) geen onacceptabele frametime-/memory-regressie. Bij mislukking eerst design verbeteren, niet doorbouwen naar honderden losse effects.
-
----
-
-## FASE 4 — UPDATES 46–50: ANIMATION & VFX LOCK-IN
-
-**Mijlpaaldoel Update 50:** een complete, visueel samenhangende *2.5D vertical slice* waarin movement, aanvalshits, evoluties en Guardian Powers werkelijk spectaculair en vloeiend zijn. **Niet gelijkstellen aan volledige content-/releasepolish.**
-
-| Update | Werkpakket | Klaar wanneer / toetsbare uitkomst |
-|---|---|---|
-| **46** | **Smooth Movement & Combat Animation** | Vloeiende player/enemy/bossbeweging, anticipatie, squash/stretch, hitstops waar fair, kleine recoil en death/knockback-reactions. Input-/hitbox-respons blijven onmiddellijk; geen storende inputlag. |
-| **47** | **Fire / Water / Frost Weapon VFX** | Alle **9 echte wapens** krijgen gelaagde trails, vloeiende impact, reflectie-/glow-/particle-identiteit; steeds eigen silhouette, schermzichtbaarheid en duidelijke hitzone. Geen extra damage door alleen visuele effecten. |
-| **48** | **Evolution & Combo Spectacle** | Zichtbare, betekenisvolle transformatie van maximaal twee earned evoluties, combo-impact Ignition/Undertow/Shatter en consistente level-/rewardfeedback zonder hard-to-read chaos. |
-| **49** | **Guardian Cinematics & Arena Transformations** | Vier memorabele bossintro-/phase-wissels, grote doch begrijpelijke Guardian Powers (Beau lanes, Shade eclipse, Bell cross, Meme reality tiles), subtiel cameragebruik, timing/telegraph voorrang op spektakel. |
-| **50** | **2.5D Visual Milestone & Optimization** | Vertical slice (wereld + characters + 9 wapens + 4 bosses) vergelijken met art guide, Low/Medium/High-optimalisatie en bewuste visual-polish backlog. Maker geeft een **GO / REWORK** op de stijl. |
-
-**Bescherming tegen 'mooi maar onspeelbaar':** bij alle art-/VFX-updates moet de echte collision overeenkomen met visual tell; dash/iframes en targeting blijven; projectielen/evoluties blijven duidelijk; 1×/2×/3× speed en low-quality/desktop performancenormen worden gecontroleerd. Camerashake en bloom instelbaar; reduced motion serieus nemen.
-
----
-
-## Update 36.1 — LIVE WATER-FEEDBACK NA 35, HOTFIX CODE GEBOUWD
-
-**UPDATE 36.1 — WATER/COMBAT HOTFIX NA ECHTE UPDATE-35-RUN (19 oktober 2026).** De maker leverde een non-sandbox Water Standard Normal Victory 25:51 aan: 29 hits, 493,99 damage, 532,99 healing, twee evoluties en alle vier Guardians. Feedback: Water Bolt te sterk, boss-aanvallen verwarrender maar niet spannender, te weinig binnenkomende damage. Analyse toonde dubbele Water Bolt-knockback (generiek + water), een zeer sterke Rapid Casting/Riptide-setup en veel Vitality-herstel. Code-hotfix: **één** Bolt-duw i.p.v. twee, Bolt-cooldown minimaal 0,98s, lichtere schade/pierce, Vitality L2 ~0,391 HP/s i.p.v. ~0,595, minder (3) overlappende boss-projectiellijnen met snellere/duidelijkere aanvallen en echte waarschuwingen. Geen extra hordes, geen verwijderde ultieme Guardian Powers. **Nieuwe handmatige browsertest na de hotfix nog OPEN**; de aangeleverde run was schema 1 (vóór Update 36-telemetrie). [UPDATE-36-1-WATER-PRESSURE-HOTFIX.md](UPDATE-36-1-WATER-PRESSURE-HOTFIX.md) is het volledige verslag. **Prioriteit: deze nieuwe balans eerst echt testen en zo nodig verder corrigeren vóór andere grote features.**
-
-## Update 37 — save-/wereldflow code en integratietests (19 oktober 2026)
-
-**Technisch geïmplementeerd, browser-gate OPEN.** `shadowProgress` v4 behoudt na reload elemental-weapons en World Before/After/Impact, nieuwe Records tonen FROZEN → FLOODED/BURNING inclusief invasiepercentage; een echte Standard-winst schrijft eenmaal de veroverde wereld en laat vervolgens Endless dezelfde run-ID bijwerken. Een tweemaal gemelde Endless Game Over mag geen dubbele punten/record geven. Unieke bossloot blijft bewaard over refresh; Living World herinnert Fire/Water/Frost-wapeninvloed. Bij localStorage-blokkade toont Victory expliciet `SAVE UNAVAILABLE`. [Volledig verslag en maker-testplan](UPDATE-37-WORLD-SAVE-ENDLESS.md). **559/559 CI-tests groen voorafgaand aan alleen documentatie-updates; controleer laatste branch-CI.** De handmatige browserrefresh/Endless-/verliesplaytests moeten nog gebeuren. Alle uitstaande 36.1 Water/Guardian-balanschecks blijven open. Volgende codefase **Update 38 All Nine Weapons**, zonder blind te stellen dat Water al is gebalanceerd.
-
-## Update 37.2 — echte combatdruk + earned healing na volgende Water-run (19 oktober 2026)
-
-**Code-hotfix gebouwd, live makerhertest OPEN.** Nieuwe Water Standard Normal 26:42 Victory: 21 hits, 333,86 HP damage, 369,6 healing, twee hits tussen 15–25min, ondanks 52 secundaire bossvolleys. Maker is duidelijk: **niet nóg slechter healen, wel vaker/harder echte hits, sterker bereikbaar herstel en merkbaar lastigere Guardian-attacks**. Water Bolt heeft minder damage/pierce/rate/knockback/soak, melee pursuit en ranged attack rate nemen toe, Normal late enemy damage stijgt, Vitality is licht sterker, gewonde spelers kunnen groene health pickups bij echte kills najagen. Bossen hebben gevaarlijkere herkenbare gemarkeerde centre/flank patronen zonder verwijderde specials; hit.source QA maakt de volgende run inzichtelijker. [UPDATE-37-2-REAL-PRESSURE.md](UPDATE-37-2-REAL-PRESSURE.md). Dit is **geen bewijs van aangenamere bossfights vóór een nieuwe speelsessie** en **geen afgeronde Update 38**.
-
-## Update 38 — alle 9 wapens versus 4 vijandrollen (19 oktober 2026)
-
-**Code-technisch gebouwd en geautomatiseerd getest; maker-browseracceptatie OPEN.** [Het Update 38 ontwerp, de complete 36-matchupmatrix, echte Water/Frost-nerfs en testprotocol](UPDATE-38-ALL-NINE-WEAPONS.md). De gemeten Water 37.2-baseline blijft 26:42 Victory/21 hits/333,86 damage; door de nieuwe Fire/Water/Frost-code is nog geen complete nieuwe browserrun gespeeld. De beproefde healing- en bossdrukverbeteringen uit 37.2 blijven. **Volgende update: 39 — Three Complete Normal Runs & UX Fixes**, pas daarna milestone-40 release gate GO/NO-GO.
-
-## Update 38.1 — Normal-mastery polish vóór maker-speeltest (19 oktober 2026)
-
-**ACTUEEL — UPDATE 38.1: NORMAL MOET JE VERDIENEN (19 oktober 2026).** Makerdoel: een nieuwe speler wint doorgaans niet in de eerste Normal-runs; verlies moet leerzaam, zichtbaar en te voorkomen zijn door beter dodgen, Guardian-patronen kennen en actief health pickups zoeken. **GEEN** verborgen winstblokkade, gegarandeerde dood, nep-hits of healing-nerf. Code: gewone Normal enemy-damageramp begint vanaf **4:00 (voorheen 5:00)** en bereikt dezelfde cap **1,65× op 22:00 (voorheen 25:00)**. Guardian normale salvo-cooldowns versnellen gecontroleerd in fase I/II/III met factoren **0,97 / 0,89 / 0,83** (Nightmare nog sneller), minimum **1,35s**; bestaande warningtijden, signature-ultimates en recovery blijven. **Easy onveranderd**, Vitality en healing pickups blijven. Difficulty-menu legt beginner vs Normal uit. Nieuwe regressietests: **578/578 CI groen vóór documentatiewijzigingen**. [UPDATE-38-1-NORMAL-MASTERY.md](UPDATE-38-1-NORMAL-MASTERY.md). **Geen recente menselijke browserrun na deze build**, dus novice-winrate, feel en release-acceptatie nog OPEN. De gevraagde Update 39 blijft drie complete Normal-runs Fire/Water/Frost met UX-fixes; niet doen alsof 39 door deze hotfix klaar is.
-
-## Update 38.2 — echte fire-run legt leegtes bloot (19 oktober 2026)
-
-**ACTUEEL — UPDATE 38.2: CONSTANT PRESSURE & UNIEKE GUARDIAN-OPENERS (19 oktober 2026).** Gebaseerd op échte [Fire Standard Normal QA](UPDATE-38-2-CONSTANT-PRESSURE.md): **defeat op 12:35**, 11 hits/183,48 damage, 42 health pickups, 0 Vitality, 2 Guardians gekilled, 1 Meteor Rain evolutie; gewone field had vaak **slechts 1–4 enemies**, early 0 hits. Daarom nu geen healing-nerf, maar **Normal doorgaande ambient mini-packs van 2–4 sterke offscreen enemies**, ambientcap 10–14, 1,65–2,6s entrycadence, kortere recoveries (2,5–3,3s) en waves (38–46s), patrols sneller, globale cap 30. Easy blijft rustiger; Boss-arena blijft geïsoleerd. De **eerste twee normale attacks van Beau, Shade, Bell, Last Meme** hebben nu elk andere echte geometry (voorwaartse charge lane / pack-pincer; laterale spear wall / diagonal phantom corners; chime cross / lengthwise timing corridor; checkerboard rip / forward-back shear) i.p.v. kopieën van cirkels, snellere schadelijke projectielen en 0,52s delayed real hazard na volledig zichtbaar telegraph. Tekenen en collision delen exact dezelfde coördinaten. **584/584 CI groen vóór doc slot; geactualiseerde branch-CI controleren**. **NIET live door maker gespeeld**, FPS/druk/uitwijkbalans en 39's vereiste 3 volle runs blijven OPEN. Volgende stap maker hertest, daarna Update 39 volledige Fire/Water/Frost runs, Update 40 releasegates NO-GO tot bewijs. Geen extra bonus evoluties, geen geknipte signatures of healerf.
-
-**Dit is GEEN bewijs van afgeronde Update 39:** er is één Fire-run geëindigd bij 12:35 en de moeilijkheid is daarna fundamenteel veranderd. Voor Update 39 blijven drie complete na-fix Fire/Water/Frost Normal-runs en UX-bugs nodig.
-
-## Hoe we voortgang bijhouden
-
-- **Update 30:** 20/20 voltooide *geplande* technische/combat-updates. **Releasegates nog OPEN.**
-- **Updates 31–40:** **Update 31 live + technisch geaccepteerd (1/10 volledig geaccepteerd); Updates 32 (+32.1), 33, 34, 35, 36 (+36.1), 37 (+37.2) en 38 TECHNISCH gebouwd (8/10 genummerde updates gebouwd), maar Water/Frost-balans, nieuwe counterrollen en Beau/Shade/Bell/Meme LIVE QA OPEN.** Water 26:44 Victory + 2 earned evoluties exact 10:00 en 17:00; Frost 28:01 Victory sandboxflag true, maker zegt geen developerfuncties gebruikt. [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md). **M3–M6 nog gedeeltelijk open, release NO-GO.**
-- **Updates 41–45:** momenteel **0/5**; de 2.5D art direction is **gekozen als doel**, de assetstijl nog **niet definitief getekend/goedgekeurd**.
-- **Updates 46–50:** momenteel **0/5**; 3D-gevoel via vloeiende, gelaagde 2D-animatie/VFX is **het doel**, niet reeds gerealiseerd.
-- Na iedere werkelijk geïmplementeerde update: GitHub commit, syntax/regressietests, waar relevant browser screenshot/video of FPS, beide projectdocumenten en deze roadmap bijwerken. **Een roadmappunt is niet voltooid doordat we erover praten.**
-- **Mijlpaal 40:** Verified Playable Run. **Mijlpaal 45:** 2.5D Visual Foundation. **Mijlpaal 50:** Animation & VFX Vertical Slice.
-
-## Mogelijke toekomst: een echte 3D sequel
-
-Een **eventuele** Shadow Survivor 2 mag later 3D movement, ruimere arena's, cinematografische bosses en een uitgebreidere Living World krijgen. **Geen echte 3D-camera, enginewissel of 3D-sequel bouwen in Updates 31–50**. We ontwikkelen eerst een zelfstandige, sterke, herkenbare 2D-game met een bijna-3D-look, zodat een vervolg voortbouwt op een bewezen concept.
-
-**Smaak / makerbesluit:** “ik wil voor deze game echt een lijp goed vloeiende stijl, dat het bijna 3d voelt, en dan misschien later als meer een soort deel 2 van het spel 3d”. Dit is voortaan de leidende visuele richting voor alle designs, revisies en vervolgstappen.
-
-## Update 31 — technische implementatie én echte browserplaytest (18 oktober 2026)
-
-- `js/run-telemetry.js` verzamelt **uitsluitend lokaal/in geheugen** gegevens van een werkelijk lopende game (geen fetch of auto-upload). Nieuwe run begint eigen rapport; Developer Mode krijgt duidelijk `sandbox:true`.
-- Registratie: 30s gameklok snapshots met levels/XP/needed/unlocked/upgrades/HP/wereld/boss, level-upaanbiedingen en gekozen upgrades, upgrade- en bossbeloningen, **de werkelijke twee evoluties**, boss spawns/phase transitions/defeats, hits, death/Victory/Endless; 5s FPS/P95/AI/collision/draw/objectmetingen uit echte realtime browserframes. Ruwe per-framebuffers en eventlijsten zijn beperkt qua geheugen.
-- Settings heeft nu **Record local run QA data** (aan, uitzetbaar); pauzemenu/Victory/Game Over/hoofdmenu leveren **DOWNLOAD QA REPORT · JSON** en **COPY QA SUMMARY**. De gebruiker deelt het bestand alleen zelf.
-- `tests/update-31-run-telemetry.test.cjs` voegde **11 specifieke tests** toe; GitHub Actions is **479/479 groen**, technische milestone-audit Update 30 blijft groen. Rapport en handmatige procedures: [RUN-TEST-31.md](RUN-TEST-31.md).
-- **Eerste echte browserrun geaccepteerd:** Water sandbox:false, Standard Normal Victory 26:44 met twee echte evoluties exact 10:00/17:00. Daarnaast Frost 28:01, sandboxflag true maar maker gebruikte geen developerfuncties; gewone bossrewards ontbraken door sandboxlogica. Detailgegevens in [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md). **M1/M2 aantoonbaar Water PASS; M3–M6 blijven onvolledig.** Volgende Update 32.
-
-
-## Update 32 — implementation handoff (19 oktober 2026; code PASS, live balance QA OPEN)
-
-- **Nieuw:** [UPDATE-32-BALANCE.md](UPDATE-32-BALANCE.md). Volledige onderbouwing, onderscheid werkelijk gespeelde 31-data en nog ongeteste nieuwe waterbalans, met expliciete twee browsertestscenario's.
-- **Code:** js/crowd-control.js gedeelde movement-/knockbackweerstand op alle fysieke Water-paden in js/elemental-combat.js en js/enemies.js: gewone enemies sterk verplaatsbaar, maar Zombie Mike zware massa; Water Bolt herhaalde extra recoil verminderd zonder zijn damage, rate of pierce plat te nerfen. Whirlpool, Tidal Wave en combo-pulls volgen dezelfde regel.
-- **Levelup:** js/upgrades.js biedt locked weapons standaard vroeg en periodiek, niet bij bijna elke level-up; evolutionFocusKey blijft behulpzaam en de twee earned evolutiongates 10:00/17:00 (weapon 5 + support 3) ongewijzigd.
-- **Frost sandboxprobleem:** js/developer-mode.js maakt onderscheid tussen sandboxflag en daadwerkelijk gebruikt ontwikkeltool; passief Developer Mode slaat bossreward-keuzes niet langer over, maar toolgebruik / open F9 krijgt geen modal. Save-sandboxbescherming blijft intact.
-- **Tests:** **491/491 groen, 0 fouten** ([CI na code](https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39230706344)), waaronder 12 nieuwe regressies en aangepaste oude keuzeassumpties. **Nog geen nieuwe daadwerkelijk gespeelde Water/Frost-run ná de fixes**. Dit blijft de hoogste volgende verificatieprioriteit.
-- **Volgende geplande code-update:** 33 — Beau/Shade secundaire aanvallen, hun twee sterke signatures behouden. Nieuwe enemy-counterrollen en unieke visuele silhouette bij 35/41–50. **Als de nieuwe Water-run nog onwinbaar makkelijk blijft, eerst verdere gerichte rebalance vóór doorgaan.**
-
-## Update 33 — Beau & The Mourning Shade standaardaanvallen (19 oktober 2026; CODE PASS, LIVE QA OPEN)
-
-- **Gebouwd in code:** nieuwe [js/guardian-secondary-attacks.js](js/guardian-secondary-attacks.js), opgenomen in echte `bossFire()` en `game.js` charge/shot-warningflow, visueel getekend door `render.js`. Elk van Beau en Shade heeft **twee afwisselende gewone salvo's**, met vooruit getekende flanken / grondzones, exact dezelfde posities in tekening én schadekracht, en echte verzonnen flankprojectielen vanuit aangekeken afzenderlocaties.
-- **Beau:** FANG SWEEP (verschillende projectielsnelheden + 1 flankslag), PACK CROSSFIRE (3 projectielen + 2 aangekondigde flankschutters + gemarkeerde centrale inslag). **Shade:** MOURNING LANCES (snelle centrale speer + vertraagde flanklanes), PHANTOM MIRRORS (2 zichtbare spellcasters opzij + 2 gemarkeerde flankinslagen, centrum vrij van grondinslag).
-- **Behouden:** de sterke `Hunting Grounds`, `Pincer Ambush`, `The Final Hunt`, `Shadow Collapse`, `Phantom Execution`, `Eternal Eclipse`, `boss-combat` signatures, Phase-III Guardian Arena Powers en volledige Normal-/Endless-bossvolgorde. Geen gewone extra mobs/spawnspam, geen extra boss-HP of buff voor de ultimates.
-- **Tests:** 13 nieuwe regressies, **514/514 Node-tests groen**, in [CI-run](https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39236970668). Uitwijkpaden en F9/special-interrupt in unit tests gecontroleerd. **Geen nieuw daadwerkelijk door maker gespeeld Beau/Shade-gevecht**, die live acceptatie blijft OPEN.
-- **Bron + open checks:** [UPDATE-33-GUARDIAN-SECONDARY.md](UPDATE-33-GUARDIAN-SECONDARY.md) (Low/High, 1×/2×/3×, leesbare warning, fair hitzones en fase-3-overlap). Maker speelt later ook nog de Update 32.1-waterbalanstest.
-- **Volgende geplande update 34:** Bell Tower & The Last Meme secundaire moves cooler/moeilijker maken met behoud van de door maker geweldig gevonden final ultimates. Daarna Update 35 specifieke unieke counterrollen voor gewone enemies.
-
-## Update 34 — Bell Tower & The Last Meme standaardvolleyverbetering (19 oktober 2026; CODE PASS, LIVE QA OPEN)
-
-- **Nieuw in game:** [js/guardian-late-secondary.js](js/guardian-late-secondary.js) en productiehooks in `js/game.js`, `js/enemies.js`, `js/render.js`, `index.html`. Bell **CLAPPER'S VERDICT** (drie variabele chimes + twee late flankhazards) en **SPLIT HOUR** (drie normale + twee vooraf getekende zijschoten, een vertraagde middeninslag); Meme **PIXEL RIP** (vijf riftprojectielen + twee diagonale markerinslagen) en **GLITCH DOUBLE** (twee zichtbare emitters, vier flankschoten plus centrale rift, twee voor/achterhazards).
-- **Fair mechanics:** vanaf de hele bestaande shot-warning exact dezelfde merktekens als de latere echte collision, richtingen bevriezen na het bestaande 0.35s trackingvenster, extra 0.8s impactwaarschuwing, max vijf projectielen/twee impacts, minstens 1.55s tot volgende grote signature-start, cancellation bij phase changes. Oude generieke shoot-cones worden verborgen als een specifiek Update-33/34-patroon wordt getoond om nepgevaarzones te voorkomen.
-- **Grote favoriete aanvallen NIET aangepast:** `js/bell-encounter.js`, `js/meme-encounter.js`, `js/boss-combat.js`, `js/guardian-arena-powers.js` inhoudelijk onveranderd. Maker houdt `The Grand Peal` en vooral `The End of Everything` als benchmark; behoud de finale pas na 25:00 en drie echte Guardian kills.
-- **13 nieuwe automatische tests**, **527/527 groen** ([CI](https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39238642036)). **Geen echte nieuwe Bell/Meme browserrun** na de codewijziging; update technisch compleet, daadwerkelijke fun/difficulty/telegraph overlap op 1×/2×/3×, Low/High nog OPEN. Instructies: [UPDATE-34-LATE-GUARDIANS.md](UPDATE-34-LATE-GUARDIANS.md).
-- **Volgende Update 35:** unieke enemyrollen met zelfverklarend uiterlijk (Anchor, Phase Stalker, Warden), uit bestaande zware/runner/shield enemies; niet extra vijanden stapelen. De maker test daarnaast de eerdere Water/Vitality/gewone enemy-survivalhotfix van Update 32.1 later.
-
-## Update 35 — unieke tactische enemyrollen (19 oktober 2026; CODE PASS, LIVE QA OPEN)
-
-- Nieuwe [js/enemy-counter-roles.js](js/enemy-counter-roles.js) is werkelijk geïntegreerd in `js/enemies.js`, `js/crowd-control.js`, `js/encounter-tactics.js`, `js/render.js`, `js/game.js` en `index.html`. **Geen nieuwe enemy-spawns**, alle rollen komen voort uit reeds bestaande Zombie Mike, tactische Runner Pouncer en Ward Bulwark. Hun buitenvormen en visuele signalen laten hun abilities nu al zien op Low/High; complete 2.5D-stijl komt pas rond 41–50.
-- **THE ANCHOR:** zware feet/ankers en 4,2% Whirlpool-trekkracht / 7,8% algemene duwkracht bij bestaande zware baseline; Bomb-hit geeft Armor Crack 2,6s waarna 20% extra directe damage mogelijk is. Niet immuun voor Water Bolt-, Frost- of Fire-damage.
-- **PHASE STALKER:** alleen tactische Pouncer-Runner, diagonale ±0,37rad-dash na 0,86s zichtbare corridorwaarschuwing, 1,6s kwetsbare recovery (+20% damage); geen teleports of instant-hit; normale Runners blijven gewone Runners.
-- **THE WARDEN:** alleen Bulwark met `ward`-tactiek, zichtbare max. twee bescherming-links naar levende bondgenoten op ≤155px en eigen team; terwijl schild omhoog blijft ontvangen zij 33% van normale push/pull, nooit damage-immuniteit. Kill/flank/shield-down breekt de bescherming direct.
-- **Tests:** 12 nieuwe gerichte regressies; 539/539 Node-tests geslaagd in [Actions](https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39241222863). QA snapshots tellen `counterRoles.anchor/phaseStalker/warden` elke 30 game-seconden. **Geen echte handmatige Water/Frost-run na Update 35**. Details inclusief browserchecklist: [UPDATE-35-ENEMY-COUNTERS.md](UPDATE-35-ENEMY-COUNTERS.md).
-- **Volgende gepland:** Update 36 = reële FPS/memory-stresstests in drukke gameplay met rollen, boss-warning en 1×/3×; eerdere 32.1-/33-/34-/35-browseracceptatie blijft open.
+**Do not mark update 39/40 DONE because Node regressions pass.** Browser runs are not simulated by unit tests. Git history holds full removed update documents if older rationale is needed.
