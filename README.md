@@ -2,6 +2,8 @@
 
 A desktop browser roguelike built with **HTML, CSS and Canvas JavaScript**. One evolving living world, three player elements (Fire / Water / Frost), six defender families and four Guardians.
 
+The three three-weapon loadouts are **Fire** (Flame Cone, Fireball, Flame Orbit), **Water** (Water Bolt, Tidal Wave, Whirlpool) and **Frost** (Frost Orb, Ice Shards, Glacial Pulse).
+
 ## Start
 
 Open `index.html` in a modern desktop browser or serve the repository locally. Select **Standard → difficulty → character → three weapons**. WASD / arrows move; **Shift** dashes; **P / Esc** pauses; **F** fullscreen; 1×/2×/3× selects speed. Pause → **Current Build** shows complete weapon stats and recipes; **Controls** shows all keys; **QA export** saves the run report.
