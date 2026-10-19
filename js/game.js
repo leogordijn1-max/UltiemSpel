@@ -1035,7 +1035,8 @@ function update(dt) {
           moveSpeed = 0;
           if (e.shotWarning === 0) {
             enemyFireOrb(e);
-            window.encounterTacticVolley?.(e,enemyShots,player);
+            // A Ranged Shade's projectile count is determined by its LV,
+            // not by a randomly assigned squad-role volley.
             const rangedTuning=window.getCombatDifficultyTuning?.(difficulty);
             e.shootCooldown = rand(rangedTuning?.rangedCooldownMin ?? 4.5,
               rangedTuning?.rangedCooldownMax ?? 6.2) *
@@ -1194,9 +1195,13 @@ function update(dt) {
       };
       const archetype=window.updateEnemyArchetype?.(
         e,dt,player,time,onScreen,abilityHooks);
-      const teamSkill=e.encounterTactic
-        ? window.updateEncounterTactic?.(e,dt,player,time,onScreen,abilityHooks)
-        : null;
+      // Squads change spacing and angles, not the actual ability list of
+      // two units of the same family and level. No random Crusher/Binder
+      // attack that only some same-level Mikes or Drifters happen to get.
+      const formationRoles=["vanguard","ward","skirmisher"];
+      const teamSkill=formationRoles.includes(e.encounterTactic)
+        ?window.updateEncounterTactic?.(e,dt,player,time,onScreen,abilityHooks)
+        :null;
       // Distinct evolved flanking positions only fill moments where the
       // authored encounter tactic / archetype isn't already attacking.
       const formation=window.evolvedEnemyTeamSteer?.(e,player);
