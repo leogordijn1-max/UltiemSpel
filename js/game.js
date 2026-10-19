@@ -1856,12 +1856,12 @@ function update(dt) {
     p.y += p.vy * dt;
     p.life -= dt;
   }
-  particles = particles.filter((p) => p.life > 0);
+  compactLiveEffects(particles);
   for (const t of texts) {
     t.y -= 35 * dt;
     t.life -= dt;
   }
-  texts = texts.filter((t) => t.life > 0);
+  compactLiveEffects(texts);
   window.updateHitFeedback?.(dt,time);
   shake = Math.max(0, shake - 35 * dt);
   checkRunAchievements();
@@ -1904,6 +1904,16 @@ function update(dt) {
   }
 }
 
+// Update 36: preserve live-effect order without new arrays per 60Hz tick.
+function compactLiveEffects(items) {
+  let write=0;
+  for(let read=0;read<items.length;read++){
+    const item=items[read];
+    if(item.life>0)items[write++]=item;
+  }
+  items.length=write;
+  return items;
+}
 // Keep the game loop running; simulation pauses while menus are open.
 function loop(t) {
   const elapsed = (t - last) / 1000 || 0;
@@ -1943,6 +1953,7 @@ function loop(t) {
     enemyAI:performanceMetrics.enemyAI,
     collisions:performanceMetrics.collisions,
     render:performanceMetrics.render,
+    graphicsQuality,gameSpeed,bossName:boss?.bossName||null,
     enemies:enemies.length,playerProjectiles:bullets.length,
     enemyProjectiles:enemyShots.length+bossShots.length,
     effects:particles.length
