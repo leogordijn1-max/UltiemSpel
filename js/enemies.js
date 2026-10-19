@@ -10,7 +10,7 @@ const difficultyProfiles = {
   },
   normal: {
     enemyHealth: 1,
-    enemyDamage: 1,
+    enemyDamage: 1.13,
     spawnRate: 1,
     xpReward: 1,
     healthDropChance: 0.15,
@@ -610,8 +610,13 @@ function damage(e, d, origin = player, damageType = "direct") {
       });
     }
     const profile = difficultyProfiles[difficulty] || difficultyProfiles.normal;
-    if (e.kind === 1 && Math.random() < profile.healthDropChance) {
-      dropGem({ x: e.x, y: e.y, r: 7, kind: "health", value: 2 });
+    if (e !== boss && !e.summoned && !e.noXp && player.hp < player.maxHp * .83 &&
+        Math.random() < (e.kind === 1 ? profile.healthDropChance :
+          (e.elite ? .14 : difficulty === "easy" ? .11 : .085))) {
+      // Restore health only when actually collected. Wounded players have to
+      // travel toward defeated enemies; Vitality is not nerfed again.
+      dropGem({ x: e.x, y: e.y, r: 9, kind: "health",
+        value: e.elite ? 22 : e.kind === 1 ? 14 : 16 });
     }
     const killedFinalBoss = e === boss && e.isFinalBoss;
     if (e === boss) {
@@ -903,8 +908,8 @@ function bossFire(e) {
     e.volleyCount=(e.volleyCount||0)+1;
     e.shotWarning=0;
     e.shootCooldown=e.isFinalBoss?
-      Math.max(1.65,3.0-0.35*(e.finalPhase||1)):
-      e.phaseThree?2.08:e.phaseTwo?2.35:2.9;
+      Math.max(1.5,2.65-0.35*(e.finalPhase||1)):
+      e.phaseThree?1.85:e.phaseTwo?2.05:2.55;
     return;
   }
   if (e.isFinalBoss) return finalBossFire(e);
@@ -926,7 +931,7 @@ function bossFire(e) {
     });
   if(enhanced){
     e.shotWarning=0;
-    e.shootCooldown=e.phaseThree?2.08:e.phaseTwo?2.35:2.9;
+    e.shootCooldown=e.phaseThree?1.85:e.phaseTwo?2.05:2.55;
     return;
   }
   if (e.variant === 0) {
@@ -967,7 +972,7 @@ function bossFire(e) {
     }
   }
   e.shotWarning = 0;
-  e.shootCooldown = e.phaseThree ? 2.08 : e.phaseTwo ? 2.35 : 2.9;
+  e.shootCooldown = e.phaseThree ? 1.85 : e.phaseTwo ? 2.05 : 2.55;
 }
 
 // Alternate visibly different patterns; all aim directions/target points were locked
