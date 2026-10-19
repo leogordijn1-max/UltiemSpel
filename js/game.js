@@ -1019,6 +1019,8 @@ function update(dt) {
     if (e !== boss && e.kind !== 4 && !e.summoned)
       moveSpeed *= window.enemyPursuitMultiplier?.(
         growthTime,difficulty,playerDistance) ?? 1;
+    if(e.kind===0&&!e.summoned)moveSpeed *=
+      window.enemyEvolutionCombatMultiplier?.(e,enemies,player)??1;
     if (e.burnUntil > time && e.nextBurnTick <= time) {
       e.nextBurnTick = time + 0.5;
       damage(e, e.burnDps * 0.5, e.burnWeapon ? { x: player.x, y: player.y, type: e.burnWeapon } : player, "burn");
@@ -1044,7 +1046,8 @@ function update(dt) {
             window.encounterTacticVolley?.(e,enemyShots,player);
             const rangedTuning=window.getCombatDifficultyTuning?.(difficulty);
             e.shootCooldown = rand(rangedTuning?.rangedCooldownMin ?? 4.5,
-              rangedTuning?.rangedCooldownMax ?? 6.2);
+              rangedTuning?.rangedCooldownMax ?? 6.2) *
+              ((e.evolutionLevel||1)>=4?.55:(e.evolutionLevel||1)>=2?.82:1);
           }
         } else {
           e.shootCooldown -= dt;
@@ -1067,21 +1070,25 @@ function update(dt) {
       if (e.guardTimer <= 0) {
         e.shieldActive = !e.shieldActive;
         const shieldTuning=window.getCombatDifficultyTuning?.(difficulty);
+        const level=e.evolutionLevel||1;
         e.guardTimer = e.shieldActive
-          ? (shieldTuning?.shieldRaised ?? 3) : (shieldTuning?.shieldExposed ?? 2);
+          ? (shieldTuning?.shieldRaised ?? 3)*(1+Math.max(0,level-1)*.19)
+          : (shieldTuning?.shieldExposed ?? 2)*Math.max(.46,1-(level-1)*.16);
       }
     }
     if (e.kind === 5) {
       if (!e.armed && onScreen &&
-          playerDistanceSquared < (e.burstRadius+45)*(e.burstRadius+45)) {
+          playerDistanceSquared < (e.burstRadius+85)*(e.burstRadius+85)) {
         e.armed = true;
-        e.burstWarning = window.getCombatDifficultyTuning?.(difficulty)?.burstTelegraph ?? 0.95;
+        e.burstWarning = Math.max(.68,
+          (window.getCombatDifficultyTuning?.(difficulty)?.burstTelegraph ?? .95)-
+          Math.min(.22,((e.evolutionLevel||1)-1)*.075));
       }
       if (e.armed) {
         // The warning tracks the REAL moving Burstling instead of freezing
         // harmlessly 40px outside its detonation circle.
-        moveSpeed = playerDistanceSquared<(e.burstRadius+player.r-8)**2?0:
-          moveSpeed*.75;
+        moveSpeed = playerDistanceSquared<(e.burstRadius*.55)**2?0:
+          moveSpeed*(1.55+Math.min(3,e.evolutionLevel||1)*.24);
         e.burstWarning = Math.max(0, e.burstWarning - dt);
         if (e.burstWarning === 0) {
           e.dead = true;
@@ -1092,7 +1099,7 @@ function update(dt) {
             !tryDodge()
           ) {
             player.hp -= e.damage;
-            recordPlayerHit(e.damage);
+            recordPlayerHit(e.damage,"enemy_explosion");
             player.inv = 0.75;
             damageFlash = 0.42;
             shake = Math.max(shake, 8);
@@ -1109,6 +1116,23 @@ function update(dt) {
             maxLife: 0.5,
             evolved: false,
           });
+          // Every Burstling of LV2+ has the same honest follow-up kit:
+          // visible homing shrapnel; LV3 fires three, LV4 five projectiles.
+          // The second attack can be dodged/blocked; never automatic damage.
+          const rank=e.evolutionLevel||1;
+          if(rank>=2 && enemyShots.length<305){
+            const a=Math.atan2(player.y-e.y,player.x-e.x);
+            const angles=rank===2?[0]:rank===3?[-.27,0,.27]:[-.43,-.2,0,.2,.43];
+            for(const spread of angles){
+              const angle=a+spread,speed=165+rank*17;
+              enemyShots.push({
+                type:"burstShard",x:e.x,y:e.y,
+                vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+                speed,turnRate:rank===4?.75:.36,life:3.5,r:9,
+                damage:e.damage*.48
+              });
+            }
+          }
           puff(e.x, e.y, "#ff985b", 11);
           continue;
         }
