@@ -59,7 +59,7 @@ test("bosses and summoned minions are not silently altered by squad tuning",()=>
     assert.ok(!e.encounterDifficultyApplied);
   }
 });
-test("actual director creates the same-sized elite team on each difficulty",()=>{
+test("actual director creates the intended stronger specialists on Normal and Nightmare",()=>{
   const a=teamFor("easy"),n=teamFor("normal"),h=teamFor("nightmare");
   assert.ok(a.length>=n.length,"Easy may use a larger, weaker training squad");
   assert.equal(n.length,h.length);
