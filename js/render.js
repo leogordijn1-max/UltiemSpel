@@ -301,6 +301,7 @@ function draw() {
     window.drawEnemyArchetype?.(e,ctx,time,graphicsQuality);
     window.drawGuardianWorldWarning?.(e, ctx, time, graphicsQuality === "low");
     window.drawBossCombat?.(e, ctx, time, graphicsQuality);
+    window.drawGuardianSecondary?.(e,ctx,time,graphicsQuality);
     window.drawBeauTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawShadeTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawBellTelegraph?.(e, ctx, time, graphicsQuality);
