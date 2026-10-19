@@ -101,10 +101,10 @@ test("Meme Pixel Rip marks two diagonal side strikes and paints its fast central
  assert.ok(marks[0].x<320&&marks[1].x>320);
  assert.ok(marks[0].y<0&&marks[1].y>0);
  const shots=h.window.guardianLateSecondaryShots(h.boss);
- assert.equal(shots.length,5);
- assert.ok(shots[2].speed>shots[0].speed);
+ assert.equal(shots.length,3);
+ assert.ok(shots[1].speed>shots[0].speed);
  h.boss.shotWarning=0;h.window.fireGuardianLateSecondary(h.boss,h.hooks,1501.2);
- assert.equal(h.shots.length,5);assert.equal(h.hazards.length,2);
+ assert.equal(h.shots.length,3);assert.equal(h.hazards.length,2);
  assert.ok(h.shots.every(s=>s[4]==="rift"));
 });
 test("Meme Glitch Double uses two announced mirrors and leaves side dodge lanes",()=>{
@@ -114,14 +114,14 @@ test("Meme Glitch Double uses two announced mirrors and leaves side dodge lanes"
  h.window.prepareGuardianLateSecondary(h.boss,10);
  assert.equal(h.boss.lateSecondary.mode,"glitchDouble");
  const shots=h.window.guardianLateSecondaryShots(h.boss);
- assert.equal(shots.length,5);
- assert.equal(shots.filter(s=>s.origin!==h.boss).length,4);
+ assert.equal(shots.length,3);
+ assert.equal(shots.filter(s=>s.origin!==h.boss).length,2);
  const marks=h.window.guardianLateSecondaryDanger(h.boss);
  assert.equal(marks.length,2);
  assert.equal(marks[0].y,0);assert.equal(marks[1].y,0);
  h.boss.shotWarning=0;
  h.window.fireGuardianLateSecondary(h.boss,h.hooks,11);
- assert.equal(h.shots.length,5);assert.equal(h.hazards.length,2);
+ assert.equal(h.shots.length,3);assert.equal(h.hazards.length,2);
  assert.ok(h.puffs.length>=3);
  assert.ok(h.boss.memeFight.nextAt>11);
 });
