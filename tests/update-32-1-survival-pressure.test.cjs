@@ -50,7 +50,7 @@ test("real hits reset recovery and resets clear injury timer",()=>{
  const game=source("js/game.js");
  assert.match(game,/lastPlayerHitAt = -Infinity,/);
  assert.match(game,/lastPlayerHitAt = -Infinity;/);
- assert.match(game,/function recordPlayerHit\(amount\) \{\s*lastPlayerHitAt=time;/);
+ assert.match(game,/function recordPlayerHit\(amount, source = "unknown"\) \{\s*lastPlayerHitAt=time;/);
  assert.match(game,/window\.vitalityRegenPerSecond\?\.\(\s*upgrades\.health,time-lastPlayerHitAt\)/);
  assert.doesNotMatch(game,/player\.hp \+ upgrades\.health \* 0\.8 \* dt/);
  assert.match(game,/healing:runStats\?\.healing\|\|0/);
