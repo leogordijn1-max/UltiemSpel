@@ -1164,6 +1164,7 @@ function update(dt) {
           e.hp <= e.maxHp * 0.33 ? 3 : e.hp <= e.maxHp * 0.66 ? 2 : 1;
         if (nextPhase > e.finalPhase) {
           e.finalPhase = nextPhase;
+          window.cancelGuardianLateSecondary?.(e);
           window.interruptMemeEncounter?.(e, time);
           e.phaseIntro = 1.25;
           e.shotWarning = 0;
@@ -1181,6 +1182,7 @@ function update(dt) {
       if (!e.isFinalBoss && !e.phaseTwo && e.hp <= e.maxHp * 0.66) {
         e.phaseTwo = true;
         window.cancelGuardianSecondary?.(e);
+        window.cancelGuardianLateSecondary?.(e);
         e.phaseIntro = 0.95;
         e.shotWarning = 0;
         e.shootCooldown = Math.max(1.4, e.shootCooldown);
@@ -1193,6 +1195,7 @@ function update(dt) {
                  e.hp <= e.maxHp * 0.33) {
         e.phaseThree = true;
         window.cancelGuardianSecondary?.(e);
+        window.cancelGuardianLateSecondary?.(e);
         window.interruptBeauEncounter?.(e, time);
         window.interruptShadeEncounter?.(e, time);
         window.interruptBellEncounter?.(e, time);
@@ -1383,6 +1386,7 @@ function update(dt) {
           e.shootCooldown = 0;
           const target = window.bossCombatPredictTarget?.(e, player) || player;
           e.shotAngle = Math.atan2(target.y - e.y, target.x - e.x);
+          e.warningX=target.x;e.warningY=target.y;
           e.shotTrackUntil = time + .35;
           if (e.isFinalBoss) {
             e.shotPattern = (e.volleyCount || 0) % 3;
@@ -1390,11 +1394,13 @@ function update(dt) {
             e.warningX = target.x;
             e.warningY = target.y;
             e.shotWarning = [1.2, 1.05, 0.92][e.finalPhase - 1];
+            window.prepareGuardianLateSecondary?.(e,time);
           } else {
             // Each ordinary Beau/Shade volley now shows its real attack
             // geometry throughout this fixed, lockable warning window.
             e.shotWarning = e.phaseTwo ? 0.95 : 1.05;
             window.prepareGuardianSecondary?.(e,time);
+            window.prepareGuardianLateSecondary?.(e,time);
           }
         }
       }
