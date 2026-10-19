@@ -1078,7 +1078,7 @@ function update(dt) {
       if (e.armed) {
         // The warning tracks the REAL moving Burstling instead of freezing
         // harmlessly 40px outside its detonation circle.
-        moveSpeed = playerDistanceSquared<(e.burstRadius+player.r+12)**2?0:
+        moveSpeed = playerDistanceSquared<(e.burstRadius+player.r-8)**2?0:
           moveSpeed*.75;
         e.burstWarning = Math.max(0, e.burstWarning - dt);
         if (e.burstWarning === 0) {
