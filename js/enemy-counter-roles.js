@@ -45,7 +45,7 @@
     if(!e||e.dead||e.kind===3||e.summoned)return 1;
     if(e.counterRole==="anchor")
       return source==="whirlpool"?.35:.65; // .12 baseline becomes .042/.078
-    return wardFor(e)?.shieldActive?.33:1;
+    return wardFor(e)?.shieldActive ? .33 : 1;
   }
   function damageFactor(e,type,now){
     if(!e||e.dead||e.kind===3||e.summoned)return 1;
