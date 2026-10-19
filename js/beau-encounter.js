@@ -267,15 +267,17 @@
     };
     if(s.mode==="hunt"){
       if(s.stage==="huntTell"){
+        // At every phase, the drawn corridor reaches the real charge distance.
+        const reach=(835+phase(e)*50)*.66+16;
         // Fast charge corridor: central aimed lane is genuinely dangerous.
         ctx.beginPath();ctx.moveTo(e.x,e.y);
-        ctx.lineTo(e.x+ax*610,e.y+ay*610);
+        ctx.lineTo(e.x+ax*reach,e.y+ay*reach);
         ctx.lineWidth=low?52:90;ctx.globalAlpha=.19;ctx.stroke();
         ctx.globalAlpha=.9;ctx.lineWidth=low?2:4;
         ctx.beginPath();ctx.moveTo(e.x+sx*55,e.y+sy*55);
-        ctx.lineTo(e.x+ax*610+sx*55,e.y+ay*610+sy*55);
+        ctx.lineTo(e.x+ax*reach+sx*55,e.y+ay*reach+sy*55);
         ctx.moveTo(e.x-sx*55,e.y-sy*55);
-        ctx.lineTo(e.x+ax*610-sx*55,e.y+ay*610-sy*55);
+        ctx.lineTo(e.x+ax*reach-sx*55,e.y+ay*reach-sy*55);
         ctx.stroke();
         mark(x,y,40);
       }else if(s.stage==="huntRush"){
