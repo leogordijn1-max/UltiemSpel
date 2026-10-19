@@ -641,7 +641,7 @@ function damage(e, d, origin = player, damageType = "direct") {
         window.onWorldBossDefeated?.(bossesDefeated, false);
         const generation=window.enemyEvolutionTier?.(bossesDefeated)||0;
         if(generation>0){
-          notify("THE WORLD RESPONDS · DEFENDERS EVOLVE · GENERATION "+generation,
+          notify("WORLD ERA "+(generation+1)+" · VETERANS EVOLVE · NEW FAMILIES ARRIVE LV1",
             "boss",5);
           window.runQaEvent?.("enemy_evolution_unlocked",{
             tier:generation,cause:"guardian_defeated",guardian:e.bossName},time);
