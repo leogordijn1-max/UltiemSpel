@@ -148,7 +148,7 @@
     };
     for(const {x,y,r} of points(e))mark(x,y,r);
     if(g.mode==="fangSweep"||g.mode==="mourningLances"){
-      const spreads=[-.38,0,.38];
+      const spreads=g.mode==="fangSweep"?[-.43,-.21,0,.21,.43]:[-.36,0,.36];
       for(const angle of spreads){
         const a=g.angle+angle;
         line(e.x,e.y,e.x+Math.cos(a)*430,e.y+Math.sin(a)*430);
