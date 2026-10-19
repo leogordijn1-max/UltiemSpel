@@ -55,7 +55,7 @@ test("evolved Drifter and Burstling coordinate a genuine flank, without overridi
  const b=w.evolvedEnemyTeamSteer(volatile,player);
  assert.ok(a&&b&&a.angle*b.angle<0,"one fronts on left, the other threatens right");
  assert.ok(a.speedMult>1&&b.speedMult>1);
- volatile.dead=true;
+ volatile.dead=true;guard.dead=true;
  assert.equal(w.evolvedEnemyTeamSteer(front,player),null);
  assert.match(read("js/game.js"),/teamSkill\|\|archetype\|\|formation/);
 });
