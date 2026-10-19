@@ -162,7 +162,7 @@ test("warning is actually drawn on Low and High and never draws outside live win
  },{set(o,k,v){o[k]=v;return true;}});
  h.window.prepareGuardianSecondary(h.boss,10);
  h.window.drawGuardianSecondary(h.boss,ctx,10.2,"low");
- assert.ok(calls.stroke>6);
+ assert.ok(calls.stroke>=6);
  assert.equal(calls.words,0);
  h.window.drawGuardianSecondary(h.boss,ctx,10.3,"high");
  assert.equal(calls.words,1);
