@@ -51,7 +51,7 @@ test("the current elemental starter selection does not expose old legacy weapons
 test("Fireball, Water Bolt and Ice Shards all use motion-leading",()=>{
  const code=read("js/elemental-combat.js");
  assert.match(code,/const aim = elementalAim\(1100,350\)/);
- assert.match(code,/const aim = elementalAim\(1100,evolutions\.riptideLance\?760:640\)/);
+ assert.match(code,/const aim = elementalAim\(900,evolutions\.riptideLance\?760:640\)/);
  assert.match(code,/const aim = elementalAim\(950,480\)/);
  assert.match(code,/window\.weaponAimAngle\?\.\(player,enemy,projectileSpeed/);
 });
