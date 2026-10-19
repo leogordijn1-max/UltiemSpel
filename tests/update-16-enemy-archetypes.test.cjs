@@ -6,7 +6,7 @@ function harness(){
   vm.runInNewContext(read("js/enemy-archetypes.js"),ctx,{filename:"js/enemy-archetypes.js"});
   const player={x:200,y:0,r:12,inv:0};
   const spawn=(kind,x=0,y=0)=>{
-    const e={kind,x,y,r:kind===2?35:kind===6?24:12,hp:100,
+    const e={kind,x,y,r:kind===2?35:kind===6?24:12,hp:100,evolutionLevel:2,
       shieldActive:kind===6};
     window.initializeEnemyArchetype(e);return e;
   };
@@ -98,11 +98,12 @@ test("Zombie Mike's stomp warns before damaging, then can be dodged",()=>{
   h.window.updateEnemyArchetype(e,1.02,h.player,11.02,true,{damage:n=>hits.push(n)});
   assert.deepEqual(hits,[15]);
 });
-test("Zombie Mike does not double stomp when acting as a tactical Crusher",()=>{
+test("all LV2 Mikes retain the same innate stomp regardless of their squad position",()=>{
   const h=harness(),e=h.spawn(2);
   e.encounterTactic="crusher";e.stompCooldown=0;
-  assert.equal(h.window.updateEnemyArchetype(e,.016,h.player,1,true),null);
-  assert.equal(e.stompWarning,0);
+  assert.equal(h.window.updateEnemyArchetype(e,.016,h.player,1,true).speedMult,0);
+  assert.ok(e.stompWarning>0);
+  assert.match(read("js/game.js"),/const formationRoles=\["vanguard","ward","skirmisher"\]/);
 });
 test("no hidden attacks from offscreen, dead, summoned or boss enemies",()=>{
   const h=harness();
