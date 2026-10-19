@@ -234,9 +234,11 @@ test("deleting a sandbox boss keeps L actions and resumes on close", () => {
   assert.equal(t.context.paused,false);
 });
 
-test("sandbox boss kills do not open the gameplay reward overlay", () => {
+test("boss rewards skip active developer tools and F9 panel, but passive dev setting keeps rewards", () => {
   const source=fs.readFileSync(path.join(__dirname,"../js/enemies.js"),"utf8");
-  assert.match(source,/!killedFinalBoss && !window\.isDeveloperRun\?\.\(\)\) showBossReward\(\)/);
+  assert.match(source,/!killedFinalBoss && \(!window\.isDeveloperRun\?\.\(\) \|\|/);
+  assert.match(source,/!window\.developerToolsUsed\?\.\(\)/);
+  assert.match(source,/!window\.developerPanelOpen\?\.\(\)/);
 });
 
 test("L toggles developer panel and F9 no longer intercepts keyboard input", () => {
