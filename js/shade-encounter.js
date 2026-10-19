@@ -12,11 +12,12 @@ if(mode==="eclipse"){s.ultimateUsed=true;h.clearBossAttacks?.();window.beginGuar
 h.sfx?.("boss-warn");h.notify?.("MOURNING SHADE · "+({collapse:"SHADOW COLLAPSE",phantoms:"PHANTOM EXECUTION",eclipse:"ETERNAL ECLIPSE"}[mode]),"boss",3.2);}
 function finish(e,t,h){const s=e.shadeFight;window.interruptGuardianArenaPower?.(e);s.mode="idle";s.stage="";s.target=null;s.nextAt=t+(phase(e)===3?9.5:12);
 e.specialRecoveryUntil=t+2.2;e.chargeCooldown=Math.max(e.chargeCooldown||0,2);e.shootCooldown=Math.max(e.shootCooldown||0,2);h.notify?.("SHADE EXPOSED · COUNTERATTACK!","boss",2);}
-function ring(e,h,a,count,speed){for(let i=0;i<count;i++){const angle=a+i*TAU/count;if(i===0||i===1)continue;h.projectile?.(e,angle,speed,10+phase(e),"shadow");}}
+function ring(e,h,a,count,speed){for(let i=0;i<count;i++){const angle=a+i*TAU/count;if(i===0)continue;h.projectile?.(e,angle,speed,12+phase(e)*2,"shadow");}}
 function execute(e,t,h){const s=e.shadeFight,q=s.target;if(!q)return;
 if(s.mode==="collapse"){
 // Successive concentric ring volleys: escape the changing gap; no instant hits.
-ring(e,h,q.a+s.round*.58,16+s.round*2,255+s.round*18);
+ring(e,h,q.a+s.round*.73,18+s.round*3,
+   315+phase(e)*22+s.round*29);
 const x=q.x+Math.cos(q.a+s.round*.85)*110,y=q.y+Math.sin(q.a+s.round*.85)*110;
 h.hazard?.(x,y,95,.48,13+phase(e));h.puff?.(e.x,e.y,"#b38bff",13);
 }else if(s.mode==="phantoms"){
@@ -45,7 +46,7 @@ h.shake?.(7+s.round*2);h.puff?.(q.x,q.y,"#d2a5ff",24);
 s.round++;
 const total=s.mode==="eclipse"?3:s.mode==="collapse"?3:2;
 if(s.round>=total){s.stage="recovery";s.until=t+.65;}
-else{s.stage="tell";s.until=t+(s.mode==="eclipse"?1.15:.98);s.lockAt=t+.25;s.target=null;}
+else{s.stage="tell";s.until=t+(s.mode==="eclipse"?1.15:.9);s.lockAt=t+.25;s.target=null;}
 }
 function update(e,t,dt,p,h={}){if(!isShade(e)||!e.shadeFight)return false;const s=e.shadeFight;
 if(s.mode==="idle"){
@@ -70,7 +71,20 @@ function telegraph(e,ctx,t,quality){if(!isShade(e)||!e.shadeFight)return;const s
 const q=s.target,ax=Math.cos(q.a),ay=Math.sin(q.a),sx=-ay,sy=ax;
 ctx.save();ctx.strokeStyle=s.mode==="eclipse"?"#ec91ff":"#b99aff";ctx.globalAlpha=.85;ctx.lineWidth=quality==="low"?3:4;ctx.setLineDash([11,8]);
 const circle=(x,y,r)=>{ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.stroke();};
-if(s.mode==="collapse"){circle(e.x,e.y,175+s.round*25);circle(q.x+Math.cos(q.a+s.round*.85)*110,q.y+Math.sin(q.a+s.round*.85)*110,95);}
+if(s.mode==="collapse"){
+  circle(e.x,e.y,175+s.round*25);
+  circle(q.x+Math.cos(q.a+s.round*.85)*110,q.y+Math.sin(q.a+s.round*.85)*110,95);
+  // The ONE safe radial seam rotates every beat. This matches the skipped
+  // projectile at index zero; the rest of the ring is actual projectiles.
+  const gap=q.a+s.round*.73,sector=Math.PI*2/(18+s.round*3);
+  ctx.save();ctx.setLineDash([]);ctx.strokeStyle="#99ffe1";ctx.lineWidth=quality==="low"?4:6;
+  for(const edge of [-sector*.52,sector*.52]){
+    const a=gap+edge;
+    ctx.beginPath();ctx.moveTo(e.x+Math.cos(a)*70,e.y+Math.sin(a)*70);
+    ctx.lineTo(e.x+Math.cos(a)*245,e.y+Math.sin(a)*245);ctx.stroke();
+  }
+  ctx.restore();
+}
 else if(s.mode==="phantoms"){
   const rotation=q.a+s.round*Math.PI/2;
   for(let i=0;i<8;i++){
