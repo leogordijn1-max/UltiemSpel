@@ -91,6 +91,10 @@ De audit wordt **bij iedere push** op deze branch uitgevoerd. Lokale opdracht: `
 
 **Nieuw makerbesluit:** de eerste Shadow Survivor blijft 2D top-down met een **vloeiende stylized 2.5D-look, bijna 3D-gevoel, geen pixelart**. Een mogelijke latere sequel mag werkelijk 3D worden. De concrete art direction, contactschaduwen, volume, character/enemy/boss-redesign en Living World-diepte staan gepland voor **41–45**; animaties, negen weapon-VFX, evoluties en grote boss-setpieces voor **46–50**. **[ROADMAP-31-50.md](ROADMAP-31-50.md)** is nu het officiële vervolgplan. Het besluit maakt NO-GO-manuele gameplaychecks 31–40 niet automatisch PASS en verandert de voltooide teller 11–30 niet.
 
+### Status Update 32 — technische code groen, echte live rebalance OPEN
+
+Nieuwe balansmodule js/crowd-control.js corrigeert een gedeelde zware knockback-/Whirlpool-resistance op alle Water-paden; Water Bolt blijft krachtig maar geeft minder herhaalde extra push, normale upgrade-aanbiedingen krijgen meer afwisseling, en een passieve Developer Sandbox geeft nu toch normale bossreward-keuzes zonder opslag-exploit. **491/491 automatische tests geslaagd** ([CI](https://github.com/leogordijn1-max/UltiemSpel/actions/runs/39230706344)). Dit is **technische implementatie**, géén aangetoonde Water/Frost-verbetering in een nieuwe browserrun. Details en concreet testprotocol: [UPDATE-32-BALANCE.md](UPDATE-32-BALANCE.md). De bekende live Water Victory uit Update 31 was **vóór** deze wijzigingen. M1/M2 voor de oude Water-run blijven gedocumenteerd, M3–M6 incompleet en release dus nog NO-GO.
+
 ### Status Update 31 (historisch: technische stand vóór live QA)
 
 **HUIDIGE STAND:** de gebruikersrun van Water 26:44 is via het volledige non-sandbox JSON geverifieerd; Frost 28:01 sandboxflag true, maker gebruikte geen tools. [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md). M1 en M2 voor Water PASS, M3–M6 gedeeltelijk en release NO-GO.
