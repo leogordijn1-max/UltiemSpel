@@ -129,7 +129,7 @@ test("Water and Frost evolution levels/timestamps stay unchanged",()=>{
   assert.match(upgrades,/return \[600, 1020\]\[evolvedCount\] \?\? Infinity/);
   assert.match(upgrades,/currentUpgradeLevel\(recipe\.weapon\) >= recipe\.level && currentUpgradeLevel\(recipe\.support\) >= recipe\.supportLevel/);
   assert.match(upgrades,/level: 5, supportLevel: 3/);
-  assert.match(source("js/elemental-combat.js"),/elementalCooldown\("waterBolt", Math\.max\(0\.95, 1\.5 - upgrades\.waterBolt \* 0\.1\)\)/);
+  assert.match(source("js/elemental-combat.js"),/elementalCooldown\("waterBolt", Math\.max\(1\.05, 1\.6 - upgrades\.waterBolt \* 0\.1\)\)/);
 });
 test("index loads resistance before enemies and changed scripts use updated URLs",()=>{
   const html=source("index.html");
