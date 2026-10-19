@@ -65,31 +65,40 @@
   function danger(e){
     const g=geometry(e);if(!g)return [];
     if(g.mode==="clapperVerdict")
-      return [-1,1].map(k=>({
-        x:g.tx+g.sx*k*160,y:g.ty+g.sy*k*160,r:65
-      }));
+      return [
+        {x:g.tx,y:g.ty,r:76},
+        ...[-1,1].map(k=>({
+          x:g.tx+g.sx*k*145,y:g.ty+g.sy*k*145,r:65
+        }))
+      ];
     if(g.mode==="splitHour")
-      return [{x:g.tx,y:g.ty,r:75}];
+      return [{x:g.tx,y:g.ty,r:82}];
     if(g.mode==="pixelRip")
-      return [-1,1].map(k=>({
-        x:g.tx+g.sx*k*156+g.fx*k*40,
-        y:g.ty+g.sy*k*156+g.fy*k*40,r:62
-      }));
-    return [-1,1].map(k=>({
-      x:g.tx+g.fx*k*140,y:g.ty+g.fy*k*140,r:69
-    }));
+      return [
+        {x:g.tx,y:g.ty,r:74},
+        ...[-1,1].map(k=>({
+          x:g.tx+g.sx*k*152+g.fx*k*40,
+          y:g.ty+g.sy*k*152+g.fy*k*40,r:63
+        }))
+      ];
+    return [
+      {x:g.tx,y:g.ty,r:74},
+      ...[-1,1].map(k=>({
+        x:g.tx+g.fx*k*140,y:g.ty+g.fy*k*140,r:69
+      }))
+    ];
   }
   function shots(e){
     const g=geometry(e);if(!g)return [];
     // Three decisive lanes instead of five decorative trajectories.
-    const speed=330+g.stage*17;
+    const speed=370+g.stage*24;
     if(g.mode==="clapperVerdict")
       return [[-.43,-55],[0,65],[.43,-55]].map(([offset,delta])=>({
-        origin:e,angle:g.angle+offset,speed:speed+delta,damage:13+g.stage*2,type:"bell"
+        origin:e,angle:g.angle+offset,speed:speed+delta,damage:16+g.stage*3,type:"bell"
       }));
     if(g.mode==="splitHour"){
       const normal=[-.25,0,.25].map(off=>({
-        origin:e,angle:g.angle+off,speed:speed+28,damage:12+g.stage*2,type:"bell"
+        origin:e,angle:g.angle+off,speed:speed+28,damage:15+g.stage*3,type:"bell"
       }));
       // The two visible side bells fire inward: the player has to move,
       // but neither emitter ever spawns over the player's position.
@@ -97,22 +106,22 @@
         const ghost=emitter(e,g,side);
         normal.push({origin:ghost,
           angle:Math.atan2(g.ty-ghost.y,g.tx-ghost.x),
-          speed:speed-25,damage:12+g.stage*2,type:"bell"});
+          speed:speed-25,damage:15+g.stage*3,type:"bell"});
       }
       return normal;
     }
     if(g.mode==="pixelRip")
       return [-.42,0,.42].map(off=>({
         origin:e,angle:g.angle+off,
-        speed:speed+(off===0?57:-38),damage:13+g.stage*2,type:"rift"
+        speed:speed+(off===0?57:-38),damage:16+g.stage*3,type:"rift"
       }));
     const shotList=[{origin:e,angle:g.angle,speed:speed+52,
-      damage:14+g.stage*2,type:"rift"}];
+      damage:17+g.stage*3,type:"rift"}];
     for(const side of [-1,1]){
       const ghost=emitter(e,g,side);
       shotList.push({origin:ghost,
         angle:Math.atan2(g.ty-ghost.y,g.tx-ghost.x),
-        speed:speed-24,damage:12+g.stage*2,type:"shadow"});
+        speed:speed-24,damage:15+g.stage*3,type:"shadow"});
       // One visible mirror projectile per side; no misleading extra edge rays.
     }
     return shotList;
@@ -126,7 +135,7 @@
     // A marked delayed strike gives an additional reaction window after
     // the projectiles fire. The bossHazards system enforces real collision.
     for(const z of danger(e))
-      hooks.hazard?.(z.x,z.y,z.r,.8,14+g.stage*2);
+      hooks.hazard?.(z.x,z.y,z.r,.8,17+g.stage*3);
     const bell=e.variant===2&&!e.isFinalBoss;
     hooks.puff?.(e.x,e.y,bell?"#ffe2a0":"#ff8be8",14);
     if(g.mode==="splitHour"||g.mode==="glitchDouble"){
@@ -136,7 +145,7 @@
       }
     }
     // Prevent the next giant showcase from overlapping a late marked strike.
-    const next=p.warningEndsAt+1.55;
+    const next=p.warningEndsAt+1.2;
     if(e.bellFight)e.bellFight.nextAt=Math.max(e.bellFight.nextAt||0,next);
     if(e.memeFight)e.memeFight.nextAt=Math.max(e.memeFight.nextAt||0,next);
     e.specialNextAt=Math.max(e.specialNextAt||0,next);
