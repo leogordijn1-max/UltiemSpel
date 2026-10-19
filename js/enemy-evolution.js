@@ -11,7 +11,15 @@
     5:["Burstling","Feral Burstling","Core Burstling","Cataclysm Burstling"],
     6:["Bulwark","Iron Bulwark","Oath Bulwark","Doom Bulwark"]
   });
-  const PALETTE=["","#f6a45d","#b784ff","#fa6479"];
+  // A family starts at LV1 when its first possible chapter begins. Global
+  // world threat (the dominant aesthetic) is independent from family rank.
+  // New classes look like part of the same frightening world even at LV1.
+  const BIRTH_BOSSES=Object.freeze({0:0,1:0,4:1,2:1,5:2,6:2});
+  const PALETTE=["#9eb8c6","#f6a45d","#b784ff","#fa6479"];
+  function familyBirthBoss(kind){return BIRTH_BOSSES[kind]??0;}
+  function familyTier(kind,defeated=0){
+    return tier(Math.max(0,Math.floor(Number(defeated)||0)-familyBirthBoss(kind)));
+  }
   const profiles={
     0:{health:1.22,speed:1.11,damage:1.04}, // slow basic needs to get closer
     1:{health:1.12,speed:1.08,damage:1.05},
@@ -29,9 +37,12 @@
   function tier(defeated=0){return Math.max(0,Math.min(3,Math.floor(Number(defeated)||0)));}
   function evolve(e,defeated=0,difficulty="normal"){
     if(!e || !FORMS[e.kind] || e.kind===3 || e.summoned)return e;
-    const level=tier(defeated);
+    const level=familyTier(e.kind,defeated);
     if(e.evolutionTier!==undefined)return e; // idempotent for shared spawners
-    e.evolutionTier=level;
+    e.worldThreatTier=tier(defeated);
+    e.evolutionBirthBoss=familyBirthBoss(e.kind);
+    e.evolutionTier=level; // zero-based: LV1=0, LV4=3
+    e.evolutionLevel=level+1;
     e.evolutionName=FORMS[e.kind][level];
     // Fewer, longer-lived bodies still need to fund two earned weapon
     // evolutions by 10:00 and 17:00; no XP is awarded without an actual kill.
@@ -75,54 +86,68 @@
   // enemy sprite/body remains recognisable. Works on Low and High graphics.
   function draw(e,ctx,time=0,quality="high"){
     const level=e?.evolutionTier||0;
-    if(!level || !ctx || e.dead)return;
-    const c=PALETTE[level],r=e.r||13;
+    const era=e?.worldThreatTier??level;
+    if(!e || e.evolutionTier===undefined || !ctx || e.dead)return;
+    const c=PALETTE[Math.min(3,Math.max(0,era))],r=e.r||13;
     ctx.save();ctx.translate(e.x,e.y);
     ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=level>=3?3.4:2.2;
-    ctx.globalAlpha=.9;ctx.shadowColor=c;ctx.shadowBlur=quality==="low"?0:8+level*4;
+    ctx.globalAlpha=.9;ctx.shadowColor=c;ctx.shadowBlur=quality==="low"?0:8+era*4;
     const spikes=e.kind===2?6:e.kind===6?4:e.kind===5?8:e.kind===4?5:e.kind===1?3:7;
+    const totalSpikes=spikes+era;
     const radius=e.kind===2?r*1.42:e.kind===6?r*1.4:e.kind===4?r*2.1:e.kind===5?r*1.85:r*1.9;
-    // Crown/spines become denser and harsher after each Guardian defeat.
-    for(let i=0;i<spikes+level;i++){
-      const angle=(i/(spikes+level))*Math.PI*2-Math.PI/2;
+    // World-era shape/colour belongs to everyone, including LV1 newcomers.
+    // Family rank determines actual earned mutations and combat power.
+    for(let i=0;i<totalSpikes;i++){
+      const angle=(i/totalSpikes)*Math.PI*2-Math.PI/2;
       const u=Math.cos(angle),v=Math.sin(angle);
-      const extension=r*(.25+.10*level);
+      const extension=r*(.25+.10*era);
       ctx.beginPath();ctx.moveTo(u*radius-v*5,v*radius+u*5);
       ctx.lineTo(u*(radius+extension),v*(radius+extension));
       ctx.lineTo(u*radius+v*5,v*radius-u*5);
       ctx.closePath();ctx.fill();
     }
     // Type-specific mutations: visible even under a late-run weapon storm.
-    if(e.kind===0){ // Drifter grows two hooked antlers and a cracked core
+    if(level>0 && e.kind===0){ // Evolved Drifter: hooked antlers and cracked core
       for(const side of [-1,1]){
         ctx.beginPath();ctx.moveTo(side*r*.43,-r*.6);
         ctx.lineTo(side*r*.9,-r*1.4);
         ctx.lineTo(side*r*1.34,-r*1.67);ctx.stroke();
       }
-    }else if(e.kind===1){ // Runner develops long pursuit blades
+    }else if(level>0 && e.kind===1){ // Runner develops long pursuit blades
       for(const side of [-1,1]){
         ctx.beginPath();ctx.moveTo(-r*.6,side*r*.55);
         ctx.lineTo(-r*(2.0+.2*level),side*r*(1.0+.1*level));ctx.stroke();
       }
-    }else if(e.kind===2){ // Mike: enormous broken shoulder armor
+    }else if(level>0 && e.kind===2){ // Mike: enormous broken shoulder armor
       for(const side of [-1,1]){
         ctx.strokeRect(side*r*1.18-r*.23,-r*.8,r*.46,r*1.2);
       }
-    }else if(e.kind===4){ // Shade: unmistakable floating spectral crown
+    }else if(level>0 && e.kind===4){ // Shade: unmistakable floating spectral crown
       ctx.beginPath();ctx.arc(0,-r*1.7,r*.78,Math.PI*.15,Math.PI*.85);
       ctx.stroke();
-    }else if(e.kind===5){ // Burstling: split burning heart
+    }else if(level>0 && e.kind===5){ // Burstling: split burning heart
       ctx.beginPath();ctx.arc(0,0,r*(1.16+.07*level),0,Math.PI*2);ctx.stroke();
       ctx.beginPath();ctx.moveTo(-r*.8,-r*.8);
       ctx.lineTo(r*.85,r*.85);ctx.stroke();
-    }else if(e.kind===6){ // Bulwark: two battle standards and jagged armor
+    }else if(level>0 && e.kind===6){ // Bulwark: two battle standards and jagged armor
       for(const side of [-1,1]){
         ctx.beginPath();ctx.moveTo(side*r*.95,-r*.2);
         ctx.lineTo(side*r*1.4,-r*1.65);
         ctx.lineTo(side*r*2.02,-r*1.5);ctx.stroke();
       }
     }
-    if(quality!=="low"){
+    // A constant rank tag (1–4 dots) above each unit clearly distinguishes
+    // e.g. a world-era III LV1 new arrival from a world-era III LV3 veteran.
+    // Pips match ACTUAL level, never the scary world colour or visual era.
+    ctx.globalAlpha=.96;ctx.shadowBlur=quality==="low"?0:5;
+    const pipCount=level+1;
+    const pitch=8;
+    for(let i=0;i<pipCount;i++){
+      const px=(i-(pipCount-1)/2)*pitch;
+      ctx.beginPath();ctx.arc(px,-r*(e.kind===4?2.5:2.05)-9,2.8,0,Math.PI*2);
+      ctx.fill();
+    }
+    if(quality!=="low" && era>0){
       ctx.globalAlpha=.3;
       ctx.beginPath();ctx.arc(0,0,r*(1.45+.08*Math.sin(time*2+e.x)),
         0,Math.PI*2);ctx.stroke();
@@ -130,6 +155,8 @@
     ctx.restore();
   }
   window.enemyEvolutionTier=tier;
+  window.enemyFamilyDebutBossCount=familyBirthBoss;
+  window.enemyFamilyEvolutionTier=familyTier;
   window.applyEnemyEvolution=evolve;
   window.evolvedEnemyTeamSteer=teamSteer;
   window.drawEnemyEvolution=draw;
