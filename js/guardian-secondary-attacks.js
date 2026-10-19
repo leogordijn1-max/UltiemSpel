@@ -91,7 +91,7 @@
       }
     } else if(g.mode==="mourningLances") {
       // Distinct fast centre spear + two slower flanks, not a blind ring spam.
-      for(const [off,delta] of [[-.33,-45],[0,72],[.33,-45]])
+      for(const [off,delta] of [[-.33,-45],[0,95],[.33,-45]])
         hooks.projectile?.(e,g.angle+off,speed+delta,11+stage,"shadow");
       for(const off of [-.77,.77])
         hooks.projectile?.(e,g.angle+off,speed-95,9+stage,"shadow");
