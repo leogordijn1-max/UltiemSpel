@@ -44,7 +44,7 @@ test("either reserved weapon can be guaranteed while keeping an evolution-focus 
     h.read("choices()");
     assert.equal(h.rendered.length,3);
     const buttons=h.rendered.map(x=>x.innerHTML);
-    const unlock=buttons.filter(x=>x.includes("WEAPON UNLOCK"));
+    const unlock=buttons.filter(x=>x.includes("NEW WEAPON"));
     assert.equal(unlock.length,1);
     assert.ok(buttons.some(x=>x.includes("Arcane Bolt")));
     assert.equal(new Set(buttons).size,3);
