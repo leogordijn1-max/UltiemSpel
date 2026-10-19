@@ -27,7 +27,7 @@ test("Vitality recovery starts only after three seconds without a hit",()=>{
 });
 test("single Vitality heals slowly and stacked levels have diminishing returns",()=>{
  const v=tuning().vitalityRegenPerSecond;
- approx(v(1,3),.35);
+ approx(v(1,3),.23);
  assert.ok(v(4,4)<1,"Vitality 4 should no longer recover 3.2 HP/s");
  assert.ok(v(5,4)<1.05);
  assert.ok(v(4,4)>v(3,4) && v(3,4)>v(2,4));
@@ -64,9 +64,9 @@ test("Vitality UI descriptions show the actual amount and recovery delay",()=>{
 });
 test("Water Bolt keeps damage and pierce, but high casting rate has 0.78s minimum",()=>{
  const s=source("js/elemental-combat.js");
- assert.match(s,/key==="waterBolt"\?Math\.max\(\.78,effective\):effective/);
- assert.match(s,/shot\.pierce = evolutions\.riptideLance \? 4 : 2/);
- assert.match(s,/elementalCooldown\("waterBolt", Math\.max\(0\.95, 1\.5 - upgrades\.waterBolt \* 0\.1\)\)/);
+ assert.match(s,/key==="waterBolt"\?Math\.max\(\.98,effective\):effective/);
+ assert.match(s,/shot\.pierce = evolutions\.riptideLance \? 3 : 2/);
+ assert.match(s,/elementalCooldown\("waterBolt", Math\.max\(1\.05, 1\.6 - upgrades\.waterBolt \* 0\.1\)\)/);
 });
 test("script versions update and difficulty loads before enemies",()=>{
  const html=source("index.html");
