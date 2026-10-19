@@ -10,11 +10,20 @@ if(m==="end"){s.ultimateUsed=true;h.clearBossAttacks?.();window.beginGuardianAre
 h.notify?.("THE LAST MEME · "+({cuts:"REALITY SCISSORS",orbit:"BROKEN ORBIT",end:"THE END OF EVERYTHING"}[m]),"boss",4);h.sfx?.("boss-warn");}
 function zones(s){const q=s.target;if(!q)return[];const a=s.angle,ax=Math.cos(a),ay=Math.sin(a),sx=-ay,sy=ax;
 if(s.mode==="cuts"){const shift=(s.round-1)*90;return[-2,-1,0,1,2].map(k=>({x:q.x+sx*k*140+ax*shift,y:q.y+sy*k*140+ay*shift,r:68}));}
-if(s.mode==="orbit"){const rot=a+s.round*.62;return Array.from({length:10},(_,i)=>i).filter(i=>i!==s.round%10&&i!==(s.round+1)%10&&i!==(s.round+2)%10).map(i=>({x:q.x+Math.cos(rot+i*TAU/10)*215,y:q.y+Math.sin(rot+i*TAU/10)*215,r:61}));}
+if(s.mode==="orbit"){
+  // Tight moving ring: a narrow two-sector exit, a dangerous center,
+  // and the exact same circles used for visual warning and real collision.
+  const rot=a+s.round*.48,count=12,skip=(s.round*2)%count;
+  const ring=Array.from({length:count},(_,i)=>i)
+    .filter(i=>i!==skip&&i!==(skip+1)%count)
+    .map(i=>({x:q.x+Math.cos(rot+i*TAU/count)*185,
+      y:q.y+Math.sin(rot+i*TAU/count)*185,r:85}));
+  return [...ring,{x:q.x,y:q.y,r:83}];
+}
 const rot=a+s.round*.5;return[-2,-1,0,1,2].map(k=>({x:q.x+Math.cos(rot)*k*148,y:q.y+Math.sin(rot)*k*148,r:79}));}
-function impact(e,t,h){const s=e.memeFight,q=s.target;if(!q)return;for(const z of zones(s))h.hazard?.(z.x,z.y,z.r,.5,s.mode==="end"?19:14);
+function impact(e,t,h){const s=e.memeFight,q=s.target;if(!q)return;for(const z of zones(s))h.hazard?.(z.x,z.y,z.r,.5,s.mode==="end"?19:s.mode==="orbit"?18:14);
 if(s.mode==="cuts"){for(const off of [-.48,-.22,.22,.48])h.projectile?.(e,s.angle+off,310,13,"shadow");}
-else if(s.mode==="orbit"){for(let i=0;i<7;i++)h.projectile?.(e,s.angle+i*TAU/7+s.round*.3,290,12,"shadow");}
+else if(s.mode==="orbit"){for(let i=0;i<11;i++)h.projectile?.(e,s.angle+i*TAU/11+s.round*.3,375,16,"memeOrbit");}
 else{for(const off of [-.65,-.38,-.13,.13,.38,.65])h.projectile?.(e,s.angle+off+s.round*.12,335+s.round*15,16,"shadow");h.shake?.(8+s.round*2);}
 h.puff?.(q.x,q.y,"#ff7ce8",22);s.round++;const count=s.mode==="end"?4:3;
 if(s.round>=count){s.stage="recovery";s.until=t+.7;}
