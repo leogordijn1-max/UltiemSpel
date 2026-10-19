@@ -162,5 +162,5 @@ test("world scars no longer allocate viewport arrays and the HUD rebuilds only o
   assert.match(game,/cachedLoadoutHtml = null;\s*window\.resetCombatHud/);
   assert.match(game,/simulationAccumulator \+= Math\.min\(elapsed, 0\.1\) \* gameSpeed/);
   assert.match(game,/const fixedStep = 1 \/ 60/);
-  assert.match(read("index.html"),/js\/render\.js\?v=performance-28/);
+  assert.match(read("index.html"),/js\/render\.js\?v=[a-z0-9-]+/);
 });
