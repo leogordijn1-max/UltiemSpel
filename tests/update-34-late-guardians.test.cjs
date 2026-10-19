@@ -60,58 +60,59 @@ test("pre-warning or duplicate firing cannot create invisible damage",()=>{
  assert.equal(h.window.fireGuardianLateSecondary(h.boss,h.hooks,61.2),true);
  assert.equal(h.window.fireGuardianLateSecondary(h.boss,h.hooks),false);
 });
-test("Bell Clapper's Verdict fires three variable-speed bell strikes and warns both flanks",()=>{
+test("Bell starts with a marked chime CROSS and three variable-speed shots",()=>{
  const h=setup(2,1);
  h.window.prepareGuardianLateSecondary(h.boss,1);
- const marks=h.window.guardianLateSecondaryDanger(h.boss).map(x=>({...x}));
+ const marks=h.window.guardianLateSecondaryDanger(h.boss);
  const shots=h.window.guardianLateSecondaryShots(h.boss);
- assert.equal(marks.length,3);assert.ok(marks[1].y<0&&marks[2].y>0);
+ assert.equal(marks.length,5);
+ assert.ok(marks.some(p=>p.x<320&&p.y===0));
+ assert.ok(marks.some(p=>p.x>320&&p.y===0));
+ assert.ok(marks.some(p=>p.y<0&&p.x===320));
+ assert.ok(marks.some(p=>p.y>0&&p.x===320));
  assert.equal(shots.length,3);assert.ok(shots[1].speed>shots[0].speed);
  h.boss.shotWarning=0;h.window.fireGuardianLateSecondary(h.boss,h.hooks);
- assert.equal(h.shots.length,3);assert.equal(h.hazards.length,3);
- assert.ok(h.shots.every(s=>s[4]==="bell"));
- for(let i=0;i<marks.length;i++)
-  assert.deepEqual(h.hazards[i].slice(0,3),[marks[i].x,marks[i].y,marks[i].r]);
- assert.ok(h.hazards.every(x=>x[3]>=.8));
+ assert.equal(h.shots.length,3);assert.equal(h.hazards.length,5);
+ assert.ok(h.shots.every(x=>x[4]==="bell"));
+ for(let k=0;k<marks.length;k++)
+  assert.deepEqual(h.hazards[k].slice(0,3),[marks[k].x,marks[k].y,marks[k].r]);
+ assert.ok(h.hazards.every(a=>a[3]>=.5));
 });
-test("Bell Split Hour spawns two visible off-centre chimes and centre strike",()=>{
+test("Bell's next attack changes to a lengthwise timing corridor and twin side chimes",()=>{
  const h=setup(2,2);
- fire(h,1);
- h.shots.length=0;h.hazards.length=0;
- h.boss.shotWarning=1.05;
+ fire(h,1);h.shots.length=0;h.hazards.length=0;h.boss.shotWarning=1.05;
  h.window.prepareGuardianLateSecondary(h.boss,18);
  assert.equal(h.boss.lateSecondary.mode,"splitHour");
  const marks=h.window.guardianLateSecondaryDanger(h.boss);
- assert.equal(marks.length,1);assert.equal(marks[0].x,320);
+ assert.equal(marks.length,3);
+ assert.ok(marks[0].x<320&&marks[2].x>320);
+ assert.ok(marks.every(p=>p.y===0));
  const planned=h.window.guardianLateSecondaryShots(h.boss);
  assert.equal(planned.length,5);
  assert.equal(planned.filter(s=>s.origin!==h.boss).length,2);
- assert.ok(planned.every(s=>Math.hypot(s.origin.x-320,s.origin.y)>130));
  h.boss.shotWarning=0;h.window.fireGuardianLateSecondary(h.boss,h.hooks,19.05);
- assert.equal(h.shots.length,5);assert.equal(h.hazards.length,1);
- assert.ok(h.puffs.length>=2);
- assert.ok(h.boss.bellFight.nextAt>19);
+ assert.equal(h.shots.length,5);assert.equal(h.hazards.length,3);
+ assert.ok(h.puffs.length>=2&&h.boss.bellFight.nextAt>19);
 });
-test("Meme Pixel Rip marks two diagonal side strikes and paints its fast central shot",()=>{
+test("Meme first paints a distinct five-tile checkerboard fracture",()=>{
  const h=setup(3,1);
  h.window.prepareGuardianLateSecondary(h.boss,1500);
  assert.equal(h.boss.lateSecondary.mode,"pixelRip");
  const marks=h.window.guardianLateSecondaryDanger(h.boss);
- assert.equal(marks.length,3);
- assert.ok(marks[1].x<320&&marks[2].x>320);
- assert.ok(marks[1].y<0&&marks[2].y>0);
+ assert.equal(marks.length,5);
+ assert.ok(marks.some(p=>p.x<320&&p.y<0));
+ assert.ok(marks.some(p=>p.x>320&&p.y>0));
+ assert.ok(marks.some(p=>p.x===320&&p.y===0));
  const shots=h.window.guardianLateSecondaryShots(h.boss);
- assert.equal(shots.length,3);
- assert.ok(shots[1].speed>shots[0].speed);
+ assert.equal(shots.length,3);assert.ok(shots[1].speed>shots[0].speed);
  h.boss.shotWarning=0;h.window.fireGuardianLateSecondary(h.boss,h.hooks,1501.2);
- assert.equal(h.shots.length,3);assert.equal(h.hazards.length,3);
+ assert.equal(h.shots.length,3);assert.equal(h.hazards.length,5);
  assert.ok(h.shots.every(s=>s[4]==="rift"));
 });
-test("Meme Glitch Double uses two announced mirrors and leaves side dodge lanes",()=>{
+test("Meme's second attack forms a forward/backward shear with two mirrors",()=>{
  const h=setup(3,2);
  fire(h,0);h.shots.length=0;h.hazards.length=0;
- h.boss.shotWarning=1.05;
- h.window.prepareGuardianLateSecondary(h.boss,10);
+ h.boss.shotWarning=1.05;h.window.prepareGuardianLateSecondary(h.boss,10);
  assert.equal(h.boss.lateSecondary.mode,"glitchDouble");
  const shots=h.window.guardianLateSecondaryShots(h.boss);
  assert.equal(shots.length,3);
@@ -119,26 +120,24 @@ test("Meme Glitch Double uses two announced mirrors and leaves side dodge lanes"
  const marks=h.window.guardianLateSecondaryDanger(h.boss);
  assert.equal(marks.length,3);
  assert.ok(marks.every(m=>m.y===0));
- h.boss.shotWarning=0;
- h.window.fireGuardianLateSecondary(h.boss,h.hooks,11);
+ assert.ok(marks[0].x<320&&marks[2].x>320);
+ h.boss.shotWarning=0;h.window.fireGuardianLateSecondary(h.boss,h.hooks,11);
  assert.equal(h.shots.length,3);assert.equal(h.hazards.length,3);
- assert.ok(h.puffs.length>=3);
- assert.ok(h.boss.memeFight.nextAt>11);
+ assert.ok(h.puffs.length>=3&&h.boss.memeFight.nextAt>11);
 });
-test("all normal attacks preserve dodgeable gaps and modest projectile counts",()=>{
+test("five painted hazards still retain a skill-based outer dodge route",()=>{
  for(const variant of [2,3]){
   const h=setup(variant);
   for(let i=0;i<2;i++){
-   h.boss.shotWarning=1.05;
-   h.window.prepareGuardianLateSecondary(h.boss,i*20);
+   h.boss.shotWarning=1.05;h.window.prepareGuardianLateSecondary(h.boss,i*20);
    const areas=h.window.guardianLateSecondaryDanger(h.boss);
+   assert.ok(areas.length>=3&&areas.length<=5);
    const count=h.window.guardianLateSecondaryShots(h.boss).length;
    assert.ok(count<=5);
-   assert.ok(areas.length<=3);
-   const candidates=[-1,1].map(sign=>({x:320,y:sign*360}));
+   const candidates=[[-420,0],[420,0],[0,-420],[0,420]].map(([x,y])=>({x:320+x,y}));
    assert.ok(candidates.some(p=>areas.every(z=>
      Math.hypot(p.x-z.x,p.y-z.y)>z.r+18)),
-     "not every lateral escape can be covered by the area hazards");
+     "no untelegraphed full-arena unavoidable damage");
    h.boss.shotWarning=0;
    assert.equal(h.window.fireGuardianLateSecondary(h.boss,h.hooks,i*20+1.05),true);
   }
