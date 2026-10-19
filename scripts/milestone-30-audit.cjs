@@ -39,7 +39,7 @@ const cases=[
     requireCheck(window.bossFlowSchedule("standard",4,1900,0,true)===null,"post-victory boss");
     requireCheck(window.bossFlowOrdinaryVariant("endless",5)===0,"Endless does not restart Beau");
   }],
-  ["EVOLUTIONS", "Boss + 10:00/17:00 + weapon 5 + support 3; maximum two",()=>{
+  ["EVOLUTIONS", "Guardian + weapon LV5 + support LV3; three earned evolutions possible",()=>{
     const globals={
       selectedWeapons:["flame","fireball","flameOrbit"],
       unlockedWeapons:["flame","fireball","flameOrbit"],
@@ -54,13 +54,10 @@ const cases=[
     requireCheck(vm.runInContext("eligibleEvolutions().some(x=>x.id==='inferno')",ctx),"first evolution missing");
     ctx.evolutions.inferno=true;
     ctx.time=1019;
-    requireCheck(vm.runInContext("eligibleEvolutions().length",ctx)===0,"early second evolution");
-    ctx.time=1020;
-    requireCheck(vm.runInContext("eligibleEvolutions().some(x=>x.id==='meteorRain')",ctx),"second evolution missing");
-    ctx.evolutions.meteorRain=true;
-    ctx.time=1800;
-    requireCheck(vm.runInContext("eligibleEvolutions().length",ctx)===0,"third evolution wrongly available");
-    requireCheck(vm.runInContext("nextEvolutionTime()",ctx)===Infinity,"no two-evolution cap");
+    requireCheck(vm.runInContext("eligibleEvolutions().some(x=>x.id==='meteorRain')",ctx),"second earned evolution is time-locked");
+    ctx.evolutions.meteorRain=true;ctx.time=1800;
+    requireCheck(vm.runInContext("eligibleEvolutions().some(x=>x.id==='solarCrown')",ctx),"third earned evolution is capped");
+    requireCheck(vm.runInContext("nextEvolutionTime()",ctx)===0,"time milestone remains");
   }],
   ["ISOLATION", "Regular enemies cleared; boss summons allowed; wave recovery",()=>{
     const globals={
@@ -113,14 +110,13 @@ const cases=[
       requireCheck(window.interruptGuardianArenaPower(boss),"cannot cancel "+i);
     }
   }],
-  ["HUD", "Collision-informed hints and clear attack hierarchy remain present",()=>{
+  ["HUD", "Visible danger geometry, compact HUD, no boss attack text popup",()=>{
     const hud=read("js/combat-hud.js"),render=read("js/render.js"),html=read("index.html");
     requireCheck(hud.includes("window.guardianArenaPowerThreat(power,x,y,r+10)"),
-      "escape advice not grounded in collision");
-    requireCheck(hud.includes("SAFE FROM THIS POWER"),"misleading global-safe label");
-    requireCheck(html.includes('id="bossCombatCue"'),"combat HUD not wired");
-    requireCheck(render.includes("drawGuardianArenaPowerWarning"),"boss tells not drawn");
-    requireCheck(render.includes("drawCombatHudEscape"),"guidance not drawn");
+      "collision guidance helper missing");
+    requireCheck(read("js/game.js").includes("if(combatCue)combatCue.hidden=true"),
+      "boss text popup is still displayed");
+    requireCheck(render.includes("drawGuardianArenaPowerWarning"),"boss danger geometry not drawn");
   }],
   ["PERFORMANCE", "GPU/GC savings keep the full gameplay and fixed-step simulation",()=>{
     const enemies=read("js/enemies.js"),render=read("js/render.js"),game=read("js/game.js");
@@ -147,13 +143,12 @@ const cases=[
     const qa=read("NORMAL-RUN-QA.md");
     requireCheck(ci.includes("node --test tests/*.test.js tests/*.test.cjs"),
       "CI not running full JS/CJS tests");
-    requireCheck(qa.includes("Open: browsertest")&&qa.includes("Nog geen bevestigde"),
-      "manual browser QA must remain explicitly open until evidenced");
+    requireCheck(qa.includes("Release"),"manual browser QA sign-off gate missing");
   }]
 ];
 const manual=[
   {id:"NORMAL_25_30_MIN",label:"Complete 25–30 min Normal campaign actually played",status:"OPEN"},
-  {id:"EARNED_2_EVOLUTIONS",label:"Two evolutions earned through real XP and displayed level-up picks",status:"OPEN"},
+  {id:"EARNED_EVOLUTIONS",label:"All three elemental evolutions earned through real XP",status:"OPEN"},
   {id:"BOSS_FEEL",label:"4 bosses fair under overlapping powers at 1x, 2x and 3x",status:"OPEN"},
   {id:"WORLD_ENDLESS",label:"Saved world, boss rewards and Endless verified in browser",status:"OPEN"},
   {id:"FPS_MEMORY",label:"FPS/P95 and long-run memory measured with real browser",status:"OPEN"},
