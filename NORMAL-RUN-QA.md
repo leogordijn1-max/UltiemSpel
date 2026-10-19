@@ -38,6 +38,10 @@ Start op **Normal, 1×** met standaard, zonder Developer God Mode. Noteer tijd, 
 - **Memory / FPS:** vergelijk een zware golf, een boss en een drukke terreinzone, bij Low/Medium/High. Neem de echte P95-frame, AI-, hit- en draw-tijden op. Node-regressies bewijzen geen numerieke FPS-winst.
 - **Refresh/start opnieuw:** saved world en earned trophies/records blijven, tijdelijke conquest/scars verdwijnen; geen blijvende sandbox rewards.
 
+## Update 34: nieuwe Bell/Meme normale aanvallen — live QA OPEN
+
+**Technische controle:** nieuwe module `js/guardian-late-secondary.js`, **527/527 Node-tests groen**. **The Last Meme zijn geliefde finaleaanval blijft onaangeraakt**. Bij Bell Tower graag **CLAPPER'S VERDICT / SPLIT HOUR** bekijken; bij The Last Meme **PIXEL RIP / GLITCH DOUBLE**. Zijn de gemarkeerde impactzones en aangekondigde schietrichtingen op Low/High zichtbaar? Kun je bij 1×/2×/3× echt ontwijken en is geen overlap met de bestaande geweldige arena-ultimates onmogelijk om uit te lopen? QA-export bevat `boss_secondary_attack`-events. **Nog geen nieuwe gespeelde bossrun**; geen live PASS. Handmatige details in [UPDATE-34-LATE-GUARDIANS.md](UPDATE-34-LATE-GUARDIANS.md); ook eerdere Water/Vitality- en Beau/Shade-herchecks staan nog open.
+
 ## Nieuwe boss-QA nadat Update 33 is geïmplementeerd (19 oktober 2026)
 
 **TECHNISCH 514/514 groen, live gebruikersacceptatie NOG NIET UITGEVOERD.** Beau heeft FANG SWEEP/PACK CROSSFIRE, Shade MOURNING LANCES/PHANTOM MIRRORS als echte alternatieve *normale* salvo's met vooraf getekende impactzones. Bestaande door maker geliefde showcase-/fase-3-aanvallen zijn behouden. Tijdens volgende Playtest graag **Low/High-graphics, 1×/2×/3× snelheid**, zien of de markeringen overeenkomen met de werkelijke danger zones, of er veilige dodgeroutes zijn en of de nieuwe aanvallen hun zwaarste twee bestaande aanvallen niet oneerlijk overlappen. Gebruik de nieuwe `boss_secondary_attack`-events in de QA-JSON. Zie [UPDATE-33-GUARDIAN-SECONDARY.md](UPDATE-33-GUARDIAN-SECONDARY.md). **Update 32.1 survival/Water hertest en M3–M6 blijven eveneens OPEN.**
