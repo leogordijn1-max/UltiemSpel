@@ -66,5 +66,5 @@ test("effect compaction avoids fresh arrays without changing order",()=>{
 });
 test("browser loads the updated telemetry and gameplay assets",()=>{
   assert.match(read("index.html"),/js\/run-telemetry\.js\?v=36/);
-  assert.match(read("index.html"),/js\/game\.js\?v=perf-36/);
+  assert.match(read("index.html"),/js\/game\.js\?v=39-ux-evolution/);
 });
