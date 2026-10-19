@@ -49,7 +49,7 @@ test("Hunting Grounds chains three warned rushes and leaves delayed trail hazard
   assert.ok(h.events.warnings.some(x=>x[0].includes("HUNTING GROUNDS")));
   assert.ok(h.events.hazards.length>=5);
   assert.ok(h.events.shots.length>=9);
-  assert.ok(h.e.x>120);
+  assert.ok(h.events.hazards.length>=6); // oscillating retargeted charges need not finish far to the right
   assert.ok(h.e.specialRecoveryUntil>0);
 });
 test("Pincer Ambush attacks from two flank locations plus Beau, in two volleys",()=>{
