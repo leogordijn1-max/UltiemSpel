@@ -33,7 +33,7 @@
       return (7.3+Math.min(3.3,time/550*1.5))*1.18;
     // Constant pressure, even when the last weak enemies die at range.
     // Capped by the live population budget so the game stays performant.
-    return Math.max(1.65,2.6-Math.min(.95,time/1300*.95));
+    return Math.max(2.4,3.1-Math.min(.7,time/1300*.7));
   }
   function living(enemies) {
     return Array.isArray(enemies) ? enemies.filter(e => e && !e.dead && e.hp !== 0) : [];
@@ -58,8 +58,8 @@
     }
     // Preserve a real approaching background during patrols. The global
     // population budget still stops horde/performance explosions.
-    const base=10+Math.min(4,Math.floor(time/240));
-    return Math.max(6,Math.min(populationCap(seconds,difficulty)-7,base));
+    const base=7+Math.min(2,Math.floor(time/360));
+    return Math.max(6,Math.min(populationCap(seconds,difficulty)-10,base));
   }
   function canStart(enemies,seconds=0,kind="patrol",size=3,difficulty="normal") {
     const alive=living(enemies),count=alive.length,groupCount=groups(alive);
@@ -67,19 +67,21 @@
     if(groupCount>=maxGroups(seconds))return false;
     if(count+size>populationCap(seconds,difficulty))return false;
     // Hold encounters until most stray enemies have been cleared.
-    return count<=12;
+    return count<=(difficulty==="easy"?12:9);
   }
   function reset() { running = true; nextPatrol = Infinity; patrols = 0; stage = 0; }
   function clear() { running = false; nextPatrol = Infinity; stage = 0; }
   function patrolCount(growthSeconds) {
-    return Math.min(5, 3 + Math.floor(Math.max(0,growthSeconds)/450));
+    return Math.min(4, 3 + Math.floor(Math.max(0,growthSeconds)/600));
   }
   function spawnPatrol(now, growthSeconds, player, enemies, spawnEnemy,
     difficulty = "normal", sequenceOverride = null) {
     if (!running || !player || typeof spawnEnemy !== "function") return 0;
     const plan=window.chooseTacticalEncounter?.(growthSeconds,
       sequenceOverride??patrols);
-    const total=plan?.members?.length || patrolCount(growthSeconds);
+    const total=difficulty==="easy"?
+      (plan?.members?.length||patrolCount(growthSeconds)):
+      Math.min(4,plan?.members?.length||patrolCount(growthSeconds));
     if(!canStart(enemies,growthSeconds,"patrol",total,difficulty))return 0;
 
     // One tough leader with actual support types, rather than three identical chasers.
@@ -103,9 +105,10 @@
       const position=window.enemyOffscreenSpawn?.(direction,180,along);
       e.x=position?.x ?? (anchorX+Math.cos(direction+Math.PI/2)*along);
       e.y=position?.y ?? (anchorY+Math.sin(direction+Math.PI/2)*along);
-      const scale=1.9+Math.min(.95,growthSeconds/1400);
+      const scale=difficulty==="easy"?(1.9+Math.min(.95,growthSeconds/1400)):
+        (2.55+Math.min(.85,growthSeconds/1600));
       e.hp*=scale;
-      e.speed*=1.18;
+      e.speed*=difficulty==="easy"?1.18:1.22;
       e.damage*=1.26+Math.min(.22,growthSeconds/2100);
       window.applyCombatDifficultyToSquad?.(e, difficulty);
       e.encounterRole="patrol";
