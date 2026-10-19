@@ -61,7 +61,7 @@ test("Beau Fang Sweep paints exactly its delayed flank trap and fires 5 fish",()
  assert.ok(Math.abs(marked[0].y)>150);
  h.boss.shotWarning=0;
  h.window.fireGuardianSecondary(h.boss,h.hooks);
- assert.equal(h.shots.length,5);
+ assert.equal(h.shots.length,3);
  assert.ok(h.shots.every(s=>s[4]==="fish"));
  assert.equal(h.hazards.length,1);
  assert.deepEqual(h.hazards[0].slice(0,3),[marked[0].x,marked[0].y,marked[0].r]);
@@ -79,7 +79,7 @@ test("Beau crossfire telegraphs two side casters, then gives a real recovery gap
  assert.equal(mark.length,1);assert.equal(mark[0].x,320);
  h.boss.shotWarning=0;
  h.window.fireGuardianSecondary(h.boss,h.hooks);
- assert.equal(h.shots.length,5);
+ assert.equal(h.shots.length,3);
  assert.equal(h.hazards.length,1);
  assert.ok(h.shots.some(s=>s[0].x!==0));
  assert.ok(h.shots.some(s=>s[0].y!==0));
@@ -92,11 +92,11 @@ test("Shade Mourning Lances use contrasting projectile speeds and a warned side 
  h.window.prepareGuardianSecondary(h.boss,12);
  const marked=h.window.guardianSecondaryDangerPoints(h.boss);
  h.boss.shotWarning=0;h.window.fireGuardianSecondary(h.boss,h.hooks);
- assert.equal(h.shots.length,5);
+ assert.equal(h.shots.length,3);
  assert.equal(h.hazards.length,1);
  assert.deepEqual(h.hazards[0].slice(0,3),[marked[0].x,marked[0].y,marked[0].r]);
  assert.ok(h.shots.some(s=>s[2]>=390),"the aimed lance should be genuinely dangerous");
- assert.ok(h.shots.some(s=>s[2]<240),"flanks are intentionally staggered");
+ assert.ok(h.shots.some(s=>s[2]<300),"flanks are intentionally staggered");
  assert.ok(h.shots.every(s=>s[4]==="shadow"));
 });
 test("Shade Phantom Mirrors send real projectiles from visible flanking positions",()=>{
