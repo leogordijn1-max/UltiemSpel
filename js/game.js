@@ -1180,6 +1180,7 @@ function update(dt) {
       }
       if (!e.isFinalBoss && !e.phaseTwo && e.hp <= e.maxHp * 0.66) {
         e.phaseTwo = true;
+        window.cancelGuardianSecondary?.(e);
         e.phaseIntro = 0.95;
         e.shotWarning = 0;
         e.shootCooldown = Math.max(1.4, e.shootCooldown);
@@ -1191,6 +1192,7 @@ function update(dt) {
       } else if (!e.isFinalBoss && e.phaseTwo && !e.phaseThree &&
                  e.hp <= e.maxHp * 0.33) {
         e.phaseThree = true;
+        window.cancelGuardianSecondary?.(e);
         window.interruptBeauEncounter?.(e, time);
         window.interruptShadeEncounter?.(e, time);
         window.interruptBellEncounter?.(e, time);
@@ -1389,7 +1391,10 @@ function update(dt) {
             e.warningY = target.y;
             e.shotWarning = [1.2, 1.05, 0.92][e.finalPhase - 1];
           } else {
+            // Each ordinary Beau/Shade volley now shows its real attack
+            // geometry throughout this fixed, lockable warning window.
             e.shotWarning = e.phaseTwo ? 0.95 : 1.05;
+            window.prepareGuardianSecondary?.(e,time);
           }
         }
       }
