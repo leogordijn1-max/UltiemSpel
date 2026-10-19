@@ -110,7 +110,9 @@ function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKe
     enemy.burnDps = Math.max(enemy.burnDps || 0, 7 + (upgrades.fireball || upgrades.flameOrbit || 1) * 3);
     enemy.nextBurnTick = Math.min(enemy.nextBurnTick || Infinity, time + 0.5);
   } else if (element === "frost") {
-    enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + (evolutions.absoluteZero && weaponKey === "glacialPulse" ? 3 : 1.7) + (combo.bonusChill || 0));
+    const otherChillUntil=time + (evolutions.absoluteZero && weaponKey === "glacialPulse" ? 3 : 1.7) + (combo.bonusChill || 0);
+    enemy.frostOtherUntil=Math.max(enemy.frostOtherUntil||0,otherChillUntil);
+    enemy.frostUntil = Math.max(enemy.frostUntil || 0, otherChillUntil);
     if (evolutions.absoluteZero && weaponKey === "glacialPulse" && enemy !== boss)
       enemy.deepFreezeUntil = Math.max(enemy.deepFreezeUntil || 0, time + 0.85);
   } else if (element === "water") {
@@ -225,9 +227,9 @@ function updateElementalCombat(dt) {
       shot.x += vx;
       shot.y += vy;
       shot.distance += Math.hypot(vx, vy);
-      if (shot.type === "waterBolt" && shot.distance >= (shot.nextWaterMark || 155)) {
-        markWetGround(shot.x, shot.y, evolutions.riptideLance ? 104 : 70);
-        shot.nextWaterMark = (shot.nextWaterMark || 155) + 210;
+      if (shot.type === "waterBolt" && shot.distance >= (shot.nextWaterMark || 195)) {
+        markWetGround(shot.x, shot.y, evolutions.riptideLance ? 80 : 54);
+        shot.nextWaterMark = (shot.nextWaterMark || 195) + 290;
       }
       // Current elemental projectiles get the same swept accuracy fix as
       // legacy bolts: a fast lance cannot jump past a thin Runner between frames.
@@ -263,7 +265,7 @@ function updateElementalCombat(dt) {
             shot.x - vx, shot.y - vy, shot.type);
           window.emitWeaponVfxImpact?.(shot.type, shot.x, shot.y, time);
           if (shot.type === "waterBolt") {
-            markWetGround(shot.x, shot.y, evolutions.riptideLance ? 100 : 65);
+            markWetGround(shot.x, shot.y, evolutions.riptideLance ? 76 : 50);
             elementalAreas.push({ type: "water", x: shot.x, y: shot.y,
               radius: 34, life: 0.27, maxLife: 0.27 });
             if (elementalAreas.length > 55) elementalAreas.shift();
