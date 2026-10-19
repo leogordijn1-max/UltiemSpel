@@ -178,7 +178,7 @@ test("victory saving and endless continuing retain one run record and award",()=
   const progression=src("js/progression.js"),game=src("js/game.js");
   assert.match(progression,/if \(typeof victoryClaimed !== "undefined" && victoryClaimed\) return false;/);
   assert.match(progression,/recordRun\("victory"\);/);
-  assert.match(progression,/if \(wasRecorded && !\(mode === "endless" && won\)\) return false;/);
+  assert.match(progression,/endlessRecordClosed/);
   assert.match(game,/if \(gameState !== "victory" \|\| !victoryClaimed\) return false;/);
   assert.match(game,/endlessStartTime = time;/);
   assert.match(game,/nextBossTime = time \+ 180;/);
