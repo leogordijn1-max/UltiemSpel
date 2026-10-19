@@ -302,6 +302,7 @@ function draw() {
     window.drawGuardianWorldWarning?.(e, ctx, time, graphicsQuality === "low");
     window.drawBossCombat?.(e, ctx, time, graphicsQuality);
     window.drawGuardianSecondary?.(e,ctx,time,graphicsQuality);
+    window.drawGuardianLateSecondary?.(e,ctx,time,graphicsQuality);
     window.drawBeauTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawShadeTelegraph?.(e, ctx, time, graphicsQuality);
     window.drawBellTelegraph?.(e, ctx, time, graphicsQuality);
@@ -408,7 +409,10 @@ function draw() {
       ctx.stroke();
       ctx.restore();
     }
-    if (e.kind === 3 && e.shotWarning > 0) {
+    // Avoid an old broad cone painted on top of a real, distinct prepared
+    // normal volley: it would falsely mark safe/dangerous ground.
+    if (e.kind === 3 && e.shotWarning > 0 &&
+        !e.secondaryVolley && !e.lateSecondary) {
       ctx.save();
       const intensity = 0.5 + Math.sin(time * 13) * 0.15;
       ctx.fillStyle = `rgba(250, 75, 105, ${0.08 + intensity * 0.08})`;
