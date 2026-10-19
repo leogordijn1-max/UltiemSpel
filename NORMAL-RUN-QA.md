@@ -38,6 +38,10 @@ Start op **Normal, 1×** met standaard, zonder Developer God Mode. Noteer tijd, 
 - **Memory / FPS:** vergelijk een zware golf, een boss en een drukke terreinzone, bij Low/Medium/High. Neem de echte P95-frame, AI-, hit- en draw-tijden op. Node-regressies bewijzen geen numerieke FPS-winst.
 - **Refresh/start opnieuw:** saved world en earned trophies/records blijven, tijdelijke conquest/scars verdwijnen; geen blijvende sandbox rewards.
 
+## Update 38 — All Nine Weapons maker-heracceptatie OPEN (19 oktober 2026)
+
+**Technische 9×4 vijandrollenmatrix en 37.2 bosspressure/healing samen aanwezig; minstens één echte non-sandbox complete Fire/Water/Frost Normal-run per element nodig.** [Volledig testprotocol Update 38](UPDATE-38-ALL-NINE-WEAPONS.md). Vergelijk Water Bolt Rate V, Riptide, resized wet trails, echte hits per 5m, `hit.source` en health pickup loop met oude Water 26:42/21 hits/333,86 damage. Test Frost Orb op Rate V: herhaald Glacier-koude-effect mag geen perma lockdown geven; Ice Shards/Crystal Storm en Glacial Pulse/Absolute Zero houden hun eigen slows en twee verdiende evoluties. Fire heeft nog geen eerlijke complete non-sandbox baseline. **Geen live-GO op basis van tests alleen**; Update 39 levert 3 gedocumenteerde elementruns op.
+
 ## Update 37.2 — Water/Healing/Boss-pressure re-test OPEN (19 oktober 2026)
 
 **Nieuwe non-sandbox Water-run van maker: 26:42 Victory, 21 hits, 333,86 damage; 369,6 healing en twee hits tussen 15:00–25:00.** De maker wil meer echte hits, meer damage, *betere herstelopties die hij actief moet zoeken* en echt moeilijkere secundaire bossaanvallen. [37.2 ontwerp/implementatie](UPDATE-37-2-REAL-PRESSURE.md). Bij de eerstvolgende non-sandbox browserrun: check boss locktracking 0,57s, centre/flank warnings, geen onmogelijke 1×/3× overlap met oude ultimates, hits per 5min, damage per bron in nieuw `hit.source`, Water Bolt DPS/soak/pierce, normale enemy pursuit en groen heal-loot bij echte kills wanneer speler <83% HP is. **Balance live acceptance OPEN, ongeacht groene Node-tests**.
