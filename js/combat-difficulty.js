@@ -23,7 +23,10 @@
   // population or making their early-game first hit unfair.
   function enemyThreatMultiplier(seconds=0,difficulty="normal"){
     if(difficulty==="easy")return 1;
-    const progress=Math.max(0,Math.min(1,(Math.max(0,seconds)-300)/1200));
+    // Normal teaches through actual attacks: the build-up begins after
+    // the first few minutes, not only when the player is near the finale.
+    // Same enemy counts, collision rules and capped late-run damage.
+    const progress=Math.max(0,Math.min(1,(Math.max(0,seconds)-240)/1080));
     return 1+progress*(difficulty==="nightmare"?.52:.65);
   }
   // Vitality retains max-HP and gradual recovery but must not replace
@@ -41,6 +44,18 @@
     const distanceFactor=Math.max(0,Math.min(1,(distance-130)/210));
     return 1+progress*(difficulty==="nightmare"?.78:.65)*
       (.48+.52*distanceFactor);
+  }
+  // Strong players still earn a win through dodges and boss recognition.
+  // Normal's 2nd/3rd phases are less forgiving between clearly warned
+  // volleys, not faster in their warning animations or recovery windows.
+  // Easy is left untouched so first-time players can learn the mechanics.
+  function guardianNormalAttackCooldown(seconds,difficulty="normal",phase=1){
+    if(!Number.isFinite(seconds)||seconds<=0)return seconds;
+    if(difficulty==="easy")return seconds;
+    const stage=Math.max(1,Math.min(3,Math.floor(Number(phase)||1)));
+    const factors=difficulty==="nightmare"
+      ?[.93,.85,.79]:[.97,.89,.83];
+    return Math.max(1.35,seconds*factors[stage-1]);
   }
   function get(difficulty) { return tuning[difficulty] || tuning.normal; }
   function applySquad(enemy,difficulty) {
@@ -63,6 +78,7 @@
   }
   window.getCombatDifficultyTuning = get;
   window.enemyThreatMultiplier=enemyThreatMultiplier;
+  window.guardianNormalAttackCooldown=guardianNormalAttackCooldown;
   window.vitalityRegenPerSecond=vitalityRegenPerSecond;
   window.enemyPursuitMultiplier=enemyPursuitMultiplier;
   window.applyCombatDifficultyToSquad = applySquad;
