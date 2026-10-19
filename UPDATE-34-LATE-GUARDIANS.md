@@ -51,7 +51,7 @@ Nieuwe module **`js/guardian-late-secondary.js`** bevat vier patronen. Bell Towe
 
 1. **Bell Tower:** herken **CLAPPER'S VERDICT** en **SPLIT HOUR** in Phase I/II; de gewone aanval moet spannender worden zonder dat de geliefde **THE GRAND PEAL** ontbreekt. Check dat flankemitters en echte schoten op hetzelfde moment verschijnen.
 2. **Last Meme:** herken **PIXEL RIP** en **GLITCH DOUBLE** in alle phases. De laatste grote **THE END OF EVERYTHING** moet nog even dik en moeilijk blijven. Begin op 1×; herhaal desnoods op 2×/3×.
-3. De **laatste 0,35s aim-lock**: zodra de aanvaller heeft gelockt, beweeg expres opzij. Markeringen en late grondinslagen horen op dezelfde plek te blijven. Let op of dash/outside markers werkelijke veilige keuzes zijn.
+3. **Target lockt ná de eerste 0,35s**: zodra de aanvaller heeft gelockt, beweeg expres opzij. Markeringen en late grondinslagen horen op dezelfde plek te blijven. Let op of dash/outside markers werkelijke veilige keuzes zijn.
 4. **Low/Medium/High**, vooral druk rond 25:00 met boss + summoned minions; niet onopzettelijk FPS verliezen door extra Canvas-waarschuwingslijnen. Neem QA-JSON en noteer zowel plezier als vermeende onzichtbare hits.
 5. **De update 32.1 survival-herplaytest staat NOG OPEN**: heeft Vitality-herstelpauze de Water-run uitdagender gemaakt? Wat gebeurt er met Zombie Mike en Water Bolt? Dit staat los van de technische Update-34-done-staat.
 6. Bij een vreemd overlapmoment: noteer bossnaam, fase, naam van nieuw patroon, spelsnelheid en approximate gameklok; met `boss_secondary_attack` kan de log helpen reproduceren.
