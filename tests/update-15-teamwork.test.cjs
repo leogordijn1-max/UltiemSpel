@@ -161,5 +161,5 @@ test("real kill flow applies guard death and live damage checks exposed window",
   assert.match(read("js/encounter-pacing.js"),/linkEncounterTacticTeam/);
   assert.match(read("js/enemies.js"),/linkEncounterTacticTeam/);
   assert.match(read("js/game.js"),/updateEncounterTactic/);
-  assert.match(read("index.html"),/encounter-tactics\.js\?v=(?:teamwork-15|archetypes-16|telegraphs-17)/);
+  assert.match(read("index.html"),/encounter-tactics\.js\?v=[a-z0-9-]+/);
 });
