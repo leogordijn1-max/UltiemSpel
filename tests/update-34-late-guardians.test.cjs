@@ -156,11 +156,12 @@ test("once the player's target is locked, the same geometry drives both warning 
  h.window.fireGuardianLateSecondary(h.boss,h.hooks,101.2);
  for(let i=0;i<marks.length;i++)
   assert.deepEqual(h.hazards[i].slice(0,3),[marks[i].x,marks[i].y,marks[i].r]);
- for(let i=0;i<shots.length;i++)
+ for(let i=0;i<shots.length;i++){
   assert.equal(h.shots[i][0].x,shots[i].x);
   assert.equal(h.shots[i][0].y,shots[i].y);
   assert.equal(h.shots[i][1],shots[i].a);
   assert.equal(h.shots[i][2],shots[i].speed);
+ }
 });
 test("phase transitions and death stop the old pattern before a new phase begins",()=>{
  for(const variant of [2,3]){
