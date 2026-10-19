@@ -39,7 +39,7 @@
     if(difficulty==="easy")return 1;
     const progress=Math.max(0,Math.min(1,(Math.max(0,seconds)-180)/900));
     const distanceFactor=Math.max(0,Math.min(1,(distance-130)/210));
-    return 1+progress*(difficulty==="nightmare"?.48:.38)*
+    return 1+progress*(difficulty==="nightmare"?.78:.65)*
       (.48+.52*distanceFactor);
   }
   function get(difficulty) { return tuning[difficulty] || tuning.normal; }
