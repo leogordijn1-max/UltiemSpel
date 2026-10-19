@@ -128,6 +128,8 @@ let upgrades = {},
   currentFrameMs = 0,
   performanceMetrics = { enemyAI: 0, collisions: 0, render: 0 },
   simulationAccumulator = 0;
+// Single source of truth: actual Guardian kills, not the in-game minute.
+window.enemyRunBossCount=()=>bossesDefeated;
 let cachedLoadoutHtml = null;
 function loadSelectedWeapons() {
   const loadout = elementalLoadout();
