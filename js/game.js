@@ -1890,7 +1890,14 @@ function update(dt) {
         bossPhase:boss?(boss.finalPhase|| (boss.phaseThree?3:boss.phaseTwo?2:1)):0,
         worldTarget:conquest?.target||0,
         fps:currentFps,graphicsQuality,
-        enemies:enemies.length
+        enemies:enemies.length,
+        // Small squads, NOT spawn spam: count which new enemy counters
+        // actually appear in this real run for the next Water playtest.
+        counterRoles:{
+          anchor:enemies.filter(e=>!e.dead&&e.counterRole==="anchor").length,
+          phaseStalker:enemies.filter(e=>!e.dead&&e.counterRole==="phaseStalker").length,
+          warden:enemies.filter(e=>!e.dead&&e.counterRole==="warden").length
+        }
       });
     }
     hud();
