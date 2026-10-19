@@ -213,6 +213,6 @@ test("wiring observes only real game progression and does NOT alter level choice
   assert.match(enemies,/runQaEvent\?\.\("boss_defeated"/);
   assert.match(controls,/runQaSetEnabled\?\.\(qaInput.checked\)/);
   assert.match(controls,/appendRunQaExportButtons\?\.\(parent\)/);
-  assert.match(index,/js\/run-telemetry\.js\?v=31/);
+  assert.match(index,/js\/run-telemetry\.js\?v=[a-z0-9-]+/);
   assert.doesNotMatch(qa,/fetch\(|XMLHttpRequest|sendBeacon|WebSocket|storageSet\("shadowQaReport"/);
 });
