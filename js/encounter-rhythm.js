@@ -16,15 +16,16 @@
     running=false;phase="ready";until=0;tracked=[];
     lastKind=null;encounters=0;cleared=0;
   }
-  function rest(now,growth=0){
+  function rest(now,growth=0,difficulty="easy"){
     phase="recover";
     tracked=[];
-    const length=REST_BASE+Math.min(REST_LATE-REST_BASE,
-      Math.max(0,(Number(growth)||0)/240));
+    const length=difficulty==="easy"
+      ? REST_BASE+Math.min(REST_LATE-REST_BASE,Math.max(0,(Number(growth)||0)/240))
+      : 2.5+Math.min(.8,Math.max(0,(Number(growth)||0)/1300));
     until=now+length;
     cleared++;
   }
-  function advance(now,enemies,blocked=false,growth=0){
+  function advance(now,enemies,blocked=false,growth=0,difficulty="easy"){
     if(!running||!Number.isFinite(now))return;
     if(blocked){
       // Do not bring back deferred waves immediately after a boss fight.
@@ -34,7 +35,7 @@
       return;
     }
     if(phase==="boss"){
-      phase="recover";tracked=[];until=now+12;
+      phase="recover";tracked=[];until=now+(difficulty==="easy"?12:3);
       return;
     }
     if(phase==="engaged"){
@@ -42,7 +43,7 @@
       // One lingering straggler shouldn't delay XP collection and the next
       // staged encounter indefinitely. A large swarm must be mostly cleared.
       const threshold=tracked.length>=20?3:1;
-      if(survivors.length<=threshold)rest(now,growth);
+      if(survivors.length<=threshold)rest(now,growth,difficulty);
     }
     if(phase==="recover"&&now>=until){phase="ready";until=0;}
   }
@@ -68,13 +69,15 @@
     }
     return true;
   }
-  function ambientLimit(now,enemies,base){
+  function ambientLimit(now,enemies,base,difficulty="easy"){
     if(!running)return base;
     if(phase==="boss")return 0;
     // Combat is about the active squad. During recovery leave just enough
     // ambient enemies for movement and XP without restarting the fight.
-    if(phase==="engaged")return Math.min(base,2);
-    if(phase==="recover")return Math.min(base,2);
+    // Normal is survival, not a chain of isolated empty set pieces.
+    // Ordinary enemies keep arriving during a patrol and its short recovery.
+    if(phase==="engaged" || phase==="recover")
+      return difficulty==="easy"?Math.min(base,2):Math.min(base,12);
     return base;
   }
   function planIndex(base=0){
