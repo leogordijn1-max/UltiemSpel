@@ -228,8 +228,8 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
     x: spawnPoint.x,
     y: spawnPoint.y,
     r: 13,
-    hp: (20 + growthTime * 0.08) * profile.enemyHealth,
-    speed: rand(43, 63) + growthTime * 0.06,
+    hp: (32 + growthTime * 0.02) * profile.enemyHealth,
+    speed: rand(56, 73) + growthTime * 0.008,
     damage: 8,
     kind,
     hit: 0,
@@ -242,11 +242,11 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
   } else if (kind === 2) {
     e.r = 35; e.hp *= 4; e.speed *= 0.7; e.damage = 14;
   } else if (kind === 4) {
-    e.r = 15; e.speed = rand(34, 42) + growthTime * 0.025;
+    e.r = 15; e.speed = rand(40, 48) + growthTime * 0.006;
     e.damage = 6; e.shootCooldown = rand(2.6, 4.2); e.shotWarning = 0;
   } else if (kind === 5) {
-    e.r = 12; e.hp *= 0.7; e.speed *= 1.25; e.damage = 16;
-    e.burstWarning = 0; e.burstRadius = 86; e.armed = false;
+    e.r = 12; e.hp *= 1.4; e.speed *= 1.4; e.damage = 17;
+    e.burstWarning = 0; e.burstRadius = 99; e.armed = false;
   } else if (kind === 6) {
     e.r = 24; e.hp *= 3; e.speed *= 0.75; e.damage = 11;
     e.guardTimer = 3; e.shieldActive = true;
@@ -270,6 +270,9 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
   window.initializeEnemyAdaptation?.(e);
   window.initializeEnemyArchetype?.(e);
   window.initializeEnemyCounterRole?.(e);
+  // The fallen Guardians/changed world trigger recognizable new enemy
+  // generations. Existing game-duration growth is intentionally minimal.
+  window.applyEnemyEvolution?.(e,bossesDefeated,difficulty);
   enemies.push(e);
   if (typeof trackDiscovery === "function") {
     const seen = typeof enemyDiscoveryId === "function" ? enemyDiscoveryId(e.kind) : null;
@@ -329,16 +332,18 @@ function spawnSpecialWave(number, cap = 95) {
     return { name: "BOSS ARENA · WAVES PAUSED", spawned: 0, pattern: null };
   const pattern = wavePatternFor(number);
   const swarm = !!pattern.swarm;
-  const waveSize = swarm
-    ? Math.min(42, 26 + Math.floor(number * 1.2))
-    : pattern.members?.length || Math.min(8, 4 + Math.floor(number / 3));
+  const hardMode=difficulty!=="easy";
+  const waveSize=swarm
+    ?(hardMode?Math.min(15,10+Math.floor(number*.35)):Math.min(42,26+Math.floor(number*1.2)))
+    :(hardMode?Math.min(4,pattern.members?.length||4):
+      pattern.members?.length||Math.min(8,4+Math.floor(number/3)));
   // A swarm can temporarily exceed the normal ambient cap, but not this hard limit.
   const allowed=window.encounterCanStart?.(
     enemies,growthTime,swarm?"swarm":"wave",waveSize,
     typeof difficulty==="string"?difficulty:"normal");
   if(allowed===false)return {name:pattern.name,spawned:0,pattern,
     hint:pattern.hint||null,deferred:true};
-  const hardCap=Math.min(swarm?(window.encounterSwarmLimit||95):95,Math.max(0,cap));
+  const hardCap=Math.min(swarm?(hardMode?24:(window.encounterSwarmLimit||95)):95,Math.max(0,cap));
   let spawned = 0;
   const tacticGroup = swarm ? null : window.newEncounterTacticGroup?.();
   const team=[];
@@ -363,17 +368,21 @@ function spawnSpecialWave(number, cap = 95) {
       const wavePosition = window.enemyOffscreenSpawn?.(angle, 110 + Math.floor(i/3)*9, (lane-1)*34);
       e.x = wavePosition?.x ?? (player.x + Math.cos(angle)*radius);
       e.y = wavePosition?.y ?? (player.y + Math.sin(angle)*radius);
-      e.hp *= .46;e.damage *= .7;e.speed *= 1.1;
-      e.xpValueMultiplier = .44;
+      // No more 30 fragile mobs dying at screen edge: an evolved
+      // coordinated shock pack with enough stamina to close the gap.
+      e.hp *= hardMode?1.6:.46;
+      e.damage *= hardMode?1.18:.7;
+      e.speed *= hardMode?1.17:1.1;
+      e.xpValueMultiplier = hardMode?1.8:.44;
       e.encounterRole = "swarm";
     } else {
       const spread = (i-(waveSize-1)/2)*58;
       const position = window.enemyOffscreenSpawn?.(waveAngle, 145, spread);
       e.x = position?.x ?? (centerX - Math.sin(waveAngle)*spread);
       e.y = position?.y ?? (centerY + Math.cos(waveAngle)*spread);
-      e.hp *= 1.75 + Math.min(.72,number*.065);
+      e.hp *= hardMode?(2.05 + Math.min(.75,number*.08)):(1.75 + Math.min(.72,number*.065));
       e.damage *= 1.22 + Math.min(.27,number*.023);
-      e.speed *= 1.13;
+      e.speed *= hardMode?1.19:1.13;
       e.xpValueMultiplier =
         window.encounterXpMultiplier?.(growthTime,"wave") ?? 2.6;
       e.encounterRole = "patrol";
@@ -628,7 +637,16 @@ function damage(e, d, origin = player, damageType = "direct") {
         name:e.bossName,variant:e.variant,final:!!e.isFinalBoss,
         number:bossNumber,bossesDefeated:bossesDefeated+1},time);
       bossesDefeated++;
-      if (!killedFinalBoss) window.onWorldBossDefeated?.(bossesDefeated, false);
+      if (!killedFinalBoss){
+        window.onWorldBossDefeated?.(bossesDefeated, false);
+        const generation=window.enemyEvolutionTier?.(bossesDefeated)||0;
+        if(generation>0){
+          notify("THE WORLD RESPONDS · DEFENDERS EVOLVE · GENERATION "+generation,
+            "boss",5);
+          window.runQaEvent?.("enemy_evolution_unlocked",{
+            tier:generation,cause:"guardian_defeated",guardian:e.bossName},time);
+        }
+      }
       if (typeof awardBossLoot === "function" && typeof metaProgress !== "undefined") {
         const lootKey = e.isFinalBoss ? "final" : ["beau", "mourning", "bell"][e.variant] || null;
         const trophy = awardBossLoot(metaProgress, lootKey);
