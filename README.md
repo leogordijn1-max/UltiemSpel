@@ -5,6 +5,10 @@
 > **Project voortzetten met een nieuwe AI-chat?** Lees eerst [PROJECT-KOMPAS.md](PROJECT-KOMPAS.md) voor visie, sfeer, gemaakte beslissingen en de werkwijze, en [MILESTONE-30.md](MILESTONE-30.md) voor de actuele updateplanning. Deze README bevat op onderdelen nog informatie over oudere versies; de actieve code op de ontwikkelbranch is leidend.
 
 
+## Nieuwste ontwikkelstatus: Update 32 (19 oktober 2026)
+
+**Update 31 volledig geaccepteerd:** echte Water Normal 26:44 Victory met twee verdiende evoluties exact op 10:00 en 17:00; Frost 28:01 Victory met sandboxflag, hoewel maker geen developerfuncties gebruikte. **Update 32 technisch geïmplementeerd (491/491 groene tests), maar nog niet opnieuw in de browser gespeeltest**. Eén fysiek knockback-model zorgt ervoor dat zware vijanden zich veel beter tegen Water Bolt/Whirlpool verzetten; herhaalde Water Bolt-duw is verminderd maar damage/schietsnelheid blijven. Het level-upmenu reserveert minder vaak een locked weapon en Developer Mode zonder gebruikte cheats toont weer normale bossrewards (blijft een sandbox zonder permanente opslag). **Lees [UPDATE-32-BALANCE.md](UPDATE-32-BALANCE.md)** en [ROADMAP-31-50.md](ROADMAP-31-50.md) voor de details en volgende QA. Voor definitieve balance-acceptatie: speel één nieuwe non-sandbox Water-run en een Frost-run, exporteer JSON en geef aan of Normal nu moeilijker maar nog leuk voelt. M3–M6/release blijven deels OPEN.
+
 ## Actuele stand — Mijlpaal Update 30 (18 oktober 2026)
 
 **Combat & Gameplay 2.0: 20/20 geplande stappen voltooid.** De technische modules en regressietests zijn geïntegreerd, maar de game is **nog niet als volledig speelbaar en uitgebalanceerd vrijgegeven**: een echte doorlopende Normal-browserrun van 25–30 minuten, daadwerkelijk haalbare dubbele evoluties, FPS en overlappende bossaanvallen vereisen nog handmatige speeltests.
