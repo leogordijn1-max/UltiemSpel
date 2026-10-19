@@ -29,8 +29,11 @@
   function ambientInterval(growthSeconds = 0, difficulty = "normal") {
     const time = Math.max(0, Number(growthSeconds) || 0);
     // Ambient spawns become rarer as tactical formations get more demanding.
-    const base = 7.3 + Math.min(3.3, time / 550 * 1.5);
-    return base * (difficulty === "easy" ? 1.18 : 1);
+    if(difficulty==="easy")
+      return (7.3+Math.min(3.3,time/550*1.5))*1.18;
+    // Constant pressure, even when the last weak enemies die at range.
+    // Capped by the live population budget so the game stays performant.
+    return Math.max(1.65,2.6-Math.min(.95,time/1300*.95));
   }
   function living(enemies) {
     return Array.isArray(enemies) ? enemies.filter(e => e && !e.dead && e.hp !== 0) : [];
@@ -48,11 +51,15 @@
   function maxGroups(seconds=0) { return seconds>=360?2:1; }
   function ambientLimit(seconds=0,difficulty="normal",enemies=[]) {
     const time=Math.max(0,Number(seconds)||0);
-    const base=Math.max(4,9-Math.floor(time/180));
-    const modifier=difficulty==="easy"?-1:0;
-    // During a staged fight, keep the arena focused on those specific threats.
-    return Math.max(2,Math.min(populationCap(seconds,difficulty)-10,
-      base+modifier-(groups(enemies)>0?3:0)));
+    if(difficulty==="easy"){
+      const base=Math.max(4,9-Math.floor(time/180));
+      return Math.max(2,Math.min(populationCap(seconds,difficulty)-10,
+        base-1-(groups(enemies)>0?3:0)));
+    }
+    // Preserve a real approaching background during patrols. The global
+    // population budget still stops horde/performance explosions.
+    const base=10+Math.min(4,Math.floor(time/240));
+    return Math.max(6,Math.min(populationCap(seconds,difficulty)-7,base));
   }
   function canStart(enemies,seconds=0,kind="patrol",size=3,difficulty="normal") {
     const alive=living(enemies),count=alive.length,groupCount=groups(alive);
@@ -138,7 +145,9 @@
     if(added>0)window.recordEncounterRhythmSpawn?.(
       "patrol",now,enemies.slice(before),growthSeconds);
     // Retry a blocked encounter once the current pack is defeated; no catch-up burst.
-    nextPatrol=now+(added?Math.max(25,31-Math.min(5,growthSeconds/300)):6);
+    nextPatrol=now+(added?(difficulty==="easy"
+      ?Math.max(25,31-Math.min(5,growthSeconds/300))
+      :Math.max(16,20-Math.min(4,growthSeconds/360))):4);
     return added;
   }
   function status(growthSeconds=0,difficulty="normal"){
