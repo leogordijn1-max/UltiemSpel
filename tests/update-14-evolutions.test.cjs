@@ -28,6 +28,8 @@ function upgradesHarness(seed=null){
 test("focused upgrade slot preserves a reserve weapon unlock among three choices",()=>{
   const h=upgradesHarness();
   assert.equal(h.read("evolutionFocusKey()"),"arcane");
+  // Update 32 guarantees a locked choice periodically, not EVERY level.
+  h.read("level=8"); // 8 + 1 earned boss = periodic reserved-slot round
   h.read("choices()");
   assert.equal(h.rendered.length,3);
   const names=h.rendered.map(x=>x.innerHTML);
@@ -38,6 +40,7 @@ test("focused upgrade slot preserves a reserve weapon unlock among three choices
 test("either reserved weapon can be guaranteed while keeping an evolution-focus choice",()=>{
   for(const seed of [0,.999]){
     const h=upgradesHarness(seed);
+    h.read("level=8"); // periodic reserved slot remains guaranteed
     h.read("choices()");
     assert.equal(h.rendered.length,3);
     const buttons=h.rendered.map(x=>x.innerHTML);
