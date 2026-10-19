@@ -9,18 +9,18 @@ test("Water Bolt applies just one movement impulse, retaining elemental damage",
   assert.match(element,/weaponKey==="waterBolt"\?"waterBolt":"water"/);
   assert.match(element,/dx\/length\*\(force\+\(combo\.bonusKnockback\|\|0\)\)/);
 });
-test("Water Bolt cannot machine-gun past the 0.98s cap at Rapid Casting V",()=>{
+test("Water Bolt cannot machine-gun past the 1.12s cap at Rapid Casting V",()=>{
   const s=read("js/elemental-combat.js");
   const fn=s.match(/function elementalCooldown\(key, seconds\) \{[\s\S]*?\n\}/);
   assert.ok(fn);
   const timers={},context=vm.createContext({Math,elementalTimers:timers,weaponCooldownMultiplier:()=>.2});
   vm.runInContext(fn[0],context);
   vm.runInContext('elementalCooldown("waterBolt",1.1)',context);
-  assert.equal(timers.waterBolt,.98);
+  assert.equal(timers.waterBolt,1.12);
   vm.runInContext('elementalCooldown("fireball",1.1)',context);
   assert.ok(Math.abs(timers.fireball-.22)<1e-8);
-  assert.match(s,/shot\.pierce = evolutions\.riptideLance \? 3 : 2/);
-  assert.match(s,/\(12 \+ upgrades\.waterBolt \* 5\)/);
+  assert.match(s,/shot\.pierce = evolutions\.riptideLance \? 2 : 1/);
+  assert.match(s,/\(10 \+ upgrades\.waterBolt \* 4\)/);
 });
 test("Vitality L2 heals less than observed 0.595 HP/s, while remaining useful",()=>{
   const w={};vm.runInNewContext(read("js/combat-difficulty.js"),{window:w,Math,Number});
