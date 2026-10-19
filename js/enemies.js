@@ -879,6 +879,15 @@ function spawnFinalBoss() {
   return true;
 }
 
+// Phase-aware Normal/Nightmare skill pressure: only the downtime between
+// normal volleys changes. Every telegraph, signature and recovery stays intact.
+function scheduleBossNormalVolley(e,seconds) {
+  const phase=e.isFinalBoss ? Math.max(1,e.finalPhase||1)
+    : e.phaseThree?3:e.phaseTwo?2:1;
+  e.shootCooldown=window.guardianNormalAttackCooldown?.(
+    seconds,difficulty,phase) ?? seconds;
+}
+
 // Boss projectiles remember their variant so only Beau uses the original fish sprite.
 function addBossProjectile(e, angle, speed, damage = 13, type = "shadow") {
   if (bossShots.length >= 180) return;
@@ -911,9 +920,9 @@ function bossFire(e) {
   if(late){
     e.volleyCount=(e.volleyCount||0)+1;
     e.shotWarning=0;
-    e.shootCooldown=e.isFinalBoss?
+    scheduleBossNormalVolley(e,e.isFinalBoss?
       Math.max(1.5,2.65-0.35*(e.finalPhase||1)):
-      e.phaseThree?1.85:e.phaseTwo?2.05:2.55;
+      e.phaseThree?1.85:e.phaseTwo?2.05:2.55);
     return;
   }
   if (e.isFinalBoss) return finalBossFire(e);
@@ -935,7 +944,7 @@ function bossFire(e) {
     });
   if(enhanced){
     e.shotWarning=0;
-    e.shootCooldown=e.phaseThree?1.85:e.phaseTwo?2.05:2.55;
+    scheduleBossNormalVolley(e,e.phaseThree?1.85:e.phaseTwo?2.05:2.55);
     return;
   }
   if (e.variant === 0) {
@@ -976,7 +985,7 @@ function bossFire(e) {
     }
   }
   e.shotWarning = 0;
-  e.shootCooldown = e.phaseThree ? 1.85 : e.phaseTwo ? 2.05 : 2.55;
+  scheduleBossNormalVolley(e,e.phaseThree ? 1.85 : e.phaseTwo ? 2.05 : 2.55);
 }
 
 // Alternate visibly different patterns; all aim directions/target points were locked
@@ -1016,5 +1025,5 @@ function finalBossFire(e) {
   }
   e.volleyCount = (e.volleyCount || 0) + 1;
   e.shotWarning = 0;
-  e.shootCooldown = Math.max(1.65, 3.0 - 0.35 * phase);
+  scheduleBossNormalVolley(e,Math.max(1.65, 3.0 - 0.35 * phase));
 }
