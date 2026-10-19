@@ -412,15 +412,25 @@ function choices() {
   const regularSlots = 3 - (evolutionPicks.length ? 1 : 0);
   const evolutionWeapons = new Set(evolutionPicks.map((recipe) => recipe.weapon));
   const regularPool = eligible.filter(([key]) => !evolutionWeapons.has(key));
-  const pick = lockedPicks.length
-    ? [lockedPicks[Math.floor(Math.random() * lockedPicks.length)], ...chooseWeighted(regularPool.filter(([key]) => !lockedPicks.some(([lockedKey]) => lockedKey === key)), regularSlots - 1)]
-    : chooseWeighted(regularPool, regularSlots);
+  // A permanently reserved locked weapon appeared on ~every Frost offer.
+  // Give one a guaranteed slot for the first few levels and periodically
+  // later; on other levels locked weapons remain in the weighted pool.
+  // Three real build choices remain and the player still earns every unlock.
+  const reserveLocked = lockedPicks.length>0 &&
+    (level<=3 || (level+bossesDefeated)%3===0);
+  const pick = reserveLocked
+    ? [lockedPicks[Math.floor(Math.random()*lockedPicks.length)],
+        ...chooseWeighted(regularPool.filter(([key]) =>
+          !lockedPicks.some(([lockedKey])=>lockedKey===key)),regularSlots-1)]
+    : chooseWeighted(regularPool,regularSlots);
   // At least one slot may advance a selected weapon's actual recipe.
-  // Locked reserve slots remain guaranteed; focus is an OFFER, not an auto-pick.
+  // A locked reserve exists only in selected rounds; focus stays an
+  // OFFER, not an automatic upgrade or evolution.
   const focusKey=evolutionFocusKey();
   const focusOption=regularPool.find(([key])=>key===focusKey);
   if(focusOption && !pick.some(([key])=>key===focusKey)){
-    const replaceAt=pick.length && lockedPicks.some(([key])=>key===pick[0]?.[0]) ? 1 : 0;
+    const replaceAt=reserveLocked && pick.length &&
+      lockedPicks.some(([key])=>key===pick[0]?.[0]) ? 1 : 0;
     if(replaceAt<regularSlots){
       if(pick.length<regularSlots)pick.push(focusOption);
       else pick[replaceAt]=focusOption;
