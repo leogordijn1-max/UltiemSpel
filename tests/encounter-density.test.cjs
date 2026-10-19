@@ -34,22 +34,22 @@ function waveHarness(h){
   vm.runInContext(text.slice(start,end),h.ctx);
   return n=>h.ctx.spawnSpecialWave(n);
 }
-test("late game has fewer ambient enemies and smaller max population than early spam build",()=>{
+test("Normal late game sustains more threats without exceeding the bounded population budget",()=>{
   const h=make();
   const budget=h.window.encounterPopulationCap;
   const ambient=h.window.encounterAmbientLimit;
   assert.ok(budget(1800)<=30);
   assert.ok(budget(0)<budget(1200));
-  assert.ok(ambient(1500,"normal",[])<=5);
-  assert.ok(ambient(1500,"normal",[])<ambient(0,"normal",[]));
-  assert.ok(h.window.encounterAmbientInterval(1500)>h.window.encounterAmbientInterval(0));
+  assert.ok(ambient(1500,"normal",[])>=10 && ambient(1500,"normal",[])<=14);
+  assert.ok(ambient(1500,"normal",[])>ambient(0,"normal",[]));
+  assert.ok(h.window.encounterAmbientInterval(1500)<h.window.encounterAmbientInterval(0));
 });
-test("an intact squad gets priority: ambient budget drops and extra formations are rejected",()=>{
+test("intact squads cannot pile up without limit while ambient pressure continues",()=>{
   const h=make();
   const initial=h.patrol();
   assert.equal(initial,5);
   assert.equal(h.window.encounterActiveGroups(h.enemies),1);
-  assert.ok(h.window.encounterAmbientLimit(1200,"normal",h.enemies) <=3);
+  assert.ok(h.window.encounterAmbientLimit(1200,"normal",h.enemies)>=10);
   // The second tactical encounter is allowed later, but a third cannot pile up.
   assert.equal(h.patrol(),5);
   assert.equal(h.window.encounterActiveGroups(h.enemies),2);
