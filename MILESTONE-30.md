@@ -6,6 +6,8 @@
 
 **Laatste afgeronde update:** 30 — Combat & Gameplay 2.0 TECHNISCHE mijlpaalreview: tien groen geauditeerde technische gates, zes open handmatige releasegates en een roadmap richting Update 40.
 **Volgende update:** 31 — run-telemetrie **technisch gebouwd** (479 tests), maar eerste echte Normal-browserrun **nog OPEN**. Daarna Update 32 XP/evolutie-economie volgens [ROADMAP-31-50.md](ROADMAP-31-50.md): 31–40 echte speelkwaliteit, 41–45 vloeiende 2.5D Visual Foundation, 46–50 Animation & VFX Lock-In.**
+**Actuele vervolgstand (19 oktober 2026):** Update 31 code + eerste non-sandbox Water Victory **afgerond**. Update 32 **technisch geïmplementeerd (491/491 tests), maar live Water/Frost-balanstest na de fixes OPEN**. Nieuwe gedeelde fysieke crowd-controlweerstand, periodieke locked weapon-keuze, passief sandbox-bossrewardherstel. [UPDATE-32-BALANCE.md](UPDATE-32-BALANCE.md) bevat het bewijs en testprotocol; [ROADMAP-31-50.md](ROADMAP-31-50.md) is leidend voor de volgende fase. 20/20 hieronder slaat uitsluitend op de historische fase Updates 11–30; release M3–M6 nog niet volledig bewezen.
+
 **Planningvoortgang:** **20 / 20 afgerond = 100%**. Dit is een planningsteller, niet een inschatting van grafische/gameplaykwaliteit.
 **Update-31-handoff:** zie [RUN-TEST-31.md](RUN-TEST-31.md) en [ROADMAP-31-50.md](ROADMAP-31-50.md) voor de lokale recorder, echte browser-QA en resterende acceptatie. Het 20/20-percentage blijft alleen over Updates 11–30.
 **Meetregel:** na elke afgeronde update wordt deze tracker bijgewerkt; zowel `afgeronde updates / 20` als de inhoudelijke kwaliteitschecks worden gerapporteerd. Update-nummer is geen kwaliteitspercentage.
