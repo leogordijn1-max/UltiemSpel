@@ -53,14 +53,14 @@
   }
   function resetEnemy(e){
     if(!e || e.kind===3 || e.summoned)return e;
-    if(e.kind===1){
+    if(e.kind===1 && (e.evolutionLevel||1)>=2){
       e.feintCooldown=2.1+(Math.abs(e.x*.011+e.y*.017)%1.6);
       e.feintTime=0;
       e.feintDirection=(Math.floor(Math.abs(e.x+e.y))%2)?1:-1;
     }
-    if(e.kind===2){
+    if(e.kind===2 && (e.evolutionLevel||1)>=2){
       e.stompCooldown=4.4+(Math.abs(e.x*.012+e.y*.005)%2);
-      e.stompWarning=0;e.stompRadius=149;
+      e.stompWarning=0;e.stompRadius=149+Math.max(0,(e.evolutionLevel||1)-2)*31;
     }
     if(e.kind===6)e.shieldSector=0;
     return e;
@@ -70,35 +70,35 @@
        !player || !Number.isFinite(dt) || dt<=0)return null;
     if(e.kind===6){facing(e,player);return null;}
     const dx=player.x-e.x,dy=player.y-e.y,distance=Math.hypot(dx,dy);
-    if(e.kind===1 && !e.encounterTactic && !e.eliteChargeActive && !e.eliteChargeWarning){
+    if(e.kind===1 && (e.evolutionLevel||1)>=2 && !e.eliteChargeActive && !e.eliteChargeWarning){
       if(e.feintCooldown===undefined)resetEnemy(e);
       if(e.feintTime>0){
         e.feintTime=Math.max(0,e.feintTime-dt);
         const angle=Math.atan2(dy,dx)+(e.feintDirection||1)*.83;
-        return {angle,speedMult:1.48};
+        return {angle,speedMult:1.48+.14*Math.max(0,(e.evolutionLevel||2)-2)};
       }
       e.feintCooldown=Math.max(0,e.feintCooldown-dt);
       if(e.feintCooldown===0 && distance>105 && distance<335){
         e.feintTime=.45;
         e.feintDirection=-(e.feintDirection||1);
-        e.feintCooldown=3.4;
-        return {angle:Math.atan2(dy,dx)+e.feintDirection*.83,speedMult:1.48};
+        e.feintCooldown=Math.max(1.9,3.4-.48*((e.evolutionLevel||2)-2));
+        return {angle:Math.atan2(dy,dx)+e.feintDirection*.83,speedMult:1.48+.14*Math.max(0,(e.evolutionLevel||2)-2)};
       }
     }
-    if(e.kind===2 && e.encounterTactic!=="crusher"){
+    if(e.kind===2 && (e.evolutionLevel||1)>=2){
       if(e.stompCooldown===undefined)resetEnemy(e);
       if(e.stompWarning>0){
         e.stompWarning=Math.max(0,e.stompWarning-dt);
         if(e.stompWarning===0){
-          e.stompCooldown=7.6;
+          e.stompCooldown=Math.max(4.4,7.6-(e.evolutionLevel-2)*1.45);
           if(distance<(e.stompRadius||149)+(player.r||0))
-            hooks.damage?.(15,e);
+            hooks.damage?.(15+Math.max(0,e.evolutionLevel-2)*6,e);
         }
         return {angle:Math.atan2(dy,dx),speedMult:0};
       }
       e.stompCooldown=Math.max(0,e.stompCooldown-dt);
       if(e.stompCooldown===0 && distance>25 && distance<182){
-        e.stompWarning=1.0;
+        e.stompWarning=Math.max(.66,1-.13*((e.evolutionLevel||2)-2));
         return {angle:Math.atan2(dy,dx),speedMult:0};
       }
     }
@@ -106,14 +106,14 @@
   }
   function draw(e,ctx,now,quality="high"){
     if(!e || e.dead || !ctx?.save)return;
-    if(e.kind===1 && e.feintTime>0 && !e.encounterTactic){
+    if(e.kind===1 && e.feintTime>0){
       ctx.save();ctx.strokeStyle="#ffcb82";ctx.globalAlpha=.55;
       ctx.lineWidth=2;ctx.beginPath();
       const a=(e.feintDirection||1)*Math.PI/2;
       ctx.arc(e.x,e.y,(e.r||10)+13,a-.55,a+.55);ctx.stroke();
       ctx.restore();
     }
-    if(e.kind===2 && e.stompWarning>0 && e.encounterTactic!=="crusher"){
+    if(e.kind===2 && e.stompWarning>0){
       const progress=1-e.stompWarning/1.0;
       ctx.save();ctx.strokeStyle="#ffa36d";ctx.fillStyle="rgba(255,135,65,.11)";
       ctx.lineWidth=3;ctx.beginPath();
