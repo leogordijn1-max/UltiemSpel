@@ -16,7 +16,8 @@
   });
   function eligible(e){
     return !!e && e.kind===3 && !e.dead &&
-      (e.isFinalBoss===true || (e.variant===2 && !e.isFinalBoss));
+      ((e.isFinalBoss===true && e.variant===3) ||
+        (e.variant===2 && !e.isFinalBoss));
   }
   function stage(e){
     return e.isFinalBoss?Math.max(1,e.finalPhase||1):
