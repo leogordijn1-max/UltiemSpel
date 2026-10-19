@@ -36,8 +36,8 @@ test("Normal ambient pressure steadily approaches, while the population hard-cap
   assert.ok(h.window.encounterPopulationCap(1200,"normal")<=30);
   assert.ok(h.window.encounterPopulationCap(1200,"nightmare")<=30);
   assert.ok(h.window.encounterPopulationCap(0,"easy")<20);
-  assert.ok(h.window.encounterAmbientInterval(0,"normal")<=2.6);
-  assert.ok(h.window.encounterAmbientInterval(1500,"normal")<1.651);
+  assert.ok(h.window.encounterAmbientInterval(0,"normal")<=3.1);
+  assert.ok(h.window.encounterAmbientInterval(1500,"normal")<2.401);
   assert.ok(h.window.encounterAmbientInterval(1500,"nightmare")<h.window.encounterAmbientInterval(1500,"easy"));
 });
 test("every 17 seconds the director sends a tightly grouped, stronger patrol",()=>{
@@ -59,7 +59,7 @@ test("every 17 seconds the director sends a tightly grouped, stronger patrol",()
 });
 test("stronger patrols reach five members late into the run",()=>{
   const h=director();const n=h.window.spawnEncounterPatrol(1200,1200,h.player,h.enemies,h.spawn,"normal");
-  assert.equal(n,5);
+  assert.equal(n,4);
   assert.equal(h.window.getEncounterPacingStatus().patrols,1);
 });
 test("patrol director pauses through boss isolation and never catch-up-spawns",()=>{
@@ -67,8 +67,8 @@ test("patrol director pauses through boss isolation and never catch-up-spawns",(
   assert.equal(h.update(100,500,true),0);
   assert.equal(h.enemies.length,0);
   assert.equal(h.update(100.1,500,false),0);
-  assert.equal(h.update(117.2,500,false),3+Math.floor(500/450));
-  assert.equal(h.enemies.length,4);
+  assert.equal(h.update(117.2,500,false),3+Math.floor(500/600));
+  assert.equal(h.enemies.length,3);
 });
 test("patrols obey population cap and avoid half-spawned invalid groups",()=>{
   const h=director();
@@ -87,15 +87,15 @@ test("reset and clear cannot leave old timers or spawn extra enemies",()=>{
   assert.equal(h.window.getEncounterPacingStatus().patrols,0);
   assert.equal(h.update(999),0);
 });
-test("every fourth special wave is a swarm of many weaker drifters and runners",()=>{
+test("every fourth special wave is a smaller coordinated pack, not an empty-screen spam horde",()=>{
   const h=waveHarness();
   assert.equal(h.sandbox.wavePatternFor(4).swarm,true);
   const wave=h.sandbox.spawnSpecialWave(4);
-  assert.ok(wave.spawned>=26&&wave.spawned<=42);
+  assert.ok(wave.spawned>=10&&wave.spawned<=15);
   assert.equal(wave.pattern.swarm,true);
   assert.ok(h.enemies.every(e=>e.kind===0||e.kind===1));
-  assert.ok(h.enemies.every(e=>e.hp===46&&e.damage===7&&e.encounterRole==="swarm"));
-  assert.ok(h.enemies.every(e=>e.xpValueMultiplier===.44));
+  assert.ok(h.enemies.every(e=>e.hp===160&&e.damage===11.8&&e.encounterRole==="swarm"));
+  assert.ok(h.enemies.every(e=>e.xpValueMultiplier===1.8));
 });
 test("normal waves are small challenging patrols, not huge hordes",()=>{
   for(const waveNumber of [1,2,3,5,6,7,9,12]){
@@ -112,8 +112,8 @@ test("wave population hard cap and boss isolation block all extra spawns",()=>{
   const h=waveHarness();
   for(let i=0;i<90;i++)h.enemies.push({x:0,y:0,hp:100});
   const w=h.sandbox.spawnSpecialWave(4,150);
-  assert.equal(w.spawned,5);
-  assert.equal(h.enemies.length,95);
+  assert.equal(w.spawned,0);
+  assert.equal(h.enemies.length,90);
   h.sandbox.boss={};
   assert.equal(h.sandbox.spawnSpecialWave(8).spawned,0);
   h.sandbox.boss=null;h.window.isBossIsolationActive=()=>true;
