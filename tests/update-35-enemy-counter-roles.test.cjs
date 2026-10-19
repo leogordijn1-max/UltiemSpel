@@ -160,7 +160,7 @@ test("live code integrates physics, tactical team roles and Canvas cues",()=>{
  const html=source("index.html"),enemyCode=source("js/enemies.js"),
   game=source("js/game.js"),render=source("js/render.js"),
   crowd=source("js/crowd-control.js"),tactics=source("js/encounter-tactics.js");
- assert.ok(html.includes("js/enemy-counter-roles.js?v=35"));
+ assert.ok(html.includes("js/enemy-counter-roles.js?v=39-ux-evolution"));
  assert.ok(html.indexOf("js/encounter-tactics.js")<html.indexOf("js/enemy-counter-roles.js"));
  assert.match(enemyCode,/initializeEnemyCounterRole\?\.\(e\)/);
  assert.match(enemyCode,/enemyCounterDamageMultiplier\?\.\(e,damageType,time\)/);
