@@ -141,14 +141,14 @@ function simulate(element="fire"){
       h.context.upgrades[r.weapon]=5;
       h.context.upgrades[r.support]=3;
       h.go(1019);
-      assert.equal(h.run("eligibleEvolutions().length"),0,
-        "second evolution cannot appear before 17:00");
+      assert.equal(h.run("eligibleEvolutions().length"),1,
+        "fully earned second evolution is no longer time-locked");
       h.go(1020);
       assert.equal(h.run("eligibleEvolutions().length"),1);
       assert.equal(h.run("evolveWeapon(eligibleEvolutions()[0],{consumeLevel:false})"),true);
       assert.equal(h.run("Object.values(evolutions).filter(Boolean).length"),2);
       assert.equal(h.run("eligibleEvolutions().length"),0,
-        "standard permits precisely two earned evolutions");
+        "a third evolution still requires an unlocked and fully upgraded third weapon");
       h.go(event.death);
     }
   }
@@ -278,14 +278,16 @@ test("3 bosses plus zero evolution prerequisites does not conjure free evolution
   assert.equal(h.run("Object.values(evolutions).filter(Boolean).length"),0);
   assert.equal(h.context.upgrades.flame||0,0);
 });
-test("no accidental third evolution after legitimately completing two",()=>{
+test("a genuinely earned third weapon can now evolve instead of being hard capped at two",()=>{
   const h=simulate("water");
   h.context.runMode="endless";
   h.context.unlockedWeapons.push(h.context.selectedWeapons[2]);
   h.context.upgrades.whirlpool=5;
   h.context.upgrades.magnet=3;
   h.go(2600);
-  assert.equal(h.run("eligibleEvolutions().length"),0);
+  assert.equal(h.run("eligibleEvolutions().length"),1);
+  assert.equal(h.run("evolveWeapon(eligibleEvolutions()[0],{consumeLevel:false})"),true);
+  assert.equal(h.run("Object.values(evolutions).filter(Boolean).length"),3);
 });
 test("replay uses actual module functions and preserves existing 1x/2x/3x sim timing",()=>{
   const game=source("js/game.js"),elements=source("js/elements.js");
