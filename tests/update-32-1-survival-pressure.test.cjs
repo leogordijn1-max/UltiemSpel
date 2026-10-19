@@ -5,8 +5,8 @@ function tuning(){const window={};vm.runInNewContext(source("js/combat-difficult
 function approx(a,b){assert.ok(Math.abs(a-b)<.000001,String(a)+" != "+String(b));}
 test("Normal contact pressure ramps progressively through +65% without extra spawns",()=>{
  const m=tuning().enemyThreatMultiplier;
- approx(m(0,"normal"),1);approx(m(299,"normal"),1);approx(m(300,"normal"),1);
- approx(m(900,"normal"),1.325);approx(m(1500,"normal"),1.65);approx(m(3000,"normal"),1.65);
+ approx(m(0,"normal"),1);approx(m(239,"normal"),1);approx(m(240,"normal"),1);
+ approx(m(900,"normal"),1+660/1080*.65);approx(m(1500,"normal"),1.65);approx(m(3000,"normal"),1.65);
 });
 test("Easy stays accessible and Nightmare remains dangerous",()=>{
  const m=tuning().enemyThreatMultiplier;
