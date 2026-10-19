@@ -530,13 +530,18 @@ function damage(e, d, origin = player, damageType = "direct") {
   const knockbackY = e.y - origin.y;
   const knockbackLength = Math.hypot(knockbackX, knockbackY);
   if (knockbackLength > 0) {
-    const resistance =
-      e.kind === 3 ? 0.12 : e.kind === 2 ? 0.45 : e.elite ? 0.6 : 1;
-    const force = 145 * resistance * (1 + (upgrades.knockback || 0) * 0.25);
-    e.knockbackX = (e.knockbackX || 0) + (knockbackX / knockbackLength) * force;
-    e.knockbackY = (e.knockbackY || 0) + (knockbackY / knockbackLength) * force;
+    const source=damageType==="water"?"waterHit":"generic";
+    const force=145 * (1+(upgrades.knockback||0)*.25);
+    // All damage types now obey the same physical enemy weight, including
+    // the extra Water/Tidal/Whirlpool forces applied elsewhere.
+    window.applyEnemyCrowdControl?.(e,
+      (knockbackX/knockbackLength)*force,
+      (knockbackY/knockbackLength)*force,source,time);
     if (upgrades.knockback >= 3 && e.kind !== 3) {
-      e.impactSlowUntil = Math.max(e.impactSlowUntil || 0, time + 0.25 + (upgrades.knockback - 2) * 0.12);
+      const resistance=window.enemyCrowdControlResistance?.(e,source,time)??1;
+      const duration=(.25+(upgrades.knockback-2)*.12)*
+        Math.max(.25,resistance);
+      e.impactSlowUntil=Math.max(e.impactSlowUntil||0,time+duration);
     }
   }
 
