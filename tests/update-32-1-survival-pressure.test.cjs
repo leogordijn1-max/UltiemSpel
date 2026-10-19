@@ -35,7 +35,8 @@ test("single Vitality heals slowly and stacked levels have diminishing returns",
 });
 test("enemy spawns, ranged projectiles and enemy skills receive scaled pressure",()=>{
  const enemies=source("js/enemies.js"),game=source("js/game.js");
- assert.ok((enemies.match(/window\.enemyThreatMultiplier\?\.\(growthTime,difficulty\)/g)||[]).length>=2);
+ assert.match(enemies,/window\.enemyThreatMultiplier\?\.\(growthTime,difficulty\)/);
+ assert.match(enemies,/window\.enemyThreatMultiplier\?\.\(currentGrowthTime,currentDifficulty\)/);
  assert.match(game,/const skillDamage=amount\*pressure/);
  assert.match(game,/recordPlayerHit\(skillDamage\)/);
 });
