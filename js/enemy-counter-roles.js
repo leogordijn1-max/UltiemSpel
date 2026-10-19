@@ -9,9 +9,12 @@
   function init(e){
     if(!e||e.dead||e.kind===3||e.summoned)return e;
     // No supernatural counter skill on a fresh, unmutated creature.
-    const role=e.evolutionTier===0?null:e.kind===2?"anchor"
-      :e.kind===1&&e.encounterTactic==="pouncer"?"phaseStalker"
-      :e.kind===6&&e.encounterTactic==="ward"?"warden":null;
+    // Same family + same evolution level = identical supernatural kit.
+    // Tactical squads can cooperate but never randomly unlock a power.
+    const level=e.evolutionLevel||1;
+    const role=e.kind===2&&level>=3?"anchor"
+      :e.kind===1&&level>=3?"phaseStalker"
+      :e.kind===6&&level>=3?"warden":null;
     if(e.counterRole!==role){
       e.counterRole=role;
       if(role==="anchor")e.counterCrackedUntil=0;
