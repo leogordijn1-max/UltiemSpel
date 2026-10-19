@@ -43,24 +43,24 @@ test("boss isolation still suppresses field spawns without delayed catch-up",()=
   assert.equal(w.encounterRhythmCanStart("patrol",400,pack),false);
 });
 
-test("10–14 live ordinary threats are permitted, but never bypass the global 30 cap",()=>{
+test("7–9 tougher live enemies are preferred, with the same global safety cap",()=>{
  const w=environment(),ambient=w.encounterAmbientLimit;
- assert.ok(ambient(0,"normal",[])>=10);
- assert.ok(ambient(1200,"normal",[])>=14);
+ assert.ok(ambient(0,"normal",[])>=7);
+ assert.ok(ambient(1200,"normal",[])>=9);
  assert.ok(ambient(1200,"normal",[])<=w.encounterPopulationCap(1200,"normal"));
  assert.ok(w.encounterPopulationCap(2400,"normal")<=30);
- assert.ok(w.encounterAmbientInterval(0,"normal")<=2.6);
- assert.ok(w.encounterAmbientInterval(1500,"normal")<2);
+ assert.ok(w.encounterAmbientInterval(0,"normal")<=3.1);
+ assert.ok(w.encounterAmbientInterval(1500,"normal")<2.401);
  assert.ok(w.encounterAmbientInterval(1500,"easy")>7);
  assert.ok(w.encounterAmbientLimit(0,"easy",[])<ambient(0,"normal",[]));
 });
 
 test("production ambient mini-packs are capped, originate offscreen and retain boss isolation",()=>{
  const s=src("js/game.js");
- assert.match(s,/Math\.min\(ambientCap-enemies\.length,enemies\.length<5\?4:enemies\.length<9\?2:1\)/);
+ assert.match(s,/Math\.min\(ambientCap-enemies\.length,enemies\.length<4\?2:1\)/);
  assert.match(s,/if \(!boss && !window\.isBossIsolationActive\?\.\(\)\)/);
  assert.match(s,/const ambient=enemySpawn\(\)/);
- assert.match(s,/ambient\.hp\*=1\.55\+\.35\*depth/);
+ assert.match(s,/ambient\.hp\*=1\.08\+\.14\*depth/);
  assert.match(s,/waveTimer = difficulty==="easy"\?70:46/);
  assert.match(s,/Math\.max\(38,48-waveNumber\*2\)/);
  assert.match(src("js/enemies.js"),/function enemyOffscreenSpawn\(/);
