@@ -269,6 +269,7 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
   // locked future kinds into the current run.
   window.initializeEnemyAdaptation?.(e);
   window.initializeEnemyArchetype?.(e);
+  window.initializeEnemyCounterRole?.(e);
   enemies.push(e);
   if (typeof trackDiscovery === "function") {
     const seen = typeof enemyDiscoveryId === "function" ? enemyDiscoveryId(e.kind) : null;
@@ -502,9 +503,11 @@ function damage(e, d, origin = player, damageType = "direct") {
   const guardianResistance = window.guardianWorldResistance?.(e, damageType) ?? 1;
   const archetypeWeakness=window.enemyArchetypeDamageMultiplier?.(
     e,damageType,origin,player) ?? 1;
-  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * packResistance * archetypeWeakness * (window.worldDefenseDamageMultiplier?.(e) ?? 1) * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
+  const counterWeakness=window.enemyCounterDamageMultiplier?.(e,damageType,time)??1;
+  const finalDamage = d * (critical ? criticalMultiplier : 1) * slowedAreaBonus * elementalBonus * defense * worldResistance * guardianResistance * packResistance * archetypeWeakness * counterWeakness * (window.worldDefenseDamageMultiplier?.(e) ?? 1) * (window.bossCombatDamageMultiplier?.(e, time) ?? 1);
   const effectiveDamage = Math.min(Math.max(0, e.hp), Math.max(0, finalDamage));
   e.hp -= finalDamage;
+  if(effectiveDamage>0&&e.hp>0)window.enemyCounterOnDamaged?.(e,damageType,time);
   if (typeof runStats !== "undefined" && typeof recordDamage === "function") {
     recordDamage(runStats, effectiveDamage, damageType, origin, critical);
   }
