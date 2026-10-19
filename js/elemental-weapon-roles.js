@@ -21,7 +21,7 @@
     frost:Object.freeze(["frost","iceShards","glacialPulse"])
   });
   function roleOf(enemy){
-    if(!enemy || enemy.kind===3 || enemy.isFinalBoss || enemy.summoned)
+    if(!enemy || enemy.dead || enemy.kind===3 || enemy.isFinalBoss || enemy.summoned)
       return "excluded";
     if(enemy.kind===2 || enemy.counterRole==="anchor")return "heavy";
     if(enemy.kind===6 || enemy.counterRole==="warden")return "shield";
