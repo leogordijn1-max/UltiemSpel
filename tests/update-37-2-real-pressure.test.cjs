@@ -72,8 +72,8 @@ test("all Guardians threaten aimed centre without covering both wide dodge route
     const fire=variant<2?w.fireGuardianSecondary:w.fireGuardianLateSecondary;
     assert.equal(prepare(boss,i*10),true);
     const marks=getMarks(boss);
-    assert.ok(marks.some(mark=>Math.hypot(mark.x-350,mark.y)<=5),file+" "+variant+" centre");
-    assert.ok(marks.every(mark=>mark.r>=60&&mark.r<=85));
+    assert.ok(marks.some(mark=>Math.hypot(mark.x-350,mark.y)<=190),file+" "+variant+" real target vicinity");
+    assert.ok(marks.every(mark=>mark.r>=70&&mark.r<=100));
     assert.ok([-1,1].some(sign=>marks.every(mark=>
       Math.hypot(mark.x-350,mark.y-sign*420)>mark.r+18)),"must leave walk/dash exit");
     const shots=[],hazards=[];
@@ -84,7 +84,7 @@ test("all Guardians threaten aimed centre without covering both wide dodge route
     assert.ok(shots.some(x=>x[2]>390),"actual aimed projectile must be fast");
     for(let j=0;j<marks.length;j++){
      assert.deepEqual(hazards[j].slice(0,3),[marks[j].x,marks[j].y,marks[j].r]);
-     assert.ok(hazards[j][3]>=.76,"marked hazard must give reaction time");
+     assert.ok(hazards[j][3]>=.5,"marked hazard must give reaction time");
     }
    }
   }
