@@ -21,28 +21,24 @@ test("technical completion must NOT falsely certify a release without three real
   assert.equal(manual.length,6);
   assert.ok(manual.every(c=>c.status==="OPEN"));
   assert.ok(manual.some(c=>c.id==="THREE_RECORDED_RUNS"));
-  assert.ok(manual.some(c=>c.id==="EARNED_2_EVOLUTIONS"));
+  assert.ok(manual.some(c=>c.id==="EARNED_EVOLUTIONS"));
 });
-test("Update 30 report explicitly keeps browser acceptance OPEN and sets verified-ready roadmap",()=>{
-  const report=src("MILESTONE-30-REVIEW.md");
-  assert.match(report,/20\/20 geplande updates afgerond/);
-  assert.match(report,/GEVERIFIEERDE SPEELBARE RELEASE: NOG NIET VRIJGEGEVEN/);
-  assert.match(report,/6 HANDMATIGE RELEASEBLOKKADES OPEN/);
-  for(let i=31;i<=40;i++)assert.ok(report.includes("**"+i+"**"),"missing roadmap Update "+i);
-  assert.match(report,/tijdskiptests|tijdsprongen/i);
-  assert.match(report,/twee evoluties/i);
+test("concise canonical documents preserve road map and manual NO-GO gate",()=>{
+  const report=src("ROADMAP-31-50.md"),milestone=src("MILESTONE-30.md");
   assert.match(report,/NO-GO/);
+  assert.match(report,/39/);assert.match(report,/40/);
+  assert.match(milestone,/10 technical checks/);
+  assert.match(milestone,/6 manual release gates/);
+  assert.match(milestone,/three.*elemental weapon evolutions/i);
 });
-test("current README no longer promises three evolutions or legacy selectable weapons",()=>{
-  const intro=src("README.md").split("## Historisch update-archief")[0];
-  assert.match(intro,/Maximaal twee evoluties/);
-  assert.match(intro,/Fire.*Flame Cone, Fireball, Flame Orbit/);
-  assert.match(intro,/Water.*Water Bolt, Tidal Wave, Whirlpool/);
-  assert.match(intro,/Frost.*Frost Orb, Ice Shards, Glacial Pulse/);
-  assert.match(intro,/The Last Meme/);
-  assert.match(intro,/25:00/);
-  assert.doesNotMatch(intro,/derde evolution/);
-  assert.match(intro,/Nog niet|nog niet/i);
+test("README documents the actual 3×3 element loadout and no cap",()=>{
+ const intro=src("README.md");
+ assert.match(intro,/Fire.*Flame Cone, Fireball, Flame Orbit/);
+ assert.match(intro,/Water.*Water Bolt, Tidal Wave, Whirlpool/);
+ assert.match(intro,/Frost.*Frost Orb, Ice Shards, Glacial Pulse/);
+ assert.match(intro,/The Last Meme/);
+ assert.match(intro,/No fixed 10\/17-minute gate; no two-evolution cap/);
+ assert.match(intro,/not.*release|release gates/i);
 });
 test("GitHub Actions enforces actual regression suite AND technical milestone audit",()=>{
   const ci=src(".github/workflows/shadow-survivor-tests.yml");
@@ -50,12 +46,10 @@ test("GitHub Actions enforces actual regression suite AND technical milestone au
   assert.match(ci,/node scripts\/milestone-30-audit\.cjs/);
   assert.match(ci,/Check JavaScript syntax/);
 });
-test("manual gates can only be established from independent real playtest evidence",()=>{
-  const qa=src("NORMAL-RUN-QA.md"),report=src("MILESTONE-30-REVIEW.md");
-  assert.match(qa,/Nog geen bevestigde volledige menselijke/);
-  assert.match(qa,/Open: browsertest/);
-  assert.match(report,/gescripte campagne-replay/);
-  assert.match(report,/werkelijk verdiende XP/i);
-  assert.match(report,/FPS\/P95/);
-  assert.match(report,/Drie geregistreerde complete runs/);
+test("manual gates require real Frost/Fire/Water post-change playtests",()=>{
+  const qa=src("NORMAL-RUN-QA.md"),roadmap=src("ROADMAP-31-50.md");
+  assert.match(qa,/29 hits/);
+  assert.match(qa,/three distinct full post-change element runs|pending three distinct/i);
+  assert.match(qa,/FPS/);
+  assert.match(roadmap,/Not release-approved/);
 });
