@@ -22,7 +22,7 @@ const x=q.x+Math.cos(q.a+s.round*.85)*110,y=q.y+Math.sin(q.a+s.round*.85)*110;
 h.hazard?.(x,y,95,.48,13+phase(e));h.puff?.(e.x,e.y,"#b38bff",13);
 }else if(s.mode==="phantoms"){
 // Phantom Execution is a rotating execution seal, not another flank crossfire.
-// Six glyphs surround the locked position. Each beat leaves a broad marked
+// Six overlapping glyphs surround the locked position. Each beat leaves a narrow marked
 // opening that rotates 90 degrees, inviting an actual movement decision.
 const rotation=q.a+s.round*Math.PI/2;
 const radius=205;
@@ -30,7 +30,7 @@ for(let i=0;i<8;i++){
   if(i===0||i===1)continue; // two adjacent safe sectors
   const a=rotation+i*TAU/8;
   const x=q.x+Math.cos(a)*radius,y=q.y+Math.sin(a)*radius;
-  h.hazard?.(x,y,74,.44,12+phase(e));
+  h.hazard?.(x,y,106,.44,14+phase(e)*2);
   h.puff?.(x,y,"#cf9bff",7);
 }
 // A delayed centre strike makes standing still unsafe, without unavoidable
@@ -91,7 +91,7 @@ else if(s.mode==="phantoms"){
     if(i===0||i===1)continue;
     const a=rotation+i*TAU/8;
     const px=q.x+Math.cos(a)*205,py=q.y+Math.sin(a)*205;
-    circle(px,py,74);
+    circle(px,py,106);
     ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(px,py);ctx.stroke();
   }
   circle(q.x,q.y,67);
