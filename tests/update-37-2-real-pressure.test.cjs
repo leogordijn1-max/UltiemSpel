@@ -32,7 +32,8 @@ test("Normal enemies gain pursuit while Easy stays unchanged and Guardians are i
 });
 test("Normal enemies grow more threatening in damage without spawning more monsters",()=>{
  const w=load("js/combat-difficulty.js");
- assert.equal(w.enemyThreatMultiplier(299,"normal"),1);
+ assert.equal(w.enemyThreatMultiplier(239,"normal"),1);
+ assert.ok(w.enemyThreatMultiplier(299,"normal")>1);
  assert.equal(w.enemyThreatMultiplier(1500,"normal"),1.65);
  assert.equal(w.enemyThreatMultiplier(1500,"easy"),1);
  const n=w.getCombatDifficultyTuning("normal"),h=w.getCombatDifficultyTuning("nightmare");
