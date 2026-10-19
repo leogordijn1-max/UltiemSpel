@@ -24,6 +24,10 @@
 
 ---
 
+### Nieuw: technische Update 32.1 balance-hotfix na tweede live Water-test (19 oktober 2026)
+
+De maker leverde ná Update 32 een nieuwe Normal Water JSON aan: **27:01 non-sandbox Victory, 52 hits en 843,71 totale schade maar 242,53/260 HP** vlak voor de overwinning. **Zombie Mike komt nu wél dichterbij**, maar de gewone enemies doen nog veel te weinig damage, ook bij 3× speed; Water Bolt blijft volgens maker te sterk. Deze specifieke run kreeg twee dubbele healthbossrewards en eindigde op **Vitality 4** (oude regen 3,2HP/s); maker noemt ook dat **Vitality 1 in het algemeen al veel te goed** is. **Hotfix 32.1 gebouwd**: vertraagde, afvlakkende Vitality-heal (na 3s safe; level 1 0,35 HP/s, level 4 ~0,89), Normal gewone enemy damage groeit na minuut 5 geleidelijk naar +50% bij 25min (geen extra hordes/boss-ultimates), Water Bolt Rapid Casting minimumcooldown 0,78s plus evolved pierce 4 i.p.v. 5. Extra healing/regen-QA-meetpunten toegevoegd. **Dit is een code-hotfix, nog géén bewezen nieuwe moeilijke browserrun.** Bron/acceptatie in [UPDATE-32-1-SURVIVAL-BALANCE.md](UPDATE-32-1-SURVIVAL-BALANCE.md); 33 blijft Beau/Shade. **Update 31 live PASS, 32/32.1 CODE PASS waar CI bevestigd; live difficulty-gate OPEN.**
+
 ## FASE 2 — UPDATES 31–40: VERIFIED PLAYABLE RUN
 
 **Mijlpaaldoel Update 40:** de **echte** Normal-run kunnen spelen, meten, controleren en verbeteren. Niet alleen tijdskiptests: minstens **drie geregistreerde complete browserruns**, verdeeld over Fire/Water/Frost, met twee **daadwerkelijk verdiende** evoluties, faire solo-bossfights, werkelijk save-/Endless-gedrag en meetbare FPS/frametimes. De 6 gates uit Update 30 zijn releaseblokkades totdat er werkelijk bewijs is.
