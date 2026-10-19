@@ -269,10 +269,9 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
   // locked future kinds into the current run.
   window.initializeEnemyAdaptation?.(e);
   window.initializeEnemyArchetype?.(e);
-  window.initializeEnemyCounterRole?.(e);
-  // The fallen Guardians/changed world trigger recognizable new enemy
-  // generations. Existing game-duration growth is intentionally minimal.
+  // Boss-defeat mutation is determined BEFORE selecting counter skills.
   window.applyEnemyEvolution?.(e,bossesDefeated,difficulty);
+  window.initializeEnemyCounterRole?.(e);
   enemies.push(e);
   if (typeof trackDiscovery === "function") {
     const seen = typeof enemyDiscoveryId === "function" ? enemyDiscoveryId(e.kind) : null;
