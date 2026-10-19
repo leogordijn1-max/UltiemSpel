@@ -8,7 +8,8 @@
   });
   function init(e){
     if(!e||e.dead||e.kind===3||e.summoned)return e;
-    const role=e.kind===2?"anchor"
+    // No supernatural counter skill on a fresh, unmutated creature.
+    const role=e.evolutionTier===0?null:e.kind===2?"anchor"
       :e.kind===1&&e.encounterTactic==="pouncer"?"phaseStalker"
       :e.kind===6&&e.encounterTactic==="ward"?"warden":null;
     if(e.counterRole!==role){
