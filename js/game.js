@@ -911,16 +911,23 @@ function update(dt) {
       spawn -= dt;
       const interval = window.encounterAmbientInterval?.(growthTime,difficulty) ?? 6;
       while (spawn <= 0 && enemies.length < ambientCap) {
-        const ambient=enemySpawn();
-        if(!ambient)break;
-        if(difficulty!=="easy"){
-          // Ambient threats should cross into danger rather than evaporate
-          // before reaching the player. No hidden spawn near the player.
-          const depth=Math.min(1,growthTime/750);
-          ambient.hp*=1.55+.35*depth;
-          if(ambient.kind!==1)ambient.speed*=1.12;
-          ambient.encounterRole ||= "ambient";
+        // Each normal entry is a small OFFSCREEN wavelet, not one disposable
+        // mob that an automatic weapon kills before it reaches the arena.
+        const count=difficulty==="easy"?1:
+          Math.min(ambientCap-enemies.length,enemies.length<5?4:enemies.length<9?2:1);
+        let added=0;
+        for(let i=0;i<count;i++){
+          const ambient=enemySpawn();
+          if(!ambient)break;
+          if(difficulty!=="easy"){
+            const depth=Math.min(1,growthTime/750);
+            ambient.hp*=1.55+.35*depth;
+            if(ambient.kind!==1)ambient.speed*=1.12;
+            ambient.encounterRole ||= "ambient";
+          }
+          added++;
         }
+        if(!added)break;
         spawn += interval;
       }
     }
