@@ -151,8 +151,8 @@ test("DOM CSS and render loop prioritize boss cues without mutating gameplay",()
   assert.match(index,/id="bossCueFill"/);
   assert.ok(index.indexOf("js/guardian-arena-powers.js")<
     index.indexOf("js/combat-hud.js"));
-  assert.match(game,/combatHudDescribe\?\.\(boss,player,time,dashCooldown\)/);
-  assert.match(game,/combatCue\.hidden=!cue\?\.visible/);
+  assert.match(game,/const combatCue=\$\("bossCombatCue"\)/);
+  assert.match(game,/if\(combatCue\)combatCue\.hidden=true/);
   assert.match(game,/resetCombatHud\?\.\(\)/);
   assert.match(render,/drawCombatHudEscape\?\.\(ctx,e,player,time,graphicsQuality\)/);
   assert.match(css,/#bossCombatCue\[hidden\]/);
