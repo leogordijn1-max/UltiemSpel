@@ -908,7 +908,7 @@ function addBossProjectile(e, angle, speed, damage = 13, type = "shadow") {
     x: e.x, y: e.y,
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
-    r: type === "fish" ? 8 : 7,
+    r: type === "fish" ? 8 : type==="memeOrbit"?13:7,
     life: 4.5,
     damage: damage * profile.enemyDamage,
     visualType: type,
