@@ -20,6 +20,8 @@
         multiplier*=.42;
     }
     if(source==="tidalWave")multiplier*=.85;
+    // Heavy anchors and a living nearby Warden share the SAME Water physics.
+    multiplier*=window.enemyCounterMovementFactor?.(enemy,source,now)??1;
     return Math.max(0,Math.min(1,multiplier));
   }
   function push(enemy,x,y,source="generic",now=0){
