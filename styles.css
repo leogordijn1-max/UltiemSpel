@@ -1015,3 +1015,66 @@ input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   #bossCueFill { transition: none; }
 }
+
+/* UX cleanup: a player reads silhouettes and warnings, not paragraphs. */
+#hud {
+  width:min(246px,calc(100vw - 36px));
+  padding:12px 13px;
+  letter-spacing:.55px;
+}
+#stats{font-size:12px;color:#f1ecff;line-height:1.45;letter-spacing:.3px}
+#worldFront{
+  margin-top:5px;padding:5px 7px;
+  font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#evolutionProgress{font-size:11px;margin-top:5px}
+#characterHud{font-size:10px;line-height:1.3}
+#loadout{display:none !important} /* Fully visible in PAUSE → CURRENT BUILD. */
+#hint{display:none} /* P / Esc → CONTROLS still explains every key. */
+#bossCombatCue{display:none !important} /* Warnings are in the actual arena. */
+#waveHud{margin-top:6px;font-size:11px}
+#waveText{line-height:1.25}
+#notifications{max-width:min(265px,28vw)}
+.toast{font-size:11px;line-height:1.25}
+#choices{align-items:stretch;gap:12px}
+/* All actual upgrade/evolution cards have the same footprint, independent of
+   description length or whether an icon is available. */
+#choices > button.choice{
+  flex:0 0 202px;
+  width:202px;
+  height:202px;
+  min-height:202px;
+  max-height:202px;
+  gap:9px;
+  overflow:hidden;
+  align-items:stretch;
+}
+#choices > button.choice b{
+  font-size:17px;line-height:1.25;
+  min-height:22px;max-height:44px;overflow:hidden;
+}
+#choices > button.choice small{
+  font-size:12px;line-height:1.3;
+  overflow-wrap:anywhere;
+}
+#choices > button.choice .choice-category{
+  font-size:10px;min-height:25px;letter-spacing:.05em;
+}
+#choices > button.choice .choice-primary{
+  color:#f0edff;font-weight:700;max-height:43px;
+  overflow:hidden;
+}
+#choices > button.choice .evolution-route{
+  margin-top:auto;font-size:10px;line-height:1.2;max-height:38px;
+  overflow:hidden;color:#e6d79e;
+}
+#choices > button.choice .choice-art{height:44px;width:44px;flex-shrink:0}
+@media(max-width:700px){
+  #choices > button.choice{
+    flex:1 1 185px;
+    width:min(202px,100%);
+    height:202px;
+    min-height:202px;
+  }
+  #hud{width:min(225px,calc(100vw - 36px))}
+}
