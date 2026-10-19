@@ -36,6 +36,8 @@ function checkSavedAchievements() {
 // A victory saves immediately; continuing Endless later updates the same run, not a second run.
 let recordedRunId = null;
 let runRewardSettled = 0;
+// Update 37: an Endless death closes the same run record permanently.
+let endlessRecordClosed = false;
 const FINAL_VICTORY_BONUS = 12;
 
 function grantFinalVictory() {
@@ -55,7 +57,7 @@ function recordRun(outcome = "defeat") {
   const mode = typeof runMode !== "undefined" && runMode === "endless" ? "endless" : "standard";
   const won = typeof victoryClaimed !== "undefined" && victoryClaimed === true;
   // Never count a normal run twice. Victory may later be updated on an Endless continuation.
-  if (wasRecorded && !(mode === "endless" && won)) return false;
+  if (wasRecorded && (!(mode === "endless" && won) || endlessRecordClosed)) return false;
 
   const survived = Math.floor(time);
   const pointsForPerformance = Math.floor(kills / 100) + bossesDefeated * 3;
@@ -101,6 +103,8 @@ function recordRun(outcome = "defeat") {
     metaProgress.bestFlawlessSurvival = Math.max(metaProgress.bestFlawlessSurvival || 0, survived);
     if (survived >= 300) unlockAchievement("flawless", "Untouched Run");
   }
+  // Repeated Game Over/end callbacks must not award or re-write a second time.
+  if (mode === "endless" && won && outcome === "defeat") endlessRecordClosed = true;
   saveMetaProgress();
   return true;
 }
