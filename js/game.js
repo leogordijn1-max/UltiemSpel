@@ -175,6 +175,7 @@ function reset() {
   victoryClaimed = false;
   recordedRunId = null;
   runRewardSettled = 0;
+  endlessRecordClosed = false;
   bossesDefeated = 0;
   bossRewardPoints = 0;
   runDamageTaken = 0;
