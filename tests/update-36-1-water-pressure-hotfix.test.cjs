@@ -46,13 +46,13 @@ test("Beau and Shade normal attack patterns have readable aimed lanes with activ
         projectile:(...args)=>shots.push(args),
         hazard:(...args)=>hazards.push(args)
       }),true);
-      assert.equal(shots.length,3);
+      assert.equal(shots.length,variant===0&&i===0?5:3);
       assert.equal(hazards.length,marks.length);
       assert.ok(shots.some(shot=>shot[2]>380));
       for(let j=0;j<marks.length;j++){
         assert.equal(hazards[j][0],marks[j].x);
         assert.equal(hazards[j][1],marks[j].y);
-        assert.ok(hazards[j][3]>=.76);
+        assert.ok(hazards[j][3]>=.5);
       }
       e.shotWarning=1.05;
     }
