@@ -82,15 +82,15 @@ test("two evolution-ready levels are attainable before 25m without restoring spa
     "25-minute XP should allow at least 17 level-up choices");
   assert.ok(h.window.encounterPopulationCap(1200)<=30);
 });
-test("second evolution milestone remains 17m, before The Last Meme at 25m",()=>{
+test("evolutions no longer have a 10m/17m clock lock; final boss still starts at 25m",()=>{
   const context=vm.createContext({Math});
   vm.runInContext(read("js/upgrades.js"),context);
   vm.runInContext("var evolutions={}",context);
-  assert.equal(vm.runInContext("nextEvolutionTime()",context),600);
+  assert.equal(vm.runInContext("nextEvolutionTime()",context),0);
   vm.runInContext("evolutions.first=true",context);
-  assert.equal(vm.runInContext("nextEvolutionTime()",context),1020);
+  assert.equal(vm.runInContext("nextEvolutionTime()",context),0);
   vm.runInContext("evolutions.second=true",context);
-  assert.equal(vm.runInContext("nextEvolutionTime()",context),Infinity);
+  assert.equal(vm.runInContext("nextEvolutionTime()",context),0);
   assert.equal(vm.runInContext("FINAL_BOSS_TIME",sandbox().context),1500);
   assert.match(read("js/game.js"),/const pickupRange =[\s\S]{0,35}115 \+ upgrades\.magnet/);
 });
