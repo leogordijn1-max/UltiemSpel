@@ -21,14 +21,15 @@ test("Frost Orb fires exactly one homing projectile at every level and cannot pi
     let nearestEnemy = () => ({ x: 120, y: 20 });
     let playSfx = () => {};
   `, context);
+  load(context, "js/elemental-weapon-roles.js");
   load(context, "js/weapons.js");
 
   const expected = [
-    { level: 1, damage: 28, radius: 100, cooldown: 3.92 },
-    { level: 2, damage: 32, radius: 112, cooldown: 3.74 },
-    { level: 3, damage: 36, radius: 124, cooldown: 3.56 },
-    { level: 4, damage: 40, radius: 136, cooldown: 3.38 },
-    { level: 5, damage: 44, radius: 148, cooldown: 3.2 },
+    { level: 1, damage: 28, radius: 92, cooldown: 4.14 },
+    { level: 2, damage: 32, radius: 102, cooldown: 3.98 },
+    { level: 3, damage: 36, radius: 112, cooldown: 3.82 },
+    { level: 4, damage: 40, radius: 122, cooldown: 3.66 },
+    { level: 5, damage: 44, radius: 132, cooldown: 3.50 },
   ];
   for (const expectedLevel of expected) {
     // Even Phantom Shots level 5 must not enable Frost piercing.
@@ -42,7 +43,7 @@ test("Frost Orb fires exactly one homing projectile at every level and cannot pi
     assert.equal(actual.damage, expectedLevel.damage);
     assert.equal(actual.radius, expectedLevel.radius);
     assert.ok(Math.abs(actual.cooldown - expectedLevel.cooldown) < 1e-10);
-    assert.equal(actual.turnRate, 4, "keep the existing homing");
+    assert.equal(actual.turnRate, 3.3, "keep the existing homing");
   }
 });
 
@@ -55,6 +56,7 @@ test("Frost Orb also stays single-hit after Glacier evolution", () => {
     let globalDamageMultiplier = () => 1.5;
     let nearestEnemy = () => ({ x: 95, y: 0 });
   `, context);
+  load(context, "js/elemental-weapon-roles.js");
   load(context, "js/weapons.js");
   vm.runInContext("fireFrostOrb()", context);
   const result = JSON.parse(vm.runInContext(
@@ -76,9 +78,10 @@ test("normal Frost Orb makes one modest splash without damaging its direct targe
     let enemyHitRadius = () => 10;
     let damage = (enemy, amount, origin, type) => hits.push({ enemy, amount, type });
   `, context);
+  load(context, "js/elemental-weapon-roles.js");
   load(context, "js/weapons.js");
   vm.runInContext(
-    "applyFrostBurst(0, 0, { d: 44, frostRadius: 148, hitTarget: primary })",
+    "applyFrostBurst(0, 0, { d: 44, frostRadius: 132, hitTarget: primary })",
     context,
   );
   const state = JSON.parse(vm.runInContext(
@@ -86,12 +89,12 @@ test("normal Frost Orb makes one modest splash without damaging its direct targe
     context,
   ));
   assert.equal(state.count, 1);
-  assert.equal(state.amount, 11); // 25% splash
+  assert.equal(state.amount, 44*.22); // 22% splash
   assert.equal(state.enemy, true);
   assert.ok(state.primarySlow > 100);
   assert.ok(state.nearbySlow > 100);
   assert.equal(state.outsideSlow, 0);
-  assert.equal(state.radius, 148);
+  assert.equal(state.radius, 132);
 });
 
 test("Glacier keeps a bigger chill radius but does not restore multi-hit piercing", () => {
@@ -99,24 +102,25 @@ test("Glacier keeps a bigger chill radius but does not restore multi-hit piercin
   vm.runInContext(`
     let time = 100, upgrades = { frost: 5 };
     let evolutions = { glacier: true }, frostZones = [], hits = [];
-    let primary = { x: 0, y: 0 }, adjacent = { x: 175, y: 0 };
+    let primary = { x: 0, y: 0 }, adjacent = { x: 145, y: 0 };
     let nearbyEnemies = () => [primary, adjacent];
     let enemyHitRadius = () => 10;
     let damage = (enemy, amount, origin, type) => hits.push({ enemy, amount, type });
   `, context);
+  load(context, "js/elemental-weapon-roles.js");
   load(context, "js/weapons.js");
   vm.runInContext(
-    "applyFrostBurst(0, 0, { d: 44, frostRadius: 148, hitTarget: primary })",
+    "applyFrostBurst(0, 0, { d: 44, frostRadius: 132, hitTarget: primary })",
     context,
   );
   const state = JSON.parse(vm.runInContext(
     "JSON.stringify({ radius:frostZones[0].radius, splash:hits[0].amount, count:hits.length, glacierSlow:adjacent.frostUntil })",
     context,
   ));
-  assert.equal(state.radius, 185);
-  assert.equal(state.splash, 44 * 0.32);
+  assert.equal(state.radius, 132*1.18);
+  assert.equal(state.splash, 44 * 0.30);
   assert.equal(state.count, 1);
-  assert.equal(state.glacierSlow, 105.2);
+  assert.equal(state.glacierSlow, 103.2);
 });
 
 test("Frost upgrade cards accurately describe damage, radius and cooldown", () => {
@@ -127,11 +131,11 @@ test("Frost upgrade cards accurately describe damage, radius and cooldown", () =
     context,
   ));
   assert.match(level1, /28 base damage/);
-  assert.match(level1, /100px chill radius/);
-  assert.match(level1, /3\.92s cooldown/);
+  assert.match(level1, /92px chill radius/);
+  assert.match(level1, /2\.65s between shots/);
   assert.match(level5, /44 base damage/);
-  assert.match(level5, /148px chill radius/);
-  assert.match(level5, /3\.20s cooldown/);
+  assert.match(level5, /132px chill radius/);
+  assert.match(level5, /repeat slow diminishes/);
   assert.match(level5, /no pierce/);
 });
 
@@ -142,6 +146,7 @@ test("Frost Orb does not create a projectile when no target is nearby", () => {
     let player = { x: 0, y: 0 }, bullets = [], evolutions = {};
     let nearestEnemy = () => null;
   `, context);
+  load(context, "js/elemental-weapon-roles.js");
   load(context, "js/weapons.js");
   vm.runInContext("fireFrostOrb()", context);
   assert.equal(vm.runInContext("bullets.length", context), 0);
