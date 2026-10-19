@@ -104,7 +104,7 @@ test("game uses real skills for patrols, waves and rendering, but never boss min
   assert.match(read("js/enemies.js"),/assignEncounterTactic/);
   assert.match(read("js/encounter-pacing.js"),/assignEncounterTactic/);
   assert.match(read("js/game.js"),/updateEncounterTactic/);
-  assert.match(read("js/game.js"),/encounterTacticVolley/);
+  assert.doesNotMatch(read("js/game.js"),/window\.encounterTacticVolley\?\.\(e,enemyShots,player\)/);
   assert.match(read("js/enemies.js"),/encounterTacticDamageMultiplier/);
   assert.match(read("js/render.js"),/drawEncounterTactic/);
   assert.match(read("index.html"),/encounter-tactics\.js/);
