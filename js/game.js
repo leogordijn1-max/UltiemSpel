@@ -1318,7 +1318,7 @@ function update(dt) {
             (e.isFinalBoss
               ? 375 + e.finalPhase * 17
               : e.variant === 0
-                ? 360
+                ? 505
                 : e.variant === 1
                   ? 310
                   : 395) * (e.phaseThree ? 1.31 : e.phaseTwo ? 1.18 : 1);
@@ -1331,7 +1331,7 @@ function update(dt) {
               ? 0.46
               : e.variant === 1
                 ? 0.54
-                : 0.42;
+                : e.variant===0 ? .55 : .42;
             e.chargeCooldown = e.isFinalBoss
               ? 8.7 - (e.finalPhase - 1) * 0.7
               : (e.variant === 1 ? 8.7 : e.variant === 2 ? 7.8 : 8) *
