@@ -73,43 +73,41 @@
     // Firing before the full wind-up would bypass the readable marker.
     if(!valid(e)||!e.secondaryVolley||e.shotWarning>0)return false;
     const g=geometry(e),p=e.secondaryVolley;
-    const stage=phase(e),speed=290+stage*12;
+    // Fewer, faster, more intentional lanes: avoid a wall of overlapping rays.
+    const stage=phase(e),speed=330+stage*16;
     // Only one attack replaces the NORMAL volley; no extra enemies or
     // recurring timers. All hazards are delayed, allowing an additional dodge.
     if(g.mode==="fangSweep") {
-      for(const off of [-.44,-.21,0,.21,.44])
+      for(const off of [-.38,0,.38])
         hooks.projectile?.(e,g.angle+off,
-          speed+(Math.abs(off)>.4?-52:18),10+stage,"fish");
+          speed+(off===0?80:-42),12+stage*2,"fish");
     } else if(g.mode==="houndCrossfire"){
-      for(const off of [-.17,0,.17])
-        hooks.projectile?.(e,g.angle+off,speed+23,11+stage,"fish");
+      hooks.projectile?.(e,g.angle,speed+88,13+stage*2,"fish");
       for(const side of [-1,1]) {
         const phantom=source(e,g,side);
         const angle=Math.atan2(g.ty-phantom.y,g.tx-phantom.x);
-        hooks.projectile?.(phantom,angle,speed-12,10+stage,"fish");
+        hooks.projectile?.(phantom,angle,speed-25,12+stage*2,"fish");
         hooks.puff?.(phantom.x,phantom.y,"#ffd095",5);
       }
     } else if(g.mode==="mourningLances") {
       // Distinct fast centre spear + two slower flanks, not a blind ring spam.
-      for(const [off,delta] of [[-.33,-45],[0,95],[.33,-45]])
-        hooks.projectile?.(e,g.angle+off,speed+delta,11+stage,"shadow");
-      for(const off of [-.77,.77])
-        hooks.projectile?.(e,g.angle+off,speed-95,9+stage,"shadow");
+      for(const [off,delta] of [[-.36,-65],[0,110],[.36,-65]])
+        hooks.projectile?.(e,g.angle+off,speed+delta,12+stage*2,"shadow");
     } else {
       // A paired apparition attack. Both mirrors and both marked flanks
       // are visible for the entire wind-up; the centre remains an escape.
-      hooks.projectile?.(e,g.angle,speed+30,11+stage,"shadow");
+      hooks.projectile?.(e,g.angle,speed+88,13+stage*2,"shadow");
       for(const side of [-1,1]){
         const mirror=source(e,g,side);
         hooks.projectile?.(mirror,
-          Math.atan2(g.ty-mirror.y,g.tx-mirror.x),speed-17,10+stage,"shadow");
+          Math.atan2(g.ty-mirror.y,g.tx-mirror.x),speed-27,12+stage*2,"shadow");
         hooks.puff?.(mirror.x,mirror.y,"#c5a0ff",6);
       }
     }
     for(const mark of points(e)){
       // The marker has been visible since prepare(); the same coordinates
       // drive collision, using the existing real bossHazards queue.
-      hooks.hazard?.(mark.x,mark.y,mark.r,.76,10+stage*2);
+      hooks.hazard?.(mark.x,mark.y,mark.r,.76,13+stage*2);
     }
     hooks.puff?.(e.x,e.y,e.variant===0?"#ffcb91":"#c5a0ff",10);
     // Guard against the next large showcase starting during our late trap.
@@ -129,7 +127,7 @@
     ctx.save();
     ctx.strokeStyle=beau?"#ffbc79":"#caa1ff";
     ctx.fillStyle=beau?"#ffbc79":"#caa1ff";
-    ctx.globalAlpha=.86;
+    ctx.globalAlpha=.95;
     ctx.lineWidth=low?3:4;
     ctx.setLineDash([10,7]);
     if(!low){ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=10;}
@@ -143,7 +141,7 @@
     };
     for(const {x,y,r} of points(e))mark(x,y,r);
     if(g.mode==="fangSweep"||g.mode==="mourningLances"){
-      const spreads=g.mode==="fangSweep"?[-.44,-.21,0,.21,.44]:[-.77,-.33,0,.33,.77];
+      const spreads=[-.38,0,.38];
       for(const angle of spreads){
         const a=g.angle+angle;
         line(e.x,e.y,e.x+Math.cos(a)*430,e.y+Math.sin(a)*430);
