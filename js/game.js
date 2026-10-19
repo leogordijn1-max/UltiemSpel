@@ -560,6 +560,7 @@ function showVictory() {
   finalBossDefeated = true;
   if (!grantFinalVictory()) return false;
   window.completeWorldConquest?.();
+  const conquestPersistent = window.getWorldConquest?.().saved !== false;
   paused = true;
   choiceScreenOpen = true;
   gameState = "victory";
@@ -577,7 +578,7 @@ function showVictory() {
   if (typeof playSfx === "function") playSfx("victory");
   panel(
     "VICTORY · THE NIGHT IS YOURS",
-    `You defeated THE LAST MEME!<br><b>World conquered:</b> ${window.getWorldConquest?.().invading?.toUpperCase() || "UNKNOWN"} · 100% PERMANENT<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
+    `You defeated THE LAST MEME!<br><b>World conquered:</b> ${window.getWorldConquest?.().invading?.toUpperCase() || "UNKNOWN"} · ${conquestPersistent ? "100% PERMANENT" : "100% THIS RUN ONLY · SAVE UNAVAILABLE"}<br><b>Survived:</b> ${survived} · <b>Level:</b> ${level} · <b>Kills:</b> ${kills}<br><b>Bosses:</b> ${bossesDefeated} · <b>Evolutions:</b> ${evolvedCount}<br><b>Weapons:</b> ${currentNames}<br><b>Victory bonus:</b> +${FINAL_VICTORY_BONUS} permanent points<br><b>Endless Mode:</b> UNLOCKED${recentAchievements.length ? `<br><b>Achievements:</b> ${recentAchievements.join(", ")}` : ""}`,
     (container) => {
       const continueButton = document.createElement("button");
       continueButton.className = "victory-continue";
