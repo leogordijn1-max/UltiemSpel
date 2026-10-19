@@ -104,7 +104,7 @@ test("Meme Pixel Rip marks two diagonal side strikes and paints its fast central
  assert.equal(shots.length,3);
  assert.ok(shots[1].speed>shots[0].speed);
  h.boss.shotWarning=0;h.window.fireGuardianLateSecondary(h.boss,h.hooks,1501.2);
- assert.equal(h.shots.length,3);assert.equal(h.hazards.length,2);
+ assert.equal(h.shots.length,3);assert.equal(h.hazards.length,3);
  assert.ok(h.shots.every(s=>s[4]==="rift"));
 });
 test("Meme Glitch Double uses two announced mirrors and leaves side dodge lanes",()=>{
@@ -121,7 +121,7 @@ test("Meme Glitch Double uses two announced mirrors and leaves side dodge lanes"
  assert.ok(marks.every(m=>m.y===0));
  h.boss.shotWarning=0;
  h.window.fireGuardianLateSecondary(h.boss,h.hooks,11);
- assert.equal(h.shots.length,3);assert.equal(h.hazards.length,2);
+ assert.equal(h.shots.length,3);assert.equal(h.hazards.length,3);
  assert.ok(h.puffs.length>=3);
  assert.ok(h.boss.memeFight.nextAt>11);
 });
