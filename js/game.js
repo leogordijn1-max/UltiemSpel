@@ -1870,6 +1870,11 @@ function update(dt) {
         upgrades,unlockedWeapons,selectedWeapons,
         hp:player.hp,maxHp:player.maxHp,
         damageTaken:runDamageTaken,
+        // Update 32.1: make sustain-vs-pressure measurable in real runs.
+        healing:runStats?.healing||0,
+        vitalityRegen:window.vitalityRegenPerSecond?.(upgrades.health,Infinity)??0,
+        vitalityRecoveryBlockedFor:Number.isFinite(lastPlayerHitAt)
+          ?Math.max(0,3-(time-lastPlayerHitAt)):0,
         boss:boss?.bossName||null,
         bossPhase:boss?(boss.finalPhase|| (boss.phaseThree?3:boss.phaseTwo?2:1)):0,
         worldTarget:conquest?.target||0,
