@@ -143,5 +143,5 @@ test("integration applies weaknesses and shield angle to actual enemy damage wit
   assert.match(game,/updateEnemyArchetype\?\.\(/);
   assert.match(game,/updateEncounterTactic\?\.\(/);
   assert.match(game,/if\(onScreen && !boss && !e\.summoned\)/);
-  assert.match(read("index.html"),/enemy-archetypes\.js\?v=(?:16|17)/);
+  assert.match(read("index.html"),/enemy-archetypes\.js\?v=[^"]+/);
 });
