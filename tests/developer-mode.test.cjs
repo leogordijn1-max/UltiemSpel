@@ -296,3 +296,34 @@ test("85% IMPACT button updates the actual world coverage and the panel status",
   assert.equal(t.disk.has("shadowDominantWorldV1"), false);
   assert.equal(t.context.window.developerSetWorldCoverage(35), false);
 });
+
+
+test("enabling sandbox alone is not the same as using a developer tool",()=>{
+  const t=environment();
+  t.enable();
+  t.start();
+  assert.equal(t.context.window.isDeveloperRun(),true);
+  assert.equal(t.context.window.developerToolsUsed(),false);
+  assert.equal(t.context.window.developerPanelOpen(),false);
+  assert.equal(t.context.window.openDeveloperPanel(),true);
+  assert.equal(t.context.window.developerPanelOpen(),true);
+  assert.equal(t.context.window.developerToolsUsed(),false);
+  const god=t.find(t.document.body,node=>
+    node.tagName==="BUTTON"&&node.textContent==="ENABLE GOD MODE");
+  assert.ok(god,"the developer tools panel must expose its God Mode toggle");
+  god.listeners.click();
+  assert.equal(t.context.window.developerToolsUsed(),true);
+  assert.equal(t.context.window.developerInvincible(),true);
+  t.context.window.closeDeveloperPanel();
+  assert.equal(t.context.window.developerPanelOpen(),false);
+  assert.equal(t.context.window.developerToolsUsed(),true);
+  t.context.window.developerEndRun();
+  assert.equal(t.context.window.developerToolsUsed(),false);
+  assert.equal(t.context.window.isDeveloperRun(),false);
+});
+test("normal boss rewards may occur with passive Developer Mode, but NOT while tools are used or F9 open",()=>{
+  const sourceText=fs.readFileSync(path.join(__dirname,"..","js/enemies.js"),"utf8");
+  assert.match(sourceText,/!window\.developerToolsUsed\?\.\(\)/);
+  assert.match(sourceText,/!window\.developerPanelOpen\?\.\(\)/);
+  assert.match(sourceText,/!window\.isDeveloperRun\?\.\(\)/);
+});
