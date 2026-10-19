@@ -52,7 +52,7 @@ test("7–9 tougher live enemies are preferred, with the same global safety cap"
  assert.ok(w.encounterAmbientInterval(0,"normal")<=3.1);
  assert.ok(w.encounterAmbientInterval(1500,"normal")<2.401);
  assert.ok(w.encounterAmbientInterval(1500,"easy")>7);
- assert.ok(w.encounterAmbientLimit(0,"easy",[])<ambient(0,"normal",[]));
+ assert.ok(w.encounterAmbientInterval(0,"easy")>w.encounterAmbientInterval(0,"normal"));
 });
 
 test("production ambient mini-packs are capped, originate offscreen and retain boss isolation",()=>{
