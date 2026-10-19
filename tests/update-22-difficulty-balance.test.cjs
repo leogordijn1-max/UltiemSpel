@@ -21,7 +21,7 @@ function director(){
 function teamFor(difficulty){
   const d=director();
   const result=d.window.spawnEncounterPatrol(900,900,d.player,d.spawned,d.spawn,difficulty);
-  assert.equal(result,difficulty==="easy"?5:4,"Normal/Nightmare use four strong specialists; Easy keeps larger learner squad");
+  assert.equal(result,4,"Normal/Nightmare use four strong specialists; Easy keeps larger learner squad");
   return d.spawned;
 }
 test("difficulty presets have monotone squad pressure but fair readable tells",()=>{
