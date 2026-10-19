@@ -53,6 +53,9 @@ test("real hits reset recovery and resets clear injury timer",()=>{
  assert.match(game,/function recordPlayerHit\(amount\) \{\s*lastPlayerHitAt=time;/);
  assert.match(game,/window\.vitalityRegenPerSecond\?\.\(\s*upgrades\.health,time-lastPlayerHitAt\)/);
  assert.doesNotMatch(game,/player\.hp \+ upgrades\.health \* 0\.8 \* dt/);
+ assert.match(game,/healing:runStats\?\.healing\|\|0/);
+ assert.match(game,/vitalityRegen:window\.vitalityRegenPerSecond/);
+ assert.match(game,/vitalityRecoveryBlockedFor/);
 });
 test("Vitality UI descriptions show the actual amount and recovery delay",()=>{
  const upgrade=source("js/upgrades.js");
