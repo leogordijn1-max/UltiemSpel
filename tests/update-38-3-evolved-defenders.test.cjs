@@ -97,3 +97,23 @@ test("smaller smarter waves and first two boss pressure increases are wired in",
  assert.match(shade,/#99ffe1/);
  assert.match(read("js/enemies.js"),/enemy_evolution_unlocked/);
 });
+
+test("supernatural counter-skills appear only AFTER the creature actually mutates",()=>{
+ const w={};vm.runInNewContext(read("js/enemy-counter-roles.js"),{window:w,Math,Number});
+ const fresh={kind:1,evolutionTier:0,encounterTactic:"pouncer"};
+ w.initializeEnemyCounterRole(fresh);
+ assert.equal(fresh.counterRole,null);
+ const changed={kind:1,evolutionTier:1,encounterTactic:"pouncer"};
+ w.initializeEnemyCounterRole(changed);
+ assert.equal(changed.counterRole,"phaseStalker");
+ const mike={kind:2,evolutionTier:1};
+ w.initializeEnemyCounterRole(mike);
+ assert.equal(mike.counterRole,"anchor");
+ const ward={kind:6,evolutionTier:3,encounterTactic:"ward"};
+ w.initializeEnemyCounterRole(ward);
+ assert.equal(ward.counterRole,"warden");
+ const src=read("js/enemies.js");
+ assert.match(src,/window\.applyEnemyEvolution\?\.\(e,bossesDefeated,difficulty\)/);
+ assert.ok(src.indexOf("window.applyEnemyEvolution?.(e,bossesDefeated,difficulty)")<
+  src.indexOf("window.initializeEnemyCounterRole?.(e)"));
+});
