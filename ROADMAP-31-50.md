@@ -85,6 +85,10 @@ De maker leverde ná Update 32 een nieuwe Normal Water JSON aan: **27:01 non-san
 
 ---
 
+## Update 36.1 — LIVE WATER-FEEDBACK NA 35, HOTFIX CODE GEBOUWD
+
+**UPDATE 36.1 — WATER/COMBAT HOTFIX NA ECHTE UPDATE-35-RUN (19 oktober 2026).** De maker leverde een non-sandbox Water Standard Normal Victory 25:51 aan: 29 hits, 493,99 damage, 532,99 healing, twee evoluties en alle vier Guardians. Feedback: Water Bolt te sterk, boss-aanvallen verwarrender maar niet spannender, te weinig binnenkomende damage. Analyse toonde dubbele Water Bolt-knockback (generiek + water), een zeer sterke Rapid Casting/Riptide-setup en veel Vitality-herstel. Code-hotfix: **één** Bolt-duw i.p.v. twee, Bolt-cooldown minimaal 0,98s, lichtere schade/pierce, Vitality L2 ~0,391 HP/s i.p.v. ~0,595, minder (3) overlappende boss-projectiellijnen met snellere/duidelijkere aanvallen en echte waarschuwingen. Geen extra hordes, geen verwijderde ultieme Guardian Powers. **Nieuwe handmatige browsertest na de hotfix nog OPEN**; de aangeleverde run was schema 1 (vóór Update 36-telemetrie). [UPDATE-36-1-WATER-PRESSURE-HOTFIX.md](UPDATE-36-1-WATER-PRESSURE-HOTFIX.md) is het volledige verslag. **Prioriteit: deze nieuwe balans eerst echt testen en zo nodig verder corrigeren vóór andere grote features.**
+
 ## Hoe we voortgang bijhouden
 
 - **Update 30:** 20/20 voltooide *geplande* technische/combat-updates. **Releasegates nog OPEN.**
