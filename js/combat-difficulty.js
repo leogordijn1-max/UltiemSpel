@@ -19,6 +19,20 @@
       burstTelegraph: .86, shieldRaised: 3.15, shieldExposed: 1.9
     })
   });
+  // Update 32.1: enemies should grow into a threat without increasing their
+  // population or making their early-game first hit unfair.
+  function enemyThreatMultiplier(seconds=0,difficulty="normal"){
+    if(difficulty==="easy")return 1;
+    const progress=Math.max(0,Math.min(1,(Math.max(0,seconds)-300)/1200));
+    return 1+progress*(difficulty==="nightmare"?.38:.50);
+  }
+  // Vitality gives maximum HP as before, but healing no longer erases a hit
+  // before the player has even had to dodge the next attack.
+  function vitalityRegenPerSecond(level=0,secondsSinceHit=Infinity){
+    const rank=Math.max(0,Math.min(5,Math.floor(Number(level)||0)));
+    if(!rank||secondsSinceHit<3)return 0;
+    return .35*(1-Math.pow(.70,rank))/.30;
+  }
   function get(difficulty) { return tuning[difficulty] || tuning.normal; }
   function applySquad(enemy,difficulty) {
     if (!enemy || enemy.dead || enemy.kind === 3 || enemy.summoned ||
@@ -39,6 +53,8 @@
     return enemy && enemy === activeBoss ? .82 : 1;
   }
   window.getCombatDifficultyTuning = get;
+  window.enemyThreatMultiplier=enemyThreatMultiplier;
+  window.vitalityRegenPerSecond=vitalityRegenPerSecond;
   window.applyCombatDifficultyToSquad = applySquad;
   window.frostMoveMultiplier = frostMoveMultiplier;
   window.flameOrbitDamageMultiplier = flameOrbitDamageMultiplier;
