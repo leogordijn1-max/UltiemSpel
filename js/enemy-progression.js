@@ -1,4 +1,4 @@
-// Enemy progression — introduce dangerous enemy TYPES gradually within each run.
+// Enemy progression — new enemy families arrive in the correct Guardian chapter.
 // All ambient spawns, patrols, special waves and defense squads share this roster.
 (() => {
   "use strict";
@@ -13,7 +13,13 @@
   let previousUnlocks=2, overrideCount=null;
   function isSandbox(){ return window.isDeveloperRun?.()===true; }
   function unlockCount(seconds=0){
-    const actual=STAGES.filter(entry=>seconds>=entry.seconds).length;
+    // Every new species enters its own LV1 era. A delayed boss victory must
+    // not let a later species arrive before its birth-chapter Guardian falls.
+    // Headless legacy tests may omit the current-boss hook; the time roster
+    // remains usable without the full game runtime.
+    const defeated=window.enemyRunBossCount?.() ?? Infinity;
+    const actual=STAGES.filter(entry=>seconds>=entry.seconds &&
+      defeated>=(window.enemyFamilyDebutBossCount?.(entry.kind)??0)).length;
     return isSandbox()&&overrideCount!==null ? Math.max(actual,overrideCount) : actual;
   }
   function unlocked(seconds=0){return STAGES.slice(0,unlockCount(seconds)).map(e=>e.kind);}
