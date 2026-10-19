@@ -7,6 +7,7 @@
   let enabled = storageGet(PREF, "false") === "true";
   let sandbox = false;
   let invincible = false;
+  let usedTools = false;
   let testElement = null;
   let open = false;
   let wasPlaying = false;
@@ -19,6 +20,8 @@
 
   const isSandbox = () => sandbox;
   window.isDeveloperRun = isSandbox;
+  window.developerToolsUsed = () => sandbox && usedTools;
+  window.developerPanelOpen = () => sandbox && open;
   window.developerRunElement = () => sandbox ? testElement : null;
   window.developerModeEnabled = () => enabled;
   function setEnabled(value) {
@@ -91,6 +94,7 @@
       highest = storageNumber("shadowHigh", 0, 0);
     }
     sandbox = enabled;
+    usedTools = false;
     frameTimes = [];
     perfClock = 0;
     perfSnapshot = { fps: 0, p95: 0, count: 0, ai: 0, render: 0, collisions: 0 };
@@ -105,6 +109,7 @@
       highest = storageNumber("shadowHigh", 0, 0);
     }
     sandbox = false;
+    usedTools = false;
     invincible = false;
     testElement = null;
     updateBadge();
@@ -130,6 +135,8 @@
     if (danger) button.className = "developer-danger";
     button.addEventListener("click", () => {
       if (!sandbox || !active) return;
+      usedTools = true;
+      window.runQaEvent?.("developer_action_used",{action:text},typeof time==="number"?time:0);
       action();
       if (open) refresh();
     });
