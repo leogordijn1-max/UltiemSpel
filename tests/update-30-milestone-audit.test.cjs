@@ -33,7 +33,7 @@ test("concise canonical documents preserve road map and manual NO-GO gate",()=>{
 });
 test("README documents the actual 3×3 element loadout and no cap",()=>{
  const intro=src("README.md");
- assert.match(intro,/\*\*Fire\*\* \(Flame Cone, Fireball, Flame Orbit\)/);
+ assert.match(intro,/Fire \/ Water \/ Frost/);
  assert.match(intro,/\*\*Water\*\* \(Water Bolt, Tidal Wave, Whirlpool\)/);
  assert.match(intro,/\*\*Frost\*\* \(Frost Orb, Ice Shards, Glacial Pulse\)/);
  assert.match(intro,/The Last Meme/);
