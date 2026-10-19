@@ -752,26 +752,25 @@ function fire() {
 }
 // Enemy and boss projectile attacks.
 function enemyFireOrb(e) {
-  if (enemyShots.length >= 320) return;
-  const angle = Number.isFinite(e.aimAngle) ? e.aimAngle : Math.atan2(player.y - e.y, player.x - e.x);
-  // Isolated combat tests may invoke this helper without game.js globals.
+  if (enemyShots.length >= 315) return;
+  const level=e.evolutionLevel||1;
+  const aim=Number.isFinite(e.aimAngle)?e.aimAngle:Math.atan2(player.y-e.y,player.x-e.x);
+  // All Ranged Shades at the same evolution level shoot the SAME pattern:
+  // LV1 single, LV2 double, LV3 triple, LV4 rapid triple.
+  const offsets=level===1?[0]:level===2?[-.13,.13]:[-.23,0,.23];
   const currentDifficulty=typeof difficulty==="string"?difficulty:"normal";
   const currentGrowthTime=typeof growthTime==="number"?growthTime:0;
-  enemyShots.push({
-    type: "enemyOrb",
-    x: e.x,
-    y: e.y,
-    vx: Math.cos(angle) * 105,
-    vy: Math.sin(angle) * 105,
-    speed: 105,
-    turnRate: 0.8,
-    life: 6.8,
-    r: 8,
-    damage: 9 * (difficultyProfiles[currentDifficulty] || difficultyProfiles.normal).enemyDamage *
-      (window.enemyThreatMultiplier?.(currentGrowthTime,currentDifficulty) ?? 1),
-  });
+  for(const offset of offsets){
+    enemyShots.push({
+      type:"enemyOrb",x:e.x,y:e.y,
+      vx:Math.cos(aim+offset)*(112+level*9),
+      vy:Math.sin(aim+offset)*(112+level*9),
+      speed:112+level*9,turnRate:.62,life:5.6,r:8+Math.floor(level/3),
+      damage:(8+level*2)*(difficultyProfiles[currentDifficulty]||difficultyProfiles.normal).enemyDamage*
+        (window.enemyThreatMultiplier?.(currentGrowthTime,currentDifficulty)??1)
+    });
+  }
 }
-
 function spawnBoss() {
   if(boss||(typeof runMode!=="undefined"&&runMode==="standard"&&
       bossNumber>=STANDARD_BOSS_COUNT))return false;
