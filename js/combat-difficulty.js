@@ -14,7 +14,7 @@
       burstTelegraph: .95, shieldRaised: 3, shieldExposed: 2
     }),
     nightmare: Object.freeze({
-      squadHp: 1.04, squadDamage: 1.065, squadSpeed: 1.04,
+      squadHp: 1.04, squadDamage: 1.19, squadSpeed: 1.1,
       rangedTelegraph: .64, rangedCooldownMin: 4.0, rangedCooldownMax: 5.6,
       burstTelegraph: .86, shieldRaised: 3.15, shieldExposed: 1.9
     })
