@@ -33,6 +33,9 @@
     if(e.evolutionTier!==undefined)return e; // idempotent for shared spawners
     e.evolutionTier=level;
     e.evolutionName=FORMS[e.kind][level];
+    // Fewer, longer-lived bodies still need to fund two earned weapon
+    // evolutions by 10:00 and 17:00; no XP is awarded without an actual kill.
+    e.evolutionXpMultiplier=difficulty==="easy"?1:(1.34+level*.22);
     const t=tiers[level],p=profiles[e.kind];
     // The new form, not passage of arbitrary time, explains the health/speed
     // changes. Easy variants have a toned-down evolution multiplier.
