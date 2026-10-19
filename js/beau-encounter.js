@@ -102,25 +102,26 @@
     if(s.stage==="huntTell" && t>=s.until) {
       const angle=Math.atan2(s.target.y-e.y,s.target.x-e.x);
       s.chargeX=Math.cos(angle);s.chargeY=Math.sin(angle);
-      s.stage="huntRush";s.until=t+.58;s.trailAt=t;
-      houndShots(e,hooks,angle,335);
+      s.stage="huntRush";s.until=t+.66;s.trailAt=t;
+      houndShots(e,hooks,angle,392+phase(e)*17);
       hooks.shake?.(5);
       hooks.puff?.(e.x,e.y,"#ffb86b",15);
     } else if(s.stage==="huntRush") {
       // Real boss movement along the locked charge lane, never teleportation.
-      const step=760*Math.min(dt,.04);
+      const step=(835+phase(e)*50)*Math.min(dt,.04);
       e.x+=s.chargeX*step;e.y+=s.chargeY*step;
       if(t>=s.trailAt){
-        mark(hooks,e.x,e.y,73,.48,12+phase(e));
-        s.trailAt=t+.14; // visible pursuit trail; dodge perpendicular to charge
+        mark(hooks,e.x,e.y,83,.42,15+phase(e)*3);
+        s.trailAt=t+.17; // visible pursuit trail; dodge perpendicular to charge
       }
       if(t>=s.until){
-        s.stage="huntPause";s.until=t+.33;s.round++;
+        s.stage="huntPause";s.until=t+.26;s.round++;
       }
     } else if(s.stage==="huntPause" && t>=s.until) {
-      if(s.round>=3)finish(e,t,hooks);
+      if(s.round>=4)finish(e,t,hooks);
       else {
-        s.stage="huntTell";s.until=t+.87;s.lockedAt=t+.24;target(e,player);
+        // Retarget after each committed rush; staying on the same side is unsafe.
+        s.stage="huntTell";s.until=t+.78;s.lockedAt=t+.25;target(e,player);
       }
     } else if(s.stage==="pincerTell" && t>=s.until){
       for(const echo of s.echoes){
@@ -268,13 +269,13 @@
       if(s.stage==="huntTell"){
         // Fast charge corridor: central aimed lane is genuinely dangerous.
         ctx.beginPath();ctx.moveTo(e.x,e.y);
-        ctx.lineTo(e.x+ax*360,e.y+ay*360);
+        ctx.lineTo(e.x+ax*610,e.y+ay*610);
         ctx.lineWidth=low?52:90;ctx.globalAlpha=.19;ctx.stroke();
         ctx.globalAlpha=.9;ctx.lineWidth=low?2:4;
         ctx.beginPath();ctx.moveTo(e.x+sx*55,e.y+sy*55);
-        ctx.lineTo(e.x+ax*360+sx*55,e.y+ay*360+sy*55);
+        ctx.lineTo(e.x+ax*610+sx*55,e.y+ay*610+sy*55);
         ctx.moveTo(e.x-sx*55,e.y-sy*55);
-        ctx.lineTo(e.x+ax*360-sx*55,e.y+ay*360-sy*55);
+        ctx.lineTo(e.x+ax*610-sx*55,e.y+ay*610-sy*55);
         ctx.stroke();
         mark(x,y,40);
       }else if(s.stage==="huntRush"){
