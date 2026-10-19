@@ -634,10 +634,12 @@ function damage(e, d, origin = player, damageType = "direct") {
       $("bossHud").style.display = "none";
       bossShots = [];
       if (typeof bossHazards !== "undefined") bossHazards = [];
-      // Developer boss deletion must not open a modal behind the F9 panel.
-      // Keep the sandbox in its existing paused/playing state so all test
-      // controls remain available and F9 can resume the simulation.
-      if (!killedFinalBoss && !window.isDeveloperRun?.()) showBossReward();
+      // Merely enabling Developer Mode no longer steals earned boss rewards.
+      // Opening F9 is still protected, and actually using sandbox powers
+      // keeps test-run progression uninterrupted and reward-free.
+      if (!killedFinalBoss && (!window.isDeveloperRun?.() ||
+          (!window.developerToolsUsed?.() && !window.developerPanelOpen?.())))
+        showBossReward();
     }
     if (kills > highest) {
       highest = kills;
