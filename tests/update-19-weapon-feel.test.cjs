@@ -87,7 +87,7 @@ test("elemental projectile families share predictive aim; homing Frost remains h
  assert.match(a,/weaponAimAngle\?\.\(player,enemy,projectileSpeed/);
  assert.match(w,/weaponAimAngle\?\.\(/);
  assert.match(w,/type: "frost"/);
- assert.match(w,/turnRate: 4\.0/);
+ assert.match(w,/turnRate: 3\.3/);
  assert.match(w,/target,/);
 });
 test("the game uses measured movement while bosses and summoned units retain normal rules",()=>{
