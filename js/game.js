@@ -323,6 +323,9 @@ function recordPlayerHit(amount, source = "unknown") {
 }
 
 function notify(message, type = "info", duration = 3.5) {
+  // Boss attack guidance belongs in the animated game telegraphs, not
+  // unreadable floating sentences while the player is dodging.
+  if(type==="boss" && !/PHASE|BOSS SPAWN|FINAL BOSS|BOSS TROPHY|BOSS SUMMONS|VICTORY/i.test(message))return;
   const container = $("notifications");
   if (!container) return;
   const item = document.createElement("div");
@@ -465,20 +468,10 @@ function hud() {
       ? "DASH READY · SHIFT"
       : `DASH ${dashCooldown.toFixed(1)}s · SHIFT`;
   dashStatus.classList.toggle("ready", dashCooldown <= 0);
+  // Keep the existing cue DOM for compatibility but never display its
+  // textual attack advice; real arena warning geometry stays fully drawn.
   const combatCue=$("bossCombatCue");
-  if(combatCue){
-    const cue=window.combatHudDescribe?.(boss,player,time,dashCooldown);
-    combatCue.hidden=!cue?.visible;
-    if(cue?.visible){
-      combatCue.dataset.tone=cue.tone;
-      $("bossCueTitle").textContent=cue.title;
-      $("bossCueClock").textContent=cue.detail;
-      $("bossCueAdvice").textContent=cue.instruction;
-      $("bossCueDash").textContent=cue.subtext;
-      $("bossCueTrack").hidden=cue.progress===null;
-      $("bossCueFill").style.width=(cue.progress??0)+"%";
-    }
-  }
+  if(combatCue)combatCue.hidden=true;
   const upcomingWave = waveNumber + 1;
   const waveClock = `${Math.floor(Math.max(0, waveTimer) / 60)}:${String(Math.ceil(Math.max(0, waveTimer) % 60)).padStart(2, "0")}`;
   const currentPattern = waveNumber
@@ -489,12 +482,10 @@ function hud() {
       ? `ENDLESS · TIER ${currentEndlessTier() + 1} · `
       : "";
   const rhythmStatus=window.getEncounterRhythmStatus?.(time);
-  const phaseLabel=rhythmStatus?.phase==="recover"
-    ? `RECOVER ${Math.ceil(rhythmStatus.remaining)}s · `
-    : rhythmStatus?.phase==="engaged"?"FORMATION ACTIVE · ":"";
+  const phaseLabel=rhythmStatus?.phase==="engaged"?"SQUAD · ":"";
   $("waveText").textContent = boss
-    ? `${endlessLabel}WAVE ${waveNumber || 1} · PAUSED DURING BOSS`
-    : `${endlessLabel}WAVE ${waveNumber || 1} · ${phaseLabel}${currentPattern} · NEXT ${upcomingWave} IN ${waveClock}`;
+    ? "GUARDIAN FIGHT"
+    : `WAVE ${waveNumber || 1} · ${phaseLabel}NEXT ${waveClock}`;
   $("waveFill").style.width =
     `${Math.max(0, Math.min(100, (1 - waveTimer / waveDuration) * 100))}%`;
   $("healthText").textContent = Math.ceil(player.hp) + " / " + player.maxHp;
@@ -504,17 +495,18 @@ function hud() {
   const evolutionStatus=$("evolutionProgress");
   if(evolutionStatus)evolutionStatus.textContent=window.evolutionHudStatus?.()||"";
   const worldFront=$("worldFront");
-  if(worldFront)worldFront.textContent=window.worldConsequenceHudText?.(player,time)||"";
+  if(worldFront)worldFront.textContent=
+    `WORLD ${Math.floor(window.getWorldConquest?.().coverage||0)}% · ERA ${Math.min(4,bossesDefeated+1)}`;
   const conqueredPercent = window.getWorldConquest?.().coverage || 0;
   $("stats").textContent =
-    `${(window.getDominantWorld?.() || "frozen").toUpperCase()} WORLD · ${conqueredPercent}% IMPACT · ${currentLivingWorldElement().toUpperCase()} ELEMENT · ${runMode === "endless" ? "ENDLESS" : "STANDARD"} · ${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}  ·  ${kills} KILLS  ·  BEST ${highest}  ·  ${enemies.length} ENEMIES`;
+    `${Math.floor(time/60)}:${String(Math.floor(time%60)).padStart(2,"0")} · ${kills} KILLS · ${enemies.length} FOES`;
   const character = getCharacter(selectedCharacter);
   const boost =
     characterRuntime.activeBoost > 0
       ? ` · ACTIVE ${characterRuntime.activeBoost.toFixed(1)}s`
       : "";
   $("characterHud").textContent =
-    `${character.name} · ${character.ability}${boost}`;
+    `${character.name}${boost}`;
   const weaponNames = Object.fromEntries(
     weaponCatalog.map((weapon) => [weapon.key, weapon.name]),
   );
