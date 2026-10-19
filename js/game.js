@@ -990,7 +990,7 @@ function update(dt) {
       (window.worldOccupationMovement?.(e,e.groundBiome) ?? 1) *
       (window.guardianWorldSpeed?.(e, walkingGround) ?? 1) *
       (e.soakedUntil > time ? 0.82 : 1) *
-      (e.frostUntil > time ? (window.frostMoveMultiplier?.(e,boss) ?? 0.48) : 1) *
+      (e.frostUntil > time ? (window.frostSlowFactor?.(e,boss,time) ?? window.frostMoveMultiplier?.(e,boss) ?? 0.48) : 1) *
       (e.deepFreezeUntil > time && e !== boss ? 0.16 : 1) *
       (e.pulseSlowUntil > time ? 0.77 : 1);
     // Pressuring enemies have to close the gap before they can deal REAL hits.
