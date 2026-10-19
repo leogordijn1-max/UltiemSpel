@@ -4,20 +4,30 @@ const read=p=>fs.readFileSync(path.join(__dirname,"..",p),"utf8");
 function evolution(){const window={};vm.runInNewContext(read("js/enemy-evolution.js"),{window,Math,Number});return window;}
 const make=kind=>({kind,hp:100,speed:100,damage:10,r:kind===2?35:13});
 
-test("first, second and third Guardian deaths evolve every one of the six regular families",()=>{
- const w=evolution(),families=[0,1,2,4,5,6];
- for(const kind of families){
-  let names=[];
-  for(let defeated=0;defeated<=3;defeated++){
-   const e=make(kind);w.applyEnemyEvolution(e,defeated,"normal");
-   assert.equal(e.evolutionTier,defeated);
-   names.push(e.evolutionName);
-   if(defeated)assert.ok(e.hp>100&&e.speed>100&&e.damage>10);
+test("every species has its OWN LV1 birth chapter, while the whole world enters the same horror era",()=>{
+ const w=evolution();
+ const debut={0:0,1:0,4:1,2:1,5:2,6:2};
+ const eras={
+  0:[[0,1]],
+  1:[[0,2],[1,2],[4,1],[2,1]],
+  2:[[0,3],[1,3],[4,2],[2,2],[5,1],[6,1]],
+  3:[[0,4],[1,4],[4,3],[2,3],[5,2],[6,2]]
+ };
+ for(const [stage,units] of Object.entries(eras)){
+  for(const [kind,expectedLevel] of units){
+   const e=make(kind);w.applyEnemyEvolution(e,Number(stage),"normal");
+   assert.equal(e.evolutionTier+1,expectedLevel,"wrong family rank for "+kind+" in era "+stage);
+   assert.equal(e.evolutionLevel,expectedLevel);
+   assert.equal(e.worldThreatTier,Number(stage),"new LV1 must share the horror era");
+   assert.equal(e.evolutionBirthBoss,debut[kind]);
+   assert.equal(e.evolutionName,w.enemyEvolutionForms[kind][expectedLevel-1]);
   }
-  assert.equal(new Set(names).size,4,"each generation needs a named new form");
  }
  assert.equal(w.enemyEvolutionTier(99),3);
- assert.equal(w.enemyEvolutionTier(0),0);
+ assert.equal(w.enemyFamilyEvolutionTier(5,2),0);
+ assert.equal(w.enemyFamilyEvolutionTier(5,3),1);
+ assert.equal(w.enemyFamilyEvolutionTier(4,1),0);
+ assert.equal(w.enemyFamilyEvolutionTier(0,3),3);
 });
 
 test("evolution progression is not a hidden per-frame health multiplier",()=>{
@@ -36,7 +46,7 @@ test("evolution progression is not a hidden per-frame health multiplier",()=>{
 test("evolved Burstling survives longer, arms from closer real proximity and gets bigger visible detonation",()=>{
  const w=evolution(),base=make(5),late=make(5);
  w.applyEnemyEvolution(base,0,"normal");
- w.applyEnemyEvolution(late,3,"normal");
+ w.applyEnemyEvolution(late,5,"normal");
  assert.ok(late.hp>base.hp*2);
  assert.ok(late.speed>base.speed);
  assert.ok(late.burstRadius>base.burstRadius);
@@ -48,7 +58,7 @@ test("evolved Drifter and Burstling coordinate a genuine flank, without overridi
  const w=evolution(),front=make(0),volatile=make(5),guard=make(6);
  front.encounterGroup=volatile.encounterGroup=guard.encounterGroup="squad1";
  front.encounterSlot=0;volatile.encounterSlot=1;
- w.applyEnemyEvolution(front,2);w.applyEnemyEvolution(volatile,2);
+ w.applyEnemyEvolution(front,3);w.applyEnemyEvolution(volatile,3);
  front.encounterPartners=volatile.encounterPartners=[front,volatile,guard];
  const player={x:250,y:0};
  const a=w.evolvedEnemyTeamSteer(front,player);
@@ -63,7 +73,7 @@ test("evolved Drifter and Burstling coordinate a genuine flank, without overridi
 test("each evolved family changes actual Canvas silhouette while retaining old body drawing",()=>{
  const w=evolution(),visited=new Set();
  for(const kind of [0,1,2,4,5,6]){
-  const e=make(kind);w.applyEnemyEvolution(e,2);
+  const e=make(kind);w.applyEnemyEvolution(e,3);
   const events=[];
   const ctx=new Proxy({},{
     get(_,key){if(key==="save"||key==="restore"||key==="stroke"||key==="fill"||
@@ -116,4 +126,43 @@ test("supernatural counter-skills appear only AFTER the creature actually mutate
  assert.match(src,/window\.applyEnemyEvolution\?\.\(e,bossesDefeated,difficulty\)/);
  assert.ok(src.indexOf("window.applyEnemyEvolution?.(e,bossesDefeated,difficulty)")<
   src.indexOf("window.initializeEnemyCounterRole?.(e)"));
+});
+
+test("first-boss LV1 newcomer has same global spines and palette as a LV2 veteran but unmistakable rank dots",()=>{
+ const w=evolution(),old=make(0),newKind=make(4);
+ w.applyEnemyEvolution(old,1);w.applyEnemyEvolution(newKind,1);
+ assert.equal(old.evolutionLevel,2);
+ assert.equal(newKind.evolutionLevel,1);
+ assert.equal(old.worldThreatTier,newKind.worldThreatTier);
+ function drawing(e){
+  const calls=[];
+  const ctx=new Proxy({},{
+   get(_,key){if(["save","restore","stroke","fill","beginPath","closePath",
+    "translate","moveTo","lineTo","strokeRect","arc"].includes(key))
+    return (...args)=>calls.push([key,...args]);return undefined;},
+   set(_,key,val){calls.push(["set",key,val]);return true;}
+  });
+  w.drawEnemyEvolution(e,ctx,100,"low");return calls;
+ }
+ const base=drawing(old),arriving=drawing(newKind);
+ assert.equal(base.find(x=>x[0]==="set"&&x[1]==="fillStyle")[2],
+  arriving.find(x=>x[0]==="set"&&x[1]==="fillStyle")[2],"same world era colour");
+ const rankY=e=>-e.r*(e.kind===4?2.5:2.05)-9;
+ assert.equal(base.filter(x=>x[0]==="arc"&&x[2]===rankY(old)).length,2);
+ assert.equal(arriving.filter(x=>x[0]==="arc"&&x[2]===rankY(newKind)).length,1);
+ assert.ok(arriving.some(x=>x[0]==="fill"),"LV1 still has the dark era silhouette");
+});
+
+test("a new enemy introduced after the second Guardian evolves once after Bell, not to LV4",()=>{
+ const w=evolution(),burst=make(5),bulwark=make(6);
+ w.applyEnemyEvolution(burst,3);
+ w.applyEnemyEvolution(bulwark,3);
+ assert.equal(burst.evolutionLevel,2);
+ assert.equal(bulwark.evolutionLevel,2);
+ assert.equal(burst.worldThreatTier,3);
+ assert.equal(bulwark.worldThreatTier,3);
+ // In Endless, a fourth Guardian may progress the family again (cap remains LV4).
+ assert.equal(w.enemyFamilyEvolutionTier(5,4)+1,3);
+ assert.equal(w.enemyFamilyEvolutionTier(5,5)+1,4);
+ assert.equal(w.enemyFamilyEvolutionTier(5,100)+1,4);
 });
