@@ -255,8 +255,8 @@ function reset() {
   dashDirectionX = 1;
   dashDirectionY = 0;
   waveNumber = 0;
-  waveTimer = 70;
-  waveDuration = 70;
+  waveTimer = difficulty==="easy"?70:46;
+  waveDuration = waveTimer;
   notifications = [];
   $("notifications").replaceChildren();
   evolutionFlash = null;
@@ -751,7 +751,7 @@ function update(dt) {
   updateSpecialWeapons(dt);
   // Observe deaths before any of the three automatic encounter sources runs.
   window.updateEncounterRhythm?.(
-    time,enemies,!!boss||!!window.isBossIsolationActive?.(),growthTime);
+    time,enemies,!!boss||!!window.isBossIsolationActive?.(),growthTime,difficulty);
 
   dashTimer = Math.max(0, dashTimer - dt);
   dashCooldown = Math.max(0, dashCooldown - dt);
@@ -771,7 +771,9 @@ function update(dt) {
         if(wave.spawned>0)window.recordEncounterRhythmSpawn?.(
           wave.pattern?.swarm?"swarm":"wave",time,enemies.slice(waveStart),growthTime);
         waveNumber=nextWave;
-        waveDuration=Math.max(60,80-waveNumber*2);
+        waveDuration=difficulty==="easy"
+          ?Math.max(60,80-waveNumber*2)
+          :Math.max(38,48-waveNumber*2);
         waveTimer=waveDuration;
         notify(
           `WAVE ${waveNumber} · ${wave.name} · ${wave.spawned} ENEMIES${wave.hint ? " · "+wave.hint : ""}`,
@@ -900,7 +902,7 @@ function update(dt) {
     // Ambient mobs are atmosphere, not the main encounter. Teams get priority.
     const ordinaryCap=window.encounterAmbientLimit?.(growthTime,difficulty,enemies) ??
       Math.max(4,9-Math.floor(growthTime/180));
-    const ambientCap=window.encounterRhythmAmbientLimit?.(time,enemies,ordinaryCap)
+    const ambientCap=window.encounterRhythmAmbientLimit?.(time,enemies,ordinaryCap,difficulty)
       ??ordinaryCap;
     if (enemies.length >= ambientCap) {
       // Never accumulate a catch-up horde while at the population limit.
@@ -909,7 +911,16 @@ function update(dt) {
       spawn -= dt;
       const interval = window.encounterAmbientInterval?.(growthTime,difficulty) ?? 6;
       while (spawn <= 0 && enemies.length < ambientCap) {
-        if (!enemySpawn()) break;
+        const ambient=enemySpawn();
+        if(!ambient)break;
+        if(difficulty!=="easy"){
+          // Ambient threats should cross into danger rather than evaporate
+          // before reaching the player. No hidden spawn near the player.
+          const depth=Math.min(1,growthTime/750);
+          ambient.hp*=1.55+.35*depth;
+          if(ambient.kind!==1)ambient.speed*=1.12;
+          ambient.encounterRole ||= "ambient";
+        }
         spawn += interval;
       }
     }
