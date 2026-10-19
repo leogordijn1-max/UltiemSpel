@@ -2,8 +2,8 @@
 // changes, or fabricated browser evidence. Export is EXPLICITLY user-triggered.
 (() => {
   "use strict";
-  const MAX_EVENTS=360,MAX_CHECKPOINTS=160,MAX_PERF=420,FRAME_WINDOW=120;
-  const VERSION=1;
+  const MAX_EVENTS=360,MAX_CHECKPOINTS=160,MAX_PERF=420,FRAME_WINDOW=1200;
+  const VERSION=2;
   const finite=n=>typeof n==="number" && Number.isFinite(n);
   const number=(n,digits=2)=>finite(n)?Number(n.toFixed(digits)):0;
   const clean=(v,depth=0)=>{
@@ -31,11 +31,14 @@
   let current=null,completed=null;
   let nextSnapshot=0,perfElapsed=0,perfFrames=0,perfIndex=0;
   let frameRing=[],lastBoss=null,lastBossPhase=0;
+  let totals={enemyAI:0,collisions:0,render:0},labels=null;
+  let peakFrame=0,slowFrames=0;
   const telemetryTime=()=>finite(current?.lastTime)?current.lastTime:0;
   function begin(meta={}){
     // The previous report stays available until a NEW run intentionally begins.
     completed=null;
     frameRing=[];perfIndex=0;perfElapsed=0;perfFrames=0;
+    totals={enemyAI:0,collisions:0,render:0};labels=null;peakFrame=0;slowFrames=0;
     nextSnapshot=0;lastBoss=null;lastBossPhase=0;
     current=enabled?{
       schema:VERSION,source:"local-browser-runtime-not-manually-verified",
@@ -89,6 +92,7 @@
     if(finite(t))current.lastTime=Math.max(current.lastTime,t);
     return true;
   }
+  // Update 36: bounded 5s real-browser windows, up to 1200 frame samples.
   function frame(seconds,t,metrics=null){
     if(!current||current.outcome!=="in_progress"||!finite(seconds)||
       seconds<=0||seconds>.5)return false;
@@ -96,23 +100,43 @@
     if(frameRing.length<FRAME_WINDOW)frameRing.push(ms);
     else {frameRing[perfIndex]=ms;perfIndex=(perfIndex+1)%FRAME_WINDOW;}
     perfFrames++;perfElapsed+=seconds;
-    // Fractional browser-frame durations may sum to 4.99999999999999.
+    peakFrame=Math.max(peakFrame,ms);
+    if(ms>33.33)slowFrames++;
+    for(const k of ["enemyAI","collisions","render"]){
+      const n=metrics?.[k];if(finite(n)&&n>=0)totals[k]+=n;
+    }
+    const next={
+      quality:metrics?.graphicsQuality||"unknown",
+      speed:finite(metrics?.gameSpeed)?metrics.gameSpeed:1,
+      boss:metrics?.bossName||"field"
+    };
+    if(!labels)labels=next;
+    else for(const k of ["quality","speed","boss"])
+      if(labels[k]!==next[k])labels[k]="mixed";
     if(perfElapsed+1e-8<5)return false;
-    const ordered=[...frameRing].sort((a,b)=>a-b);
-    const p95=ordered[Math.max(0,Math.ceil(ordered.length*.95)-1)]||0;
+    const frames=[...frameRing].sort((x,y)=>x-y);
+    const p95=frames[Math.max(0,Math.ceil(frames.length*.95)-1)]||0;
+    // performance.memory is a non-standard Chromium property; absent = null.
+    const heap=typeof performance==="undefined"?null:performance.memory;
+    const used=finite(metrics?.heapUsedBytes)?metrics.heapUsedBytes:heap?.usedJSHeapSize;
     if(current.performance.length>=MAX_PERF)current.performance.shift();
     current.performance.push({
       gameTime:number(t),fps:number(perfFrames/perfElapsed,1),
-      p95FrameMs:number(p95,1),
-      aiMs:number(metrics?.enemyAI||0,2),
-      collisionMs:number(metrics?.collisions||0,2),
-      renderMs:number(metrics?.render||0,2),
+      frameCount:perfFrames,measuredSeconds:number(perfElapsed,2),
+      p95FrameMs:number(p95,1),peakFrameMs:number(peakFrame,1),
+      framesOver33ms:slowFrames,
+      graphicsQuality:labels.quality,gameSpeed:labels.speed,encounter:labels.boss,
+      aiMs:number(totals.enemyAI/perfFrames,2),
+      collisionMs:number(totals.collisions/perfFrames,2),
+      renderMs:number(totals.render/perfFrames,2),
+      heapUsedMB:finite(used)&&used>0?number(used/1048576,2):null,
       enemies:Math.max(0,Math.floor(metrics?.enemies||0)),
       playerProjectiles:Math.max(0,Math.floor(metrics?.playerProjectiles||0)),
       enemyProjectiles:Math.max(0,Math.floor(metrics?.enemyProjectiles||0)),
       effects:Math.max(0,Math.floor(metrics?.effects||0))
     });
-    perfFrames=0;perfElapsed=0;
+    frameRing=[];perfIndex=0;perfElapsed=0;perfFrames=0;
+    totals={enemyAI:0,collisions:0,render:0};labels=null;peakFrame=0;slowFrames=0;
     return true;
   }
   function bossPhase(boss,t){
