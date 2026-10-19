@@ -145,7 +145,7 @@
       }
     }
     // Prevent the next giant showcase from overlapping a late marked strike.
-    const next=p.warningEndsAt+1.2;
+    const next=p.warningEndsAt+1.55;
     if(e.bellFight)e.bellFight.nextAt=Math.max(e.bellFight.nextAt||0,next);
     if(e.memeFight)e.memeFight.nextAt=Math.max(e.memeFight.nextAt||0,next);
     e.specialNextAt=Math.max(e.specialNextAt||0,next);
