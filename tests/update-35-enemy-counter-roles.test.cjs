@@ -8,10 +8,10 @@ function setup(){
  return window;
 }
 const enemy=(kind,extra={})=>({kind,dead:false,hp:100,x:0,y:0,
- r:kind===2?35:kind===6?24:12,shieldActive:true,
+ r:kind===2?35:kind===6?24:12,shieldActive:true,evolutionLevel:3,
  knockbackX:0,knockbackY:0,...extra});
 function approx(a,b){assert.ok(Math.abs(a-b)<1e-8,String(a)+" != "+String(b));}
-test("roles reuse original enemy kinds only, without adding new spawns",()=>{
+test("same-level defenders always get identical counter powers independently of tactical role",()=>{
  const w=setup(),mobs=[
   enemy(2),enemy(1,{encounterTactic:"pouncer"}),enemy(1),
   enemy(6,{encounterTactic:"ward"}),enemy(6),enemy(3),
@@ -19,9 +19,9 @@ test("roles reuse original enemy kinds only, without adding new spawns",()=>{
  mobs.forEach(m=>w.initializeEnemyCounterRole(m));
  assert.equal(mobs[0].counterRole,"anchor");
  assert.equal(mobs[1].counterRole,"phaseStalker");
- assert.equal(mobs[2].counterRole,null);
+ assert.equal(mobs[2].counterRole,"phaseStalker");
  assert.equal(mobs[3].counterRole,"warden");
- assert.equal(mobs[4].counterRole,null);
+ assert.equal(mobs[4].counterRole,"warden");
  assert.equal(mobs[5].counterRole,undefined);
  assert.equal(mobs[6].counterRole,undefined);
  assert.equal(Object.keys(w.enemyCounterRoleNames).length,3);
