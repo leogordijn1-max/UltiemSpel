@@ -156,7 +156,9 @@ function fireFrostOrb() {
   const level = Math.max(1, upgrades.frost);
   // Weapon timers tick in Rapid Casting-adjusted time units. Clamp the real
   // volley interval to prevent maximum Rate from freezing every approach.
-  weaponTimers.frost = Math.max(2.65 / weaponCooldownMultiplier(),
+  const rate=typeof weaponCooldownMultiplier==="function"
+    ? weaponCooldownMultiplier() : 1;
+  weaponTimers.frost = Math.max(2.65 / Math.max(.2,rate),
     4.30 - level * 0.16);
   const target = playerVisibleTarget(player.x, player.y, 850);
   if (!target || bullets.length >= 300) return;
