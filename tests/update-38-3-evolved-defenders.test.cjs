@@ -91,7 +91,7 @@ test("smaller smarter waves and first two boss pressure increases are wired in",
  assert.match(waves,/Math\.min\(15,10\+Math\.floor\(number\*\.35\)\)/);
  const beau=read("js/beau-encounter.js"),shade=read("js/shade-encounter.js");
  assert.match(beau,/if\(s\.round>=4\)finish\(e,t,hooks\)/);
- assert.match(beau,/e\.x\+ax\*610/);
+ assert.match(beau,/const reach=\(835\+phase\(e\)\*50\)\*\.66\+16/);
  assert.match(shade,/18\+s\.round\*3/);
  assert.match(shade,/if\(i===0\)continue/);
  assert.match(shade,/#99ffe1/);
