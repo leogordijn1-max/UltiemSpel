@@ -44,6 +44,17 @@
     e.evolutionTier=level; // zero-based: LV1=0, LV4=3
     e.evolutionLevel=level+1;
     e.evolutionName=FORMS[e.kind][level];
+    // Core abilities are a fixed family+level contract, not random squad/elite
+    // rolls. Squad positions can vary; what a unit CAN do never varies.
+    const skills={
+      0:[["pursuit"],["pursuit","intercept"],["pursuit","intercept","rally"],["pursuit","intercept","rally","relentless"]],
+      1:[["sprint"],["sprint","feint"],["sprint","feint","phase"],["sprint","feint","phase","chainDash"]],
+      2:[["tough"],["tough","stomp"],["tough","stomp","anchor"],["tough","stomp","anchor","quake"]],
+      4:[["ranged"],["ranged","doubleShot"],["ranged","doubleShot","tripleShot"],["ranged","doubleShot","tripleShot","rapidFire"]],
+      5:[["chaseFuse"],["chaseFuse","chaseBurst"],["chaseFuse","chaseBurst","shockBurst"],["chaseFuse","chaseBurst","shockBurst","cataclysm"]],
+      6:[["shield"],["shield","escort"],["shield","escort","ward"],["shield","escort","ward","bastion"]]
+    };
+    e.evolutionAbilities=Object.freeze(skills[e.kind][level].slice());
     // Fewer, longer-lived bodies still need to fund two earned weapon
     // evolutions by 10:00 and 17:00; no XP is awarded without an actual kill.
     e.evolutionXpMultiplier=difficulty==="easy"?1:(1.34+level*.22);
@@ -60,6 +71,21 @@
     }
     if(e.kind===4)e.shootCooldown*=level>=2?.83:1;
     return e;
+  }
+  // A real, bounded gameplay effect for every upgraded Drifter. Allies gain
+  // a visible pressure formation, but their own abilities never change.
+  function combatMultiplier(e,enemies=[],player=null){
+    if(!e || e.kind!==0)return 1;
+    const level=e.evolutionLevel||1;
+    let multiplier=1;
+    if(player && level>=2 && Math.hypot(player.x-e.x,player.y-e.y)>185)
+      multiplier*=1.25;
+    if(level>=3 && Array.isArray(enemies) && enemies.some(a=>
+      a!==e && !a.dead && a.hp>0 && a.kind===0 &&
+      (a.x-e.x)**2+(a.y-e.y)**2<180**2))
+      multiplier*=1.22;
+    if(level>=4)multiplier*=1.13;
+    return multiplier;
   }
   // Actual formation decisions: evolved frontline holds the angle, evolved
   // Burstlings attack exposed flanks while a guard/binder occupies the centre.
@@ -161,4 +187,5 @@
   window.evolvedEnemyTeamSteer=teamSteer;
   window.drawEnemyEvolution=draw;
   window.enemyEvolutionForms=FORMS;
+  window.enemyEvolutionCombatMultiplier=combatMultiplier;
 })();
