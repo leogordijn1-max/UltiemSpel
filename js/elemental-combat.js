@@ -18,7 +18,7 @@ function elementalCooldown(key, seconds) {
   const effective=seconds*weaponCooldownMultiplier();
   // Water Bolt keeps its identity but no longer suppresses every approach.
   // Other Water/Frost/Fire cooldowns are unaffected.
-  elementalTimers[key]=key==="waterBolt"?Math.max(.98,effective):effective;
+  elementalTimers[key]=key==="waterBolt"?Math.max(1.12,effective):effective;
 }
 function elementalAim(maxRange = 900, projectileSpeed = 0) {
   const range=window.playerWeaponRange?.(maxRange) ?? maxRange;
@@ -114,10 +114,11 @@ function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKe
     if (evolutions.absoluteZero && weaponKey === "glacialPulse" && enemy !== boss)
       enemy.deepFreezeUntil = Math.max(enemy.deepFreezeUntil || 0, time + 0.85);
   } else if (element === "water") {
-    enemy.soakedUntil = Math.max(enemy.soakedUntil || 0, time + 1.8);
+    enemy.soakedUntil = Math.max(enemy.soakedUntil || 0,
+      time + (weaponKey === "waterBolt" ? .65 : 1.8));
     const dx = enemy.x - originX, dy = enemy.y - originY;
     const length = Math.hypot(dx, dy) || 1;
-    const force = enemy === boss ? 35 : 170;
+    const force = enemy === boss ? 35 : weaponKey === "waterBolt" ? 75 : 170;
     window.applyEnemyCrowdControl?.(enemy,
       dx/length*(force+(combo.bonusKnockback||0)),
       dy/length*(force+(combo.bonusKnockback||0)),
@@ -137,12 +138,12 @@ function updateElementalCombat(dt) {
     }
   }
   if (upgrades.waterBolt && !elementalTimers.waterBolt) {
-    const aim = elementalAim(1100,evolutions.riptideLance?760:640);
+    const aim = elementalAim(900,evolutions.riptideLance?760:640);
     if (aim.target) {
       const shot = elementalShot("waterBolt", player.x, player.y, aim.angle, evolutions.riptideLance ? 760 : 640, evolutions.riptideLance ? 10 : 7,
-        (12 + upgrades.waterBolt * 5) * globalDamageMultiplier() * (evolutions.riptideLance ? 1.15 : 1), 1.65);
-      if (shot) shot.pierce = evolutions.riptideLance ? 3 : 2;
-      elementalCooldown("waterBolt", Math.max(1.05, 1.6 - upgrades.waterBolt * 0.1));
+        (10 + upgrades.waterBolt * 4) * globalDamageMultiplier() * (evolutions.riptideLance ? 1.1 : 1), 1.65);
+      if (shot) shot.pierce = evolutions.riptideLance ? 2 : 1;
+      elementalCooldown("waterBolt", Math.max(1.18, 1.72 - upgrades.waterBolt * 0.1));
     }
   }
   if (upgrades.iceShards && !elementalTimers.iceShards) {
@@ -266,7 +267,7 @@ function updateElementalCombat(dt) {
             elementalAreas.push({ type: "water", x: shot.x, y: shot.y,
               radius: 34, life: 0.27, maxLife: 0.27 });
             if (elementalAreas.length > 55) elementalAreas.shift();
-            if (shot.hit.size >= (shot.pierce || 2)) shot.life = 0;
+            if (shot.hit.size >= (shot.pierce || 1)) shot.life = 0;
           } else {
             window.addWorldScar?.("frost", shot.x, shot.y, 55);
             // Crystal Storm fragments fork in two directions, once per main shard.
