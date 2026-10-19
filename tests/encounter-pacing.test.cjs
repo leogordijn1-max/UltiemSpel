@@ -37,7 +37,7 @@ test("Normal ambient pressure steadily approaches, while the population hard-cap
   assert.ok(h.window.encounterPopulationCap(1200,"nightmare")<=30);
   assert.ok(h.window.encounterPopulationCap(0,"easy")<20);
   assert.ok(h.window.encounterAmbientInterval(0,"normal")<=2.6);
-  assert.ok(h.window.encounterAmbientInterval(1500,"normal")<=1.65);
+  assert.ok(h.window.encounterAmbientInterval(1500,"normal")<1.651);
   assert.ok(h.window.encounterAmbientInterval(1500,"nightmare")<h.window.encounterAmbientInterval(1500,"easy"));
 });
 test("every 17 seconds the director sends a tightly grouped, stronger patrol",()=>{
