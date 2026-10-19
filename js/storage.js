@@ -1,5 +1,11 @@
 // Safe, versioned localStorage access shared by the game and its menus.
-const SAVE_VERSION = 3;
+const SAVE_VERSION = 4;
+const RUN_WEAPON_KEYS = Object.freeze([
+  "arcane", "orbit", "bomb", "chain", "boomerang", "flame", "frost", "nova",
+  "fireball", "flameOrbit", "waterBolt", "tidalWave", "whirlpool", "iceShards", "glacialPulse"
+]);
+const RUN_WORLD_KEYS = Object.freeze(["frozen", "burning", "flooded"]);
+const RUN_ELEMENT_KEYS = Object.freeze(["fire", "water", "frost"]);
 
 function storageGet(key, fallback = null) {
   try {
@@ -103,7 +109,15 @@ function loadMetaProgress() {
       stats: run.stats && typeof run.stats === "object"
         ? (typeof normalizeRunStats === "function" ? normalizeRunStats(run.stats) : run.stats)
         : null,
-      weapons: Array.isArray(run.weapons) ? run.weapons.filter((key) => ["arcane","orbit","bomb","chain","boomerang","flame","frost","nova"].includes(key)).slice(0, 3) : [],
+      // Update 37: preserve the real elemental run loadout and world history
+      // across page reloads. Older v2/v3 saves may not have these fields.
+      weapons: Array.isArray(run.weapons)
+        ? [...new Set(run.weapons.filter(key => RUN_WEAPON_KEYS.includes(key)))].slice(0, 3) : [],
+      runElement: RUN_ELEMENT_KEYS.includes(run.runElement) ? run.runElement : null,
+      worldBefore: RUN_WORLD_KEYS.includes(run.worldBefore) ? run.worldBefore : null,
+      worldAfter: RUN_WORLD_KEYS.includes(run.worldAfter) ? run.worldAfter : null,
+      worldImpact: Number.isFinite(run.worldImpact)
+        ? Math.max(0, Math.min(100, Math.round(run.worldImpact))) : null,
       id: typeof run.id === "string" ? run.id.slice(0, 80) : "",
     })).sort((a, b) => b.survived - a.survived).slice(0, 30)
     : [];
