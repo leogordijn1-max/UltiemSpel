@@ -341,7 +341,11 @@ function showRecords() {
       top.append(heading);
       for (const run of metaProgress.runs.slice(0, 10)) {
         const line = document.createElement("p");
-        line.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${getCharacter(run.character).name} · ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills${run.victory ? " · VICTORY" : ""}`;
+        const worldJourney = run.worldBefore && run.worldAfter
+          ? " · " + run.worldBefore.toUpperCase() + " → " +
+            run.worldAfter.toUpperCase() + " (" + (run.worldImpact ?? 0) + "%)"
+          : "";
+        line.textContent = `${(run.mode || "standard").toUpperCase()} · ${run.difficulty.toUpperCase()} · ${getCharacter(run.character).name} · ${Math.floor(run.survived / 60)}:${String(run.survived % 60).padStart(2, "0")} · ${run.kills} kills${run.victory ? " · VICTORY" : ""}` + worldJourney;
         top.append(line);
       }
       if (!metaProgress.runs.length) {
@@ -492,6 +496,14 @@ function appendRunStatistics(parent, run, { compact = false } = {}) {
   heading.textContent = compact ? "DETAILED RUN STATS" : "YOUR RUN IN NUMBERS";
   section.append(heading);
   if (!hasRecordedStats) {
+    // Legacy saves still show the invasion that was actually preserved.
+    if (run.worldBefore && run.worldAfter) {
+      const history = document.createElement("p");
+      history.textContent = "WORLD HISTORY · " + run.worldBefore.toUpperCase() +
+        " → " + run.worldAfter.toUpperCase() + " · " +
+        (run.worldImpact ?? 0) + "% IMPACT";
+      section.append(history);
+    }
     const message = document.createElement("p");
     message.textContent = "Detailed damage stats were not recorded for this earlier run.";
     section.append(message);
