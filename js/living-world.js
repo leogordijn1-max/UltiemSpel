@@ -2,13 +2,13 @@
 // Runs leave long-term atmospheric traces determined by equipped weapons.
 (() => {
   const KEY = "shadowLivingWorldV1";
-  const blank = () => ({ runs: 0, frost: 0, fire: 0, ruin: 0, storm: 0, arcane: 0, lastRun: "" });
+  const blank = () => ({ runs: 0, frost: 0, fire: 0, water: 0, ruin: 0, storm: 0, arcane: 0, lastRun: "" });
   function readWorld() {
     try {
       const value = JSON.parse(storageGet(KEY, "null"));
       if (!value || typeof value !== "object") return blank();
       const world = blank();
-      for (const key of ["runs", "frost", "fire", "ruin", "storm", "arcane"]) {
+      for (const key of ["runs", "frost", "fire", "water", "ruin", "storm", "arcane"]) {
         const number = Number(value[key]);
         world[key] = Number.isFinite(number) ? Math.max(0, Math.min(100000, number)) : 0;
       }
@@ -21,6 +21,7 @@
     const marks = [
       ["frost", "FROZEN", "Ice spreads across the abandoned streets."],
       ["fire", "SCORCHED", "Ash settles on the surviving rooftops."],
+      ["water", "DROWNED", "Floodwater rolls through the defending world."],
       ["ruin", "SHATTERED", "The roads and towers bear fresh scars."],
       ["storm", "STORM-TOUCHED", "Static hangs over the ruined city."],
       ["arcane", "HAUNTED", "The air still pulses with strange magic."],
@@ -38,8 +39,9 @@
     if (result && !prior) {
       const world = readWorld();
       const influence = {
-        frost: upgrades.frost || 0,
-        fire: upgrades.flame || 0,
+        frost: (upgrades.frost || 0) + (upgrades.iceShards || 0) + (upgrades.glacialPulse || 0),
+        fire: (upgrades.flame || 0) + (upgrades.fireball || 0) + (upgrades.flameOrbit || 0),
+        water: (upgrades.waterBolt || 0) + (upgrades.tidalWave || 0) + (upgrades.whirlpool || 0),
         ruin: (upgrades.bomb || 0) + (upgrades.nova || 0),
         storm: upgrades.chain || 0,
         arcane: (upgrades.arcane || 0) + (upgrades.orbit || 0) + (upgrades.boomerang || 0),
