@@ -134,7 +134,7 @@ test("Water and Frost evolution levels/timestamps stay unchanged",()=>{
 test("index loads resistance before enemies and changed scripts use updated URLs",()=>{
   const html=source("index.html");
   assert.ok(html.indexOf('src="js/crowd-control.js?v=32"')<
-    html.indexOf('src="js/enemies.js?v=balanced-crowd-32"'));
-  assert.match(html,/js\/elemental-combat\.js\?v=balanced-crowd-32/);
-  assert.match(html,/js\/upgrades\.js\?v=balanced-offers-32/);
+    html.indexOf('src="js/enemies.js?v=normal-pressure-32-1"'));
+  assert.match(html,/js\/elemental-combat\.js\?v=water-fire-rate-32-1/);
+  assert.match(html,/js\/upgrades\.js\?v=vitality-32-1/);
 });
