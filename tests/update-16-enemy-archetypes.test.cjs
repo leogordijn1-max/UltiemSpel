@@ -100,7 +100,7 @@ test("Zombie Mike's stomp warns before damaging, then can be dodged",()=>{
 });
 test("all LV2 Mikes retain the same innate stomp regardless of their squad position",()=>{
   const h=harness(),e=h.spawn(2);
-  e.encounterTactic="crusher";e.stompCooldown=0;
+  e.encounterTactic="crusher";h.player.x=140;e.stompCooldown=0;
   assert.equal(h.window.updateEnemyArchetype(e,.016,h.player,1,true).speedMult,0);
   assert.ok(e.stompWarning>0);
   assert.match(read("js/game.js"),/const formationRoles=\["vanguard","ward","skirmisher"\]/);
