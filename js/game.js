@@ -914,15 +914,16 @@ function update(dt) {
         // Each normal entry is a small OFFSCREEN wavelet, not one disposable
         // mob that an automatic weapon kills before it reaches the arena.
         const count=difficulty==="easy"?1:
-          Math.min(ambientCap-enemies.length,enemies.length<5?4:enemies.length<9?2:1);
+          Math.min(ambientCap-enemies.length,enemies.length<4?2:1);
         let added=0;
         for(let i=0;i<count;i++){
           const ambient=enemySpawn();
           if(!ambient)break;
           if(difficulty!=="easy"){
             const depth=Math.min(1,growthTime/750);
-            ambient.hp*=1.55+.35*depth;
-            if(ambient.kind!==1)ambient.speed*=1.12;
+            // Survival power now comes from Guardian-triggered evolutions.
+            ambient.hp*=1.08+.14*depth;
+            if(ambient.kind!==1)ambient.speed*=1.05;
             ambient.encounterRole ||= "ambient";
           }
           added++;
@@ -1069,12 +1070,16 @@ function update(dt) {
       }
     }
     if (e.kind === 5) {
-      if (!e.armed && onScreen && playerDistanceSquared < 115 * 115) {
+      if (!e.armed && onScreen &&
+          playerDistanceSquared < (e.burstRadius+45)*(e.burstRadius+45)) {
         e.armed = true;
         e.burstWarning = window.getCombatDifficultyTuning?.(difficulty)?.burstTelegraph ?? 0.95;
       }
       if (e.armed) {
-        moveSpeed = 0;
+        // The warning tracks the REAL moving Burstling instead of freezing
+        // harmlessly 40px outside its detonation circle.
+        moveSpeed = playerDistanceSquared<(e.burstRadius+player.r+12)**2?0:
+          moveSpeed*.75;
         e.burstWarning = Math.max(0, e.burstWarning - dt);
         if (e.burstWarning === 0) {
           e.dead = true;
@@ -1174,7 +1179,10 @@ function update(dt) {
       const teamSkill=e.encounterTactic
         ? window.updateEncounterTactic?.(e,dt,player,time,onScreen,abilityHooks)
         : null;
-      const action=teamSkill||archetype;
+      // Distinct evolved flanking positions only fill moments where the
+      // authored encounter tactic / archetype isn't already attacking.
+      const formation=window.evolvedEnemyTeamSteer?.(e,player);
+      const action=teamSkill||archetype||formation;
       if(action){
         moveAngle=action.angle;
         moveSpeed*=action.speedMult;
