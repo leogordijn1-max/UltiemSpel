@@ -180,7 +180,7 @@ test("live game and result screen consume status and territorial movement",()=>{
   const game=source("js/game.js"),controls=source("js/controls.js"),
     world=source("js/world-state.js"),index=source("index.html");
   assert.match(game,/window\.worldOccupationMovement\?\.\(e,e\.groundBiome\)/);
-  assert.match(game,/window\.worldConsequenceHudText\?\.\(player,time\)/);
+  assert.match(game,/window\.getWorldConquest\?\.\(\)\.coverage/);
   assert.match(game,/window\.resetWorldConsequences\?\.\(\)/);
   assert.match(world,/window\.worldConsequenceBossStage\?\.\(count\)/);
   assert.match(controls,/window\.worldConsequenceEndReport\?\.\(\)/);
