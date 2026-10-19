@@ -422,7 +422,7 @@ test("legacy progress loads with normalized values and keeps existing totals", (
   assert.deepEqual(progress.hpLevel, 3);
   assert.deepEqual(progress.damageLevel, 4);
   assert.deepEqual(progress.totals, { kills: 840, bosses: 2, runs: 9, wins: 0 });
-  assert.equal(progress.version, 3);
+  assert.equal(progress.version, 4);
   assert.equal(progress.achievements.length, 1);
   assert.equal(progress.runs[0].survived, 320);
 });
@@ -439,7 +439,7 @@ test("unavailable localStorage safely falls back to defaults", () => {
   const context = vm.createContext({});
   loadScript(context, "js/storage.js");
   const progress = JSON.parse(vm.runInContext("JSON.stringify(loadMetaProgress())", context));
-  assert.equal(progress.version, 3);
+  assert.equal(progress.version, 4);
   assert.deepEqual(progress.totals, { kills: 0, bosses: 0, runs: 0, wins: 0 });
   assert.equal(vm.runInContext("storageSet('key', 'value')", context), false);
 });
