@@ -26,12 +26,12 @@
     const progress=Math.max(0,Math.min(1,(Math.max(0,seconds)-300)/1200));
     return 1+progress*(difficulty==="nightmare"?.38:.50);
   }
-  // Vitality gives maximum HP as before, but healing no longer erases a hit
-  // before the player has even had to dodge the next attack.
+  // Vitality retains max-HP and gradual recovery but must not replace
+  // dodging during a run with only a handful of registered enemy hits.
   function vitalityRegenPerSecond(level=0,secondsSinceHit=Infinity){
     const rank=Math.max(0,Math.min(5,Math.floor(Number(level)||0)));
     if(!rank||secondsSinceHit<3)return 0;
-    return .35*(1-Math.pow(.70,rank))/.30;
+    return .23*(1-Math.pow(.70,rank))/.30;
   }
   function get(difficulty) { return tuning[difficulty] || tuning.normal; }
   function applySquad(enemy,difficulty) {
