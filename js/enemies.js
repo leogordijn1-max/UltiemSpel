@@ -10,7 +10,7 @@ const difficultyProfiles = {
   },
   normal: {
     enemyHealth: 1,
-    enemyDamage: 1.13,
+    enemyDamage: 1,
     spawnRate: 1,
     xpReward: 1,
     healthDropChance: 0.15,
