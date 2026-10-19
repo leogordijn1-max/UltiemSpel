@@ -126,7 +126,7 @@ test("new choice pool keeps distinct cards, current build route and no free evol
 });
 test("Water and Frost evolution levels/timestamps stay unchanged",()=>{
   const upgrades=source("js/upgrades.js");
-  assert.match(upgrades,/return \[600, 1020\]\[evolvedCount\] \?\? Infinity/);
+  assert.match(upgrades,/function nextEvolutionTime\(\) \{[\s\S]*?return 0;/);
   assert.match(upgrades,/currentUpgradeLevel\(recipe\.weapon\) >= recipe\.level && currentUpgradeLevel\(recipe\.support\) >= recipe\.supportLevel/);
   assert.match(upgrades,/level: 5, supportLevel: 3/);
   assert.match(source("js/elemental-combat.js"),/elementalCooldown\("waterBolt", Math\.max\(1\.18, 1\.72 - upgrades\.waterBolt \* 0\.1\)\)/);
@@ -136,5 +136,5 @@ test("index loads resistance before enemies and changed scripts use updated URLs
   assert.ok(html.indexOf('src="js/crowd-control.js?v=32"')<
     html.indexOf('src="js/enemies.js?v='));
   assert.match(html,/js\/elemental-combat\.js\?v=water-fire-rate-32-1/);
-  assert.match(html,/js\/upgrades\.js\?v=balance-37-2/);
+  assert.match(html,/js\/upgrades\.js\?v=39-ux-evolution/);
 });
