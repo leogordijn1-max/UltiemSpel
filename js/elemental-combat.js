@@ -15,7 +15,10 @@ function resetElementalCombat() {
 }
 
 function elementalCooldown(key, seconds) {
-  elementalTimers[key] = seconds * weaponCooldownMultiplier();
+  const effective=seconds*weaponCooldownMultiplier();
+  // Water Bolt + Rapid Casting V must not fire a piercing lance every .59s.
+  // Other Water/Frost/Fire cooldowns are unaffected.
+  elementalTimers[key]=key==="waterBolt"?Math.max(.78,effective):effective;
 }
 function elementalAim(maxRange = 900, projectileSpeed = 0) {
   const range=window.playerWeaponRange?.(maxRange) ?? maxRange;
@@ -138,7 +141,7 @@ function updateElementalCombat(dt) {
     if (aim.target) {
       const shot = elementalShot("waterBolt", player.x, player.y, aim.angle, evolutions.riptideLance ? 760 : 640, evolutions.riptideLance ? 10 : 7,
         (14 + upgrades.waterBolt * 6) * globalDamageMultiplier() * (evolutions.riptideLance ? 1.2 : 1), 1.65);
-      if (shot) shot.pierce = evolutions.riptideLance ? 5 : 2;
+      if (shot) shot.pierce = evolutions.riptideLance ? 4 : 2;
       elementalCooldown("waterBolt", Math.max(0.95, 1.5 - upgrades.waterBolt * 0.1));
     }
   }
