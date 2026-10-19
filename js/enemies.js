@@ -979,13 +979,13 @@ function bossFire(e) {
   } else if (e.variant === 1) {
     // Old ring opened directly toward the player, allowing them to stand
     // still safely. Its exit is now off-axis, with a clearly warned lance.
-    const count = e.phaseThree ? 16 : e.phaseTwo ? 14 : 10;
+    const count = e.phaseThree ? 22 : e.phaseTwo ? 18 : 14;
     const gapAngle = angle + Math.PI * .72;
     for (let i = 0; i < count; i++) {
       const shotAngle = angle + i * Math.PI * 2 / count;
       const gap = Math.atan2(Math.sin(shotAngle - gapAngle), Math.cos(shotAngle - gapAngle));
-      if (Math.abs(gap) < Math.PI * 2 / count * 1.18) continue;
-      addBossProjectile(e, shotAngle, e.phaseThree ? 260 : e.phaseTwo ? 240 : 215, e.phaseTwo ? 12 : 10, "shadow");
+      if (Math.abs(gap) < Math.PI * 2 / count * .76) continue;
+      addBossProjectile(e, shotAngle, e.phaseThree ? 330 : e.phaseTwo ? 306 : 274, e.phaseTwo ? 12 : 10, "shadow");
     }
     const spears = e.phaseTwo ? [-.16,0,.16] : [0];
     for (const offset of spears)
