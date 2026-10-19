@@ -154,27 +154,30 @@ function fireFrostOrb() {
   // One homing projectile per volley; level-ups improve chill radius and modestly
   // improve cast frequency. Phantom Shots does not grant Frost Orb pierce.
   const level = Math.max(1, upgrades.frost);
-  weaponTimers.frost = Math.max(3.2, 4.1 - level * 0.18);
-  const target = playerVisibleTarget(player.x, player.y, 1300);
+  // Weapon timers tick in Rapid Casting-adjusted time units. Clamp the real
+  // volley interval to prevent maximum Rate from freezing every approach.
+  weaponTimers.frost = Math.max(2.65 / weaponCooldownMultiplier(),
+    4.30 - level * 0.16);
+  const target = playerVisibleTarget(player.x, player.y, 850);
   if (!target || bullets.length >= 300) return;
   if (typeof playSfx === "function") playSfx("frost");
   // Frost is the deliberate homing/control weapon, unlike predicted Arcane.
   const angle = Math.atan2(target.y - player.y, target.x - player.x);
-  const speed = 245;
+  const speed = 252;
   bullets.push({
     type: "frost", evolved: !!evolutions.glacier,
     x: player.x, y: player.y,
     vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-    speed, turnRate: 4.0, life: 7, r: 13, target,
+    speed, turnRate: 3.3, life: 5.5, r: 13, target,
     d: (24 + level * 4) * globalDamageMultiplier(),
     pierce: 1, // Detonates on its first impact, even with Phantom Shots.
-    frostRadius: 88 + level * 12,
+    frostRadius: 82 + level * 10,
     hit: new Set(),
   });
 }
 
 function applyFrostBurst(x, y, projectile) {
-  const radius = projectile.frostRadius * (evolutions.glacier ? 1.25 : 1);
+  const radius = projectile.frostRadius * (evolutions.glacier ? 1.18 : 1);
   frostZones.push({ x, y, radius, life: 1.4, evolved: !!evolutions.glacier });
   window.emitWeaponVfxImpact?.("frost", x, y, time);
   window.addWorldScar?.("frost", x, y, radius);
@@ -182,12 +185,16 @@ function applyFrostBurst(x, y, projectile) {
     const dx = enemy.x - x, dy = enemy.y - y;
     const hitRadius = radius + enemyHitRadius(enemy);
     if (dx * dx + dy * dy > hitRadius * hitRadius) continue;
-    enemy.frostUntil = Math.max(enemy.frostUntil || 0, time + (evolutions.glacier ? 5.2 : 3.5 + upgrades.frost * 0.25));
+    const chill=window.frostOrbChillDuration?.(upgrades.frost,!!evolutions.glacier,enemy,time)
+      ?? (2 + upgrades.frost*.14);
+    enemy.frostOrbChillUntil=Math.max(enemy.frostOrbChillUntil||0,time+chill);
+    enemy.frostOrbResistUntil=time+4.5;
+    enemy.frostUntil=Math.max(enemy.frostUntil||0,time+chill);
     window.markElementalSynergy?.(enemy,"frost","frost",time);
     if (enemy !== projectile.hitTarget) {
       // No extra AoE damage to the directly hit enemy. Glacier gains a modest
       // splash bonus, but neither version gains additional piercing projectiles.
-      const splashMultiplier = evolutions.glacier ? 0.32 : 0.25;
+      const splashMultiplier = evolutions.glacier ? 0.30 : 0.22;
       damage(enemy, projectile.d * splashMultiplier, projectile, "frost");
     }
   }
