@@ -115,8 +115,10 @@ function damageEnemyElemental(enemy, amount, element, originX, originY, weaponKe
     const dx = enemy.x - originX, dy = enemy.y - originY;
     const length = Math.hypot(dx, dy) || 1;
     const force = enemy === boss ? 35 : 170;
-    enemy.knockbackX = (enemy.knockbackX || 0) + dx / length * (force + (combo.bonusKnockback || 0));
-    enemy.knockbackY = (enemy.knockbackY || 0) + dy / length * (force + (combo.bonusKnockback || 0));
+    window.applyEnemyCrowdControl?.(enemy,
+      dx/length*(force+(combo.bonusKnockback||0)),
+      dy/length*(force+(combo.bonusKnockback||0)),
+      weaponKey==="waterBolt"?"waterBolt":"water",time);
   }
 }
 function updateElementalCombat(dt) {
@@ -328,10 +330,9 @@ function updateElementalCombat(dt) {
         area.hit.add(enemy);
         damageEnemyElemental(enemy, (17+upgrades.tidalWave*8)*globalDamageMultiplier()*
           (area.evolved?1.12:1),"water",area.x,area.y,"tidalWave");
-        enemy.knockbackX = (enemy.knockbackX || 0)+
-          Math.cos(area.angle)*(enemy===boss?20:185);
-        enemy.knockbackY = (enemy.knockbackY || 0)+
-          Math.sin(area.angle)*(enemy===boss?20:185);
+        window.applyEnemyCrowdControl?.(enemy,
+          Math.cos(area.angle)*(enemy===boss?20:185),
+          Math.sin(area.angle)*(enemy===boss?20:185),"tidalWave",time);
       }
       continue;
     }
@@ -345,8 +346,8 @@ function updateElementalCombat(dt) {
       const distance=Math.hypot(dx,dy)||1;
       if (distance>area.radius+enemyHitRadius(enemy)) continue;
       const force=enemy===boss?60:(area.evolved?920:680);
-      enemy.knockbackX=(enemy.knockbackX||0)+dx/distance*force*dt;
-      enemy.knockbackY=(enemy.knockbackY||0)+dy/distance*force*dt;
+      window.applyEnemyCrowdControl?.(enemy,
+        dx/distance*force*dt,dy/distance*force*dt,"whirlpool",time);
       enemy.soakedUntil=Math.max(enemy.soakedUntil||0,time+.6);
       if(pulse){
         const raw=(5+upgrades.whirlpool*2)*globalDamageMultiplier()*(area.evolved?1.2:1);
@@ -356,8 +357,9 @@ function updateElementalCombat(dt) {
         if(combo.activated){
           window.emitWeaponVfxImpact?.("whirlpool",enemy.x,enemy.y,time);
           window.showElementalCombo?.(enemy,combo,time);
-          enemy.knockbackX=(enemy.knockbackX||0)+dx/distance*(combo.bonusKnockback||0);
-          enemy.knockbackY=(enemy.knockbackY||0)+dy/distance*(combo.bonusKnockback||0);
+          window.applyEnemyCrowdControl?.(enemy,
+            dx/distance*(combo.bonusKnockback||0),
+            dy/distance*(combo.bonusKnockback||0),"whirlpool",time);
         }
       }
     }
