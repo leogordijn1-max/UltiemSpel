@@ -70,7 +70,8 @@
     }));
   }
   function fire(e,hooks={}) {
-    if(!valid(e)||!e.secondaryVolley)return false;
+    // Firing before the full wind-up would bypass the readable marker.
+    if(!valid(e)||!e.secondaryVolley||e.shotWarning>0)return false;
     const g=geometry(e),p=e.secondaryVolley;
     const stage=phase(e),speed=290+stage*12;
     // Only one attack replaces the NORMAL volley; no extra enemies or
