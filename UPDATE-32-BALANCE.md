@@ -1,3 +1,5 @@
+> **NIEUWERE BALANCEWERKZAAMHEDEN (19 oktober 2026):** maker leverde opnieuw een echte non-sandbox Normal Water Victory na de hier besproken Update 32 aan. 52 hits, 843,71 schade, eind-HP ~243/260, normale vijanden en Water Bolt nog steeds te makkelijk; Zombie Mike bereikt de speler inmiddels wél. Daarom is een gerichte **[Update 32.1 survival-hotfix](UPDATE-32-1-SURVIVAL-BALANCE.md)** geïmplementeerd (Vitality cooldown/afvlakking, geleidelijk hogere gewone vijandenschade, Water Bolt Rapid Casting-limiet). De browseracceptatie na **die** hotfix is nog OPEN. Dit document beschrijft vooral de eerdere Update 32, niet de huidige regen-cijfers.
+
 # UPDATE 32 — Water Bolt, Crowd Control & Evolution-aanbod
 
 **Datum:** 19 oktober 2026 · **Branch:** feature/living-world-prototype  
