@@ -143,6 +143,7 @@ test("Low/High draw massive Anchor feet, Stalker ghosts and honest Warden links"
  const a=enemy(2);w.initializeEnemyCounterRole(a);
  const s=enemy(1,{encounterTactic:"pouncer",tacticAngle:.7,
   counterExposureUntil:6});w.initializeEnemyCounterRole(s);
+ s.counterExposureUntil=6; // expose only after a real completed dash
  const ward=enemy(6,{encounterTactic:"ward",encounterGroup:"g"});
  const ally=enemy(0,{x:60,encounterGroup:"g"});
  w.initializeEnemyCounterRole(ward);
