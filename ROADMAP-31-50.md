@@ -101,6 +101,10 @@ De maker leverde ná Update 32 een nieuwe Normal Water JSON aan: **27:01 non-san
 
 **Code-technisch gebouwd en geautomatiseerd getest; maker-browseracceptatie OPEN.** [Het Update 38 ontwerp, de complete 36-matchupmatrix, echte Water/Frost-nerfs en testprotocol](UPDATE-38-ALL-NINE-WEAPONS.md). De gemeten Water 37.2-baseline blijft 26:42 Victory/21 hits/333,86 damage; door de nieuwe Fire/Water/Frost-code is nog geen complete nieuwe browserrun gespeeld. De beproefde healing- en bossdrukverbeteringen uit 37.2 blijven. **Volgende update: 39 — Three Complete Normal Runs & UX Fixes**, pas daarna milestone-40 release gate GO/NO-GO.
 
+## Update 38.1 — Normal-mastery polish vóór maker-speeltest (19 oktober 2026)
+
+**ACTUEEL — UPDATE 38.1: NORMAL MOET JE VERDIENEN (19 oktober 2026).** Makerdoel: een nieuwe speler wint doorgaans niet in de eerste Normal-runs; verlies moet leerzaam, zichtbaar en te voorkomen zijn door beter dodgen, Guardian-patronen kennen en actief health pickups zoeken. **GEEN** verborgen winstblokkade, gegarandeerde dood, nep-hits of healing-nerf. Code: gewone Normal enemy-damageramp begint vanaf **4:00 (voorheen 5:00)** en bereikt dezelfde cap **1,65× op 22:00 (voorheen 25:00)**. Guardian normale salvo-cooldowns versnellen gecontroleerd in fase I/II/III met factoren **0,97 / 0,89 / 0,83** (Nightmare nog sneller), minimum **1,35s**; bestaande warningtijden, signature-ultimates en recovery blijven. **Easy onveranderd**, Vitality en healing pickups blijven. Difficulty-menu legt beginner vs Normal uit. Nieuwe regressietests: **578/578 CI groen vóór documentatiewijzigingen**. [UPDATE-38-1-NORMAL-MASTERY.md](UPDATE-38-1-NORMAL-MASTERY.md). **Geen recente menselijke browserrun na deze build**, dus novice-winrate, feel en release-acceptatie nog OPEN. De gevraagde Update 39 blijft drie complete Normal-runs Fire/Water/Frost met UX-fixes; niet doen alsof 39 door deze hotfix klaar is.
+
 ## Hoe we voortgang bijhouden
 
 - **Update 30:** 20/20 voltooide *geplande* technische/combat-updates. **Releasegates nog OPEN.**
