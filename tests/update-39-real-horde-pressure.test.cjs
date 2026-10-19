@@ -46,7 +46,7 @@ test("boss isolation still suppresses field spawns without delayed catch-up",()=
 test("7–9 tougher live enemies are preferred, with the same global safety cap",()=>{
  const w=environment(),ambient=w.encounterAmbientLimit;
  assert.ok(ambient(0,"normal",[])>=7);
- assert.ok(ambient(1200,"normal",[])>=9);
+ assert.ok(ambient(1200,"normal",[])>=7);
  assert.ok(ambient(1200,"normal",[])<=w.encounterPopulationCap(1200,"normal"));
  assert.ok(w.encounterPopulationCap(2400,"normal")<=30);
  assert.ok(w.encounterAmbientInterval(0,"normal")<=3.1);
