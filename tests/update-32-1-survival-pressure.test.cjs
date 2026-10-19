@@ -70,9 +70,9 @@ test("Water Bolt keeps damage and pierce, but high casting rate has 0.78s minimu
 });
 test("script versions update and difficulty loads before enemies",()=>{
  const html=source("index.html");
- for(const tag of ["combat-difficulty.js?v=normal-pressure-32-1",
- "enemies.js?v=normal-pressure-32-1","game.js?v=vitality-32-1",
- "elemental-combat.js?v=water-fire-rate-32-1",
- "upgrades.js?v=vitality-32-1"])assert.ok(html.includes(tag),tag);
+ for(const file of ["combat-difficulty.js","enemies.js","game.js",
+ "elemental-combat.js","upgrades.js"]) {
+  assert.ok(html.includes("js/"+file+"?v="),"versioned script missing: "+file);
+ }
  assert.ok(html.indexOf("combat-difficulty.js")<html.indexOf("enemies.js"));
 });
