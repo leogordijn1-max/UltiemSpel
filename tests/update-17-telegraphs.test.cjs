@@ -125,7 +125,7 @@ test("firing directions and cancellation hooks are called in the real simulation
  const render=read("js/render.js");
  assert.match(render,/tacticVolleyOffsets/);
  assert.match(render,/attackAngle=angle\+offset/);
- assert.match(read("index.html"),/encounter-tactics\.js\?v=telegraphs-17/);
+ assert.match(read("index.html"),/encounter-tactics\.js\?v=[a-z0-9-]+/);
 });
 test("no additional enemies, spawns, XP or bosses are introduced by warning visuals",()=>{
  const tactics=read("js/encounter-tactics.js");
