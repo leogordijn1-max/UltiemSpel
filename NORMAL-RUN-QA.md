@@ -38,6 +38,10 @@ Start op **Normal, 1×** met standaard, zonder Developer God Mode. Noteer tijd, 
 - **Memory / FPS:** vergelijk een zware golf, een boss en een drukke terreinzone, bij Low/Medium/High. Neem de echte P95-frame, AI-, hit- en draw-tijden op. Node-regressies bewijzen geen numerieke FPS-winst.
 - **Refresh/start opnieuw:** saved world en earned trophies/records blijven, tijdelijke conquest/scars verdwijnen; geen blijvende sandbox rewards.
 
+## Nieuwe boss-QA nadat Update 33 is geïmplementeerd (19 oktober 2026)
+
+**TECHNISCH 514/514 groen, live gebruikersacceptatie NOG NIET UITGEVOERD.** Beau heeft FANG SWEEP/PACK CROSSFIRE, Shade MOURNING LANCES/PHANTOM MIRRORS als echte alternatieve *normale* salvo's met vooraf getekende impactzones. Bestaande door maker geliefde showcase-/fase-3-aanvallen zijn behouden. Tijdens volgende Playtest graag **Low/High-graphics, 1×/2×/3× snelheid**, zien of de markeringen overeenkomen met de werkelijke danger zones, of er veilige dodgeroutes zijn en of de nieuwe aanvallen hun zwaarste twee bestaande aanvallen niet oneerlijk overlappen. Gebruik de nieuwe `boss_secondary_attack`-events in de QA-JSON. Zie [UPDATE-33-GUARDIAN-SECONDARY.md](UPDATE-33-GUARDIAN-SECONDARY.md). **Update 32.1 survival/Water hertest en M3–M6 blijven eveneens OPEN.**
+
 ## Vrijgavebesluit — actuele live QA op 18 oktober 2026
 
 **M1 PASS voor Water** (26:44 non-sandbox Standard Normal Victory), **M2 PASS voor Water** (evoluties 10:00/17:00 met echt verdiende weapon/supportlevels). Frost 28:01 heeft sandboxflag true zonder developerfuncties door de maker, waardoor gewone bossrewardkeuzes ontbraken. **M3–M6 gedeeltelijk OPEN**, wegens onbewezen telegraph-fairness, refresh/Endless, Low/Medium/memory, en ontbrekende Fire-run. [PLAYTEST-31-FROST-WATER.md](PLAYTEST-31-FROST-WATER.md).
