@@ -57,66 +57,64 @@
     return {x:e.x+g.sx*side*125-g.fx*35,
       y:e.y+g.sy*side*125-g.fy*35};
   }
+  // Every boss demands a DIFFERENT dodge direction. These positions are
+  // shared by rendered circles and the real bossHazards collision system.
+  // Beau: forward charging lane vs a wide sideways pack trap.
+  // Shade: lateral spear wall vs diagonal phantom corners.
   function points(e) {
     const g=geometry(e);if(!g)return [];
+    const at=(forward,side,r)=>({
+      x:g.tx+g.fx*forward+g.sx*side,
+      y:g.ty+g.fy*forward+g.sy*side,r
+    });
     if(g.mode==="fangSweep")
-      return [
-        {x:g.tx,y:g.ty,r:72},
-        {x:g.tx+g.sx*g.side*135,y:g.ty+g.sy*g.side*135,r:62}
-      ];
+      return [at(-114,0,83),at(0,0,83),at(114,0,83)];
     if(g.mode==="houndCrossfire")
-      return [{x:g.tx,y:g.ty,r:73}];
+      return [at(0,-148,86),at(0,0,86),at(0,148,86)];
     if(g.mode==="mourningLances")
-      return [
-        {x:g.tx,y:g.ty,r:74},
-        {x:g.tx+g.sx*g.side*135,y:g.ty+g.sy*g.side*135,r:63}
-      ];
-    return [
-      {x:g.tx,y:g.ty,r:70},
-      ...[-1,1].map(side=>({
-        x:g.tx+g.sx*side*150,y:g.ty+g.sy*side*150,r:61
-      }))
-    ];
+      return [at(0,-153,81),at(0,0,81),at(0,153,81)];
+    return [at(-124,-124,86),at(124,-124,86),
+      at(-124,124,86),at(124,124,86)];
   }
   function fire(e,hooks={}) {
     // Firing before the full wind-up would bypass the readable marker.
     if(!valid(e)||!e.secondaryVolley||e.shotWarning>0)return false;
     const g=geometry(e),p=e.secondaryVolley;
     // Fewer, faster, more intentional lanes: avoid a wall of overlapping rays.
-    const stage=phase(e),speed=365+stage*24;
+    const stage=phase(e),speed=415+stage*33;
     // Only one attack replaces the NORMAL volley; no extra enemies or
     // recurring timers. All hazards are delayed, allowing an additional dodge.
     if(g.mode==="fangSweep") {
-      for(const off of [-.38,0,.38])
+      for(const off of [-.43,-.21,0,.21,.43])
         hooks.projectile?.(e,g.angle+off,
-          speed+(off===0?80:-42),15+stage*3,"fish");
+          speed+(off===0?90:-35),17+stage*3,"fish");
     } else if(g.mode==="houndCrossfire"){
-      hooks.projectile?.(e,g.angle,speed+88,16+stage*3,"fish");
+      hooks.projectile?.(e,g.angle,speed+88,19+stage*3,"fish");
       for(const side of [-1,1]) {
         const phantom=source(e,g,side);
         const angle=Math.atan2(g.ty-phantom.y,g.tx-phantom.x);
-        hooks.projectile?.(phantom,angle,speed-25,15+stage*3,"fish");
+        hooks.projectile?.(phantom,angle,speed-15,17+stage*3,"fish");
         hooks.puff?.(phantom.x,phantom.y,"#ffd095",5);
       }
     } else if(g.mode==="mourningLances") {
       // Distinct fast centre spear + two slower flanks, not a blind ring spam.
       for(const [off,delta] of [[-.36,-65],[0,110],[.36,-65]])
-        hooks.projectile?.(e,g.angle+off,speed+delta,15+stage*3,"shadow");
+        hooks.projectile?.(e,g.angle+off,speed+delta,18+stage*3,"shadow");
     } else {
       // A paired apparition attack. Both mirrors and both marked flanks
       // are visible for the entire wind-up; the centre remains an escape.
-      hooks.projectile?.(e,g.angle,speed+88,16+stage*3,"shadow");
+      hooks.projectile?.(e,g.angle,speed+90,19+stage*3,"shadow");
       for(const side of [-1,1]){
         const mirror=source(e,g,side);
         hooks.projectile?.(mirror,
-          Math.atan2(g.ty-mirror.y,g.tx-mirror.x),speed-27,15+stage*3,"shadow");
+          Math.atan2(g.ty-mirror.y,g.tx-mirror.x),speed-18,18+stage*3,"shadow");
         hooks.puff?.(mirror.x,mirror.y,"#c5a0ff",6);
       }
     }
     for(const mark of points(e)){
       // The marker has been visible since prepare(); the same coordinates
       // drive collision, using the existing real bossHazards queue.
-      hooks.hazard?.(mark.x,mark.y,mark.r,.76,16+stage*3);
+      hooks.hazard?.(mark.x,mark.y,mark.r,.52,18+stage*4);
     }
     hooks.puff?.(e.x,e.y,e.variant===0?"#ffcb91":"#c5a0ff",10);
     // Guard against the next large showcase starting during our late trap.
