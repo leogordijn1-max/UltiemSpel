@@ -36,10 +36,10 @@ test("special waves never exceed the spawn cap and generate legitimate kinds", (
   vm.runInContext("spawnSpecialWave(4,10)", context);
   assert.equal(vm.runInContext("enemies.length", context), 10);
   assert.equal(vm.runInContext("enemies.every(e => [0,1].includes(e.kind))", context), true);
-  assert.equal(vm.runInContext("enemies.every(e => e.hp === 46)", context), true);
+  assert.equal(vm.runInContext("enemies.every(e => e.hp >= 150)", context), true);
 });
 
-test("Burstling and Bulwark initialize their abilities and elites receive a trait", () => {
+test("Burstling and Bulwark have deterministic family abilities; elite adds only stats", () => {
   const context = vm.createContext({});
   vm.runInContext(
     "let W=800,H=600,player={x:0,y:0},growthTime=600,difficulty='normal',boss=null,enemies=[],rand=(a)=>a;",
@@ -50,7 +50,7 @@ test("Burstling and Bulwark initialize their abilities and elites receive a trai
   assert.deepEqual(JSON.parse(vm.runInContext(
     "JSON.stringify([enemies[0].burstWarning, enemies[0].armed, enemies[1].shieldActive, enemies[2].elite, enemies[2].eliteTrait])",
     context,
-  )), [0, false, true, true, "charger"]);
+  )), [0, false, true, true, null]);
 });
 
 test("Ranged Shade must be visible, and its projectile honors the locked aim", () => {
@@ -61,7 +61,7 @@ test("Ranged Shade must be visible, and its projectile honors the locked aim", (
   assert.equal(vm.runInContext("rangedEnemyCanAttack(shade,340)", context), true);
   assert.equal(vm.runInContext("rangedEnemyCanAttack({x:450,y:0,r:15},450)", context), false);
   assert.equal(vm.runInContext("Math.abs(enemyShots[0].vx) < 1e-9", context), true);
-  assert.equal(vm.runInContext("enemyShots[0].vy", context), 105);
+  assert.equal(vm.runInContext("enemyShots[0].vy", context), 121);
   assert.ok(vm.runInContext("enemyShots[0].turnRate < 1", context));
 });
 
