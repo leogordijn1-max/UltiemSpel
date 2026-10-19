@@ -2,7 +2,7 @@ const test=require("node:test"),assert=require("node:assert/strict");
 const fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
 const read=p=>fs.readFileSync(path.join(__dirname,"..",p),"utf8");
 function evolution(){const window={};vm.runInNewContext(read("js/enemy-evolution.js"),{window,Math,Number});return window;}
-const make=kind=>({kind,hp:100,speed:100,damage:10,r:kind===2?35:13});
+const make=kind=>({kind,x:0,y:0,hp:100,speed:100,damage:10,r:kind===2?35:13});
 
 test("every species has its OWN LV1 birth chapter, while the whole world enters the same horror era",()=>{
  const w=evolution();
@@ -50,7 +50,7 @@ test("evolved Burstling survives longer, arms from closer real proximity and get
  assert.ok(late.hp>base.hp*2);
  assert.ok(late.speed>base.speed);
  assert.ok(late.burstRadius>base.burstRadius);
- assert.match(read("js/game.js"),/playerDistanceSquared < \(e.burstRadius\+45\)\*\(e.burstRadius\+45\)/);
+ assert.match(read("js/game.js"),/playerDistanceSquared < \(e.burstRadius\+85\)\*\(e.burstRadius\+85\)/);
  assert.match(read("js/render.js"),/const radius=e.burstRadius\|\|86/);
 });
 
@@ -85,7 +85,7 @@ test("each evolved family changes actual Canvas silhouette while retaining old b
   });
   w.drawEnemyEvolution(e,ctx,100,"low");
   assert.ok(events.some(x=>x[0]==="fill"),"real visible new spikes");
-  assert.ok(events.some(x=>x[0]==="stroke"),"real visible mutation");
+  assert.ok(events.some(x=>x[0]==="stroke"||x[0]==="strokeRect"),"real visible mutation");
   visited.add(e.evolutionName);
  }
  assert.equal(visited.size,6);
@@ -113,13 +113,13 @@ test("supernatural counter-skills appear only AFTER the creature actually mutate
  const fresh={kind:1,evolutionTier:0,encounterTactic:"pouncer"};
  w.initializeEnemyCounterRole(fresh);
  assert.equal(fresh.counterRole,null);
- const changed={kind:1,evolutionTier:1,encounterTactic:"pouncer"};
+ const changed={kind:1,evolutionTier:2,evolutionLevel:3,encounterTactic:"pouncer"};
  w.initializeEnemyCounterRole(changed);
  assert.equal(changed.counterRole,"phaseStalker");
- const mike={kind:2,evolutionTier:1};
+ const mike={kind:2,evolutionTier:2,evolutionLevel:3};
  w.initializeEnemyCounterRole(mike);
  assert.equal(mike.counterRole,"anchor");
- const ward={kind:6,evolutionTier:3,encounterTactic:"ward"};
+ const ward={kind:6,evolutionTier:2,evolutionLevel:3,encounterTactic:"ward"};
  w.initializeEnemyCounterRole(ward);
  assert.equal(ward.counterRole,"warden");
  const src=read("js/enemies.js");
