@@ -102,6 +102,7 @@ let upgrades = {},
   bossRewardPoints = 0,
   permanentDamageBonus = 0,
   runDamageTaken = 0,
+  lastPlayerHitAt = -Infinity,
   runStats = createRunStats(),
   metaProgress = loadMetaProgress(),
   startWeapon = "arcane",
@@ -177,6 +178,7 @@ function reset() {
   bossesDefeated = 0;
   bossRewardPoints = 0;
   runDamageTaken = 0;
+  lastPlayerHitAt = -Infinity;
   runStats = createRunStats();
   runRecorded = false;
   if (!isCharacterUnlocked(metaProgress, selectedCharacter))
@@ -309,6 +311,7 @@ function trackDiscovery(group, key) {
 
 // Account for blocked hits and dodges separately from HP lost.
 function recordPlayerHit(amount) {
+  lastPlayerHitAt=time;
   window.runQaEvent?.("hit",{amount,health:player?.hp},time);
   runDamageTaken += amount;
   if (runStats) runStats.damageTaken += Math.max(0, amount);
@@ -774,8 +777,10 @@ function update(dt) {
   }
   if (upgrades.health) {
     const beforeHeal = player.hp;
-    player.hp = Math.min(player.maxHp, player.hp + upgrades.health * 0.8 * dt);
-    if (runStats) runStats.healing += Math.max(0, player.hp - beforeHeal);
+    const recovery=window.vitalityRegenPerSecond?.(
+      upgrades.health,time-lastPlayerHitAt) ?? 0;
+    player.hp=Math.min(player.maxHp,player.hp+recovery*dt);
+    if(runStats)runStats.healing+=Math.max(0,player.hp-beforeHeal);
   }
   // Standard Mode has exactly three guardians; the fourth boss is the finale.
   // Completing Bell before 25:00 preserves time for weapon evolutions.
@@ -1127,8 +1132,10 @@ function update(dt) {
         },
         damage: amount => {
           if(player.inv>0 || window.developerInvincible?.() || tryDodge())return false;
-          player.hp-=amount;
-          recordPlayerHit(amount);
+          const pressure=window.enemyThreatMultiplier?.(growthTime,difficulty)??1;
+          const skillDamage=amount*pressure;
+          player.hp-=skillDamage;
+          recordPlayerHit(skillDamage);
           player.inv=.85;damageFlash=.48;shake=Math.max(shake,10);
           puff(player.x,player.y,"#ff9478",11);
           if(player.hp<=0)end();
