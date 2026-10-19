@@ -295,6 +295,8 @@ function draw() {
     if (!visibleEnemy(e, -e.r * 2)) continue;
     // Distinct ice crystals / ember crown / water rings around all adapted
     // enemy silhouettes, without extra sprites or high-cost particle systems.
+    // Silhouette-shifting evolved forms surround the original recognisable body.
+    window.drawEnemyEvolution?.(e,ctx,time,graphicsQuality);
     window.drawEnemyWorldAura?.(e, ctx, time, graphicsQuality);
     window.drawEncounterTactic?.(e,ctx,time,graphicsQuality);
     window.drawWorldDefense?.(e, ctx, time, graphicsQuality);
