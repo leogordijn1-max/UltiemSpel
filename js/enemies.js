@@ -883,6 +883,25 @@ function bossFire(e) {
   if (e.isFinalBoss) return finalBossFire(e);
   const angle = Number.isFinite(e.shotAngle) ? e.shotAngle : Math.atan2(player.y - e.y, player.x - e.x);
   e.volleyCount = (e.volleyCount || 0) + 1;
+  // Update 33: ordinary Beau/Shade volleys alternate unique painted
+  // patterns. The old fallback still runs for standalone tests and all
+  // encounters without a prepared warning; iconic specials are unaffected.
+  const enhanced=(e.variant===0||e.variant===1) &&
+    (typeof window!=="undefined") && window.fireGuardianSecondary?.(e,{
+      projectile:(source,a,s,d,type)=>addBossProjectile(source,a,s,d,type),
+      hazard:(x,y,radius,warning,amount)=>{
+        if(bossHazards.length<14)bossHazards.push({
+          x,y,radius,warning,
+          damage:amount*(difficultyProfiles[difficulty]||difficultyProfiles.normal).enemyDamage
+        });
+      },
+      puff:(x,y,color,amount)=>{if(typeof puff==="function")puff(x,y,color,amount);}
+    });
+  if(enhanced){
+    e.shotWarning=0;
+    e.shootCooldown=e.phaseThree?2.08:e.phaseTwo?2.35:2.9;
+    return;
+  }
   if (e.variant === 0) {
     // Beau's trademark MarioVis shotgun. In phase two, add an occasional ring.
     const offsets = e.phaseThree ? [-0.62,-0.42,-0.23,0,0.23,0.42,0.62]
