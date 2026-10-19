@@ -535,7 +535,10 @@ function damage(e, d, origin = player, damageType = "direct") {
   const knockbackX = e.x - origin.x;
   const knockbackY = e.y - origin.y;
   const knockbackLength = Math.hypot(knockbackX, knockbackY);
-  if (knockbackLength > 0) {
+  // Water Bolt already applies its intended elemental push in
+  // damageEnemyElemental(). Applying this generic 145-unit shove again
+  // doubled its crowd control and kept runners outside contact range.
+  if (knockbackLength > 0 && !(damageType==="water" && origin?.type==="waterBolt")) {
     const source=damageType==="water"?"waterHit":"generic";
     const force=145 * (1+(upgrades.knockback||0)*.25);
     // All damage types now obey the same physical enemy weight, including
