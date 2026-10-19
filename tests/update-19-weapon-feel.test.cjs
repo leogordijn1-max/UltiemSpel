@@ -82,7 +82,7 @@ test("two fast projectiles do not require extra shots or bigger damage",()=>{
 test("elemental projectile families share predictive aim; homing Frost remains homing",()=>{
  const a=read("js/elemental-combat.js"),w=read("js/weapons.js");
  assert.match(a,/elementalAim\(1100,350\)/);
- assert.match(a,/elementalAim\(1100,evolutions\.riptideLance\?760:640\)/);
+ assert.match(a,/elementalAim\(900,evolutions\.riptideLance\?760:640\)/);
  assert.match(a,/elementalAim\(950,480\)/);
  assert.match(a,/weaponAimAngle\?\.\(player,enemy,projectileSpeed/);
  assert.match(w,/weaponAimAngle\?\.\(/);
