@@ -287,14 +287,9 @@ function makeEliteEnemy(e) {
   e.hp *= 2.0;
   e.damage *= 1.28;
   e.speed *= 1.06;
-  // Chargers only apply to melee enemies; ranged elites use armor or bursts.
-  const options = e.kind === 4 || e.kind === 5 ? ["armored", "swift"] : ["charger", "armored", "swift"];
-  e.eliteTrait = options[Math.floor(Math.random() * options.length)];
-  if (e.eliteTrait === "charger") {
-    e.eliteChargeCooldown = 5.5; e.eliteChargeWarning = 0; e.eliteChargeActive = 0;
-  } else if (e.eliteTrait === "swift") {
-    e.eliteSprintTimer = 2.2; e.eliteSprintActive = 0;
-  }
+  // Elite is a visible veteran stat modifier, never a random ability.
+  // Core attacks are exclusively from the family's evolution level.
+  e.eliteTrait = null;
   return e;
 }
 
