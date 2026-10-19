@@ -54,6 +54,8 @@
   let restored = false;
   let conquered = false;
   let restorationPeak = 0;
+  // Differentiate a won fight from a successful permanent disk write.
+  let conquestSaved = null;
   const monotonicNow = () => typeof performance !== "undefined" && performance.now
     ? performance.now() : Date.now();
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
@@ -72,6 +74,7 @@
     conquered = false;
     restored = false;
     restorationPeak = 0;
+    conquestSaved = null;
     coverage = 0;
     spread = null;
     return runWorld;
@@ -95,6 +98,7 @@
       coverage: Math.round(visualCoverage()),
       target: coverage,
       conquered, restored, restorationPeak, active: runActive,
+      saved: conquestSaved,
     };
   }
   function onWorldBossDefeated(count, isFinal) {
@@ -117,9 +121,15 @@
         (typeof victoryClaimed !== "undefined" && !victoryClaimed)) return false;
     conquered = true;
     changeCoverage(100, 2400);
-    storageSet(KEY, JSON.stringify({ version: 1, dominant: getInvadingWorld() }));
+    conquestSaved = storageSet(KEY, JSON.stringify({
+      version: 1, dominant: getInvadingWorld()
+    })) !== false;
     showWorldMoment("conquest", "THE WORLD HAS FALLEN",
-      getInvadingWorld().toUpperCase() + " · THE GUARDIAN'S POWER IS BROKEN");
+      getInvadingWorld().toUpperCase() +
+      (conquestSaved ? " · PERMANENT CONQUEST SAVED"
+        : " · THIS RUN ONLY · SAVE UNAVAILABLE"));
+    if (!conquestSaved && typeof notify === "function")
+      notify("LOCAL SAVE UNAVAILABLE · PROGRESS MAY BE LOST ON RELOAD", "wave", 6);
     return true;
   }
   function restoreWorldOnDefeat() {
@@ -144,6 +154,7 @@
     restored = false;
     conquered = false;
     restorationPeak = 0;
+    conquestSaved = null;
   }
   // Short temporary animation. Future cinematic cutscenes can replace this event.
   function showWorldMoment(kind, heading, detail) {
