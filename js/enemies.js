@@ -251,7 +251,10 @@ function enemySpawn(preferredKind = null, forceElite = false, bypassProgression 
     e.r = 24; e.hp *= 3; e.speed *= 0.75; e.damage = 11;
     e.guardTimer = 3; e.shieldActive = true;
   }
-  e.damage = (e.damage + growthTime * 0.004) * profile.enemyDamage;
+  // Normal enemies gain meaningful damage after 5 minutes. The familiar
+  // early game and isolated Guardian damage remain unchanged.
+  e.damage = (e.damage + growthTime * 0.004) * profile.enemyDamage *
+    (window.enemyThreatMultiplier?.(growthTime,difficulty) ?? 1);
   const tier = currentEndlessTier();
   if (tier) {
     e.hp *= 1 + tier * 0.17;
@@ -733,7 +736,8 @@ function enemyFireOrb(e) {
     turnRate: 0.8,
     life: 6.8,
     r: 8,
-    damage: 9,
+    damage: 9 * (difficultyProfiles[difficulty] || difficultyProfiles.normal).enemyDamage *
+      (window.enemyThreatMultiplier?.(growthTime,difficulty) ?? 1),
   });
 }
 
