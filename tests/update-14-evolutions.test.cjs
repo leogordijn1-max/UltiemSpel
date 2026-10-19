@@ -34,7 +34,7 @@ test("focused upgrade slot preserves a reserve weapon unlock among three choices
   assert.equal(h.rendered.length,3);
   const names=h.rendered.map(x=>x.innerHTML);
   assert.ok(names.some(s=>s.includes("Arcane Bolt")));
-  assert.ok(names.some(s=>s.includes("WEAPON UNLOCK")));
+  assert.ok(names.some(s=>s.includes("NEW WEAPON")));
   assert.equal(new Set(names).size,3);
 });
 test("either reserved weapon can be guaranteed while keeping an evolution-focus choice",()=>{
@@ -54,28 +54,26 @@ test("after leveling weapon, focus switches to its real recipe support",()=>{
   const h=upgradesHarness();
   h.read("upgrades.arcane=5");
   assert.equal(h.read("evolutionFocusKey()"),"pierce");
-  assert.match(h.window.evolutionHudStatus(),/Arcane Bolt 5\/5/);
-  assert.match(h.window.evolutionHudStatus(),/Phantom Shots 0\/3/);
+  assert.match(h.window.evolutionHudStatus(),/EVOLUTIONS 0\/3/);
+  assert.equal(h.read("evolutionFocusKey()"),"pierce");
   h.read("upgrades.pierce=3");
   assert.equal(h.read("evolutionFocusKey()"),null);
 });
-test("focus switches to another weapon after first evolution and stops at two",()=>{
+test("focus switches to another weapon after multiple evolutions; no artificial two-cap",()=>{
   const h=upgradesHarness();
   h.read("evolutions.splitDimension=true;unlockedWeapons.push('orbit','bomb');upgrades.orbit=3");
   assert.equal(h.read("evolutionFocusKey()"),"orbit");
   h.read("upgrades.orbit=5;upgrades.bladeBlock=1");
   assert.equal(h.read("evolutionFocusKey()"),"bladeBlock");
   h.read("evolutions.aegisRing=true");
-  assert.equal(h.read("evolutionFocusKey()"),null);
-  assert.equal(h.read("nextEvolutionTime()"),Infinity);
+  assert.equal(h.read("evolutionFocusKey()"),"bomb");
+  assert.equal(h.read("nextEvolutionTime()"),0);
   assert.equal(h.read("eligibleEvolutions().length"),0);
-  assert.equal(h.window.evolutionHudStatus(),"EVOLUTIONS 2/2 · COMPLETED");
+  assert.equal(h.window.evolutionHudStatus(),"EVOLUTIONS 2/3");
 });
-test("a fully earned first evolution appears at 10:00 without another XP pickup",()=>{
+test("first fully earned evolution is available immediately without a time gate",()=>{
   const h=upgradesHarness();
   h.read("upgrades.arcane=5;upgrades.pierce=3;time=599;pendingLevelUps=0");
-  assert.equal(h.window.offerEarnedEvolution(),false);
-  h.read("time=600");
   assert.equal(h.window.offerEarnedEvolution(),true);
   assert.equal(h.read("paused"),true);
   assert.equal(h.read("gameState"),"level-up");
@@ -83,11 +81,9 @@ test("a fully earned first evolution appears at 10:00 without another XP pickup"
   assert.equal(h.read("upgrades.arcane"),5);
   assert.equal(h.read("upgrades.pierce"),3);
 });
-test("a ready second evolution appears at 17:00 and not before",()=>{
+test("a ready second evolution is available before minute 17",()=>{
   const h=upgradesHarness();
   h.read("evolutions.splitDimension=true;unlockedWeapons.push('orbit');upgrades.orbit=5;upgrades.bladeBlock=3;pendingLevelUps=0;time=1019");
-  assert.equal(h.window.offerEarnedEvolution(),false);
-  h.read("time=1020");
   assert.equal(h.window.offerEarnedEvolution(),true);
   assert.ok(h.rendered.some(b=>b.innerHTML.includes("Aegis Ring")));
   assert.equal(h.read("upgrades.orbit"),5);
@@ -105,12 +101,11 @@ test("mid-boss, menus or outstanding level choices block surprise evolution prom
   h.read("gameState='playing';active=false");
   assert.equal(h.window.offerEarnedEvolution(),false);
 });
-test("milestone HUD displays missing requirements without hiding other upgrades",()=>{
+test("HUD only displays a clear evolution count rather than an irrelevant clock",()=>{
   const h=upgradesHarness();
-  assert.match(h.window.evolutionHudStatus(),/EVOLUTIONS 0\/2 · 2:30/);
-  assert.match(h.window.evolutionHudStatus(),/Arcane Bolt 2\/5/);
+  assert.equal(h.window.evolutionHudStatus(),"EVOLUTIONS 0/3");
   h.read("time=600");
-  assert.match(h.window.evolutionHudStatus(),/READY/);
+  assert.equal(h.window.evolutionHudStatus(),"EVOLUTIONS 0/3");
 });
 function estimateScenario({minutes=25,patrolEvery=55,waveEvery=100,defenseEvery=170,collection=.7}={}){
   const win={};
@@ -167,5 +162,5 @@ test("big XP orbs have expanded but still proximity-based pickup range",()=>{
   assert.match(game,/distanceSquared < range \* range/);
   assert.match(game,/window\.offerEarnedEvolution\?\.\(\)/);
   assert.match(source("index.html"),/id="evolutionProgress"/);
-  assert.match(source("js/upgrades.js"),/\[600, 1020\]\[evolvedCount\]/);
+  assert.match(source("js/upgrades.js"),/function nextEvolutionTime\(\) \{[\s\S]*?return 0;/);
 });
