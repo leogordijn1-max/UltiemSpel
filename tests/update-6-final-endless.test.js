@@ -20,7 +20,7 @@ test("old saves keep progress and unlock the new mode fields safely", () => {
   const context = vm.createContext({ localStorage: { getItem: () => old, setItem: () => {} } });
   load(context, "js/storage.js");
   const progress = JSON.parse(vm.runInContext("JSON.stringify(loadMetaProgress())", context));
-  assert.equal(progress.version, 3);
+  assert.equal(progress.version, 4);
   assert.equal(progress.points, 13);
   assert.equal(progress.totals.wins, 0);
   assert.equal(progress.endlessUnlocked, false);
