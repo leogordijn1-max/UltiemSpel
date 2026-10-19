@@ -26,6 +26,8 @@ function assign(e,position=0,groupId=null,requestedRole=null){
   e.tacticWarning=0;e.tacticDashTime=0;
   e.tacticWarningDuration=0;e.tacticDashLength=0;e.tacticDashWidth=0;
   if(role==="volatile")e.burstRadius=Math.max(e.burstRadius||86,104);
+  // Selected tactical Runner and Bulwark members become visible named roles.
+  window.initializeEnemyCounterRole?.(e);
   return e;
 }
 function groupId(){return "pack-"+(++groupSequence);}
@@ -114,8 +116,13 @@ function tick(e,dt,player,now,visible,hooks={}){
     return {angle:aim+(e.encounterSlot%2? .70:-.70),speedMult:1.32};
   }
   if(role==="pouncer"&&e.tacticDashTime>0){
+    const previous=e.tacticDashTime;
     e.tacticDashTime=Math.max(0,e.tacticDashTime-dt);
-    return {angle:e.tacticAngle||0,speedMult:e.tacticComboBoostUntil>now?5.4:4.55};
+    if(e.counterRole==="phaseStalker"&&previous>0&&e.tacticDashTime===0)
+      e.counterExposureUntil=now+1.6;
+    return {angle:e.tacticAngle||0,
+      speedMult:e.tacticComboBoostUntil>now?5.4:
+        e.counterRole==="phaseStalker"?4.25:4.55};
   }
   if(e.tacticWarning>0){
     e.tacticWarning=Math.max(0,e.tacticWarning-dt);
@@ -146,14 +153,20 @@ function tick(e,dt,player,now,visible,hooks={}){
   const minDistance=role==="pouncer"?85:role==="crusher"?0:0;
   const maxDistance=role==="pouncer"?390:role==="crusher"?165:role==="binder"?160:0;
   if(maxDistance&&e.tacticCooldown===0&&distance>minDistance&&distance<maxDistance){
-    e.tacticAngle=Math.atan2(dy,dx);
+    const aimed=Math.atan2(dy,dx);
+    // The Phase Stalker strafes around the frontline instead of blindly
+    // dashing at the player; the real corridor remains fully warned.
+    e.tacticAngle=role==="pouncer"&&e.counterRole==="phaseStalker"
+      ? aimed+(e.encounterSlot%2?1:-1)*.37:aimed;
     e.tacticRadius=role==="crusher"?174:role==="binder"?158:0;
-    e.tacticWarning=role==="pouncer"?.68:role==="crusher"?.95:.85;
+    e.tacticWarning=role==="pouncer"?
+      (e.counterRole==="phaseStalker"?.86:.68):role==="crusher"?.95:.85;
     e.tacticWarningDuration=e.tacticWarning;
     if(role==="pouncer"){
       // Warn the player about a corridor, not just the centerline. The
       // forward distance conservatively covers a full boosted dash.
-      e.tacticDashLength=Math.min(460,Math.max(270,(e.speed||80)*5.4*.58*1.35));
+      const dashMult=e.counterRole==="phaseStalker"?4.25:5.4;
+      e.tacticDashLength=Math.min(460,Math.max(270,(e.speed||80)*dashMult*.58*1.35));
       e.tacticDashWidth=(e.r||12)+(player.r||12)+4;
     }
     return {angle:e.tacticAngle,speedMult:0};
