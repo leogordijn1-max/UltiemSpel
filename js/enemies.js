@@ -332,7 +332,7 @@ function spawnSpecialWave(number, cap = 95) {
     return { name: "BOSS ARENA · WAVES PAUSED", spawned: 0, pattern: null };
   const pattern = wavePatternFor(number);
   const swarm = !!pattern.swarm;
-  const hardMode=difficulty!=="easy";
+  const hardMode=typeof difficulty==="string"?difficulty!=="easy":true;
   const waveSize=swarm
     ?(hardMode?Math.min(15,10+Math.floor(number*.35)):Math.min(42,26+Math.floor(number*1.2)))
     :(hardMode?Math.min(4,pattern.members?.length||4):
