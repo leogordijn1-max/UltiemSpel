@@ -140,6 +140,23 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       hitFlashGeometry: new THREE.SphereGeometry(1, 10, 8),
       standardGeometry: new THREE.BoxGeometry(1.3, 19, 1.3),
       standardClothGeometry: new THREE.BoxGeometry(8, 8, 1.2),
+      bossTorsoGeometry: new THREE.SphereGeometry(1, 16, 12),
+      bossHeadGeometry: new THREE.SphereGeometry(1, 14, 10),
+      bossLimbGeometry: new THREE.CylinderGeometry(3.2, 4.5, 18, 8),
+      bossSnoutGeometry: new THREE.ConeGeometry(6, 18, 8),
+      bossEarGeometry: new THREE.ConeGeometry(4, 13, 7),
+      bossBellGeometry: new THREE.CylinderGeometry(11, 20, 17, 12, 1, true),
+      bossCrestGeometry: new THREE.ConeGeometry(7, 16, 8),
+      bossMaskGeometry: new THREE.BoxGeometry(14, 9, 3),
+      bossWingGeometry: new THREE.ConeGeometry(11, 31, 5),
+      bossHaloGeometry: new THREE.TorusGeometry(17, 1.5, 6, 32),
+      bossOrbitGeometry: new THREE.TorusGeometry(25, 0.9, 6, 40),
+      telegraphCircleGeometry: new THREE.CircleGeometry(1, 32),
+      telegraphRingGeometry: new THREE.RingGeometry(0.9, 1, 32),
+      telegraphBoxGeometry: new THREE.BoxGeometry(1, 0.5, 1),
+      telegraphArcGeometry: new THREE.TorusGeometry(1, 0.07, 4, 32, Math.PI * 1.4),
+      explosionGeometry: new THREE.SphereGeometry(1, 12, 8),
+      flameFanGeometry: new THREE.CircleGeometry(1, 24, -0.65, 1.3),
       bulwarkShieldGeometry: (() => {
         const shape = new THREE.Shape();
         shape.moveTo(-11, 14);
@@ -162,6 +179,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       projectileGeometry: new THREE.SphereGeometry(3.8, 10, 8),
       projectileRingGeometry: new THREE.TorusGeometry(6.3, 0.8, 6, 16),
       crystalGeometry: new THREE.OctahedronGeometry(5, 0),
+      orbitBladeGeometry: new THREE.BoxGeometry(26, 3.8, 8),
       hpBackGeometry: new THREE.BoxGeometry(26, 2.2, 1),
       hpFillGeometry: new THREE.BoxGeometry(24, 1.2, 1.2),
       groundMaterial: new THREE.MeshStandardMaterial({
@@ -218,6 +236,81 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           color, emissive: color, emissiveIntensity: 0.8, roughness: 0.3,
         }),
       ),
+      bossMaterials: [
+        ["#725345", "#d9aa76", "#342322", "#ff8b55"],
+        ["#382d50", "#c5b2df", "#171522", "#c08bff"],
+        ["#80704f", "#e7d29a", "#473b2c", "#ffe29b"],
+        ["#493247", "#f0a8e4", "#1a1424", "#ff63e3"],
+      ].map(([body, trim, dark, glow]) => ({
+        body: new THREE.MeshStandardMaterial({
+          color: body, roughness: 0.76, metalness: 0.08,
+        }),
+        trim: new THREE.MeshStandardMaterial({
+          color: trim, roughness: 0.48, metalness: 0.32,
+        }),
+        dark: new THREE.MeshStandardMaterial({
+          color: dark, roughness: 0.92, metalness: 0.03,
+        }),
+        glow: new THREE.MeshStandardMaterial({
+          color: glow, emissive: glow, emissiveIntensity: 1.4,
+          roughness: 0.28, metalness: 0.12,
+        }),
+      })),
+      telegraphMaterials: {
+        boss: new THREE.MeshBasicMaterial({
+          color: "#ff79ca", transparent: true, opacity: 0.3,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+        hazard: new THREE.MeshBasicMaterial({
+          color: "#ff567c", transparent: true, opacity: 0.42,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+        charge: new THREE.MeshBasicMaterial({
+          color: "#ffad62", transparent: true, opacity: 0.42,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+        fire: new THREE.MeshBasicMaterial({
+          color: "#ff874b", transparent: true, opacity: 0.26,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+        water: new THREE.MeshBasicMaterial({
+          color: "#51deeb", transparent: true, opacity: 0.24,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+        frost: new THREE.MeshBasicMaterial({
+          color: "#9ceaff", transparent: true, opacity: 0.26,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+        arcane: new THREE.MeshBasicMaterial({
+          color: "#c29aff", transparent: true, opacity: 0.26,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+        safe: new THREE.MeshBasicMaterial({
+          color: "#8effd8", transparent: true, opacity: 0.62,
+          side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+        }),
+      },
+      explosionMaterials: {
+        fire: new THREE.MeshBasicMaterial({
+          color: "#ff9348", transparent: true, opacity: 0.34, depthWrite: false,
+        }),
+        arcane: new THREE.MeshBasicMaterial({
+          color: "#d993ff", transparent: true, opacity: 0.32, depthWrite: false,
+        }),
+        frost: new THREE.MeshBasicMaterial({
+          color: "#a7eaff", transparent: true, opacity: 0.3, depthWrite: false,
+        }),
+      },
+      gemMaterials: {
+        health: new THREE.MeshStandardMaterial({
+          color: "#ff6380", emissive: "#ff334d", emissiveIntensity: 0.6,
+          metalness: 0.25, roughness: 0.25,
+        }),
+        xp: new THREE.MeshStandardMaterial({
+          color: "#7adcf5", emissive: "#29b7e7", emissiveIntensity: 0.6,
+          metalness: 0.25, roughness: 0.25,
+        }),
+      },
       projectileMaterials: {
         arcane: new THREE.MeshStandardMaterial({
           color: "#e5d9ff", emissive: "#9161f1", emissiveIntensity: 2.3,
@@ -280,7 +373,18 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     const terrainCache = new Map();
     const actors = new Map();
     const projectiles = new Map();
+    const projectilePool = [];
     const gems = new Map();
+    const gemPool = [];
+    const orbitBlades = [];
+    const combatEffects = new Map();
+    const combatEffectPool = [];
+    const combatEffectIds = new WeakMap();
+    const fanGeometryCache = new Map();
+    let nextCombatEffectId = 1;
+    let activeCombatEffectCount = 0;
+    const effectPools = { rings: [], boxes: [], fans: [] };
+    const effectFrame = { rings: 0, boxes: 0, fans: 0 };
     const viewport = { width: window.innerWidth, height: window.innerHeight };
     const pitch = THREE.MathUtils.degToRad(46);
     const zoom = 1.16;
@@ -296,6 +400,18 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     let ruinMeshCount = 0;
     const playerNdc = new THREE.Vector3();
     const actorNdc = new THREE.Vector3();
+
+    function fanGeometry(halfAngle) {
+      const bounded = Math.max(0.08, Math.min(Math.PI, halfAngle || 0.65));
+      const key = bounded.toFixed(3);
+      if (!fanGeometryCache.has(key)) {
+        fanGeometryCache.set(
+          key,
+          new THREE.CircleGeometry(1, 32, -bounded, bounded * 2),
+        );
+      }
+      return fanGeometryCache.get(key);
+    }
 
     function hash(x, z, salt = 0) {
       let value = Math.imul(x | 0, 0x45d9f3b)
@@ -976,6 +1092,151 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       return root;
     }
 
+    function createBoss(enemy) {
+      const root = new THREE.Group();
+      const body = new THREE.Group();
+      root.add(body);
+      root.userData.body = body;
+      root.userData.shadowParts = [];
+      root.userData.arms = [];
+      root.userData.legs = [];
+      root.userData.rankPips = [];
+      root.userData.mutationParts = [];
+      root.userData.attackParts = [];
+      root.userData.characterType = "boss";
+      root.userData.familyKind = 3;
+      root.userData.bossVariant = enemy.isFinalBoss ? 3 : enemy.variant;
+      root.userData.family = enemy.isFinalBoss
+        ? "The Last Meme"
+        : ["Beau", "Mourning Shade", "Bell Tower"][enemy.variant] || "Guardian";
+      const materials = shared.bossMaterials[root.userData.bossVariant] || shared.bossMaterials[0];
+      root.userData.materials = [materials.body, materials.trim, materials.dark, materials.glow];
+      root.userData.rankMutation = [];
+      root.userData.silhouetteFeatures = [];
+      root.userData.phasePips = [];
+      root.userData.shadow = makeShadow(root, enemy.r * 0.9, 0.35);
+
+      const part = (geometry, material, x, y, z, sx, sy, sz, target = body) => {
+        const item = mesh(geometry, material, target, x, y, z);
+        item.scale.set(sx, sy, sz);
+        root.userData.shadowParts.push(item);
+        return item;
+      };
+      const limb = (x, y, z, sx = 1, sy = 1, sz = 1) => {
+        const joint = new THREE.Group();
+        joint.position.set(x, y, z);
+        body.add(joint);
+        const partMesh = mesh(shared.bossLimbGeometry, materials.body, joint, 0, -8, 0);
+        partMesh.scale.set(sx, sy, sz);
+        root.userData.shadowParts.push(partMesh);
+        root.userData.legs.push(joint);
+        return joint;
+      };
+
+      if (root.userData.bossVariant === 0) {
+        root.userData.silhouetteFeatures = ["four-legged hound", "long muzzle", "spiked hunting mantle"];
+        part(shared.bossTorsoGeometry, materials.body, 0, 20, -1, 29, 17, 40);
+        part(shared.bossTorsoGeometry, materials.dark, 0, 22, -20, 25, 16, 20);
+        part(shared.bossHeadGeometry, materials.body, 0, 28, 27, 15, 13, 19);
+        part(shared.bossSnoutGeometry, materials.dark, 0, 21, 43, 1, 1.1, 1)
+          .rotation.x = Math.PI / 2;
+        part(shared.bossTorsoGeometry, materials.trim, 0, 23, 45, 8, 5, 6);
+        for (const side of [-1, 1]) {
+          part(shared.bossEarGeometry, materials.dark, side * 10, 39, 27, 1, 1.2, 1)
+            .rotation.z = side * -0.22;
+          part(shared.bossHeadGeometry, materials.glow, side * 6, 31, 41, 1.5, 1.3, 1.2);
+          part(shared.bossCrestGeometry, materials.trim, side * 16, 34, 3, 1, 1, 1)
+            .rotation.z = side * -0.7;
+          limb(side * 18, 17, 22, 1.05, 0.9, 1.05);
+          limb(side * 18, 17, -23, 1.15, 1, 1.15);
+        }
+        part(shared.bossTorsoGeometry, materials.dark, 0, 27, -40, 4, 4, 26)
+          .rotation.x = -0.34;
+        part(shared.bossCrestGeometry, materials.trim, 0, 38, -57, 1, 1, 1)
+          .rotation.x = -Math.PI / 2;
+        root.userData.attackParts.push(part(shared.bossHaloGeometry, materials.glow, 0, 2, 0, 1.8, 1.8, 1));
+      } else if (root.userData.bossVariant === 1) {
+        root.userData.silhouetteFeatures = ["floating spectral cloak", "horned crown", "broad shadow mantle"];
+        part(shared.shadeRobeGeometry, materials.dark, 0, 23, 0, 2.6, 2.2, 2.6);
+        part(shared.bossHeadGeometry, materials.body, 0, 48, 3, 15, 17, 13);
+        part(shared.bossMaskGeometry, materials.dark, 0, 43, 14, 1.15, 1.2, 1);
+        for (const side of [-1, 1]) {
+          part(shared.bossWingGeometry, materials.body, side * 24, 27, -3, 1.25, 2.1, 1)
+            .rotation.z = side * -0.68;
+          part(shared.shadeTendrilGeometry, materials.dark, side * 13, 12, -6, 1.8, 2.1, 1.6)
+            .rotation.z = side * -0.22;
+          part(shared.bossCrestGeometry, materials.trim, side * 10, 62, -1, 1, 1.4, 1)
+            .rotation.z = side * -0.65;
+          part(shared.bossTorsoGeometry, materials.glow, side * 5, 45, 15, 2.1, 2.8, 1.1);
+          limb(side * 18, 30, -1, 0.85, 1.2, 0.8);
+        }
+        part(shared.bossHaloGeometry, materials.glow, 0, 68, -2, 1.8, 1.8, 1)
+          .rotation.x = 0.28;
+        root.userData.floatHeight = 11;
+        root.userData.halo = body.children.find((item) => item.geometry === shared.bossHaloGeometry);
+        root.userData.attackParts.push(root.userData.halo);
+      } else if (root.userData.bossVariant === 2) {
+        root.userData.silhouetteFeatures = ["tower-shaped clockwork body", "hanging bells", "broad chime arms"];
+        part(shared.bossTorsoGeometry, materials.dark, 0, 29, 0, 24, 28, 18);
+        part(shared.bossTorsoGeometry, materials.body, 0, 48, 0, 20, 14, 15);
+        part(shared.bossBellGeometry, materials.trim, 0, 34, 8, 1.45, 1.25, 1.25);
+        part(shared.bossCrestGeometry, materials.trim, 0, 68, 0, 1.45, 1.2, 1.3);
+        part(shared.bossHeadGeometry, materials.dark, 0, 53, 12, 8, 9, 6);
+        part(shared.bossMaskGeometry, materials.glow, 0, 53, 18, 0.75, 0.48, 0.35);
+        for (const side of [-1, 1]) {
+          part(shared.bossBellGeometry, materials.body, side * 27, 30, 2, 0.86, 0.9, 0.9);
+          part(shared.bossCrestGeometry, materials.trim, side * 27, 42, 2, 0.7, 0.8, 0.7);
+          limb(side * 25, 31, 0, 1.1, 1.1, 1.1);
+          limb(side * 10, 14, 0, 1.15, 1.05, 1.2);
+        }
+        const gear = part(shared.bossOrbitGeometry, materials.glow, 0, 28, 0, 1.25, 1.25, 1);
+        gear.rotation.x = Math.PI / 2;
+        root.userData.halo = gear;
+        root.userData.attackParts.push(gear);
+      } else {
+        root.userData.silhouetteFeatures = ["chaotic jester frame", "split mask", "orbiting reality rings"];
+        part(shared.bossTorsoGeometry, materials.body, 0, 27, 0, 22, 27, 17);
+        part(shared.bossHeadGeometry, materials.dark, 0, 57, 2, 17, 16, 13);
+        part(shared.bossMaskGeometry, materials.trim, 0, 55, 14, 1.45, 1.05, 0.8);
+        for (const side of [-1, 1]) {
+          part(shared.bossTorsoGeometry, materials.glow, side * 6, 58, 14, 2.4, 2.6, 1);
+          part(shared.bossCrestGeometry, materials.trim, side * 11, 72, -2, 1.25, 1.4, 1)
+            .rotation.z = side * -0.8;
+          part(shared.bossWingGeometry, materials.dark, side * 21, 36, -4, 0.9, 1.55, 0.8)
+            .rotation.z = side * -0.45;
+          limb(side * 21, 36, 0, 1, 1.1, 0.9);
+          limb(side * 10, 13, 0, 1.1, 1.1, 1.1);
+        }
+        const orbit = part(shared.bossOrbitGeometry, materials.glow, 0, 42, 0, 1.8, 1.8, 1);
+        orbit.rotation.x = Math.PI / 2;
+        root.userData.halo = orbit;
+        root.userData.attackParts.push(orbit);
+        const secondOrbit = part(shared.bossOrbitGeometry, materials.trim, 0, 42, 0, 1.45, 1.45, 1);
+        secondOrbit.rotation.x = 0.85;
+        root.userData.attackParts.push(secondOrbit);
+      }
+
+      for (let index = 0; index < 3; index++) {
+        const pip = mesh(
+          shared.rankPipGeometry,
+          shared.rankMaterials[index + 1],
+          body,
+          (index - 1) * 11,
+          root.userData.bossVariant === 2 ? 80 : 78,
+          -10,
+        );
+        pip.scale.setScalar(1.35);
+        root.userData.phasePips.push(pip);
+      }
+      root.userData.hitGlow = mesh(shared.hitFlashGeometry, shared.hitFlash, root, 0, 36, 0);
+      root.userData.hitGlow.scale.set(38, 58, 34);
+      root.userData.hitGlow.visible = false;
+      root.userData.bossPhase = 1;
+      root.userData.baseScale = Math.min(2.45, 1.65 + enemy.r * 0.008);
+      scene.add(root);
+      return root;
+    }
+
     function updateActor(actor, object, state, isPlayer) {
       const x = isPlayer ? state.player.x : object.x;
       const z = isPlayer ? state.player.y : object.y;
@@ -1001,7 +1262,81 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         + (moving ? Math.sin(phase) * 0.035 : 0);
       actor.userData.body.rotation.z = actor.userData.baseBodyRotationZ;
 
-      if (isPlayer) {
+      if (actor.userData.characterType === "boss") {
+        const phaseRank = object.isFinalBoss
+          ? Math.max(1, object.finalPhase || 1)
+          : object.phaseThree ? 3 : object.phaseTwo ? 2 : 1;
+        const phaseChanged = phaseRank !== actor.userData.bossPhase;
+        actor.userData.bossPhase = phaseRank;
+        actor.userData.phasePips.forEach((pip, index) => {
+          pip.visible = index < phaseRank;
+        });
+        const bossMoving = moving || object.chargeActive > 0;
+        actor.userData.animationState = object.phaseIntro > 0
+          ? "phase-transition"
+          : object.chargeWarning > 0
+            ? "charge-warning"
+            : object.chargeActive > 0
+              ? "charge"
+              : object.shotWarning > 0
+                ? "attack-windup"
+              : object.specialWarningUntil > state.time
+                ? "signature-warning"
+                : object.secondaryVolley
+                  ? object.secondaryVolley.mode
+                  : object.lateSecondary
+                    ? object.lateSecondary.mode
+              : object.beauFight?.stage || object.shadeFight?.stage
+                || object.bellFight?.stage || object.memeFight?.stage || "idle";
+        actor.userData.attackState = actor.userData.animationState;
+        actor.userData.phase = phaseRank;
+        actor.userData.phaseChanged = phaseChanged;
+        actor.userData.moving = bossMoving;
+        actor.userData.gaitPhase = Number((phase % (Math.PI * 2)).toFixed(3));
+        actor.userData.hitGlow.visible = object.hit > 0;
+        actor.rotation.y = object.chargeActive > 0
+          ? Math.atan2(object.chargeY || 0, object.chargeX || 1)
+          : speed > 8 ? Math.atan2(velocityX, velocityZ) : Math.atan2(
+            state.player.x - x, state.player.y - z,
+          );
+        const introPulse = object.phaseIntro > 0
+          ? 1 + Math.sin(state.time * 17) * 0.045
+          : 1;
+        const bob = bossMoving ? Math.abs(Math.sin(phase * 2)) * 2.2 : 0;
+        actor.userData.body.position.y = bob;
+        actor.userData.body.rotation.z = object.chargeWarning > 0
+          ? -0.12
+          : object.chargeActive > 0
+            ? 0.11
+            : object.shotWarning > 0 && actor.userData.bossVariant !== 0
+              ? -0.08
+            : actor.userData.baseBodyRotationZ + (bossMoving ? Math.sin(phase) * 0.04 : 0);
+        actor.scale.setScalar(actor.userData.baseScale * introPulse);
+        if (actor.userData.halo) {
+          actor.userData.halo.rotation.y += object.isFinalBoss ? 0.035 : 0.018;
+          actor.userData.halo.rotation.z += 0.012 * phaseRank;
+        }
+        actor.userData.attackParts.forEach((part, index) => {
+          part.rotation.y += (index % 2 ? -1 : 1) * (0.012 + phaseRank * 0.004);
+        });
+        actor.userData.arms.forEach((arm, index) => {
+          arm.rotation.x = object.chargeWarning > 0
+            ? -0.55
+            : bossMoving ? Math.sin(phase + index) * 0.28 : 0;
+        });
+        actor.userData.legs.forEach((leg, index) => {
+          leg.rotation.x = object.shotWarning > 0 && actor.userData.bossVariant !== 0 && index < 2
+            ? -0.62
+            : bossMoving ? Math.sin(phase + index * 1.4) * 0.45 : 0;
+        });
+        actor.userData.hpBar.visible = true;
+        const hpRatio = object.maxHp > 0 && Number.isFinite(object.maxHp)
+          ? object.hp / object.maxHp : 1;
+        actor.userData.hpFill.scale.x = Math.max(0.02, Math.min(1, hpRatio));
+        actor.userData.lastPosition.set(x, z);
+        actor.userData.lastTime = state.time;
+        return;
+      } else if (isPlayer) {
         const facing = state.player.facingX || 0;
         const facingY = state.player.facingY || 0;
         actor.rotation.y = Math.atan2(facing, facingY);
@@ -1105,11 +1440,12 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     function makeActorEntry(object, isPlayer = false) {
       const root = isPlayer
         ? createPlayer()
-        : createEnemyFamily(object);
+        : object.kind === 3 ? createBoss(object) : createEnemyFamily(object);
       if (!isPlayer) {
-        const hpBack = mesh(shared.hpBackGeometry, shared.hpBack, root.userData.body, 0, 48, 0);
+        const hpY = root.userData.characterType === "boss" ? 92 : 48;
+        const hpBack = mesh(shared.hpBackGeometry, shared.hpBack, root.userData.body, 0, hpY, 0);
         hpBack.rotation.x = -0.48;
-        const hpFill = mesh(shared.hpFillGeometry, shared.hpFill, root.userData.body, 0, 48.2, 0.7);
+        const hpFill = mesh(shared.hpFillGeometry, shared.hpFill, root.userData.body, 0, hpY + 0.2, 0.7);
         hpFill.rotation.x = -0.48;
         root.userData.hpBar = hpBack;
         root.userData.hpFill = hpFill;
@@ -1152,6 +1488,19 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       }
       for (const [object, actor] of actors) {
         if (!activeActors.has(object)) {
+          if (object.dead && !Number.isFinite(actor.userData.deathUntil)) {
+            actor.userData.deathUntil = state.time + 0.32;
+            actor.userData.deathScale = actor.scale.x;
+            actor.userData.hitGlow.visible = true;
+            actor.userData.hpBar && (actor.userData.hpBar.visible = false);
+          }
+          if (Number.isFinite(actor.userData.deathUntil) && state.time < actor.userData.deathUntil) {
+            const progress = 1 - (actor.userData.deathUntil - state.time) / 0.32;
+            actor.scale.setScalar(actor.userData.deathScale * Math.max(0.1, 1 - progress * 0.9));
+            actor.rotation.z = progress * 0.7;
+            activeActors.add(object);
+            continue;
+          }
           scene.remove(actor);
           actors.delete(object);
         }
@@ -1159,24 +1508,37 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     }
 
     function projectileMaterial(type) {
-      if (type === "fireball" || type === "flame" || type === "fish") return shared.projectileMaterials.fire;
+      if (type === "bomb" || type === "fireball" || type === "flame" || type === "fish") return shared.projectileMaterials.fire;
       if (type === "waterBolt" || type === "tidalWave") return shared.projectileMaterials.water;
       if (type === "iceShards" || type === "frost") return shared.projectileMaterials.frost;
       return shared.projectileMaterials.arcane;
     }
 
     function makeProjectile(object, isEnemy = false) {
-      const group = new THREE.Group();
-      const material = isEnemy ? shared.projectileMaterials.enemy : projectileMaterial(object.type);
-      const core = mesh(shared.projectileGeometry, material, group);
+      const material = isEnemy
+        ? shared.projectileMaterials.enemy
+        : object.fuse !== undefined ? shared.projectileMaterials.fire : projectileMaterial(object.type);
+      let group = projectilePool.pop();
+      if (!group) {
+        group = new THREE.Group();
+        const core = mesh(shared.projectileGeometry, material, group);
+        const ring = mesh(shared.projectileRingGeometry, material, group, 0, 0, 0);
+        ring.rotation.x = Math.PI / 2;
+        makeShadow(group, (object.r || 4) * 0.6, 0.18);
+        group.userData.core = core;
+        group.userData.ring = ring;
+        scene.add(group);
+      } else {
+        group.userData.core.material = material;
+        group.userData.ring.material = material;
+        group.visible = true;
+        scene.add(group);
+      }
+      const core = group.userData.core;
       const radius = Math.max(0.75, Math.min(2.8, (object.r || 4) / 3.8));
       core.scale.setScalar(radius);
-      const ring = mesh(shared.projectileRingGeometry, material, group, 0, 0, 0);
-      ring.rotation.x = Math.PI / 2;
+      const ring = group.userData.ring;
       ring.scale.setScalar(radius);
-      makeShadow(group, (object.r || 4) * 0.6, 0.18);
-      group.userData.ring = ring;
-      scene.add(group);
       return group;
     }
 
@@ -1187,6 +1549,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         ...state.elementalShots,
         ...state.enemyShots,
         ...state.bossShots,
+        ...state.bombs,
       ]) {
         if (state.player) {
           const dx = shot.x - state.player.x;
@@ -1210,8 +1573,337 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       for (const [object, meshGroup] of projectiles) {
         if (!activeProjectiles.has(object)) {
           scene.remove(meshGroup);
+          meshGroup.visible = false;
           projectiles.delete(object);
+          projectilePool.push(meshGroup);
         }
+      }
+    }
+
+    function makeCombatEffect() {
+      const group = new THREE.Group();
+      const surface = mesh(shared.telegraphCircleGeometry, shared.telegraphMaterials.arcane, group);
+      const outline = mesh(shared.telegraphRingGeometry, shared.telegraphMaterials.arcane, group);
+      surface.rotation.x = -Math.PI / 2;
+      outline.rotation.x = -Math.PI / 2;
+      surface.position.y = 0.12;
+      outline.position.y = 0.35;
+      surface.renderOrder = 3;
+      outline.renderOrder = 4;
+      group.userData.surface = surface;
+      group.userData.outline = outline;
+      group.visible = false;
+      return group;
+    }
+
+    function syncCombatEffect(owner, suffix, config, activeKeys) {
+      if (!owner || !config || (!(config.radius > 0) && !(config.length > 0))) return;
+      let id = combatEffectIds.get(owner);
+      if (!id) {
+        id = nextCombatEffectId++;
+        combatEffectIds.set(owner, id);
+      }
+      const key = `${id}:${suffix}`;
+      activeKeys.add(key);
+      let effect = combatEffects.get(key);
+      if (!effect) {
+        effect = combatEffectPool.pop() || makeCombatEffect();
+        combatEffects.set(key, effect);
+        scene.add(effect);
+      }
+      effect.visible = true;
+      effect.userData.effectType = suffix;
+      const { surface, outline } = effect.userData;
+      const material = shared.telegraphMaterials[config.material] || shared.telegraphMaterials.arcane;
+      surface.material = material;
+      outline.material = material;
+      const isLine = config.shape === "line";
+      const isFan = config.shape === "fan";
+      const isArc = config.shape === "arc";
+      const geometry = isLine
+        ? shared.telegraphBoxGeometry
+        : isFan ? fanGeometry(config.halfAngle)
+          : isArc ? shared.telegraphArcGeometry : shared.telegraphCircleGeometry;
+      const outlineGeometry = isLine
+        ? shared.telegraphBoxGeometry
+        : isFan || isArc ? shared.telegraphArcGeometry : shared.telegraphRingGeometry;
+      if (surface.geometry !== geometry) surface.geometry = geometry;
+      if (outline.geometry !== outlineGeometry) outline.geometry = outlineGeometry;
+      const x = config.x || 0;
+      const z = config.y || 0;
+      effect.position.set(x, terrainHeight(x, z) + (config.height || 0.8), z);
+      effect.rotation.set(
+        0,
+        isLine || isFan || isArc ? -config.angle : 0,
+        0,
+      );
+      if (isLine) {
+        surface.scale.set(config.length || config.radius, 1.4, config.width || 5);
+        outline.scale.set(config.length || config.radius, 2.2, (config.width || 5) * 1.8);
+      } else {
+        surface.scale.set(config.radius, config.radius, config.radius);
+        outline.scale.set(config.radius, config.radius, config.radius);
+      }
+      if (isFan || isArc) {
+        surface.rotation.x = -Math.PI / 2;
+        outline.rotation.x = -Math.PI / 2;
+        outline.scale.set(config.radius, config.radius, 1);
+      } else if (isLine) {
+        surface.rotation.set(0, 0, 0);
+        outline.rotation.set(0, 0, 0);
+      } else {
+        surface.rotation.set(-Math.PI / 2, 0, 0);
+        outline.rotation.set(-Math.PI / 2, 0, 0);
+      }
+      surface.visible = config.fill !== false && !isArc;
+      outline.visible = config.outline !== false;
+    }
+
+    function syncCombatEffects(state) {
+      const activeKeys = new Set();
+      activeCombatEffectCount = 0;
+      for (const enemy of state.enemies) {
+        if (enemy.chargeWarning > 0) {
+          syncCombatEffect(enemy, "charge", {
+            shape: "line",
+            x: enemy.x + (enemy.chargeX || 0) * 260,
+            y: enemy.y + (enemy.chargeY || 0) * 260,
+            angle: Math.atan2(enemy.chargeY || 0, enemy.chargeX || 1),
+            length: 520, width: 7, material: "charge", opacity: 0.68,
+          }, activeKeys);
+        }
+        if (enemy.shotWarning > 0 && !enemy.secondaryVolley && !enemy.lateSecondary) {
+          const angle = enemy.shotAngle || enemy.aimAngle
+            || Math.atan2((state.player?.y || 0) - enemy.y, (state.player?.x || 0) - enemy.x);
+          const isBoss = enemy.kind === 3;
+          const finalTarget = isBoss && enemy.isFinalBoss && enemy.shotPattern === 2;
+          if (!isBoss) {
+            const length = 290;
+            syncCombatEffect(enemy, "shot", {
+              shape: "line",
+              x: enemy.x + Math.cos(angle) * length / 2,
+              y: enemy.y + Math.sin(angle) * length / 2,
+              angle, length, width: 5, material: "charge",
+            }, activeKeys);
+          } else {
+            const phase = enemy.isFinalBoss
+              ? Math.max(1, enemy.finalPhase || 1)
+              : enemy.phaseThree ? 3 : enemy.phaseTwo ? 2 : 1;
+            const finalArc = enemy.isFinalBoss && enemy.shotPattern === 1;
+            const shadeArc = !enemy.isFinalBoss && enemy.variant === 1;
+            const finalTargetRadius = 104 + phase * 12;
+            const radius = finalTarget
+              ? finalTargetRadius
+              : enemy.isFinalBoss ? 295 : enemy.variant === 2 ? 285 : 270;
+            const coneHalfAngle = enemy.variant === 2
+              ? phase === 3 ? 0.77 : phase === 2 ? 0.65 : 0.46
+              : phase === 3 ? 0.7 : phase === 2 ? 0.55 : 0.38;
+            syncCombatEffect(enemy, "shot", {
+              shape: finalTarget ? "circle" : finalArc || shadeArc ? "arc" : "fan",
+              x: finalTarget ? enemy.warningX : enemy.x,
+              y: finalTarget ? enemy.warningY : enemy.y,
+              angle: finalArc || shadeArc ? angle + Math.PI * 0.72 : angle,
+              halfAngle: enemy.isFinalBoss ? 0.86 : coneHalfAngle,
+              radius: finalTarget ? finalTargetRadius : finalArc ? 185 : shadeArc ? 160 : radius,
+              fill: !finalArc && !shadeArc,
+              material: "boss",
+            }, activeKeys);
+            const ray = (suffix, rayAngle, length) => {
+              syncCombatEffect(enemy, suffix, {
+                shape: "line",
+                x: enemy.x + Math.cos(rayAngle) * length / 2,
+                y: enemy.y + Math.sin(rayAngle) * length / 2,
+                angle: rayAngle, length, width: 5, material: "boss",
+              }, activeKeys);
+            };
+            const offsets = shadeArc
+              ? phase > 1 ? [-0.16, 0, 0.16] : [0]
+              : finalArc ? [0] : [];
+            offsets.forEach((offset, index) => ray(`shot-ray-${index}`, angle + offset, finalArc ? 340 : 370));
+          }
+        }
+        if (enemy.secondaryVolley && enemy.shotWarning > 0) {
+          const markers = window.guardianSecondaryDangerPoints?.(enemy) || [];
+          markers.forEach((marker, index) => {
+            syncCombatEffect(enemy, `secondary-${index}`, {
+              x: marker.x, y: marker.y, radius: marker.r,
+              fill: false, material: enemy.variant === 0 ? "charge" : "boss",
+            }, activeKeys);
+          });
+        }
+        if (enemy.lateSecondary && enemy.shotWarning > 0) {
+          const markers = window.guardianLateSecondaryDanger?.(enemy) || [];
+          markers.forEach((marker, index) => {
+            syncCombatEffect(enemy, `late-secondary-${index}`, {
+              x: marker.x, y: marker.y, radius: marker.r,
+              fill: false, material: enemy.isFinalBoss ? "boss" : "charge",
+            }, activeKeys);
+          });
+        }
+        if (enemy.specialWarningUntil > state.time) {
+          const aim = enemy.specialAim || 0;
+          const fx = Math.cos(aim);
+          const fy = Math.sin(aim);
+          const sx = -fy;
+          const sy = fx;
+          const tx = enemy.specialTargetX;
+          const ty = enemy.specialTargetY;
+          const phase = enemy.specialTelegraphSize || 1;
+          const mark = (suffix, x, y, radius) => syncCombatEffect(enemy, suffix, {
+            x, y, radius, fill: false, material: "boss",
+          }, activeKeys);
+          const ray = (suffix, angle, length = 380) => syncCombatEffect(enemy, suffix, {
+            shape: "line",
+            x: enemy.x + Math.cos(angle) * length / 2,
+            y: enemy.y + Math.sin(angle) * length / 2,
+            angle, length,
+            width: 5, material: "boss",
+          }, activeKeys);
+          if (enemy.variant === 0 && !enemy.isFinalBoss) {
+            for (const [index, offset] of [-90, 0, 90].entries()) {
+              mark(`special-${index}`, tx + sx * offset, ty + sy * offset, phase === 3 ? 97 : 86);
+            }
+            for (const [index, offset] of [-0.16, 0, 0.16].entries()) {
+              ray(`special-ray-${index}`, aim + offset);
+            }
+          } else if (enemy.variant === 1 && !enemy.isFinalBoss) {
+            syncCombatEffect(enemy, "special-ring", {
+              shape: "arc", x: enemy.x, y: enemy.y,
+              angle: aim + Math.PI * 0.72, radius: 190,
+              fill: false, material: "boss",
+            }, activeKeys);
+            for (const [index, offset] of [-0.16, 0, 0.16].entries()) {
+              ray(`special-ray-${index}`, aim + offset);
+            }
+          } else if (enemy.variant === 2 && !enemy.isFinalBoss) {
+            for (const [index, offset] of [-0.6, -0.38, -0.19, 0, 0.19, 0.38, 0.6].entries()) {
+              ray(`special-ray-${index}`, aim + offset);
+            }
+            mark("special-target", tx, ty, phase === 3 ? 105 : 92);
+          } else {
+            mark("special-target", tx, ty, phase === 3 ? 113 : 101);
+            for (const [index, [forward, side]] of [[155, 145], [155, -145], [-155, 145], [-155, -145]].entries()) {
+              mark(
+                `special-${index}`,
+                tx + fx * forward + sx * side,
+                ty + fy * forward + sy * side,
+                phase === 3 ? 90 : 77,
+              );
+            }
+          }
+        } else if (enemy.specialRecoveryUntil > state.time && enemy.kind === 3) {
+          syncCombatEffect(enemy, "special-recovery", {
+            x: enemy.x, y: enemy.y, radius: enemy.r * 1.34,
+            fill: false, material: "safe",
+          }, activeKeys);
+        }
+        if (enemy.phaseIntro > 0 && enemy.kind === 3) {
+          syncCombatEffect(enemy, "phase", {
+            x: enemy.x, y: enemy.y, radius: enemy.r * 1.5,
+            fill: false, material: "boss", opacity: 0.82,
+          }, activeKeys);
+        }
+        if (enemy.kind === 5 && enemy.armed && enemy.burstWarning > 0) {
+          syncCombatEffect(enemy, "burst-warning", {
+            x: enemy.x, y: enemy.y, radius: enemy.burstRadius || 86,
+            material: "fire", opacity: 0.35,
+          }, activeKeys);
+        }
+        if (enemy.kind === 2 && enemy.stompWarning > 0) {
+          syncCombatEffect(enemy, "stomp-warning", {
+            x: enemy.x, y: enemy.y, radius: enemy.stompRadius || 149,
+            material: "boss", opacity: 0.28,
+          }, activeKeys);
+        }
+        if (enemy.eliteChargeWarning > 0) {
+          syncCombatEffect(enemy, "elite-charge", {
+            shape: "line",
+            x: enemy.x + (enemy.eliteChargeX || 1) * 145,
+            y: enemy.y + (enemy.eliteChargeY || 0) * 145,
+            angle: Math.atan2(enemy.eliteChargeY || 0, enemy.eliteChargeX || 1),
+            length: 290, width: 5, material: "charge", opacity: 0.48,
+          }, activeKeys);
+        }
+      }
+      for (const hazard of state.bossHazards) {
+        syncCombatEffect(hazard, "boss-hazard", {
+          x: hazard.x, y: hazard.y, radius: hazard.radius,
+          material: hazard.warning > 0 ? "boss" : "hazard",
+          opacity: hazard.warning > 0 ? 0.3 : 0.56,
+        }, activeKeys);
+      }
+      for (const area of state.elementalAreas) {
+        if (area.delay > 0) continue;
+        const progress = area.maxRadius
+          ? Math.min(1, area.radius / area.maxRadius)
+          : 1;
+        syncCombatEffect(area, "elemental-area", {
+          shape: area.type === "tidalWave" ? "fan" : "circle",
+          x: area.x, y: area.y, angle: area.angle || 0,
+          radius: Math.max(12, area.radius || (area.maxRadius || 80) * progress),
+          material: area.type === "fire" ? "fire"
+            : area.type === "water" || area.type === "tidalWave" || area.type === "whirlpool"
+              ? "water" : area.type === "frost" || area.type === "frostEcho"
+                ? "frost" : "arcane",
+          opacity: 0.24,
+        }, activeKeys);
+      }
+      for (const zone of state.frostZones) {
+        syncCombatEffect(zone, "frost-zone", {
+          x: zone.x, y: zone.y, radius: zone.radius,
+          material: "frost", opacity: 0.3,
+        }, activeKeys);
+      }
+      for (const burst of state.flameBursts) {
+        syncCombatEffect(burst, "flame-burst", {
+          shape: "fan", x: burst.x, y: burst.y,
+          angle: burst.angle || 0, radius: burst.radius,
+          material: "fire", opacity: 0.34,
+        }, activeKeys);
+      }
+      for (const segment of state.lightningSegments) {
+        const dx = segment.x2 - segment.x1;
+        const dz = segment.y2 - segment.y1;
+        syncCombatEffect(segment, "lightning", {
+          shape: "line", x: (segment.x1 + segment.x2) / 2,
+          y: (segment.y1 + segment.y2) / 2,
+          angle: Math.atan2(dz, dx), length: Math.hypot(dx, dz),
+          width: segment.evolved ? 8 : 6, material: "arcane",
+          opacity: Math.min(0.9, segment.life / 0.24),
+        }, activeKeys);
+      }
+      for (const explosion of state.explosions) {
+        const progress = 1 - explosion.life / explosion.maxLife;
+        syncCombatEffect(explosion, "explosion", {
+          x: explosion.x, y: explosion.y,
+          radius: Math.max(2, explosion.radius * progress),
+          material: explosion.evolved ? "arcane" : "fire",
+          opacity: Math.max(0.08, 0.42 * (1 - progress)),
+        }, activeKeys);
+      }
+      for (const aftershock of state.bombAftershocks) {
+        if (aftershock.delay > 0) continue;
+        syncCombatEffect(aftershock, "aftershock", {
+          x: aftershock.x, y: aftershock.y, radius: aftershock.radius,
+          material: "arcane", opacity: 0.34,
+        }, activeKeys);
+      }
+      for (const bomb of state.bombs) {
+        syncCombatEffect(bomb, "bomb-warning", {
+          x: bomb.x, y: bomb.y, radius: bomb.radius,
+          material: "fire", opacity: 0.14,
+        }, activeKeys);
+      }
+      for (const key of combatEffects.keys()) {
+        if (activeKeys.has(key)) {
+          activeCombatEffectCount++;
+          continue;
+        }
+        const effect = combatEffects.get(key);
+        scene.remove(effect);
+        effect.visible = false;
+        combatEffects.delete(key);
+        combatEffectPool.push(effect);
       }
     }
 
@@ -1225,11 +1917,16 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         }
         activeGems.add(gem);
         if (!gems.has(gem)) {
-          const color = gem.kind === "health" ? "#ff6380" : "#7adcf5";
-          const material = new THREE.MeshStandardMaterial({
-            color, emissive: color, emissiveIntensity: 0.6, metalness: 0.25, roughness: 0.25,
-          });
-          const crystal = mesh(shared.crystalGeometry, material, scene);
+          const material = gem.kind === "health"
+            ? shared.gemMaterials.health : shared.gemMaterials.xp;
+          let crystal = gemPool.pop();
+          if (crystal) {
+            crystal.material = material;
+            crystal.visible = true;
+            scene.add(crystal);
+          } else {
+            crystal = mesh(shared.crystalGeometry, material, scene);
+          }
           crystal.castShadow = true;
           gems.set(gem, crystal);
         }
@@ -1244,8 +1941,30 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       for (const [object, crystal] of gems) {
         if (!activeGems.has(object)) {
           scene.remove(crystal);
+          crystal.visible = false;
           gems.delete(object);
+          gemPool.push(crystal);
         }
+      }
+    }
+
+    function syncOrbitBlades(state) {
+      const positions = state.bladePositions;
+      const bladeCount = Math.floor(positions.length / 2);
+      while (orbitBlades.length < bladeCount) {
+        const blade = mesh(shared.orbitBladeGeometry, shared.playerTrim, scene);
+        blade.castShadow = false;
+        blade.receiveShadow = false;
+        orbitBlades.push(blade);
+      }
+      for (let index = 0; index < orbitBlades.length; index++) {
+        const blade = orbitBlades[index];
+        blade.visible = index < bladeCount;
+        if (index >= bladeCount) continue;
+        const x = positions[index * 2];
+        const z = positions[index * 2 + 1];
+        blade.position.set(x, terrainHeight(x, z) + 10, z);
+        blade.rotation.y = state.time * 2.4 + index * 0.7;
       }
     }
 
@@ -1288,7 +2007,9 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       keyLight.target = lightTarget;
       syncActors(state);
       syncProjectiles(state);
+      syncCombatEffects(state);
       syncGems(state);
+      syncOrbitBlades(state);
       renderer.render(scene, camera);
       drawDurationMs = performance.now() - started;
       frameCount++;
@@ -1318,6 +2039,12 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             characterType: actor.userData.characterType,
             family: actor.userData.family,
             kind: actor.userData.familyKind ?? null,
+            bossVariant: actor.userData.characterType === "boss"
+              ? actor.userData.bossVariant : null,
+            bossPhase: actor.userData.characterType === "boss"
+              ? actor.userData.bossPhase : null,
+            bossPhasePips: actor.userData.characterType === "boss"
+              ? actor.userData.phasePips.filter((pip) => pip.visible).length : 0,
             level: actor.userData.characterType === "enemy"
               ? Math.max(1, Math.min(4, Math.floor(Number(object.evolutionLevel) || 1)))
               : null,
@@ -1363,7 +2090,16 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         enemyMeshCount: actors.size - (state.player ? 1 : 0),
         characters,
         projectileMeshCount: projectiles.size,
+        bossProjectileCount: state.bossShots.length,
+        bossHazardCount: state.bossHazards.length,
+        activeCombatEffectCount,
+        combatEffectPoolSize: combatEffectPool.length,
+        combatEffectTypes: Array.from(
+          combatEffects.values(),
+          (effect) => effect.userData.effectType,
+        ).sort(),
         gemMeshCount: gems.size,
+        orbitBladeCount: Math.floor(state.bladePositions.length / 2),
         terrainTileCount: terrain.size,
         terrainChunkCount: terrain.size,
         terrainChunkCacheSize: terrainCache.size,
