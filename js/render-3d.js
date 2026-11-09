@@ -126,6 +126,39 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       handGeometry: new THREE.SphereGeometry(3, 8, 6),
       drifterBodyGeometry: new THREE.SphereGeometry(1, 12, 9),
       spikeGeometry: new THREE.ConeGeometry(3.2, 9, 6),
+      characterSphereGeometry: new THREE.SphereGeometry(1, 12, 9),
+      characterLimbGeometry: new THREE.CylinderGeometry(2.6, 3.2, 13, 8),
+      runnerBladeGeometry: new THREE.BoxGeometry(3.4, 25, 5),
+      armorPlateGeometry: new THREE.DodecahedronGeometry(7, 0),
+      shadeRobeGeometry: new THREE.ConeGeometry(11, 30, 9),
+      shadeTendrilGeometry: new THREE.ConeGeometry(2, 20, 6),
+      burstCoreGeometry: new THREE.SphereGeometry(7, 12, 10),
+      beltGeometry: new THREE.BoxGeometry(10, 3.6, 2.5),
+      bootGeometry: new THREE.BoxGeometry(6, 3, 10),
+      playerHoodGeometry: new THREE.ConeGeometry(7.2, 10, 9),
+      dashTrailGeometry: new THREE.ConeGeometry(12, 32, 12),
+      hitFlashGeometry: new THREE.SphereGeometry(1, 10, 8),
+      standardGeometry: new THREE.BoxGeometry(1.3, 19, 1.3),
+      standardClothGeometry: new THREE.BoxGeometry(8, 8, 1.2),
+      bulwarkShieldGeometry: (() => {
+        const shape = new THREE.Shape();
+        shape.moveTo(-11, 14);
+        shape.lineTo(11, 14);
+        shape.lineTo(10, -8);
+        shape.lineTo(0, -19);
+        shape.lineTo(-10, -8);
+        shape.closePath();
+        return new THREE.ExtrudeGeometry(shape, {
+          depth: 3.2,
+          bevelEnabled: true,
+          bevelSegments: 1,
+          steps: 1,
+          bevelSize: 1,
+          bevelThickness: 1,
+        });
+      })(),
+      characterRingGeometry: new THREE.TorusGeometry(11, 0.7, 5, 24),
+      rankPipGeometry: new THREE.OctahedronGeometry(2.1, 0),
       projectileGeometry: new THREE.SphereGeometry(3.8, 10, 8),
       projectileRingGeometry: new THREE.TorusGeometry(6.3, 0.8, 6, 16),
       crystalGeometry: new THREE.OctahedronGeometry(5, 0),
@@ -167,6 +200,24 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         .map((color) => new THREE.MeshStandardMaterial({
           color, roughness: 0.88, metalness: 0.02,
         })),
+      enemySecondary: ["#b6a58d", "#d39770", "#9aa67c", "#b2a1c9", "#f0a460", "#a9b5c3"]
+        .map((color) => new THREE.MeshStandardMaterial({
+          color, roughness: 0.82, metalness: 0.08,
+        })),
+      enemyArmor: ["#524b54", "#714c43", "#535c4b", "#554e6a", "#733f38", "#475564"]
+        .map((color) => new THREE.MeshStandardMaterial({
+          color, roughness: 0.68, metalness: 0.2,
+        })),
+      enemyGlow: [
+        "#e2d9ba", "#f2ae72", "#c3d58c", "#b7f4ff", "#ffba62", "#9be9ff",
+      ].map((color) => new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: 1.15, roughness: 0.32, metalness: 0.12,
+      })),
+      rankMaterials: ["#b7b0a5", "#75d3e2", "#cc9bea", "#ffc36c"].map(
+        (color) => new THREE.MeshStandardMaterial({
+          color, emissive: color, emissiveIntensity: 0.8, roughness: 0.3,
+        }),
+      ),
       projectileMaterials: {
         arcane: new THREE.MeshStandardMaterial({
           color: "#e5d9ff", emissive: "#9161f1", emissiveIntensity: 2.3,
@@ -193,6 +244,15 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       hpFill: new THREE.MeshBasicMaterial({ color: "#95d58b" }),
       shadow: new THREE.MeshBasicMaterial({
         color: "#03050a", transparent: true, opacity: 0.28, depthWrite: false,
+      }),
+      actorShadow: new THREE.MeshBasicMaterial({
+        color: "#03050a", transparent: true, opacity: 0.35, depthWrite: false,
+      }),
+      projectileShadow: new THREE.MeshBasicMaterial({
+        color: "#03050a", transparent: true, opacity: 0.18, depthWrite: false,
+      }),
+      hitFlash: new THREE.MeshBasicMaterial({
+        color: "#ffffff", transparent: true, opacity: 0.4, wireframe: true, depthWrite: false,
       }),
       waterMaterial: new THREE.MeshStandardMaterial({
         color: "#44bdb8", emissive: "#168a8d", emissiveIntensity: 0.3,
@@ -235,6 +295,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     let meshCount = 0;
     let ruinMeshCount = 0;
     const playerNdc = new THREE.Vector3();
+    const actorNdc = new THREE.Vector3();
 
     function hash(x, z, salt = 0) {
       let value = Math.imul(x | 0, 0x45d9f3b)
@@ -535,11 +596,9 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     }
 
     function makeShadow(parent, radius, opacity = 0.28) {
-      const shadowMaterial = opacity === 0.28
-        ? shared.shadow
-        : new THREE.MeshBasicMaterial({
-          color: "#03050a", transparent: true, opacity, depthWrite: false,
-        });
+      const shadowMaterial = opacity === 0.18
+        ? shared.projectileShadow
+        : opacity === 0.28 ? shared.shadow : shared.actorShadow;
       const shadow = new THREE.Mesh(shared.shadowGeometry, shadowMaterial);
       shadow.rotation.x = -Math.PI / 2;
       shadow.scale.set(radius, radius * 0.68, 1);
@@ -554,132 +613,393 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       const body = new THREE.Group();
       root.add(body);
       root.userData.body = body;
+      root.userData.shadowParts = [];
+      root.userData.characterType = "player";
+      root.userData.family = "player";
+      root.userData.silhouetteFeatures = ["hood", "long coat", "paired limbs"];
       root.userData.materials = [shared.playerCloth, shared.playerTrim, shared.skin, shared.darkLeather];
       root.userData.arms = [];
       root.userData.legs = [];
-      makeShadow(root, 18, 0.34);
+      root.userData.rankPips = [];
+      root.userData.shadow = makeShadow(root, 18, 0.34);
 
-      mesh(shared.torsoGeometry, shared.playerCloth, body, 0, 18, 0);
+      const torso = mesh(shared.torsoGeometry, shared.playerCloth, body, 0, 18, 0);
+      torso.scale.set(1, 1.1, 0.9);
+      root.userData.shadowParts.push(torso);
       mesh(shared.hoodGeometry, shared.darkLeather, body, 0, 28, -0.3)
         .scale.set(0.94, 1.12, 0.94);
-      mesh(shared.headGeometry, shared.skin, body, 0, 27, 2.2)
-        .scale.set(0.74, 0.9, 0.62);
-      mesh(new THREE.ConeGeometry(7.2, 10, 9), shared.playerCloth, body, 0, 35, -1)
+      const face = mesh(shared.headGeometry, shared.skin, body, 0, 27, 2.2);
+      face.scale.set(0.74, 0.9, 0.62);
+      root.userData.shadowParts.push(face);
+      mesh(shared.playerHoodGeometry, shared.playerCloth, body, 0, 35, -1)
         .rotation.x = -0.2;
-      mesh(new THREE.BoxGeometry(10, 3.6, 2.5), shared.playerTrim, body, 0, 11, 0);
-      mesh(new THREE.SphereGeometry(1.05, 8, 6), shared.playerTrim, body, -2, 28, 7.1);
-      mesh(new THREE.SphereGeometry(1.05, 8, 6), shared.playerTrim, body, 2, 28, 7.1);
+      mesh(shared.beltGeometry, shared.playerTrim, body, 0, 11, 0);
+      mesh(shared.rankPipGeometry, shared.playerTrim, body, -2, 28, 7.1).scale.setScalar(0.5);
+      mesh(shared.rankPipGeometry, shared.playerTrim, body, 2, 28, 7.1).scale.setScalar(0.5);
 
       for (const side of [-1, 1]) {
         const arm = new THREE.Group();
         arm.position.set(side * 9, 23, 0);
         body.add(arm);
-        mesh(shared.limbGeometry, shared.playerCloth, arm, 0, -5, 0);
+        const armMesh = mesh(shared.limbGeometry, shared.playerCloth, arm, 0, -5, 0);
+        root.userData.shadowParts.push(armMesh);
         mesh(shared.handGeometry, shared.skin, arm, 0, -11.2, 0.4);
         root.userData.arms.push(arm);
 
         const leg = new THREE.Group();
         leg.position.set(side * 4.2, 9, 0);
         body.add(leg);
-        mesh(shared.limbGeometry, shared.darkLeather, leg, 0, -3.2, 0);
-        mesh(new THREE.BoxGeometry(6, 3, 10), shared.darkLeather, leg, 0, -9, 2.2);
+        const legMesh = mesh(shared.limbGeometry, shared.darkLeather, leg, 0, -3.2, 0);
+        root.userData.shadowParts.push(legMesh);
+        mesh(shared.bootGeometry, shared.darkLeather, leg, 0, -9, 2.2);
         root.userData.legs.push(leg);
       }
 
-      const dashTrail = new THREE.Mesh(new THREE.ConeGeometry(12, 32, 12), shared.dashTrail);
+      const dashTrail = new THREE.Mesh(shared.dashTrailGeometry, shared.dashTrail);
       dashTrail.rotation.x = Math.PI / 2;
       dashTrail.position.set(0, 6, -22);
       dashTrail.visible = false;
       root.add(dashTrail);
       root.userData.dashTrail = dashTrail;
+      root.userData.hitGlow = mesh(shared.hitFlashGeometry, shared.hitFlash, root, 0, 23, 0);
+      root.userData.hitGlow.scale.set(13, 25, 12);
+      root.userData.hitGlow.visible = false;
       scene.add(root);
       return root;
     }
 
-    function createDrifter() {
-      const root = new THREE.Group();
-      const body = new THREE.Group();
-      root.add(body);
-      root.userData.body = body;
-      root.userData.arms = [];
-      root.userData.legs = [];
-      root.userData.materials = [shared.drifterHide, shared.drifterBone];
-      makeShadow(root, 18, 0.38);
-
-      const torso = mesh(shared.drifterBodyGeometry, shared.drifterHide, body, 0, 15, 0);
-      torso.scale.set(8.7, 11.6, 7.3);
-      const head = mesh(shared.drifterBodyGeometry, shared.drifterHide, body, 0, 24, 4);
-      head.scale.set(6.2, 6.7, 6);
-      mesh(new THREE.SphereGeometry(1.7, 8, 6), shared.drifterBone, body, -2.7, 25.3, 9.1);
-      mesh(new THREE.SphereGeometry(1.7, 8, 6), shared.drifterBone, body, 2.7, 25.3, 9.1);
-      for (let index = 0; index < 3; index++) {
-        const spike = mesh(
-          shared.spikeGeometry,
-          shared.drifterBone,
-          body,
-          (index - 1) * 5,
-          26 + (index === 1 ? 3 : 0),
-          -5,
-        );
-        spike.rotation.z = (index - 1) * 0.33;
-        spike.rotation.x = -0.2;
-      }
-
+    function addHumanoidLimbs(root, body, main, accent, options = {}) {
+      const armSpan = options.armSpan || 8;
+      const legSpan = options.legSpan || 4;
+      const armScale = options.armScale || [1, 1, 1];
+      const legScale = options.legScale || [1, 1, 1];
       for (const side of [-1, 1]) {
         const arm = new THREE.Group();
-        arm.position.set(side * 8, 20, 0);
+        arm.position.set(side * armSpan, options.armY || 21, options.armZ || 0);
         body.add(arm);
-        const longArm = mesh(
-          new THREE.CylinderGeometry(2.1, 3.8, 17, 7),
-          shared.drifterHide,
-          arm,
-          side * 2,
-          -6.5,
-          2,
-        );
-        longArm.rotation.z = side * -0.18;
-        mesh(new THREE.ConeGeometry(3, 8, 5), shared.drifterBone, arm, side * 2, -15, 6)
-          .rotation.x = -0.7;
+        const armMesh = mesh(shared.characterLimbGeometry, main, arm, 0, -5, 0);
+        armMesh.scale.set(...armScale);
+        root.userData.shadowParts.push(armMesh);
+        mesh(shared.handGeometry, accent, arm, 0, -12, 1.4)
+          .scale.setScalar(options.handScale || 1);
         root.userData.arms.push(arm);
 
         const leg = new THREE.Group();
-        leg.position.set(side * 4, 8, -1);
+        leg.position.set(side * legSpan, options.legY || 9, 0);
         body.add(leg);
-        mesh(shared.limbGeometry, shared.drifterHide, leg, 0, -3, 0).scale.set(1.25, 1.2, 1.2);
+        const legMesh = mesh(shared.limbGeometry, main, leg, 0, -3, 0);
+        legMesh.scale.set(...legScale);
+        root.userData.shadowParts.push(legMesh);
+        mesh(shared.bootGeometry, accent, leg, 0, -9, 2.4)
+          .scale.set(options.footScale || 1, 1, options.footScale || 1);
         root.userData.legs.push(leg);
       }
-      scene.add(root);
-      return root;
     }
 
-    function createGenericEnemy(enemy) {
+    function addRankPips(body, root, level, height = 40, depth = -5) {
+      for (let index = 0; index < 4; index++) {
+        const pip = mesh(
+          shared.rankPipGeometry,
+          shared.rankMaterials[index],
+          body,
+          (index - 1.5) * 5,
+          height,
+          depth,
+        );
+        pip.scale.setScalar(0.72);
+        pip.visible = index < level;
+        root.userData.rankPips.push(pip);
+      }
+    }
+
+    function addMutation(root, body, level, name, position, material, scale = 1) {
+      const mutation = mesh(
+        shared.spikeGeometry,
+        material,
+        body,
+        position[0],
+        position[1],
+        position[2],
+      );
+      mutation.rotation.set(position[3] || 0, position[4] || 0, position[5] || 0);
+      mutation.scale.setScalar(scale * (0.78 + level * 0.12));
+      root.userData.mutationParts.push(mutation);
+      root.userData.rankMutation.push(name);
+      return mutation;
+    }
+
+    function createEnemyFamily(enemy) {
       const root = new THREE.Group();
       const body = new THREE.Group();
       root.add(body);
       root.userData.body = body;
+      root.userData.shadowParts = [];
       root.userData.arms = [];
       root.userData.legs = [];
-      root.userData.materials = [shared.genericEnemy[Math.abs(enemy.kind || 0) % shared.genericEnemy.length]];
-      root.userData.isGenericEnemy = true;
-      makeShadow(root, Math.max(12, enemy.r || 13), 0.34);
-      const scale = Math.max(0.72, Math.min(1.9, (enemy.r || 13) / 13));
-      const torso = mesh(shared.drifterBodyGeometry, root.userData.materials[0], body, 0, 10 * scale, 0);
-      torso.scale.set(7 * scale, 10 * scale, 6 * scale);
-      mesh(shared.drifterBodyGeometry, root.userData.materials[0], body, 0, 22 * scale, 2)
-        .scale.set(5 * scale, 5 * scale, 4.5 * scale);
+      root.userData.rankPips = [];
+      root.userData.mutationParts = [];
+      root.userData.rankMutation = [];
+      root.userData.attackParts = [];
+      root.userData.bannerParts = [];
+      root.userData.familyKind = enemy.kind;
+      root.userData.family = (["Drifter", "Runner", "Zombie Mike", "", "Ranged Shade", "Burstling", "Bulwark"])[enemy.kind]
+        || "Unknown";
+      root.userData.characterType = "enemy";
+      const level = Math.max(1, Math.min(4, Math.floor(Number(enemy.evolutionLevel) || 1)));
+      root.userData.evolutionLevel = level;
+      const familyColors = {
+        0: [shared.drifterHide, shared.drifterBone, shared.enemyArmor[0], shared.enemyGlow[0]],
+        1: [shared.genericEnemy[0], shared.enemySecondary[1], shared.enemyArmor[1], shared.enemyGlow[1]],
+        2: [shared.genericEnemy[2], shared.enemySecondary[2], shared.enemyArmor[2], shared.enemyGlow[2]],
+        4: [shared.genericEnemy[3], shared.enemySecondary[3], shared.enemyArmor[3], shared.enemyGlow[3]],
+        5: [shared.genericEnemy[4], shared.enemySecondary[4], shared.enemyArmor[4], shared.enemyGlow[4]],
+        6: [shared.genericEnemy[5], shared.enemySecondary[5], shared.enemyArmor[5], shared.enemyGlow[5]],
+      };
+      const [main, accent, armor, glow] = familyColors[enemy.kind] || familyColors[0];
+      root.userData.materials = [main, accent, armor, glow];
+      root.userData.silhouetteFeatures = [];
+      root.userData.shadow = makeShadow(root, Math.max(12, enemy.r || 13), 0.35);
+
+      const torso = mesh(shared.characterSphereGeometry, main, body, 0, 18, 0);
+      const head = mesh(shared.characterSphereGeometry, accent, body, 0, 31, 2.5);
+      root.userData.shadowParts.push(torso, head);
+      head.scale.set(5.5, 6.2, 5.3);
+      const eyes = [-2.1, 2.1].map((x) =>
+        mesh(shared.rankPipGeometry, glow, body, x, 32, 7.2));
+
+      if (enemy.kind === 0) {
+        torso.scale.set(9.4, 12.5, 8);
+        head.scale.set(6.3, 6.8, 6.2);
+        head.position.set(0, 27, 4);
+        eyes.forEach((eye) => eye.scale.setScalar(0.72));
+        mesh(shared.characterSphereGeometry, accent, body, 0, 20, 7.2)
+          .scale.set(4.5, 3.2, 2.7);
+        root.userData.silhouetteFeatures = ["hunched ribcage", "forward skull", "branching antlers"];
+        addHumanoidLimbs(root, body, main, accent, {
+          armSpan: 8, armY: 20, armScale: [1.12, 1.2, 1.1], legSpan: 4.3,
+        });
+        for (const side of [-1, 1]) {
+          if (level >= 2) {
+            addMutation(root, body, level, "antler tine", [side * 4.5, 35, -1, 0, 0, side * -0.55], accent, 1.2);
+          }
+          if (level >= 3) {
+            addMutation(root, body, level, "shoulder spur", [side * 9.5, 23, -2, 0, 0, side * -0.5], accent, 0.85);
+          }
+        }
+        const stompRing = mesh(shared.characterRingGeometry, glow, root, 0, 0.9, 0);
+        stompRing.rotation.x = Math.PI / 2;
+        stompRing.visible = false;
+        root.userData.stompRing = stompRing;
+        if (level >= 4) {
+          mesh(shared.burstCoreGeometry, glow, body, 0, 18, 7.5).scale.set(0.55, 0.55, 0.38);
+          root.userData.rankMutation.push("exposed bone core");
+        }
+      } else if (enemy.kind === 1) {
+        torso.scale.set(6.5, 12.4, 6.2);
+        torso.position.set(0, 19, 0);
+        head.position.set(0, 32, 3);
+        head.scale.set(4.8, 5.1, 4.8);
+        body.rotation.x = -0.2;
+        root.userData.silhouetteFeatures = ["forward lean", "long runner legs", "forearm blades"];
+        addHumanoidLimbs(root, body, main, accent, {
+          armSpan: 6.6, armY: 23, armScale: [0.8, 1.35, 0.8],
+          legSpan: 3.8, legY: 10, legScale: [0.78, 1.45, 0.78], footScale: 1.15,
+        });
+        for (const side of [-1, 1]) {
+          if (level >= 2) {
+            const blade = mesh(shared.runnerBladeGeometry, accent, body, side * 8.5, 18, 2);
+            blade.rotation.z = side * 0.34;
+            root.userData.mutationParts.push(blade);
+            root.userData.rankMutation.push("forearm blade");
+          }
+          if (level >= 3) {
+            addMutation(root, body, level, "calf spur", [side * 4.5, 7, -4, 0.4, 0, side * 0.45], accent, 0.9);
+          }
+        }
+        if (level >= 4) {
+          const fin = mesh(shared.runnerBladeGeometry, armor, body, 0, 20, -8);
+          fin.scale.set(1.4, 1.2, 1);
+          fin.rotation.x = -0.8;
+          root.userData.mutationParts.push(fin);
+          root.userData.rankMutation.push("back fin");
+        }
+      } else if (enemy.kind === 2) {
+        torso.scale.set(13.2, 13.5, 10.2);
+        torso.position.y = 18;
+        head.position.set(0, 34, 2);
+        head.scale.set(4.6, 4.9, 4.6);
+        root.userData.silhouetteFeatures = ["broad armored torso", "small head", "heavy fists"];
+        addHumanoidLimbs(root, body, main, accent, {
+          armSpan: 12, armY: 23, armScale: [1.5, 1.45, 1.4],
+          legSpan: 7.5, legScale: [1.45, 1.2, 1.35], handScale: 1.35, footScale: 1.25,
+        });
+        for (const side of [-1, 1]) {
+          const plate = mesh(shared.armorPlateGeometry, armor, body, side * 11, 28, -0.4);
+          plate.scale.set(1.25, 0.8, 1);
+          root.userData.mutationParts.push(plate);
+          if (level >= 2) {
+            addMutation(root, body, level, "shoulder ridge", [side * 12, 35, -1, 0, 0, side * -0.65], accent, 1.1);
+          }
+          if (level >= 3) {
+            addMutation(root, body, level, "forearm plate", [side * 13, 18, 4, 0, 0, side * -0.8], armor, 1.2);
+          }
+        }
+        if (level >= 4) {
+          mesh(shared.characterRingGeometry, glow, body, 0, 2, 0)
+            .scale.set(1.6, 1.6, 1);
+          root.userData.rankMutation.push("seismic mantle");
+        }
+      } else if (enemy.kind === 4) {
+        torso.geometry = shared.shadeRobeGeometry;
+        torso.material = main;
+        torso.position.set(0, 16, 0);
+        torso.scale.set(1.05, 1.1, 1.05);
+        head.material = armor;
+        head.position.set(0, 31, 1);
+        head.scale.set(1.08, 1.15, 1.05);
+        eyes.forEach((eye) => eye.position.set(0, 31.5, 7.1));
+        eyes[0].position.x = -2.3;
+        eyes[1].position.x = 2.3;
+        root.userData.floatHeight = 5;
+        root.userData.silhouetteFeatures = ["floating tapering shroud", "glowing face", "crown and trailing wisps"];
+        addHumanoidLimbs(root, body, main, glow, {
+          armSpan: 8, armY: 22, armScale: [0.85, 1.3, 0.85], legSpan: 2,
+          legY: 3, legScale: [0.7, 0.8, 0.7], footScale: 0.55,
+        });
+        for (const side of [-1, 1]) {
+          const tail = mesh(shared.shadeTendrilGeometry, main, body, side * 6, 3, -6);
+          tail.rotation.z = side * 0.3;
+          root.userData.mutationParts.push(tail);
+          if (level >= 2) {
+            addMutation(root, body, level, "crown tine", [side * 4, 39, -1, 0, 0, side * -0.42], accent, 0.9);
+          }
+        }
+        const halo = mesh(shared.characterRingGeometry, glow, body, 0, 43, -1);
+        halo.scale.set(0.8, 0.8, 0.8);
+        root.userData.halo = halo;
+        if (level >= 3) {
+          root.userData.rankMutation.push("split crown");
+          addMutation(root, body, level, "crown crest", [0, 42, -1, 0, 0, 0], accent, 1.1);
+        }
+        if (level >= 4) {
+          root.userData.rankMutation.push("expanded halo");
+          halo.scale.set(1.3, 1.3, 1.3);
+        }
+      } else if (enemy.kind === 5) {
+        torso.scale.set(12.2, 10.2, 11);
+        torso.position.set(0, 16, 0);
+        head.position.set(0, 25, 4);
+        head.scale.set(4.6, 4.7, 4.6);
+        const core = mesh(shared.burstCoreGeometry, glow, body, 0, 17, 9);
+        core.scale.set(0.9, 0.9, 0.65);
+        root.userData.core = core;
+        root.userData.silhouetteFeatures = ["low round body", "bright exposed core", "radial spines"];
+        addHumanoidLimbs(root, body, main, accent, {
+          armSpan: 10, armY: 17, armScale: [1, 0.95, 1], legSpan: 7, legY: 7,
+          legScale: [1.15, 0.9, 1.1], handScale: 0.8, footScale: 1.15,
+        });
+        for (let index = 0; index < 6; index++) {
+          const angle = index * Math.PI / 3;
+          const spike = mesh(shared.spikeGeometry, accent, body,
+            Math.sin(angle) * 10, 18 + Math.cos(angle) * 7, Math.cos(angle) * 9);
+          spike.rotation.z = Math.sin(angle) * 0.8;
+          spike.rotation.x = Math.cos(angle) * 0.8;
+          spike.scale.setScalar(0.8 + level * 0.12);
+          root.userData.mutationParts.push(spike);
+        }
+        const warningRing = mesh(shared.characterRingGeometry, glow, root, 0, 1.4, 0);
+        warningRing.rotation.x = Math.PI / 2;
+        warningRing.visible = false;
+        root.userData.warningRing = warningRing;
+        if (level >= 2) {
+          root.userData.rankMutation.push("split outer shell");
+          mesh(shared.armorPlateGeometry, armor, body, -8, 20, -4).scale.set(0.7, 0.8, 0.7);
+          mesh(shared.armorPlateGeometry, armor, body, 8, 20, -4).scale.set(0.7, 0.8, 0.7);
+        }
+        if (level >= 3) {
+          root.userData.rankMutation.push("paired core lobes");
+          mesh(shared.burstCoreGeometry, glow, body, -7, 17, 7).scale.setScalar(0.48);
+          mesh(shared.burstCoreGeometry, glow, body, 7, 17, 7).scale.setScalar(0.48);
+        }
+        if (level >= 4) {
+          root.userData.rankMutation.push("crown spines");
+          addMutation(root, body, level, "crown spine", [0, 29, -1, 0, 0, 0], accent, 1.35);
+        }
+      } else if (enemy.kind === 6) {
+        torso.scale.set(13.8, 14.5, 10.6);
+        torso.position.y = 19;
+        head.material = armor;
+        head.position.set(0, 37, 1);
+        head.scale.set(5.1, 5.7, 5);
+        root.userData.silhouetteFeatures = ["tower shield", "broad plated frame", "banner standards"];
+        addHumanoidLimbs(root, body, main, accent, {
+          armSpan: 12, armY: 23, armScale: [1.4, 1.5, 1.4],
+          legSpan: 7, legScale: [1.4, 1.2, 1.3], handScale: 1.3, footScale: 1.35,
+        });
+        const shieldGroup = new THREE.Group();
+        shieldGroup.position.set(0, 19, 11);
+        body.add(shieldGroup);
+        const shield = mesh(shared.bulwarkShieldGeometry, armor, shieldGroup, 0, 0, 0);
+        shield.scale.set(1, 1.08, 1);
+        root.userData.shadowParts.push(shield);
+        const crest = mesh(shared.spikeGeometry, accent, shieldGroup, 0, 6, 4);
+        crest.scale.setScalar(0.65);
+        root.userData.shield = shieldGroup;
+        root.userData.shieldTrim = crest;
+        root.userData.mutationParts.push(shield);
+        for (const side of [-1, 1]) {
+          const standard = new THREE.Group();
+          standard.position.set(side * 10, 38, -3);
+          body.add(standard);
+          mesh(shared.standardGeometry, armor, standard, 0, 6, 0);
+          const banner = mesh(shared.standardClothGeometry, accent, standard, side * 3, 4, 0);
+          banner.visible = level >= 2;
+          root.userData.bannerParts.push(banner);
+          root.userData.mutationParts.push(banner);
+          if (level >= 3) {
+            addMutation(root, body, level, "pauldron spike", [side * 12, 32, -2, 0, 0, side * -0.5], accent, 1.05);
+          }
+        }
+        if (level >= 2) root.userData.rankMutation.push("banner standards");
+        if (level >= 4) {
+          root.userData.rankMutation.push("fortress shield");
+          shield.scale.set(1.35, 1.3, 1.2);
+        }
+      }
+      addRankPips(body, root, level, 45, -6);
+      root.userData.hitGlow = mesh(shared.hitFlashGeometry, shared.hitFlash, root, 0, 23, 0);
+      root.userData.hitGlow.scale.set(19, 31, 17);
+      root.userData.hitGlow.visible = false;
+      if (!root.userData.rankMutation.length) root.userData.rankMutation.push("base family form");
+      root.userData.baseScale = Math.max(0.72, Math.min(1.9, (enemy.r || 13) / 13));
+      scene.add(root);
       return root;
     }
 
     function updateActor(actor, object, state, isPlayer) {
       const x = isPlayer ? state.player.x : object.x;
       const z = isPlayer ? state.player.y : object.y;
-      const moving = isPlayer
-        ? Object.values(state.keys).some(Boolean) && state.active && !state.paused
-        : Math.abs(object.speed || 0) > 0;
-      const phase = state.time * (isPlayer ? 10 : 7) + (isPlayer ? 0 : z * 0.01);
-      const gait = moving ? Math.sin(phase) * 0.48 : Math.sin(state.time * 2 + z * 0.01) * 0.045;
-      actor.position.set(x, terrainHeight(x, z), z);
-      actor.userData.body.position.y = moving ? Math.abs(Math.sin(phase * 2)) * 1.2 : 0;
+      const previous = actor.userData.lastPosition;
+      const elapsed = Math.max(0.001, state.time - actor.userData.lastTime);
+      const velocityX = isPlayer
+        ? state.player.combatVX || 0
+        : Number.isFinite(object.combatVX) ? object.combatVX : (x - previous.x) / elapsed;
+      const velocityZ = isPlayer
+        ? state.player.combatVY || 0
+        : Number.isFinite(object.combatVY) ? object.combatVY : (z - previous.z) / elapsed;
+      const speed = Math.hypot(velocityX, velocityZ);
+      const moving = speed > 8 && (isPlayer ? state.active && !state.paused : true);
+      const phase = state.time * (isPlayer ? 10 : 8) + actor.userData.animationOffset;
+      const gait = moving ? Math.sin(phase) * 0.56 : Math.sin(state.time * 2.2 + actor.userData.animationOffset) * 0.055;
+      const float = actor.userData.floatHeight
+        ? Math.sin(state.time * 2.5 + actor.userData.animationOffset) * 1.4
+        : 0;
+      actor.position.set(x, terrainHeight(x, z) + float, z);
+      actor.userData.shadow.position.y = -float - 0.08;
+      actor.userData.body.position.y = moving ? Math.abs(Math.sin(phase * 2)) * 1.5 : 0;
+      actor.userData.body.rotation.x = actor.userData.baseBodyRotationX
+        + (moving ? Math.sin(phase) * 0.035 : 0);
+      actor.userData.body.rotation.z = actor.userData.baseBodyRotationZ;
 
       if (isPlayer) {
         const facing = state.player.facingX || 0;
@@ -693,55 +1013,124 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           state.dashTimer > 0 ? 1.2 : 1.55,
           state.dashTimer > 0 ? 1.55 : 1.55,
         );
-        if (state.damageFlash > 0) {
-          shared.playerCloth.emissive.set("#ffffff");
-          shared.playerCloth.emissiveIntensity = 0.8;
-        } else {
-          shared.playerCloth.emissive.set("#000000");
-          shared.playerCloth.emissiveIntensity = 0;
-        }
+        actor.userData.hitGlow.visible = state.damageFlash > 0;
+        actor.userData.attackState = state.dashTimer > 0 ? "dash" : "idle";
       } else {
-        actor.rotation.y = Math.atan2(state.player.x - x, state.player.y - z);
-        actor.scale.setScalar(object.kind === 0
-          ? 1.4
-          : Math.max(0.72, Math.min(1.9, (object.r || 13) / 13)));
-        const hit = object.hit > 0;
-        const material = actor.userData.materials[0];
-        if (hit && material.emissive) {
-          material.emissive.set("#ffffff");
-          material.emissiveIntensity = 0.7;
-        } else if (material.emissive) {
-          material.emissive.set("#000000");
-          material.emissiveIntensity = 0;
-        }
+        const towardPlayerX = state.player.x - x;
+        const towardPlayerZ = state.player.y - z;
+        actor.rotation.y = object.kind === 6 && Number.isFinite(object.shieldFacing)
+          ? Math.PI / 2 - object.shieldFacing
+          : speed > 8
+            ? Math.atan2(velocityX, velocityZ)
+            : Math.atan2(towardPlayerX, towardPlayerZ);
+        actor.scale.setScalar(actor.userData.baseScale);
+        actor.userData.hitGlow.visible = object.hit > 0;
         actor.userData.hpBar.visible = object.hp < object.maxHp;
         const hpRatio = object.maxHp > 0 && Number.isFinite(object.maxHp)
           ? object.hp / object.maxHp : 1;
         actor.userData.hpFill.scale.x = Math.max(0.02, Math.min(1, hpRatio));
+
+        const attackState = object.kind === 1 && object.feintTime > 0
+          ? "feint"
+          : object.kind === 2 && object.stompWarning > 0
+            ? "stomp-warning"
+            : object.kind === 4 && object.shotWarning > 0
+              ? "shot-warning"
+              : object.kind === 5 && object.armed && object.burstWarning > 0
+                ? "burst-warning"
+                : object.kind === 5 && object.armed
+                  ? "armed"
+                  : object.kind === 6 && object.shieldActive
+                    ? "shield-guard"
+                    : "idle";
+        actor.userData.attackState = attackState;
+        if (actor.userData.stompRing) {
+          actor.userData.stompRing.visible = object.stompWarning > 0;
+        }
+        if (actor.userData.stompRing?.visible) {
+          actor.userData.stompRing.scale.setScalar(Math.max(0.5, (object.stompRadius || 149) / 11));
+        }
+        if (actor.userData.warningRing) {
+          actor.userData.warningRing.visible = Boolean(object.armed && object.burstWarning > 0);
+        }
+        if (actor.userData.warningRing?.visible) {
+          actor.userData.warningRing.scale.setScalar(Math.max(0.5, (object.burstRadius || 99) / 11));
+        }
+        if (object.kind === 1 && object.feintTime > 0) {
+          actor.userData.body.rotation.z = Math.sign(object.feintDirection || 1) * 0.22;
+        } else if (object.kind === 2 && object.stompWarning > 0) {
+          actor.userData.arms[0].rotation.x = -1.05;
+          actor.userData.arms[1].rotation.x = -1.05;
+        } else if (object.kind === 4 && object.shotWarning > 0) {
+          actor.userData.arms[0].rotation.x = -0.5;
+          actor.userData.arms[1].rotation.x = -0.5;
+        } else if (object.kind === 6 && actor.userData.shield) {
+          actor.userData.shield.scale.setScalar(object.shieldActive ? 1.08 : 1);
+        }
+        if (actor.userData.core) {
+          const pulse = object.armed ? 1 + Math.sin(state.time * 16) * 0.16 : 1;
+          actor.userData.core.scale.set(0.9 * pulse, 0.9 * pulse, 0.65 * pulse);
+        }
       }
       actor.userData.arms.forEach((arm, index) => {
-        arm.rotation.x = gait * (index ? -1 : 1);
-        if (!isPlayer && actor.userData.isGenericEnemy) arm.rotation.x = 0;
+        const warningPose = !isPlayer && (
+          (object.kind === 2 && object.stompWarning > 0)
+          || (object.kind === 4 && object.shotWarning > 0)
+        );
+        if (!warningPose) arm.rotation.x = gait * (index ? -1 : 1);
+        if (!isPlayer && object.kind === 1 && object.feintTime > 0) {
+          arm.rotation.z = (index ? -1 : 1) * 0.35;
+        } else {
+          arm.rotation.z = 0;
+        }
       });
       actor.userData.legs.forEach((leg, index) => {
         leg.rotation.x = gait * (index ? -1 : 1);
       });
+      if (!isPlayer && actor.userData.shield) {
+        actor.userData.shield.scale.setScalar(object.shieldActive ? 1.08 : 1);
+      }
+      if (!isPlayer && actor.userData.halo) {
+        actor.userData.halo.rotation.z = Math.sin(state.time * 1.2) * 0.12;
+      }
+      actor.userData.animationState = moving
+        ? isPlayer && state.dashTimer > 0 ? "dash" : "move"
+        : actor.userData.floatHeight ? "float" : "idle";
+      actor.userData.moving = moving;
+      actor.userData.gaitPhase = Number((phase % (Math.PI * 2)).toFixed(3));
+      actor.userData.lastPosition.set(x, z);
+      actor.userData.lastTime = state.time;
     }
 
     function makeActorEntry(object, isPlayer = false) {
       const root = isPlayer
         ? createPlayer()
-        : object.kind === 0
-          ? createDrifter()
-          : createGenericEnemy(object);
+        : createEnemyFamily(object);
       if (!isPlayer) {
-        const hpBack = mesh(shared.hpBackGeometry, shared.hpBack, root.userData.body, 0, 39, 0);
+        const hpBack = mesh(shared.hpBackGeometry, shared.hpBack, root.userData.body, 0, 48, 0);
         hpBack.rotation.x = -0.48;
-        const hpFill = mesh(shared.hpFillGeometry, shared.hpFill, root.userData.body, 0, 39.2, 0.7);
+        const hpFill = mesh(shared.hpFillGeometry, shared.hpFill, root.userData.body, 0, 48.2, 0.7);
         hpFill.rotation.x = -0.48;
         root.userData.hpBar = hpBack;
         root.userData.hpFill = hpFill;
       }
+      root.traverse((item) => {
+        if (!item.isMesh) return;
+        item.castShadow = false;
+        item.receiveShadow = false;
+      });
+      root.userData.shadowParts.forEach((item) => {
+        item.castShadow = true;
+        item.receiveShadow = true;
+      });
+      root.userData.baseBodyRotationX = root.userData.body.rotation.x;
+      root.userData.baseBodyRotationZ = root.userData.body.rotation.z;
+      root.userData.lastPosition = new THREE.Vector2(object.x || 0, object.y || 0);
+      root.userData.lastTime = 0;
+      root.userData.animationOffset = (object.x || 0) * 0.017 + (object.y || 0) * 0.011;
+      root.traverse((item) => {
+        if (item.isMesh) root.userData.meshCount = (root.userData.meshCount || 0) + 1;
+      });
       return root;
     }
 
@@ -921,6 +1310,34 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           state.player.y,
         ).project(camera)
         : null;
+      const characters = state.qa
+        ? Array.from(actors, ([object, actor]) => {
+          const screen = actorNdc.set(actor.position.x, actor.position.y + 24, actor.position.z)
+            .project(camera);
+          return {
+            characterType: actor.userData.characterType,
+            family: actor.userData.family,
+            kind: actor.userData.familyKind ?? null,
+            level: actor.userData.characterType === "enemy"
+              ? Math.max(1, Math.min(4, Math.floor(Number(object.evolutionLevel) || 1)))
+              : null,
+            worldX: object.x,
+            worldY: object.y,
+            screenX: (screen.x + 1) * viewport.width / 2,
+            screenY: (1 - screen.y) * viewport.height / 2,
+            meshCount: actor.userData.meshCount,
+            silhouetteFeatures: actor.userData.silhouetteFeatures,
+            rankMutation: actor.userData.rankMutation || [],
+            rankPips: actor.userData.rankPips?.filter((pip) => pip.visible).length || 0,
+            animationState: actor.userData.animationState,
+            moving: actor.userData.moving,
+            gaitPhase: actor.userData.gaitPhase,
+            attackState: actor.userData.attackState,
+            hitFlash: actor.userData.hitGlow.visible,
+            facingRadians: Number(actor.rotation.y.toFixed(3)),
+          };
+        })
+        : undefined;
       let minimumTerrainHeight = Infinity;
       let maximumTerrainHeight = -Infinity;
       for (const cell of terrain.values()) {
@@ -944,6 +1361,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           (enemy) => enemy.kind === 0 && actors.has(enemy),
         ).length,
         enemyMeshCount: actors.size - (state.player ? 1 : 0),
+        characters,
         projectileMeshCount: projectiles.size,
         gemMeshCount: gems.size,
         terrainTileCount: terrain.size,

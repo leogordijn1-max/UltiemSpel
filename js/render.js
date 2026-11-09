@@ -864,6 +864,7 @@ function draw() {
       damageFlash,
       active,
       paused,
+      qa: renderQaEnabled,
     };
     const sceneQa = window.drawIntegrated3DScene(renderState);
     if (renderQaEnabled) window.__shadowRenderQA = sceneQa;
