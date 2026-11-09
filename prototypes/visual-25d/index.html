@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#090d14">
+    <title>Shadow Survivor — 2.5D Visual Slice</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="prototype" id="prototype">
+      <canvas id="arena" aria-label="Playable Shadow Survivor prototype arena"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+      <header class="masthead">
+        <a class="wordmark" href="#arena" aria-label="Shadow Survivor visual prototype">
+          <span class="wordmark-mark">S</span>
+          <span>SHADOW <b>SURVIVOR</b><small>VISUAL PROTOTYPE · 2.5D SLICE</small></span>
+        </a>
+        <div class="live-status"><i></i> LIVE BUILD <span>01</span></div>
+      </header>
+
+      <section class="combat-hud" aria-label="Combat status">
+        <div class="hud-label"><span>VITALS</span><span id="hp-value">100 / 100</span></div>
+        <div class="health-track"><div id="health" class="health-fill"></div></div>
+        <div class="hud-meta"><span>EMBER LANCE</span><span id="kill-count">0 / 6 PURGED</span></div>
+        <div class="hud-divider"></div>
+        <div class="element-label">LANCE ATTUNEMENT <span>VISUAL ONLY</span></div>
+        <div class="elements" role="group" aria-label="Projectile visual theme">
+          <button class="element selected" data-element="fire" aria-pressed="true"><i class="fire-dot"></i>FIRE <kbd>1</kbd></button>
+          <button class="element" data-element="water" aria-pressed="false"><i class="water-dot"></i>WATER <kbd>2</kbd></button>
+          <button class="element" data-element="frost" aria-pressed="false"><i class="frost-dot"></i>FROST <kbd>3</kbd></button>
+        </div>
+      </section>
+
+      <div class="arena-title" aria-hidden="true"><span>THE SUNKEN CLOISTER</span><i></i><small>OUTER SANCTUM · NIGHT 01</small></div>
+      <div class="boss-marker" aria-hidden="true"><span class="marker-icon">✦</span><span><b>THE VEIL STIRS</b><small>DRIFTER PRESENCE · <em id="enemy-count">3</em></small></span></div>
+
+      <footer class="controls">
+        <span class="control-group"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><small>MOVE</small></span>
+        <span class="control-group dash-key"><kbd>SHIFT</kbd><small>DASH</small></span>
+        <span class="control-hint">Your lance finds the nearest threat.</span>
+        <span class="performance"><i></i> <span id="fps">60</span> FPS</span>
+      </footer>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div class="prototype-end" id="end-card" hidden>
+        <span>THE CLOISTER REMEMBERS</span>
+        <strong>THE VEIL RECEDES</strong>
+        <button id="restart">RETURN TO THE SANCTUM</button>
+      </div>
+    </main>
+    <script src="prototype.js"></script>
+  </body>
+</html>

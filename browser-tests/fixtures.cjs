@@ -30,8 +30,8 @@ async function saveScreenshot(page, testInfo, name) {
   await testInfo.attach(name, { path, contentType: "image/png" });
 }
 
-async function startDeveloperRun(page) {
-  await page.goto("/");
+async function startDeveloperRun(page, path = "/") {
+  await page.goto(path);
   await page.getByRole("button", { name: /SETTINGS/ }).click();
   await page.locator(".developer-settings input[type=checkbox]").check();
   await page.getByRole("button", { name: /BACK/ }).click();

@@ -13,6 +13,10 @@ const mimeTypes = {
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
 };
+const threeBuildFiles = new Map([
+  ["/vendor/three/three.module.js", "three.module.js"],
+  ["/vendor/three/three.core.js", "three.core.js"],
+]);
 
 const server = http.createServer((request, response) => {
   let pathname;
@@ -24,13 +28,16 @@ const server = http.createServer((request, response) => {
   }
 
   if (pathname === "/") pathname = "/index.html";
+  else if (pathname.endsWith("/")) pathname += "index.html";
   const segments = pathname.split(/[\\/]+/).filter(Boolean);
   if (segments.some((segment) => segment.startsWith(".") || segment.toLowerCase() === "node_modules")) {
     response.writeHead(404).end("Not found");
     return;
   }
 
-  const file = path.resolve(root, `.${pathname.replace(/\//g, path.sep)}`);
+  const file = threeBuildFiles.has(pathname)
+    ? path.join(root, "node_modules", "three", "build", threeBuildFiles.get(pathname))
+    : path.resolve(root, `.${pathname.replace(/\//g, path.sep)}`);
   const relative = path.relative(root, file);
   if (relative.startsWith("..") || path.isAbsolute(relative) || !mimeTypes[path.extname(file).toLowerCase()]) {
     response.writeHead(404).end("Not found");
