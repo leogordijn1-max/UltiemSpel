@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "test": "npm run test:node",
+    "test:node": "node --test tests/*.test.js tests/*.test.cjs",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0"
+  }
+}

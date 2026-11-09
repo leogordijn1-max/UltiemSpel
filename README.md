@@ -30,3 +30,5 @@ All earlier UPDATE-XX documents were folded into these concise files. Historical
 ## Testing
 
 Browser gameplay is the acceptance authority. GitHub Actions runs Node tests in `tests/` on pushes, but green unit tests alone cannot validate pressure, screen readability, fairness or FPS. Record a real non-sandbox Standard Normal run for each of **Fire, Water, Frost**, export the QA JSON and add actionable findings to `NORMAL-RUN-QA.md`. Never claim a test suite passed without checking its current run.
+
+Run the local Node regression suite with `npm test` and the real Chromium browser QA with `npm run test:browser`. Setup, automated scenario coverage, artifacts and manual-test limitations are documented in [BROWSER-QA.md](BROWSER-QA.md).
