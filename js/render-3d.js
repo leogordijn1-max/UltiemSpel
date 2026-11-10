@@ -20,6 +20,30 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     document.body.dataset.renderMode = "3d";
 
     const scene = new THREE.Scene();
+    let appliedGraphicsQuality = "";
+    function graphicsQualityValue() {
+      const quality = typeof graphicsQuality === "string" ? graphicsQuality : "high";
+      return ["low", "medium", "high"].includes(quality) ? quality : "high";
+    }
+    function applyGraphicsQuality(force = false) {
+      const quality = graphicsQualityValue();
+      if (!force && quality === appliedGraphicsQuality) return;
+      appliedGraphicsQuality = quality;
+      const pixelRatio = quality === "low" ? 0.85 : quality === "medium" ? 1 : 1.25;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatio));
+      renderer.shadowMap.enabled = quality !== "low";
+      keyLight.castShadow = quality !== "low";
+      if (renderer.shadowMap.enabled) {
+        const shadowSize = quality === "medium" ? 512 : 1024;
+        keyLight.shadow.mapSize.set(shadowSize, shadowSize);
+        keyLight.shadow.map?.dispose();
+        keyLight.shadow.map = null;
+      }
+      scene.traverse((item) => {
+        if (item.userData.optionalDecoration !== true) return;
+        item.visible = quality !== "low" && item.userData.qaIsolationVisible !== false;
+      });
+    }
     scene.background = new THREE.Color("#090d16");
     scene.fog = new THREE.FogExp2("#090d16", 0.00026);
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 3000);
@@ -154,7 +178,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       bossOrbitGeometry: new THREE.TorusGeometry(25, 0.9, 6, 40),
       telegraphCircleGeometry: new THREE.CircleGeometry(1, 32),
       telegraphRingGeometry: new THREE.RingGeometry(0.9, 1, 32),
-      telegraphBoxGeometry: new THREE.BoxGeometry(1, 0.5, 1),
+      telegraphBoxGeometry: new THREE.BoxGeometry(1, 0.08, 1),
       telegraphArcGeometry: new THREE.TorusGeometry(1, 0.07, 4, 32, Math.PI * 1.4),
       explosionGeometry: new THREE.SphereGeometry(1, 12, 8),
       flameFanGeometry: new THREE.CircleGeometry(1, 24, -0.65, 1.3),
@@ -589,8 +613,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       return pillar;
     }
 
-    function setTheme(element) {
-      const themes = {
+    const worldThemes = {
         fire: {
           floor: "#46312b",
           stone: ["#49332d", "#594037", "#382823", "#503a31"],
@@ -612,15 +635,20 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           light: "#a7e8ff",
           sky: "#0c1722",
         },
-      };
-      const theme = themes[element] || themes.fire;
+    };
+    let appliedTheme = "";
+    function setTheme(element) {
+      const nextTheme = element in worldThemes ? element : "fire";
+      if (nextTheme === appliedTheme) return nextTheme;
+      appliedTheme = nextTheme;
+      const theme = worldThemes[nextTheme];
       scene.background.set(theme.sky);
       scene.fog.color.set(theme.sky);
       shared.groundMaterial.color.set(theme.floor);
       theme.stone.forEach((color, index) => shared.stoneMaterials[index].color.set(color));
       theme.inset.forEach((color, index) => shared.insetMaterials[index].color.set(color));
       keyLight.color.set(theme.light);
-      return element in themes ? element : "fire";
+      return nextTheme;
     }
 
     function addThemeDetails(cell, gx, gz, localX, localZ, salt) {
@@ -632,6 +660,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const puddle = mesh(
           shared.puddleGeometry, shared.waterMaterial, cell, localX, groundY + 0.12, localZ,
         );
+        puddle.userData.optionalDecoration = true;
         puddle.rotation.x = -Math.PI / 2;
         puddle.scale.set(0.65 + salt * 0.5, 0.55 + salt * 0.35, 1);
         puddle.castShadow = false;
@@ -639,6 +668,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const rim = mesh(
           shared.puddleRingGeometry, shared.waterEdgeMaterial, cell, localX, groundY + 0.16, localZ,
         );
+        rim.userData.optionalDecoration = true;
         rim.rotation.x = -Math.PI / 2;
         rim.scale.copy(puddle.scale);
         rim.castShadow = false;
@@ -647,6 +677,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const crystal = mesh(
           shared.crystalGeometry, shared.frostMaterial, cell, localX, groundY + 4, localZ,
         );
+        crystal.userData.optionalDecoration = true;
         crystal.scale.set(0.72, 1.1 + salt * 0.55, 0.72);
         crystal.rotation.y = salt * Math.PI * 2;
         crystal.castShadow = true;
@@ -654,6 +685,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const ember = mesh(
           shared.emberGeometry, shared.emberMaterial, cell, localX, groundY + 2.2, localZ,
         );
+        ember.userData.optionalDecoration = true;
         ember.scale.set(1 + salt, 0.7, 0.9 + salt);
         ember.rotation.set(salt, salt * 2, salt * 3);
         ember.castShadow = true;
@@ -722,6 +754,18 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       return cell;
     }
 
+    function updateDecorationVisibility() {
+      const visible = graphicsQualityValue() !== "low" && renderQaIsolation.decoration;
+      for (const cell of terrain.values()) {
+        cell.traverse((item) => {
+          if (item.userData.optionalDecoration === true) {
+            item.userData.qaIsolationVisible = renderQaIsolation.decoration;
+            item.visible = visible;
+          }
+        });
+      }
+    }
+
     function updateTerrain(player, element) {
       for (const cell of terrain.values()) {
         cell.visible = renderQaIsolation.decoration;
@@ -739,7 +783,10 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       const centerX = Math.floor(player.x / terrainChunkSize);
       const centerZ = Math.floor(player.y / terrainChunkSize);
       const centerKey = `${terrainTheme}:${centerX}:${centerZ}`;
-      if (centerKey === terrainCenter) return;
+      if (centerKey === terrainCenter) {
+        updateDecorationVisibility();
+        return;
+      }
       terrainCenter = centerKey;
 
       const visibleX = Math.ceil(viewport.width / zoom / terrainChunkSize / 2) + 2;
@@ -783,6 +830,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         terrainCache.delete(key);
         chunk.userData.ownedGeometries.forEach((geometry) => geometry.dispose());
       }
+      updateDecorationVisibility();
     }
 
     function makeShadow(parent, radius, opacity = 0.28) {
@@ -1679,8 +1727,10 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
 
     function makeCombatEffect() {
       const group = new THREE.Group();
-      const surface = mesh(shared.telegraphCircleGeometry, shared.telegraphMaterials.arcane, group);
-      const outline = mesh(shared.telegraphRingGeometry, shared.telegraphMaterials.arcane, group);
+      const surfaceMaterial = shared.telegraphMaterials.arcane.clone();
+      const outlineMaterial = shared.telegraphMaterials.arcane.clone();
+      const surface = mesh(shared.telegraphCircleGeometry, surfaceMaterial, group);
+      const outline = mesh(shared.telegraphRingGeometry, outlineMaterial, group);
       surface.rotation.x = -Math.PI / 2;
       outline.rotation.x = -Math.PI / 2;
       surface.position.y = 0.12;
@@ -1689,6 +1739,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       outline.renderOrder = 4;
       group.userData.surface = surface;
       group.userData.outline = outline;
+      group.userData.surfaceMaterial = surfaceMaterial;
+      group.userData.outlineMaterial = outlineMaterial;
       group.visible = false;
       return group;
     }
@@ -1714,12 +1766,22 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       effect.visible = true;
       effect.userData.effectType = suffix;
       const { surface, outline } = effect.userData;
-      const material = shared.telegraphMaterials[config.material] || shared.telegraphMaterials.arcane;
-      surface.material = material;
-      outline.material = material;
+      const baseMaterial = shared.telegraphMaterials[config.material] || shared.telegraphMaterials.arcane;
+      const opacity = Number.isFinite(config.opacity)
+        ? Math.max(0, Math.min(1, config.opacity)) : baseMaterial.opacity;
+      const surfaceMaterial = effect.userData.surfaceMaterial;
+      const outlineMaterial = effect.userData.outlineMaterial;
+      surfaceMaterial.copy(baseMaterial);
+      outlineMaterial.copy(baseMaterial);
+      surfaceMaterial.opacity = opacity;
+      outlineMaterial.opacity = opacity;
+      surface.material = surfaceMaterial;
+      outline.material = outlineMaterial;
       const isLine = config.shape === "line";
       const isFan = config.shape === "fan";
       const isArc = config.shape === "arc";
+      effect.userData.shape = isLine ? "line" : isFan ? "fan" : isArc ? "arc" : "circle";
+      effect.userData.opacity = opacity;
       const geometry = isLine
         ? shared.telegraphBoxGeometry
         : isFan ? fanGeometry(config.halfAngle)
@@ -2142,6 +2204,11 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           },
           activationTransform: data.qaActivationTransform || null,
           lastPoolTransform: data.qaLastPoolTransform || null,
+          effectShape: data.shape || null,
+          materialOpacity: data.surfaceMaterial
+            ? [data.surfaceMaterial.opacity, data.outlineMaterial.opacity] : null,
+          geometryParameters: data.surface?.geometry?.parameters
+            ? { ...data.surface.geometry.parameters } : null,
           visible: isVisibleInHierarchy(object),
           active,
           lifetimeSeconds: Number(lifetimeSeconds.toFixed(3)),
@@ -2210,7 +2277,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     function resize() {
       viewport.width = window.innerWidth;
       viewport.height = window.innerHeight;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+      applyGraphicsQuality(true);
       renderer.setSize(viewport.width, viewport.height);
       const halfHeight = viewport.height / (2 * zoom);
       const halfWidth = viewport.width / (2 * zoom);
@@ -2227,6 +2294,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     window.drawIntegrated3DScene = function drawIntegrated3DScene(state) {
       const started = performance.now();
       renderTime = state.time;
+      applyGraphicsQuality();
       const element = setTheme(state.element);
       updateTerrain(state.player, element);
       const focusX = state.player?.x || 0;
@@ -2340,6 +2408,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           (effect) => effect.userData.effectType,
         ).sort(),
         renderQaIsolation: state.qa ? { ...renderQaIsolation } : undefined,
+        graphicsQuality: graphicsQualityValue(),
+        appliedTheme,
         objectDiagnostics,
         gemMeshCount: gems.size,
         orbitBladeCount: Math.floor(state.bladePositions.length / 2),

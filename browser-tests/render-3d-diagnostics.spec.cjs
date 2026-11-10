@@ -51,6 +51,14 @@ test("QA 3D diagnostics report pooled objects and survive repeated runs without 
         warning: 0.8,
         damage: 0,
       }];
+      lightningSegments = [{
+        x1: player.x - 60,
+        y1: player.y,
+        x2: player.x + 60,
+        y2: player.y,
+        life: 0.12,
+        evolved: false,
+      }];
     }, scenario.shot);
 
     await expect.poll(() => page.evaluate(() => (
@@ -79,6 +87,15 @@ test("QA 3D diagnostics report pooled objects and survive repeated runs without 
     expect(projectile.boundingBox.size.every(Number.isFinite)).toBe(true);
     expect(projectile.visible).toBe(true);
     expect(projectile.lifetimeSeconds).toBeGreaterThanOrEqual(0);
+    const combatEffects = active.objectDiagnostics.objects.filter(
+      (object) => object.type === "combat-effect" && object.active,
+    );
+    expect(combatEffects.length).toBeGreaterThan(0);
+    expect(combatEffects.every(
+      (effect) => effect.materialOpacity.every((opacity) => opacity >= 0 && opacity <= 1),
+    )).toBe(true);
+    const lineEffect = combatEffects.find((effect) => effect.effectShape === "line");
+    expect(lineEffect.geometryParameters.height).toBe(0.08);
     const gem = active.objectDiagnostics.objects.find(
       (object) => object.type === "gem" && object.active,
     );
@@ -162,6 +179,7 @@ test("QA 3D diagnostics report pooled objects and survive repeated runs without 
       decoration: true,
     });
     expect(afterReset.objectDiagnostics.suspectCount).toBe(0);
+    expect(afterReset.graphicsQuality).toBe("high");
     expect(afterReset.objectDiagnostics.objects.filter(
       (object) => object.type === "actor" && object.active,
     )).toHaveLength(afterReset.characters.length);
@@ -174,6 +192,16 @@ test("QA 3D diagnostics report pooled objects and survive repeated runs without 
   expect(pooledObjects.find(
     (object) => object.type === "projectile" && !object.active,
   )?.reuseCount).toBeGreaterThan(0);
+  await page.evaluate(() => {
+    graphicsQuality = "low";
+  });
+  await expect.poll(() => page.evaluate(() => window.__shadowRenderQA?.graphicsQuality))
+    .toBe("low");
+  await page.evaluate(() => {
+    graphicsQuality = "high";
+  });
+  await expect.poll(() => page.evaluate(() => window.__shadowRenderQA?.graphicsQuality))
+    .toBe("high");
   expect(pooledObjects.find(
     (object) => object.type === "combat-effect" && !object.active,
   )?.reuseCount).toBeGreaterThan(0);
