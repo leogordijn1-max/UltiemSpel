@@ -1608,6 +1608,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         updateActor(actors.get(actor), actor, state, true);
       }
       for (const enemy of state.enemies) {
+        if (enemy.dead) continue;
         const dx = enemy.x - (state.player?.x || 0);
         const dz = enemy.y - (state.player?.y || 0);
         if (dx * dx + dz * dz > 1050 * 1050) continue;
