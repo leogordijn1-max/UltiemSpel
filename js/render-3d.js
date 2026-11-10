@@ -445,6 +445,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     const combatEffects = new Map();
     const combatEffectPool = [];
     const combatEffectIds = new WeakMap();
+    const activeCombatEffectKeys = new Set();
     const fanGeometryCache = new Map();
     const renderQaIsolation = {
       projectiles: true,
@@ -2173,7 +2174,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     }
 
     function syncCombatEffects(state) {
-      const activeKeys = new Set();
+      activeCombatEffectKeys.clear();
       activeCombatEffectCount = 0;
       renderTime = state.time;
       if (!renderQaIsolation.combatEffects) {
@@ -2194,7 +2195,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             y: enemy.y + (enemy.chargeY || 0) * 260,
             angle: Math.atan2(enemy.chargeY || 0, enemy.chargeX || 1),
             length: 520, width: 7, material: "charge", opacity: 0.68,
-          }, activeKeys);
+          }, activeCombatEffectKeys);
         }
         if (enemy.shotWarning > 0 && !enemy.secondaryVolley && !enemy.lateSecondary) {
           const angle = enemy.shotAngle || enemy.aimAngle
@@ -2208,7 +2209,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
               x: enemy.x + Math.cos(angle) * length / 2,
               y: enemy.y + Math.sin(angle) * length / 2,
               angle, length, width: 5, material: "charge",
-            }, activeKeys);
+            }, activeCombatEffectKeys);
           } else {
             const phase = enemy.isFinalBoss
               ? Math.max(1, enemy.finalPhase || 1)
@@ -2231,14 +2232,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
               radius: finalTarget ? finalTargetRadius : finalArc ? 185 : shadeArc ? 160 : radius,
               fill: !finalArc && !shadeArc,
               material: "boss", spin: finalArc || shadeArc ? 1.4 : 0, pulse: 7,
-            }, activeKeys);
+            }, activeCombatEffectKeys);
             const ray = (suffix, rayAngle, length) => {
               syncCombatEffect(enemy, suffix, {
                 shape: "line",
                 x: enemy.x + Math.cos(rayAngle) * length / 2,
                 y: enemy.y + Math.sin(rayAngle) * length / 2,
                 angle: rayAngle, length, width: 5, material: "boss",
-              }, activeKeys);
+              }, activeCombatEffectKeys);
             };
             const offsets = shadeArc
               ? phase > 1 ? [-0.16, 0, 0.16] : [0]
@@ -2252,7 +2253,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             syncCombatEffect(enemy, `secondary-${index}`, {
               x: marker.x, y: marker.y, radius: marker.r,
               fill: false, material: enemy.variant === 0 ? "charge" : "boss",
-            }, activeKeys);
+            }, activeCombatEffectKeys);
           });
         }
         if (enemy.lateSecondary && enemy.shotWarning > 0) {
@@ -2261,7 +2262,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             syncCombatEffect(enemy, `late-secondary-${index}`, {
               x: marker.x, y: marker.y, radius: marker.r,
               fill: false, material: enemy.isFinalBoss ? "boss" : "charge",
-            }, activeKeys);
+            }, activeCombatEffectKeys);
           });
         }
         if (enemy.specialWarningUntil > state.time) {
@@ -2275,14 +2276,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           const phase = enemy.specialTelegraphSize || 1;
           const mark = (suffix, x, y, radius) => syncCombatEffect(enemy, suffix, {
             x, y, radius, fill: false, material: "boss",
-          }, activeKeys);
+          }, activeCombatEffectKeys);
           const ray = (suffix, angle, length = 380) => syncCombatEffect(enemy, suffix, {
             shape: "line",
             x: enemy.x + Math.cos(angle) * length / 2,
             y: enemy.y + Math.sin(angle) * length / 2,
             angle, length,
             width: 5, material: "boss",
-          }, activeKeys);
+          }, activeCombatEffectKeys);
           if (enemy.variant === 0 && !enemy.isFinalBoss) {
             for (const [index, offset] of [-90, 0, 90].entries()) {
               mark(`special-${index}`, tx + sx * offset, ty + sy * offset, phase === 3 ? 97 : 86);
@@ -2295,7 +2296,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
               shape: "arc", x: enemy.x, y: enemy.y,
               angle: aim + Math.PI * 0.72, radius: 190,
               fill: false, material: "boss", spin: 1.6, pulse: 8,
-            }, activeKeys);
+            }, activeCombatEffectKeys);
             for (const [index, offset] of [-0.16, 0, 0.16].entries()) {
               ray(`special-ray-${index}`, aim + offset);
             }
@@ -2319,25 +2320,25 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           syncCombatEffect(enemy, "special-recovery", {
             x: enemy.x, y: enemy.y, radius: enemy.r * 1.34,
             fill: false, material: "safe",
-          }, activeKeys);
+          }, activeCombatEffectKeys);
         }
         if (enemy.phaseIntro > 0 && enemy.kind === 3) {
           syncCombatEffect(enemy, "phase", {
             x: enemy.x, y: enemy.y, radius: enemy.r * 1.5,
             fill: false, material: "boss", opacity: 0.82, spin: 1.8, pulse: 10,
-          }, activeKeys);
+          }, activeCombatEffectKeys);
         }
         if (enemy.kind === 5 && enemy.armed && enemy.burstWarning > 0) {
           syncCombatEffect(enemy, "burst-warning", {
             x: enemy.x, y: enemy.y, radius: enemy.burstRadius || 86,
             material: "fire", opacity: 0.35,
-          }, activeKeys);
+          }, activeCombatEffectKeys);
         }
         if (enemy.kind === 2 && enemy.stompWarning > 0) {
           syncCombatEffect(enemy, "stomp-warning", {
             x: enemy.x, y: enemy.y, radius: enemy.stompRadius || 149,
             material: "boss", opacity: 0.28,
-          }, activeKeys);
+          }, activeCombatEffectKeys);
         }
         if (enemy.eliteChargeWarning > 0) {
           syncCombatEffect(enemy, "elite-charge", {
@@ -2346,7 +2347,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             y: enemy.y + (enemy.eliteChargeY || 0) * 145,
             angle: Math.atan2(enemy.eliteChargeY || 0, enemy.eliteChargeX || 1),
             length: 290, width: 5, material: "charge", opacity: 0.48,
-          }, activeKeys);
+          }, activeCombatEffectKeys);
         }
       }
       for (const hazard of state.bossHazards) {
@@ -2354,7 +2355,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           x: hazard.x, y: hazard.y, radius: hazard.radius,
           material: hazard.warning > 0 ? "boss" : "hazard",
           opacity: hazard.warning > 0 ? 0.3 : 0.56,
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const area of state.elementalAreas) {
         if (area.delay > 0) continue;
@@ -2372,20 +2373,20 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           opacity: area.type === "whirlpool" ? 0.34 : 0.24,
           spin: area.type === "whirlpool" ? 2.4 : area.type === "tidalWave" ? 0.7 : 0,
           pulse: area.type === "frostEcho" ? 5.5 : 0,
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const zone of state.frostZones) {
         syncCombatEffect(zone, "frost-zone", {
           x: zone.x, y: zone.y, radius: zone.radius,
           material: "frost", opacity: 0.3, spin: 0.8, pulse: 4.5,
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const burst of state.flameBursts) {
         syncCombatEffect(burst, "flame-burst", {
           shape: "fan", x: burst.x, y: burst.y,
           angle: burst.angle || 0, radius: burst.radius,
           material: "fire", opacity: 0.34, pulse: 9,
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const segment of state.lightningSegments) {
         const dx = segment.x2 - segment.x1;
@@ -2396,7 +2397,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           angle: Math.atan2(dz, dx), length: Math.hypot(dx, dz),
           width: segment.evolved ? 8 : 6, material: "arcane",
           opacity: Math.min(0.9, segment.life / 0.24),
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const explosion of state.explosions) {
         const progress = 1 - explosion.life / explosion.maxLife;
@@ -2407,23 +2408,23 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           opacity: Math.max(0.08, 0.42 * (1 - progress)),
           visual: "impact", progress,
           impactMaterial: explosion.evolved ? "arcane" : "fire",
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const aftershock of state.bombAftershocks) {
         if (aftershock.delay > 0) continue;
         syncCombatEffect(aftershock, "aftershock", {
           x: aftershock.x, y: aftershock.y, radius: aftershock.radius,
           material: "arcane", opacity: 0.34,
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const bomb of state.bombs) {
         syncCombatEffect(bomb, "bomb-warning", {
           x: bomb.x, y: bomb.y, radius: bomb.radius,
           material: "fire", opacity: 0.14,
-        }, activeKeys);
+        }, activeCombatEffectKeys);
       }
       for (const key of combatEffects.keys()) {
-        if (activeKeys.has(key)) {
+        if (activeCombatEffectKeys.has(key)) {
           activeCombatEffectCount++;
           continue;
         }

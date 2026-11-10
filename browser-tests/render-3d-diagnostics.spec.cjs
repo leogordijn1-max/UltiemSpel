@@ -162,6 +162,8 @@ test("QA 3D diagnostics report pooled objects and survive repeated runs without 
     await expect.poll(() => page.evaluate(() => window.__shadowRenderQA?.frameCount))
       .toBeGreaterThan(previousFrame);
     await expect.poll(() => page.evaluate(() => gameState)).toBe("playing");
+    await expect.poll(() => page.evaluate(() => window.__shadowRenderQA?.activeCombatEffectCount))
+      .toBe(0);
     const afterReset = await page.evaluate(() => window.__shadowRenderQA);
     expect(
       afterReset.projectileMeshCount,

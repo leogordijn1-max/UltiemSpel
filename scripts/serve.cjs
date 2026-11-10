@@ -67,3 +67,16 @@ server.on("error", (error) => {
   console.error("Could not start the Shadow Survivor QA server:", error);
   process.exitCode = 1;
 });
+
+function shutdown(signal) {
+  server.close((error) => {
+    if (error) {
+      console.error(`Could not stop the Shadow Survivor QA server after ${signal}:`, error);
+      process.exitCode = 1;
+    }
+    process.exit();
+  });
+}
+
+process.once("SIGINT", () => shutdown("SIGINT"));
+process.once("SIGTERM", () => shutdown("SIGTERM"));
