@@ -80,6 +80,13 @@ test("QA 3D diagnostics report pooled objects and survive repeated runs without 
       (object) => object.type === "projectile" && object.active,
     );
     expect(projectile.name).toBe(scenario.shot);
+    expect(projectile.visualProfile).toBe(
+      scenario.element === "fire"
+        ? "core-ring-flame-trail"
+        : scenario.element === "water"
+          ? "lance-ripple-trail"
+          : "ice-tip-trail",
+    );
     expect(projectile.parent).toBe("Scene");
     expect(projectile.worldPosition.every(Number.isFinite)).toBe(true);
     expect(projectile.worldScale.every(Number.isFinite)).toBe(true);

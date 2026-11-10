@@ -49,7 +49,14 @@ test("optional production 3D renderer uses real game entities and an angled orth
   expect(initial.projection).toBe("orthographic");
   expect(initial.cameraAngleDegrees).toBeGreaterThan(35);
   expect(initial.cameraAngleDegrees).toBeLessThan(55);
+  expect(initial.cameraZoom).toBeGreaterThan(1.2);
   expect(initial.playerMeshCount).toBe(1);
+  const playerCharacter = initial.characters.find(
+    (character) => character.characterType === "player",
+  );
+  expect(playerCharacter.baseScale).toBeGreaterThan(1.5);
+  expect(playerCharacter.hitFeedbackWireframe).toBe(false);
+  expect(playerCharacter.hitFlash).toBe(false);
   expect(initial.meshCount).toBeGreaterThan(30);
   expect(initial.terrainTileCount).toBeGreaterThan(20);
   expect(initial.terrainChunkCount).toBeGreaterThan(20);

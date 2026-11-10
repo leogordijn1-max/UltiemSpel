@@ -146,6 +146,13 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       emberGeometry: new THREE.DodecahedronGeometry(3, 0),
       fissureGeometry: new THREE.BoxGeometry(28, 0.16, 2.2),
       frostShardGeometry: new THREE.ConeGeometry(3.2, 18, 6),
+      detailPlateGeometry: new THREE.CylinderGeometry(4.5, 5.2, 2.2, 6),
+      detailShardGeometry: new THREE.ConeGeometry(2.6, 12, 5),
+      detailRingGeometry: new THREE.TorusGeometry(8, 0.8, 5, 18),
+      detailOrbGeometry: new THREE.SphereGeometry(2.8, 8, 6),
+      detailClothGeometry: new THREE.BoxGeometry(8, 16, 1.4),
+      detailMaskGeometry: new THREE.BoxGeometry(7, 3.2, 1.5),
+      detailCableGeometry: new THREE.CylinderGeometry(1.2, 1.2, 16, 6),
       shadowGeometry: new THREE.CircleGeometry(1, 20),
       torsoGeometry: new THREE.CylinderGeometry(6.5, 9.5, 17, 10),
       headGeometry: new THREE.SphereGeometry(6.3, 12, 9),
@@ -206,6 +213,9 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       rankPipGeometry: new THREE.OctahedronGeometry(2.1, 0),
       projectileGeometry: new THREE.SphereGeometry(3.8, 10, 8),
       projectileRingGeometry: new THREE.TorusGeometry(6.3, 0.8, 6, 16),
+      projectileTrailGeometry: new THREE.CylinderGeometry(0.7, 1.8, 16, 6),
+      projectileFinGeometry: new THREE.ConeGeometry(2.4, 9, 6),
+      projectileWaveGeometry: new THREE.TorusGeometry(7, 0.7, 5, 18),
       crystalGeometry: new THREE.OctahedronGeometry(5, 0),
       orbitBladeGeometry: new THREE.BoxGeometry(26, 3.8, 8),
       hpBackGeometry: new THREE.BoxGeometry(26, 2.2, 1),
@@ -328,6 +338,9 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         frost: new THREE.MeshBasicMaterial({
           color: "#a7eaff", transparent: true, opacity: 0.3, depthWrite: false,
         }),
+        water: new THREE.MeshBasicMaterial({
+          color: "#5fe7e0", transparent: true, opacity: 0.28, depthWrite: false,
+        }),
       },
       gemMaterials: {
         health: new THREE.MeshStandardMaterial({
@@ -361,6 +374,23 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           roughness: 0.25,
         }),
       },
+      projectileTrailMaterials: {
+        arcane: new THREE.MeshBasicMaterial({
+          color: "#b59aff", transparent: true, opacity: 0.28, depthWrite: false,
+        }),
+        fire: new THREE.MeshBasicMaterial({
+          color: "#ff7d42", transparent: true, opacity: 0.34, depthWrite: false,
+        }),
+        water: new THREE.MeshBasicMaterial({
+          color: "#55e6df", transparent: true, opacity: 0.28, depthWrite: false,
+        }),
+        frost: new THREE.MeshBasicMaterial({
+          color: "#a9efff", transparent: true, opacity: 0.3, depthWrite: false,
+        }),
+        enemy: new THREE.MeshBasicMaterial({
+          color: "#ff9d67", transparent: true, opacity: 0.22, depthWrite: false,
+        }),
+      },
       hpBack: new THREE.MeshBasicMaterial({ color: "#17151c" }),
       hpFill: new THREE.MeshBasicMaterial({ color: "#95d58b" }),
       shadow: new THREE.MeshBasicMaterial({
@@ -373,7 +403,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         color: "#03050a", transparent: true, opacity: 0.18, depthWrite: false,
       }),
       hitFlash: new THREE.MeshBasicMaterial({
-        color: "#ffffff", transparent: true, opacity: 0.4, wireframe: true, depthWrite: false,
+        color: "#b9eaff", transparent: true, opacity: 0.2, depthWrite: false,
       }),
       waterMaterial: new THREE.MeshStandardMaterial({
         color: "#44bdb8", emissive: "#168a8d", emissiveIntensity: 0.3,
@@ -411,6 +441,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     const gems = new Map();
     const gemPool = [];
     const orbitBlades = [];
+    const fireOrbitObjects = [];
     const combatEffects = new Map();
     const combatEffectPool = [];
     const combatEffectIds = new WeakMap();
@@ -428,7 +459,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     const effectFrame = { rings: 0, boxes: 0, fans: 0 };
     const viewport = { width: window.innerWidth, height: window.innerHeight };
     const pitch = THREE.MathUtils.degToRad(46);
-    const zoom = 1.16;
+    const zoom = 1.3;
     const terrainChunkSize = 360;
     const terrainResolution = 32;
     let terrainTheme = "";
@@ -949,11 +980,13 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       root.userData.characterType = "player";
       root.userData.family = "player";
       root.userData.silhouetteFeatures = ["hood", "long coat", "paired limbs"];
+      root.userData.visualDetailParts = [];
       root.userData.materials = [shared.playerCloth, shared.playerTrim, shared.skin, shared.darkLeather];
       root.userData.arms = [];
       root.userData.legs = [];
       root.userData.rankPips = [];
       root.userData.shadow = makeShadow(root, 18, 0.34);
+      root.userData.baseScale = 1.72;
 
       const torso = mesh(shared.torsoGeometry, shared.playerCloth, body, 0, 18, 0);
       torso.scale.set(1, 1.1, 0.9);
@@ -965,6 +998,17 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       root.userData.shadowParts.push(face);
       mesh(shared.playerHoodGeometry, shared.playerCloth, body, 0, 35, -1)
         .rotation.x = -0.2;
+      const shoulderMantle = mesh(shared.detailClothGeometry, shared.playerCloth, body, 0, 23, -2);
+      shoulderMantle.scale.set(2.3, 0.55, 1.25);
+      shoulderMantle.rotation.x = -0.25;
+      root.userData.visualDetailParts.push(shoulderMantle);
+      const faceMask = mesh(shared.detailMaskGeometry, shared.playerTrim, body, 0, 27, 7.1);
+      faceMask.scale.set(0.72, 1.1, 0.6);
+      root.userData.visualDetailParts.push(faceMask);
+      const chestRune = mesh(shared.detailRingGeometry, shared.playerTrim, body, 0, 19, 8.2);
+      chestRune.rotation.x = Math.PI / 2;
+      chestRune.scale.setScalar(0.48);
+      root.userData.visualDetailParts.push(chestRune);
       mesh(shared.beltGeometry, shared.playerTrim, body, 0, 11, 0);
       mesh(shared.rankPipGeometry, shared.playerTrim, body, -2, 28, 7.1).scale.setScalar(0.5);
       mesh(shared.rankPipGeometry, shared.playerTrim, body, 2, 28, 7.1).scale.setScalar(0.5);
@@ -996,6 +1040,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       root.userData.hitGlow = mesh(shared.hitFlashGeometry, shared.hitFlash, root, 0, 23, 0);
       root.userData.hitGlow.scale.set(13, 25, 12);
       root.userData.hitGlow.visible = false;
+      root.userData.visualDetailCount = root.userData.visualDetailParts.length;
       scene.add(root);
       return root;
     }
@@ -1070,6 +1115,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       root.userData.legs = [];
       root.userData.rankPips = [];
       root.userData.mutationParts = [];
+      root.userData.visualDetailParts = [];
       root.userData.rankMutation = [];
       root.userData.attackParts = [];
       root.userData.bannerParts = [];
@@ -1107,6 +1153,12 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         mesh(shared.characterSphereGeometry, accent, body, 0, 20, 7.2)
           .scale.set(4.5, 3.2, 2.7);
         root.userData.silhouetteFeatures = ["hunched ribcage", "forward skull", "branching antlers"];
+        for (const side of [-1, 1]) {
+          const rib = mesh(shared.detailRingGeometry, armor, body, side * 3.2, 20, 5.8);
+          rib.rotation.set(Math.PI / 2, side * 0.18, 0);
+          rib.scale.set(0.62, 0.82, 0.62);
+          root.userData.visualDetailParts.push(rib);
+        }
         addHumanoidLimbs(root, body, main, accent, {
           armSpan: 8, armY: 20, armScale: [1.12, 1.2, 1.1], legSpan: 4.3,
         });
@@ -1133,6 +1185,15 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         head.scale.set(4.8, 5.1, 4.8);
         body.rotation.x = -0.2;
         root.userData.silhouetteFeatures = ["forward lean", "long runner legs", "forearm blades"];
+        const scarf = mesh(shared.detailClothGeometry, accent, body, 0, 26, -6);
+        scarf.scale.set(0.55, 1.5, 0.55);
+        scarf.rotation.x = 0.55;
+        root.userData.visualDetailParts.push(scarf);
+        for (const side of [-1, 1]) {
+          const fin = mesh(shared.detailShardGeometry, armor, body, side * 6.5, 26, -1);
+          fin.rotation.z = side * 0.85;
+          root.userData.visualDetailParts.push(fin);
+        }
         addHumanoidLimbs(root, body, main, accent, {
           armSpan: 6.6, armY: 23, armScale: [0.8, 1.35, 0.8],
           legSpan: 3.8, legY: 10, legScale: [0.78, 1.45, 0.78], footScale: 1.15,
@@ -1161,6 +1222,15 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         head.position.set(0, 34, 2);
         head.scale.set(4.6, 4.9, 4.6);
         root.userData.silhouetteFeatures = ["broad armored torso", "small head", "heavy fists"];
+        const bellyPlate = mesh(shared.detailPlateGeometry, armor, body, 0, 20, 9.2);
+        bellyPlate.rotation.x = Math.PI / 2;
+        bellyPlate.scale.set(1.8, 1.5, 1.25);
+        root.userData.visualDetailParts.push(bellyPlate);
+        for (const side of [-1, 1]) {
+          const knuckle = mesh(shared.detailOrbGeometry, accent, body, side * 14, 14, 5);
+          knuckle.scale.setScalar(1.25);
+          root.userData.visualDetailParts.push(knuckle);
+        }
         addHumanoidLimbs(root, body, main, accent, {
           armSpan: 12, armY: 23, armScale: [1.5, 1.45, 1.4],
           legSpan: 7.5, legScale: [1.45, 1.2, 1.35], handScale: 1.35, footScale: 1.25,
@@ -1194,6 +1264,10 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         eyes[1].position.x = 2.3;
         root.userData.floatHeight = 5;
         root.userData.silhouetteFeatures = ["floating tapering shroud", "glowing face", "crown and trailing wisps"];
+        const castingSigil = mesh(shared.detailRingGeometry, glow, body, 0, 25, 8);
+        castingSigil.rotation.x = Math.PI / 2;
+        castingSigil.scale.setScalar(0.8);
+        root.userData.visualDetailParts.push(castingSigil);
         addHumanoidLimbs(root, body, main, glow, {
           armSpan: 8, armY: 22, armScale: [0.85, 1.3, 0.85], legSpan: 2,
           legY: 3, legScale: [0.7, 0.8, 0.7], footScale: 0.55,
@@ -1226,6 +1300,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         core.scale.set(0.9, 0.9, 0.65);
         root.userData.core = core;
         root.userData.silhouetteFeatures = ["low round body", "bright exposed core", "radial spines"];
+        const shellRing = mesh(shared.detailRingGeometry, armor, body, 0, 18, 0);
+        shellRing.rotation.x = Math.PI / 2;
+        shellRing.scale.set(1.25, 1.25, 0.85);
+        root.userData.visualDetailParts.push(shellRing);
+        const fuse = mesh(shared.detailCableGeometry, accent, body, 0, 30, -1);
+        fuse.rotation.z = 0.35;
+        fuse.scale.setScalar(0.7);
+        root.userData.visualDetailParts.push(fuse);
         addHumanoidLimbs(root, body, main, accent, {
           armSpan: 10, armY: 17, armScale: [1, 0.95, 1], legSpan: 7, legY: 7,
           legScale: [1.15, 0.9, 1.1], handScale: 0.8, footScale: 1.15,
@@ -1264,6 +1346,15 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         head.position.set(0, 37, 1);
         head.scale.set(5.1, 5.7, 5);
         root.userData.silhouetteFeatures = ["tower shield", "broad plated frame", "banner standards"];
+        const shieldBoss = mesh(shared.detailOrbGeometry, glow, body, 0, 19, 13);
+        shieldBoss.scale.set(1.3, 1.7, 0.55);
+        root.userData.visualDetailParts.push(shieldBoss);
+        for (const side of [-1, 1]) {
+          const strap = mesh(shared.detailCableGeometry, accent, body, side * 6, 26, 9);
+          strap.rotation.z = side * 0.45;
+          strap.scale.setScalar(0.65);
+          root.userData.visualDetailParts.push(strap);
+        }
         addHumanoidLimbs(root, body, main, accent, {
           armSpan: 12, armY: 23, armScale: [1.4, 1.5, 1.4],
           legSpan: 7, legScale: [1.4, 1.2, 1.3], handScale: 1.3, footScale: 1.35,
@@ -1304,6 +1395,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       root.userData.hitGlow.visible = false;
       if (!root.userData.rankMutation.length) root.userData.rankMutation.push("base family form");
       root.userData.baseScale = Math.max(0.72, Math.min(1.9, (enemy.r || 13) / 13));
+      root.userData.visualDetailCount = root.userData.visualDetailParts.length;
       scene.add(root);
       return root;
     }
@@ -1329,6 +1421,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       root.userData.materials = [materials.body, materials.trim, materials.dark, materials.glow];
       root.userData.rankMutation = [];
       root.userData.silhouetteFeatures = [];
+      root.userData.visualDetailParts = [];
       root.userData.phasePips = [];
       root.userData.shadow = makeShadow(root, enemy.r * 0.9, 0.35);
 
@@ -1351,6 +1444,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
 
       if (root.userData.bossVariant === 0) {
         root.userData.silhouetteFeatures = ["four-legged hound", "long muzzle", "spiked hunting mantle"];
+        for (const side of [-1, 1]) {
+          const mane = part(shared.detailShardGeometry, materials.trim, side * 12, 31, 8, 1.1, 1.6, 1.1);
+          mane.rotation.z = side * 0.6;
+          root.userData.visualDetailParts.push(mane);
+        }
+        const collar = part(shared.detailRingGeometry, materials.glow, 0, 27, 18, 1.7, 1.05, 0.8);
+        collar.rotation.x = Math.PI / 2;
+        root.userData.visualDetailParts.push(collar);
         part(shared.bossTorsoGeometry, materials.body, 0, 20, -1, 29, 17, 40);
         part(shared.bossTorsoGeometry, materials.dark, 0, 22, -20, 25, 16, 20);
         part(shared.bossHeadGeometry, materials.body, 0, 28, 27, 15, 13, 19);
@@ -1373,6 +1474,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         root.userData.attackParts.push(part(shared.bossHaloGeometry, materials.glow, 0, 2, 0, 1.8, 1.8, 1));
       } else if (root.userData.bossVariant === 1) {
         root.userData.silhouetteFeatures = ["floating spectral cloak", "horned crown", "broad shadow mantle"];
+        const veil = part(shared.detailClothGeometry, materials.dark, 0, 32, -12, 2.8, 1.8, 0.7);
+        veil.rotation.x = 0.35;
+        root.userData.visualDetailParts.push(veil);
+        for (const side of [-1, 1]) {
+          const wisp = part(shared.detailCableGeometry, materials.glow, side * 18, 20, -8, 0.8, 2.4, 0.8);
+          wisp.rotation.z = side * 0.4;
+          root.userData.visualDetailParts.push(wisp);
+        }
         part(shared.shadeRobeGeometry, materials.dark, 0, 23, 0, 2.6, 2.2, 2.6);
         part(shared.bossHeadGeometry, materials.body, 0, 48, 3, 15, 17, 13);
         part(shared.bossMaskGeometry, materials.dark, 0, 43, 14, 1.15, 1.2, 1);
@@ -1393,6 +1502,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         root.userData.attackParts.push(root.userData.halo);
       } else if (root.userData.bossVariant === 2) {
         root.userData.silhouetteFeatures = ["tower-shaped clockwork body", "hanging bells", "broad chime arms"];
+        for (const side of [-1, 1]) {
+          const gear = part(shared.detailRingGeometry, materials.trim, side * 17, 47, 10, 0.9, 0.9, 0.9);
+          gear.rotation.x = Math.PI / 2;
+          root.userData.visualDetailParts.push(gear);
+        }
+        const clockFace = part(shared.detailRingGeometry, materials.glow, 0, 53, 18, 0.85, 0.85, 0.7);
+        clockFace.rotation.x = Math.PI / 2;
+        root.userData.visualDetailParts.push(clockFace);
         part(shared.bossTorsoGeometry, materials.dark, 0, 29, 0, 24, 28, 18);
         part(shared.bossTorsoGeometry, materials.body, 0, 48, 0, 20, 14, 15);
         part(shared.bossBellGeometry, materials.trim, 0, 34, 8, 1.45, 1.25, 1.25);
@@ -1411,6 +1528,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         root.userData.attackParts.push(gear);
       } else {
         root.userData.silhouetteFeatures = ["chaotic jester frame", "split mask", "orbiting reality rings"];
+        const maskEye = part(shared.detailOrbGeometry, materials.glow, -6, 57, 16, 1.2, 0.7, 0.55);
+        const maskEyeRight = part(shared.detailOrbGeometry, materials.glow, 6, 57, 16, 1.2, 0.7, 0.55);
+        root.userData.visualDetailParts.push(maskEye, maskEyeRight);
+        for (const side of [-1, 1]) {
+          const chaosShard = part(shared.detailShardGeometry, materials.trim, side * 16, 45, 5, 1, 2.2, 1);
+          chaosShard.rotation.z = side * 0.7;
+          root.userData.visualDetailParts.push(chaosShard);
+        }
         part(shared.bossTorsoGeometry, materials.body, 0, 27, 0, 22, 27, 17);
         part(shared.bossHeadGeometry, materials.dark, 0, 57, 2, 17, 16, 13);
         part(shared.bossMaskGeometry, materials.trim, 0, 55, 14, 1.45, 1.05, 0.8);
@@ -1449,6 +1574,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       root.userData.hitGlow.visible = false;
       root.userData.bossPhase = 1;
       root.userData.baseScale = Math.min(2.45, 1.65 + enemy.r * 0.008);
+      root.userData.visualDetailCount = root.userData.visualDetailParts.length;
       scene.add(root);
       return root;
     }
@@ -1529,11 +1655,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             : actor.userData.baseBodyRotationZ + (bossMoving ? Math.sin(phase) * 0.04 : 0);
         actor.scale.setScalar(actor.userData.baseScale * introPulse);
         if (actor.userData.halo) {
-          actor.userData.halo.rotation.y += object.isFinalBoss ? 0.035 : 0.018;
-          actor.userData.halo.rotation.z += 0.012 * phaseRank;
+          actor.userData.halo.rotation.y = state.time * (object.isFinalBoss ? 1.9 : 1.05);
+          actor.userData.halo.rotation.z = Math.sin(state.time * 0.8) * 0.12
+            + phaseRank * 0.08;
         }
         actor.userData.attackParts.forEach((part, index) => {
-          part.rotation.y += (index % 2 ? -1 : 1) * (0.012 + phaseRank * 0.004);
+          part.rotation.y = state.time * (index % 2 ? -0.72 : 0.72)
+            * (1 + phaseRank * 0.12);
+          part.rotation.z = index * 0.35 + Math.sin(state.time * 0.5 + index) * 0.08;
         });
         actor.userData.arms.forEach((arm, index) => {
           arm.rotation.x = object.chargeWarning > 0
@@ -1560,9 +1689,9 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         actor.userData.dashTrail.rotation.y =
           Math.atan2(state.dashDirectionX, state.dashDirectionY) - actor.rotation.y;
         actor.scale.set(
-          state.dashTimer > 0 ? 1.7 : 1.55,
-          state.dashTimer > 0 ? 1.2 : 1.55,
-          state.dashTimer > 0 ? 1.55 : 1.55,
+          state.dashTimer > 0 ? 1.9 : actor.userData.baseScale * 1.08,
+          state.dashTimer > 0 ? 1.34 : actor.userData.baseScale * 1.08,
+          state.dashTimer > 0 ? 1.72 : actor.userData.baseScale * 1.08,
         );
         actor.userData.hitGlow.visible = state.damageFlash > 0;
         actor.userData.attackState = state.dashTimer > 0 ? "dash" : "idle";
@@ -1638,6 +1767,20 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       actor.userData.legs.forEach((leg, index) => {
         leg.rotation.x = gait * (index ? -1 : 1);
       });
+      if (actor.userData.visualDetailParts?.length) {
+        const detailPulse = 1 + Math.sin(state.time * 2.4 + actor.userData.animationOffset) * 0.035;
+        actor.userData.visualDetailParts.forEach((part, index) => {
+          if (isPlayer && index === 2) {
+            part.rotation.z = state.time * 0.55;
+          } else if (!isPlayer && object.kind === 4 && index === 0) {
+            part.rotation.z = state.time * 0.8;
+          } else if (!isPlayer && object.kind === 5 && index === 1) {
+            part.scale.setScalar(detailPulse);
+          } else if (!isPlayer && object.kind === 6 && index === 0) {
+            part.scale.y = (object.shieldActive ? 1.08 : 1) * detailPulse;
+          }
+        });
+      }
       if (!isPlayer && actor.userData.shield) {
         actor.userData.shield.scale.setScalar(object.shieldActive ? 1.08 : 1);
       }
@@ -1748,7 +1891,23 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       return shared.projectileMaterials.arcane;
     }
 
+    function projectileVisualType(object, isEnemy) {
+      if (isEnemy) return "enemy";
+      if (object.type === "fireball" || object.fuse !== undefined) return "fire";
+      if (object.type === "waterBolt" || object.type === "tidalWave") return "water";
+      if (object.type === "iceShards" || object.type === "frost") return "frost";
+      return "arcane";
+    }
+
+    function resetProjectilePart(part, visible = false) {
+      part.visible = visible;
+      part.position.set(0, 0, 0);
+      part.rotation.set(0, 0, 0);
+      part.scale.set(1, 1, 1);
+    }
+
     function makeProjectile(object, time, isEnemy = false) {
+      const visualType = projectileVisualType(object, isEnemy);
       const material = isEnemy
         ? shared.projectileMaterials.enemy
         : object.fuse !== undefined ? shared.projectileMaterials.fire : projectileMaterial(object.type);
@@ -1757,14 +1916,35 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         group = new THREE.Group();
         const core = mesh(shared.projectileGeometry, material, group);
         const ring = mesh(shared.projectileRingGeometry, material, group, 0, 0, 0);
+        const trail = mesh(
+          shared.projectileTrailGeometry,
+          shared.projectileTrailMaterials[visualType],
+          group,
+        );
+        const fin = mesh(
+          shared.projectileFinGeometry,
+          shared.projectileTrailMaterials[visualType],
+          group,
+        );
+        const wave = mesh(
+          shared.projectileWaveGeometry,
+          shared.projectileTrailMaterials[visualType],
+          group,
+        );
         ring.rotation.x = Math.PI / 2;
         group.userData.shadow = makeShadow(group, (object.r || 4) * 0.6, 0.18);
         group.userData.core = core;
         group.userData.ring = ring;
+        group.userData.trail = trail;
+        group.userData.fin = fin;
+        group.userData.wave = wave;
         scene.add(group);
       } else {
         group.userData.core.material = material;
         group.userData.ring.material = material;
+        group.userData.trail.material = shared.projectileTrailMaterials[visualType];
+        group.userData.fin.material = shared.projectileTrailMaterials[visualType];
+        group.userData.wave.material = shared.projectileTrailMaterials[visualType];
         group.visible = true;
         scene.add(group);
       }
@@ -1772,14 +1952,40 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       group.rotation.set(0, 0, 0);
       group.scale.set(1, 1, 1);
       const core = group.userData.core;
+      const trail = group.userData.trail;
+      const fin = group.userData.fin;
+      const wave = group.userData.wave;
+      resetProjectilePart(trail);
+      resetProjectilePart(fin);
+      resetProjectilePart(wave);
       core.position.set(0, 0, 0);
       core.rotation.set(0, 0, 0);
       const radius = Math.max(0.75, Math.min(2.8, (object.r || 4) / 3.8));
       core.scale.setScalar(radius);
+      const geometry = visualType === "water" || visualType === "frost"
+        ? shared.projectileFinGeometry
+        : visualType === "arcane" && object.type === "boomerang"
+          ? shared.orbitBladeGeometry : shared.projectileGeometry;
+      core.geometry = geometry;
+      core.rotation.z = geometry === shared.projectileFinGeometry ? Math.PI / 2 : 0;
       const ring = group.userData.ring;
       ring.position.set(0, 0, 0);
       ring.rotation.set(Math.PI / 2, 0, 0);
       ring.scale.setScalar(radius);
+      ring.visible = visualType !== "enemy" && object.type !== "boomerang";
+      if (visualType === "fire") {
+        ring.scale.setScalar(radius * 1.18);
+        wave.visible = object.type === "fireball" || object.fuse !== undefined;
+      } else if (visualType === "water") {
+        wave.visible = true;
+        wave.scale.setScalar(radius * 1.2);
+      } else if (visualType === "frost") {
+        fin.visible = true;
+        fin.scale.set(0.85, 1.1, 0.85);
+      } else if (object.type === "boomerang") {
+        trail.visible = true;
+        trail.scale.set(0.75, 1.6, 0.45);
+      }
       const shadow = group.userData.shadow;
       shadow.position.set(0, -0.08, 0);
       shadow.rotation.set(-Math.PI / 2, 0, 0);
@@ -1787,6 +1993,16 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       shadow.scale.set(shadowRadius, shadowRadius * 0.68, 1);
       const name = isEnemy ? "enemy-projectile" : object.type || "projectile";
       group.name = name;
+      group.userData.visualType = visualType;
+      group.userData.visualProfile = visualType === "fire"
+        ? "core-ring-flame-trail"
+        : visualType === "water"
+          ? "lance-ripple-trail"
+          : visualType === "frost"
+            ? "ice-tip-trail"
+            : object.type === "boomerang"
+              ? "returning-blade"
+              : "arcane-core";
       markRenderQaObject(group, "projectile", name, time);
       return group;
     }
@@ -1816,8 +2032,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           terrainHeight(shot.x, shot.y) + 3.2 + Math.sin(state.time * 9 + shot.x) * 0.7,
           shot.y,
         );
-        meshGroup.rotation.z += 0.035;
-        meshGroup.userData.ring.rotation.y += 0.04;
+        const angle = Math.atan2(shot.vy || 0, shot.vx || 1);
+        meshGroup.rotation.set(0, -angle, 0.18 + Math.sin(state.time * 8 + shot.x) * 0.04);
+        meshGroup.userData.ring.rotation.y = state.time * 4.5;
+        meshGroup.userData.wave.rotation.z = state.time * 3.8;
+        meshGroup.userData.trail.rotation.z = Math.PI / 2;
+        meshGroup.userData.trail.position.z = -5;
+        meshGroup.userData.trail.scale.y = Math.max(0.45, Math.min(1.8, Math.hypot(shot.vx || 0, shot.vy || 0) / 300));
+        meshGroup.userData.fin.rotation.z = Math.PI / 2;
       }
       for (const [object, meshGroup] of projectiles) {
         if (!activeProjectiles.has(object)) {
@@ -1836,16 +2058,20 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       const outlineMaterial = shared.telegraphMaterials.arcane.clone();
       const surface = mesh(shared.telegraphCircleGeometry, surfaceMaterial, group);
       const outline = mesh(shared.telegraphRingGeometry, outlineMaterial, group);
+      const impact = mesh(shared.explosionGeometry, shared.explosionMaterials.fire, group);
       surface.rotation.x = -Math.PI / 2;
       outline.rotation.x = -Math.PI / 2;
       surface.position.y = 0.12;
       outline.position.y = 0.35;
       surface.renderOrder = 3;
       outline.renderOrder = 4;
+      impact.renderOrder = 5;
+      impact.visible = false;
       group.userData.surface = surface;
       group.userData.outline = outline;
       group.userData.surfaceMaterial = surfaceMaterial;
       group.userData.outlineMaterial = outlineMaterial;
+      group.userData.impact = impact;
       group.visible = false;
       return group;
     }
@@ -1871,6 +2097,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       effect.visible = true;
       effect.userData.effectType = suffix;
       const { surface, outline } = effect.userData;
+      const impact = effect.userData.impact;
       const baseMaterial = shared.telegraphMaterials[config.material] || shared.telegraphMaterials.arcane;
       const opacity = Number.isFinite(config.opacity)
         ? Math.max(0, Math.min(1, config.opacity)) : baseMaterial.opacity;
@@ -1882,6 +2109,18 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       outlineMaterial.opacity = opacity;
       surface.material = surfaceMaterial;
       outline.material = outlineMaterial;
+      impact.visible = config.visual === "impact";
+      if (impact.visible) {
+        impact.material = shared.explosionMaterials[config.impactMaterial || config.material]
+          || shared.explosionMaterials.fire;
+        const impactProgress = Number.isFinite(config.progress) ? config.progress : 0.5;
+        const impactScale = Math.max(0.08, 1 - impactProgress * 0.72) * (config.radius || 8);
+        impact.position.set(0, 3.2, 0);
+        impact.rotation.set(0, 0, 0);
+        impact.scale.setScalar(impactScale);
+      } else {
+        resetProjectilePart(impact);
+      }
       const isLine = config.shape === "line";
       const isFan = config.shape === "fan";
       const isArc = config.shape === "arc";
@@ -1921,6 +2160,13 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       } else {
         surface.rotation.set(-Math.PI / 2, 0, 0);
         outline.rotation.set(-Math.PI / 2, 0, 0);
+      }
+      if (config.spin) {
+        outline.rotation.z = renderTime * config.spin;
+      }
+      if (config.pulse) {
+        const pulse = 1 + Math.sin(renderTime * config.pulse) * 0.06;
+        outline.scale.multiplyScalar(pulse);
       }
       surface.visible = config.fill !== false && !isArc;
       outline.visible = config.outline !== false;
@@ -1984,7 +2230,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
               halfAngle: enemy.isFinalBoss ? 0.86 : coneHalfAngle,
               radius: finalTarget ? finalTargetRadius : finalArc ? 185 : shadeArc ? 160 : radius,
               fill: !finalArc && !shadeArc,
-              material: "boss",
+              material: "boss", spin: finalArc || shadeArc ? 1.4 : 0, pulse: 7,
             }, activeKeys);
             const ray = (suffix, rayAngle, length) => {
               syncCombatEffect(enemy, suffix, {
@@ -2048,7 +2294,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             syncCombatEffect(enemy, "special-ring", {
               shape: "arc", x: enemy.x, y: enemy.y,
               angle: aim + Math.PI * 0.72, radius: 190,
-              fill: false, material: "boss",
+              fill: false, material: "boss", spin: 1.6, pulse: 8,
             }, activeKeys);
             for (const [index, offset] of [-0.16, 0, 0.16].entries()) {
               ray(`special-ray-${index}`, aim + offset);
@@ -2078,7 +2324,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         if (enemy.phaseIntro > 0 && enemy.kind === 3) {
           syncCombatEffect(enemy, "phase", {
             x: enemy.x, y: enemy.y, radius: enemy.r * 1.5,
-            fill: false, material: "boss", opacity: 0.82,
+            fill: false, material: "boss", opacity: 0.82, spin: 1.8, pulse: 10,
           }, activeKeys);
         }
         if (enemy.kind === 5 && enemy.armed && enemy.burstWarning > 0) {
@@ -2123,20 +2369,22 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             : area.type === "water" || area.type === "tidalWave" || area.type === "whirlpool"
               ? "water" : area.type === "frost" || area.type === "frostEcho"
                 ? "frost" : "arcane",
-          opacity: 0.24,
+          opacity: area.type === "whirlpool" ? 0.34 : 0.24,
+          spin: area.type === "whirlpool" ? 2.4 : area.type === "tidalWave" ? 0.7 : 0,
+          pulse: area.type === "frostEcho" ? 5.5 : 0,
         }, activeKeys);
       }
       for (const zone of state.frostZones) {
         syncCombatEffect(zone, "frost-zone", {
           x: zone.x, y: zone.y, radius: zone.radius,
-          material: "frost", opacity: 0.3,
+          material: "frost", opacity: 0.3, spin: 0.8, pulse: 4.5,
         }, activeKeys);
       }
       for (const burst of state.flameBursts) {
         syncCombatEffect(burst, "flame-burst", {
           shape: "fan", x: burst.x, y: burst.y,
           angle: burst.angle || 0, radius: burst.radius,
-          material: "fire", opacity: 0.34,
+          material: "fire", opacity: 0.34, pulse: 9,
         }, activeKeys);
       }
       for (const segment of state.lightningSegments) {
@@ -2157,6 +2405,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           radius: Math.max(2, explosion.radius * progress),
           material: explosion.evolved ? "arcane" : "fire",
           opacity: Math.max(0.08, 0.42 * (1 - progress)),
+          visual: "impact", progress,
+          impactMaterial: explosion.evolved ? "arcane" : "fire",
         }, activeKeys);
       }
       for (const aftershock of state.bombAftershocks) {
@@ -2242,6 +2492,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         blade.receiveShadow = false;
         orbitBlades.push(blade);
       }
+
       for (let index = 0; index < orbitBlades.length; index++) {
         const blade = orbitBlades[index];
         blade.visible = index < bladeCount;
@@ -2250,6 +2501,41 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const z = positions[index * 2 + 1];
         blade.position.set(x, terrainHeight(x, z) + 10, z);
         blade.rotation.y = state.time * 2.4 + index * 0.7;
+      }
+    }
+
+    function syncFireOrbits(state) {
+      const positions = state.fireOrbits || [];
+      while (fireOrbitObjects.length < positions.length) {
+        const group = new THREE.Group();
+        const core = mesh(shared.projectileGeometry, shared.projectileMaterials.fire, group);
+        const ring = mesh(shared.projectileRingGeometry, shared.projectileTrailMaterials.fire, group);
+        ring.rotation.x = Math.PI / 2;
+        group.userData.core = core;
+        group.userData.ring = ring;
+        group.userData.visualProfile = "solar-crown";
+        group.castShadow = false;
+        scene.add(group);
+        fireOrbitObjects.push(group);
+      }
+      for (let index = 0; index < fireOrbitObjects.length; index++) {
+        const group = fireOrbitObjects[index];
+        const position = positions[index];
+        group.visible = Boolean(position);
+        if (!position) {
+          scene.remove(group);
+          continue;
+        }
+        if (group.parent !== scene) scene.add(group);
+        group.position.set(
+          position.x,
+          terrainHeight(position.x, position.y) + 8,
+          position.y,
+        );
+        group.rotation.set(0, renderTime * (index % 2 ? -2.8 : 2.8), 0);
+        const radius = Math.max(0.7, Math.min(1.8, (position.r || 10) / 8));
+        group.userData.core.scale.setScalar(radius);
+        group.userData.ring.scale.setScalar(radius * 1.15);
       }
     }
 
@@ -2310,6 +2596,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           activationTransform: data.qaActivationTransform || null,
           lastPoolTransform: data.qaLastPoolTransform || null,
           effectShape: data.shape || null,
+          visualProfile: data.visualProfile || null,
           materialOpacity: data.surfaceMaterial
             ? [data.surfaceMaterial.opacity, data.outlineMaterial.opacity] : null,
           geometryParameters: data.surface?.geometry?.parameters
@@ -2354,6 +2641,9 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       for (const blade of orbitBlades) {
         if (blade.visible) record(blade, "orbit-blade", true);
       }
+      for (const orbit of fireOrbitObjects) {
+        if (orbit.visible) record(orbit, "fire-orbit", true);
+      }
 
       for (const object of scene.children) {
         if (knownSceneRoots.has(object) || object.userData.isWorldCell || object.isLight
@@ -2372,7 +2662,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         scanned: entries.length,
         truncated: Math.max(0, actors.size + projectiles.size + projectilePool.length
           + combatEffects.size + combatEffectPool.length + gems.size + gemPool.length
-          + orbitBlades.filter((blade) => blade.visible).length - entries.length),
+          + orbitBlades.filter((blade) => blade.visible).length
+          + fireOrbitObjects.filter((orbit) => orbit.visible).length - entries.length),
         objects: entries,
         suspects: suspects.slice(0, 100),
         suspectCount: suspects.length,
@@ -2424,6 +2715,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       syncCombatEffects(state);
       syncGems(state);
       syncOrbitBlades(state);
+      syncFireOrbits(state);
       renderer.render(scene, camera);
       drawDurationMs = performance.now() - started;
       frameCount++;
@@ -2468,6 +2760,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             screenX: (screen.x + 1) * viewport.width / 2,
             screenY: (1 - screen.y) * viewport.height / 2,
             meshCount: actor.userData.meshCount,
+            visualDetailCount: actor.userData.visualDetailCount || 0,
             silhouetteFeatures: actor.userData.silhouetteFeatures,
             rankMutation: actor.userData.rankMutation || [],
             rankPips: actor.userData.rankPips?.filter((pip) => pip.visible).length || 0,
@@ -2476,6 +2769,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             gaitPhase: actor.userData.gaitPhase,
             attackState: actor.userData.attackState,
             hitFlash: actor.userData.hitGlow.visible,
+            hitFeedbackWireframe: actor.userData.hitGlow.material.wireframe === true,
+            baseScale: Number(actor.userData.baseScale?.toFixed(3) || 1),
             facingRadians: Number(actor.rotation.y.toFixed(3)),
           };
         })
@@ -2492,6 +2787,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         renderer: "WebGLRenderer",
         projection: "orthographic",
         cameraAngleDegrees: Number(cameraAngleDegrees.toFixed(2)),
+        cameraZoom: zoom,
         cameraX: focusX,
         cameraZ: focusZ,
         playerScreenX: projectedPlayer ? (projectedPlayer.x + 1) * viewport.width / 2 : null,

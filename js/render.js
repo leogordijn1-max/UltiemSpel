@@ -862,6 +862,7 @@ function draw() {
       frostZones,
       lightningSegments,
       bladePositions,
+      fireOrbits: typeof fireOrbitPositions === "function" ? fireOrbitPositions() : [],
       gems,
       time,
       dashTimer,

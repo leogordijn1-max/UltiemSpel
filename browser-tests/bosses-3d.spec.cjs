@@ -42,6 +42,7 @@ test("all Guardian models and their live phase/attack state render in production
       window.__shadowRenderQA.characters.find((actor) => actor.characterType === "boss")
     ));
     expect(bossView.meshCount).toBeGreaterThan(10);
+    expect(bossView.visualDetailCount).toBeGreaterThan(0);
     expect(bossView.silhouetteFeatures.length).toBeGreaterThanOrEqual(3);
     expect(bossView.bossPhase).toBe(1);
     await saveScreenshot(page, testInfo, `three-boss-${variant}-phase-1.png`);
@@ -127,6 +128,7 @@ test("all Guardian models and their live phase/attack state render in production
     window.__shadowRenderQA.characters.find((actor) => actor.characterType === "boss")
   ));
   expect(finalBoss.family).toBe("The Last Meme");
+  expect(finalBoss.visualDetailCount).toBeGreaterThan(0);
   expect(finalBoss.bossPhase).toBe(3);
   expect(finalBoss.bossPhasePips).toBe(3);
   await expect.poll(() => page.evaluate(() => window.__shadowRenderQA?.bossProjectileCount))

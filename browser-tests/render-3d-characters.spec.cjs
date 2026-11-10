@@ -74,6 +74,7 @@ test("3D renderer builds six distinct character families with existing LV1-LV4 r
       .toEqual(families.map(({ kind, name }) => [kind, name, level]));
     for (const character of characters) {
       expect(character.meshCount, `${character.family} should use a composed 3D model`).toBeGreaterThan(15);
+      expect(character.visualDetailCount, `${character.family} should expose family-specific visual details`).toBeGreaterThan(0);
       expect(character.silhouetteFeatures.length).toBeGreaterThanOrEqual(3);
       expect(character.rankPips).toBe(level);
       rankResults.get(character.kind).push({
@@ -127,6 +128,11 @@ test("3D renderer builds six distinct character families with existing LV1-LV4 r
       (character) => character.characterType === "player",
     )?.hitFlash,
   }));
+  expect(animated.playerDamageFlash).toBe(true);
+  expect(animated.characters
+    .filter((character) => character.characterType === "enemy")
+    .every((character) => character.hitFeedbackWireframe === false),
+  ).toBe(true);
   const animationByKind = new Map(animated.characters
     .filter((character) => character.characterType === "enemy")
     .map((character) => [character.kind, character]));
