@@ -711,6 +711,13 @@ function rangedEnemyMovementMode(enemy, playerDistance) {
   return "hold";
 }
 
+function rangedEnemyStrafe(enemy, now) {
+  const level = enemy?.evolutionLevel || 1;
+  if (level < 2 || !Number.isFinite(now)) return 0;
+  const phase = now * 1.7 + (enemy.x || 0) * 0.011 + (enemy.y || 0) * 0.007;
+  return Math.sin(phase) >= 0 ? 1 : -1;
+}
+
 // Match collision sizes to the larger drawn silhouettes of ranged enemies and bosses.
 function enemyHitRadius(enemy) {
   if (enemy.kind === 3) return enemy.r * 1.4;

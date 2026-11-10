@@ -1026,7 +1026,16 @@ function update(dt) {
     if (e.kind === 4) {
       const movementMode = rangedEnemyMovementMode(e, playerDistance);
       if (movementMode === "retreat") moveAngle += Math.PI;
-      else if (movementMode === "hold") moveSpeed = 0;
+      else if (movementMode === "hold") {
+        const level = e.evolutionLevel || 1;
+        if (level >= 2) {
+          moveAngle += rangedEnemyStrafe(e, time) *
+            (level >= 4 ? 0.55 : level >= 3 ? 0.45 : 0.35);
+          moveSpeed *= level >= 4 ? 0.44 : 0.32;
+        } else {
+          moveSpeed = 0;
+        }
+      }
       else moveSpeed *= 0.65;
 
       if (rangedEnemyCanAttack(e, playerDistance)) {

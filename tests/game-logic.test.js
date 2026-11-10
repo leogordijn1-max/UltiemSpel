@@ -380,6 +380,17 @@ test("Ranged Shades approach before attacking and only fire visibly inside their
   assert.equal(vm.runInContext("rangedEnemyCanAttack({x:450,y:0,r:15}, 450)", context), false);
 });
 
+test("evolved Ranged Shades strafe in their attack band while LV1 remains stationary", () => {
+  const context = vm.createContext({});
+  loadScript(context, "js/enemies.js");
+  assert.equal(vm.runInContext("rangedEnemyStrafe({evolutionLevel:1,x:0,y:0}, 1)", context), 0);
+  const first = vm.runInContext("rangedEnemyStrafe({evolutionLevel:2,x:0,y:0}, 0)", context);
+  const second = vm.runInContext("rangedEnemyStrafe({evolutionLevel:2,x:0,y:0}, 2)", context);
+  assert.notEqual(first, 0);
+  assert.notEqual(second, 0);
+  assert.notEqual(first, second);
+});
+
 test("spatial targeting returns nearest live enemies and refreshes after movement", () => {
   const context = vm.createContext({});
   vm.runInContext("let enemies = [], enemyGrid = new Map();", context);
