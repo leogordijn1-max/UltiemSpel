@@ -579,6 +579,7 @@
       paused = false;
       gameState = "playing";
       $("overlay").style.display = "none";
+      if (typeof $("overlay").setAttribute === "function") $("overlay").setAttribute("aria-hidden", "true");
       if (pendingLevelUps > 0) choices();
     }
     wasPlaying = false;

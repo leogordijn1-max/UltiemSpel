@@ -14,6 +14,9 @@ test("the HTML loads all UI destinations and analytics before game/controls scri
     if (id === "choices") continue;
     assert.match(html, new RegExp('id="' + id + '"'), "Missing UI target: " + id);
   }
+  assert.match(html, /id="hud"[^>]*aria-label="Run status"/);
+  assert.match(html, /class="hud-header"/);
+  assert.match(html, /id="panel"[^>]*role="dialog"/);
   const quality = html.indexOf('src="js/quality.js');
   const game = html.indexOf('src="js/game.js');
   const controls = html.indexOf('src="js/controls.js');
@@ -91,4 +94,6 @@ test("all six guide categories have reachable scripts and a scrollable panel", (
   assert.match(css, /#panel\s*\{[^}]*max-height:\s*calc\(100dvh/);
   assert.match(css, /\.encyclopedia-card\.collection-unseen/);
   assert.match(css, /\.run-summary-grid/);
+  assert.match(css, /\.hud-header/);
+  assert.match(css, /#choices > button\.choice::after/);
 });

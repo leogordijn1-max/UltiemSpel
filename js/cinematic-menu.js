@@ -19,7 +19,7 @@
           <button type="button" data-theme="friends" aria-pressed="${theme === "friends"}">FRIENDS</button>
         </div></header>
         <section class="cinematic-content">
-          <h1 class="cinematic-title">SHADOW<br>SURVIVOR</h1>
+          <h1 id="panelTitle" class="cinematic-title">SHADOW<br>SURVIVOR</h1>
           <p class="cinematic-subtitle">A WORLD THAT REMEMBERS</p>
           <nav class="cinematic-nav" aria-label="Main menu actions">
             <button type="button" class="cinematic-primary" data-action="play">NEW RUN</button>

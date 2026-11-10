@@ -13,8 +13,12 @@
   <body>
     <canvas id="game"></canvas>
     <div id="ui">
-      <div id="hud">
-        <div id="bars">
+      <div id="hud" aria-label="Run status">
+        <div class="hud-header">
+          <span class="hud-kicker">SHADOW SURVIVOR</span>
+          <span class="hud-live">LIVE RUN</span>
+        </div>
+        <div id="bars" aria-label="Health and experience">
           <div>HEALTH <span id="healthText"></span></div>
           <div class="bar"><div id="hp" class="fill"></div></div>
           <div>LEVEL <span id="levelText">1</span></div>
@@ -61,8 +65,8 @@
         WASD / Arrow keys to move · P to pause · Weapons attack automatically ·
         1× / 2× / 3× speed · Shift dash · P / Esc pause · F fullscreen
       </div>
-      <div id="overlay">
-        <div id="panel">
+      <div id="overlay" aria-hidden="false">
+        <div id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
           <h1>SHADOW SURVIVOR</h1>
           <p>
             Survive the endless night. Slay monsters, collect souls, evolve your

@@ -294,6 +294,7 @@ function resumeRunAfterChoice() {
   paused = false;
   gameState = active ? "playing" : "main-menu";
   $("overlay").style.display = "none";
+  if (typeof $("overlay").setAttribute === "function") $("overlay").setAttribute("aria-hidden", "true");
 }
 
 function finishEvolutionChoice({ rare = false, consumeLevel = true } = {}) {

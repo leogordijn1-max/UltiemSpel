@@ -295,6 +295,7 @@ function reset() {
   $("bossHud").style.display = "none";
   $("bossCountdown").style.display = "block";
   $("overlay").style.display = "none";
+  $("overlay").setAttribute("aria-hidden", "true");
   $("pause").style.display = "block";
   // The recorder is LOCAL and optional. No server communication or gameplay
   // mutation; normal runs and developer sandboxes are clearly distinguished.
@@ -545,10 +546,19 @@ function hud() {
 }
 
 function panel(title, body, buttons) {
-  $("overlay").style.display = "flex";
-  $("panel").innerHTML =
-    `<h1>${title}</h1><p>${body}</p><div id="choices"></div>`;
+  const overlay = $("overlay");
+  const panelElement = $("panel");
+  overlay.style.display = "flex";
+  overlay.setAttribute("aria-hidden", "false");
+  panelElement.setAttribute("role", "dialog");
+  panelElement.setAttribute("aria-modal", "true");
+  panelElement.innerHTML =
+    `<h1 id="panelTitle">${title}</h1><p>${body}</p><div id="choices"></div>`;
   buttons($("choices"));
+  const firstAction = panelElement.querySelector(
+    "button:not([disabled]), select:not([disabled]), input:not([disabled])",
+  );
+  firstAction?.focus({ preventScroll: true });
 }
 
 function showVictory() {
@@ -615,6 +625,7 @@ function continueEndlessAfterVictory() {
   gameState = "playing";
   window.runQaContinueEndless?.(time);
   $("overlay").style.display = "none";
+  if (typeof $("overlay").setAttribute === "function") $("overlay").setAttribute("aria-hidden", "true");
   $("pause").style.display = "block";
   $("speedControls").style.display = "flex";
   $("bossCountdown").style.display = "block";

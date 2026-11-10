@@ -1091,3 +1091,127 @@ input:focus-visible {
   }
   #hud{width:min(225px,calc(100vw - 36px))}
 }
+
+/* Step 10 UI finish: one compact command deck for every renderer. */
+#hud {
+  border-color: rgba(183, 162, 255, .52);
+  background:
+    linear-gradient(145deg, rgba(20, 17, 42, .94), rgba(7, 12, 27, .88)),
+    radial-gradient(circle at 100% 0, rgba(117, 244, 238, .12), transparent 48%);
+  box-shadow: 0 12px 38px rgba(0, 0, 0, .56), inset 0 1px rgba(255,255,255,.1);
+}
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(184, 164, 255, .2);
+}
+.hud-kicker {
+  color: #e8ddff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+.hud-live {
+  padding: 3px 6px;
+  border: 1px solid rgba(117, 244, 238, .48);
+  border-radius: 999px;
+  color: var(--cyan);
+  font-size: 8px;
+  letter-spacing: .12em;
+}
+#bars > div:first-child,
+#bars > div:nth-of-type(3) {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: #c9c1e3;
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+#healthText,
+#levelText {
+  color: #fff2cc;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+#stats {
+  margin: 9px 0 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(167, 139, 250, .24);
+  border-radius: 7px;
+  background: rgba(5, 8, 20, .48);
+}
+#worldFront {
+  border-left-color: #9ceaff;
+  background: linear-gradient(90deg, rgba(23, 57, 78, .62), rgba(9, 20, 37, .35));
+}
+#evolutionProgress {
+  color: #ffe3a2;
+}
+
+#panel[role="dialog"] > h1 {
+  text-wrap: balance;
+}
+#panel[role="dialog"] > p {
+  text-wrap: balance;
+}
+#choices > button.choice {
+  border-color: rgba(188, 165, 255, .48);
+  background:
+    linear-gradient(150deg, rgba(45, 37, 82, .98), rgba(13, 22, 46, .98)),
+    radial-gradient(circle at 100% 0, rgba(117, 244, 238, .12), transparent 45%);
+}
+#choices > button.choice::after {
+  position: absolute;
+  right: 10px;
+  bottom: 9px;
+  color: rgba(229, 218, 255, .42);
+  content: "SELECT";
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+#choices > button.choice:hover::after,
+#choices > button.choice:focus-visible::after {
+  color: var(--cyan);
+}
+#choices > button.choice.evolution-choice {
+  border-color: #ffe08a !important;
+  background:
+    linear-gradient(150deg, rgba(76, 48, 65, .98), rgba(29, 21, 43, .98)),
+    radial-gradient(circle at 100% 0, rgba(255, 224, 138, .18), transparent 48%) !important;
+}
+#choices > button.choice.evolution-choice::after {
+  color: #ffe08a;
+  content: "EVOLVE";
+}
+#choices > button.choice:disabled {
+  filter: saturate(.4);
+  opacity: .58;
+}
+
+@media (max-width: 900px) {
+  #notifications {
+    width: min(250px, 42vw);
+  }
+}
+@media (max-width: 620px) {
+  #hud {
+    top: 10px;
+    left: 10px;
+    width: min(224px, calc(100vw - 154px));
+    padding: 10px;
+  }
+  .hud-kicker { font-size: 8px; }
+  #stats { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #hud *,
+  #choices > button.choice::after {
+    transition: none !important;
+  }
+}

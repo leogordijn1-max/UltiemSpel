@@ -13,6 +13,8 @@ test("Chromium smoke: menu loads and a run starts on Canvas", async ({ page }, t
   await page.goto("/");
   await expect(page.getByRole("main", { name: "Main menu" })).toBeVisible();
   await expect(page.locator(".cinematic-title")).toContainText("SHADOW");
+  await expect(page.locator("#panel")).toHaveAttribute("role", "dialog");
+  await expect(page.locator("#overlay")).toHaveAttribute("aria-hidden", "false");
   await saveScreenshot(page, testInfo, "smoke-main-menu.png");
 
   await page.getByRole("button", { name: "NEW RUN" }).click();
@@ -33,6 +35,8 @@ test("Chromium smoke: menu loads and a run starts on Canvas", async ({ page }, t
   expect(canvas.height).toBeGreaterThan(0);
   expect(canvas.cssWidth).toBeGreaterThan(0);
   expect(canvas.cssHeight).toBeGreaterThan(0);
+  await expect(page.locator(".hud-header")).toContainText("LIVE RUN");
+  await expect(page.locator("#overlay")).toHaveAttribute("aria-hidden", "true");
   await saveScreenshot(page, testInfo, "smoke-active-run.png");
 });
 

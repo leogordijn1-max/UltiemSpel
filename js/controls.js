@@ -36,6 +36,7 @@ function showMainMenu() {
   gameState = "main-menu";
   $("panel").innerHTML = mainMenuMarkup;
   $("overlay").style.display = "flex";
+  $("overlay").setAttribute("aria-hidden", "false");
   bindMainMenu();
 }
 function bindMainMenu() {
@@ -597,6 +598,7 @@ function resumePausedRun() {
   choiceScreenOpen = false;
   gameState = "playing";
   $("overlay").style.display = "none";
+  if (typeof $("overlay").setAttribute === "function") $("overlay").setAttribute("aria-hidden", "true");
   clearMovementKeys();
   return true;
 }
