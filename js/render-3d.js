@@ -1,5 +1,6 @@
 if (new URLSearchParams(location.search).get("render") === "3d") {
   import("/vendor/three/three.module.js").then((THREE) => {
+    const renderQaEnabled = new URLSearchParams(location.search).get("qa") === "1";
     const sourceCanvas = document.getElementById("game");
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -381,8 +382,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     const combatEffectPool = [];
     const combatEffectIds = new WeakMap();
     const fanGeometryCache = new Map();
+    const renderQaIsolation = {
+      projectiles: true,
+      combatEffects: true,
+      decoration: true,
+    };
     let nextCombatEffectId = 1;
     let activeCombatEffectCount = 0;
+    let renderTime = 0;
     const effectPools = { rings: [], boxes: [], fans: [] };
     const effectFrame = { rings: 0, boxes: 0, fans: 0 };
     const viewport = { width: window.innerWidth, height: window.innerHeight };
@@ -400,6 +407,63 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     let ruinMeshCount = 0;
     const playerNdc = new THREE.Vector3();
     const actorNdc = new THREE.Vector3();
+
+    function renderQaLocalTransform(object) {
+      return {
+        position: object.position.toArray().slice(0, 3),
+        rotation: object.rotation.toArray().slice(0, 3),
+        scale: object.scale.toArray(),
+      };
+    }
+
+    function markRenderQaObject(object, category, name, time) {
+      if (!renderQaEnabled) return;
+      const data = object.userData;
+      if (!Number.isFinite(data.qaCreatedAt)) data.qaCreatedAt = time;
+      const now = performance.now();
+      if (!Number.isFinite(data.qaCreatedAtMs)) data.qaCreatedAtMs = now;
+      if (Number.isFinite(data.qaActivatedAt)) {
+        data.qaReuseCount = (data.qaReuseCount || 0) + 1;
+      } else {
+        data.qaReuseCount = 0;
+      }
+      data.qaCategory = category;
+      data.qaName = name;
+      data.qaActivatedAt = time;
+      data.qaActivatedAtMs = now;
+      data.qaActivationTransform = renderQaLocalTransform(object);
+      data.qaActive = true;
+    }
+
+    function releaseRenderQaObject(object, time) {
+      if (!renderQaEnabled) return;
+      const data = object.userData;
+      data.qaLastPoolTransform = renderQaLocalTransform(object);
+      data.qaLastActiveDurationMs = Number.isFinite(data.qaActivatedAtMs)
+        ? Math.max(0, performance.now() - data.qaActivatedAtMs)
+        : 0;
+      data.qaLastActiveDuration = Number.isFinite(data.qaActivatedAt)
+        ? Math.max(0, time - data.qaActivatedAt)
+        : 0;
+      data.qaActive = false;
+      data.qaReleasedAt = time;
+    }
+
+    if (renderQaEnabled) {
+      window.getShadowRenderQAIsolation = () => (
+        window.isDeveloperRun?.() ? { ...renderQaIsolation } : null
+      );
+      window.setShadowRenderQAIsolation = (updates) => {
+        if (!window.isDeveloperRun?.() || !updates || typeof updates !== "object") return false;
+        const keys = ["projectiles", "combatEffects", "decoration"];
+        if (Object.keys(updates).some((key) => !keys.includes(key))) return false;
+        if (keys.some((key) => Object.hasOwn(updates, key) && typeof updates[key] !== "boolean")) {
+          return false;
+        }
+        Object.assign(renderQaIsolation, updates);
+        return true;
+      };
+    }
 
     function fanGeometry(halfAngle) {
       const bounded = Math.max(0.08, Math.min(Math.PI, halfAngle || 0.65));
@@ -653,14 +717,21 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         );
       }
       cell.userData.isWorldCell = true;
+      cell.name = `terrain:${terrainTheme}:${gx}:${gz}`;
       terrainChunkBuildCount++;
       return cell;
     }
 
     function updateTerrain(player, element) {
+      for (const cell of terrain.values()) {
+        cell.visible = renderQaIsolation.decoration;
+      }
       if (element !== terrainTheme) {
         terrainTheme = setTheme(element);
-        for (const cell of terrain.values()) scene.remove(cell);
+        for (const cell of terrain.values()) {
+          scene.remove(cell);
+          releaseRenderQaObject(cell, renderTime);
+        }
         terrain.clear();
         terrainCenter = "";
       }
@@ -687,6 +758,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
             }
             terrainCache.set(key, chunk);
             terrain.set(key, chunk);
+            markRenderQaObject(chunk, "world-decoration", chunk.name, renderTime);
+            chunk.visible = renderQaIsolation.decoration;
             scene.add(chunk);
           }
         }
@@ -694,6 +767,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       for (const [key, cell] of terrain) {
         if (!wanted.has(key)) {
           scene.remove(cell);
+          releaseRenderQaObject(cell, renderTime);
           terrain.delete(key);
         }
       }
@@ -1437,10 +1511,17 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       actor.userData.lastTime = state.time;
     }
 
-    function makeActorEntry(object, isPlayer = false) {
+    function makeActorEntry(object, state, isPlayer = false) {
       const root = isPlayer
         ? createPlayer()
         : object.kind === 3 ? createBoss(object) : createEnemyFamily(object);
+      root.name = root.userData.family || root.userData.characterType || "actor";
+      markRenderQaObject(
+        root,
+        root.userData.characterType || "actor",
+        root.name,
+        state.time,
+      );
       if (!isPlayer) {
         const hpY = root.userData.characterType === "boss" ? 92 : 48;
         const hpBack = mesh(shared.hpBackGeometry, shared.hpBack, root.userData.body, 0, hpY, 0);
@@ -1475,7 +1556,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       if (state.player) {
         const actor = state.player;
         activeActors.add(actor);
-        if (!actors.has(actor)) actors.set(actor, makeActorEntry(actor, true));
+        if (!actors.has(actor)) actors.set(actor, makeActorEntry(actor, state, true));
         updateActor(actors.get(actor), actor, state, true);
       }
       for (const enemy of state.enemies) {
@@ -1483,7 +1564,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const dz = enemy.y - (state.player?.y || 0);
         if (dx * dx + dz * dz > 1050 * 1050) continue;
         activeActors.add(enemy);
-        if (!actors.has(enemy)) actors.set(enemy, makeActorEntry(enemy));
+        if (!actors.has(enemy)) actors.set(enemy, makeActorEntry(enemy, state));
         updateActor(actors.get(enemy), enemy, state, false);
       }
       for (const [object, actor] of actors) {
@@ -1514,7 +1595,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       return shared.projectileMaterials.arcane;
     }
 
-    function makeProjectile(object, isEnemy = false) {
+    function makeProjectile(object, time, isEnemy = false) {
       const material = isEnemy
         ? shared.projectileMaterials.enemy
         : object.fuse !== undefined ? shared.projectileMaterials.fire : projectileMaterial(object.type);
@@ -1524,7 +1605,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const core = mesh(shared.projectileGeometry, material, group);
         const ring = mesh(shared.projectileRingGeometry, material, group, 0, 0, 0);
         ring.rotation.x = Math.PI / 2;
-        makeShadow(group, (object.r || 4) * 0.6, 0.18);
+        group.userData.shadow = makeShadow(group, (object.r || 4) * 0.6, 0.18);
         group.userData.core = core;
         group.userData.ring = ring;
         scene.add(group);
@@ -1534,23 +1615,38 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         group.visible = true;
         scene.add(group);
       }
+      group.position.set(0, 0, 0);
+      group.rotation.set(0, 0, 0);
+      group.scale.set(1, 1, 1);
       const core = group.userData.core;
+      core.position.set(0, 0, 0);
+      core.rotation.set(0, 0, 0);
       const radius = Math.max(0.75, Math.min(2.8, (object.r || 4) / 3.8));
       core.scale.setScalar(radius);
       const ring = group.userData.ring;
+      ring.position.set(0, 0, 0);
+      ring.rotation.set(Math.PI / 2, 0, 0);
       ring.scale.setScalar(radius);
+      const shadow = group.userData.shadow;
+      shadow.position.set(0, -0.08, 0);
+      shadow.rotation.set(-Math.PI / 2, 0, 0);
+      const shadowRadius = (object.r || 4) * 0.6;
+      shadow.scale.set(shadowRadius, shadowRadius * 0.68, 1);
+      const name = isEnemy ? "enemy-projectile" : object.type || "projectile";
+      group.name = name;
+      markRenderQaObject(group, "projectile", name, time);
       return group;
     }
 
     function syncProjectiles(state) {
       const activeProjectiles = new Set();
-      for (const shot of [
+      for (const shot of renderQaIsolation.projectiles ? [
         ...state.bullets,
         ...state.elementalShots,
         ...state.enemyShots,
         ...state.bossShots,
         ...state.bombs,
-      ]) {
+      ] : []) {
         if (state.player) {
           const dx = shot.x - state.player.x;
           const dz = shot.y - state.player.y;
@@ -1559,7 +1655,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         activeProjectiles.add(shot);
         if (!projectiles.has(shot)) {
           const enemyShot = state.enemyShots.includes(shot) || state.bossShots.includes(shot);
-          projectiles.set(shot, makeProjectile(shot, enemyShot));
+          projectiles.set(shot, makeProjectile(shot, state.time, enemyShot));
         }
         const meshGroup = projectiles.get(shot);
         meshGroup.position.set(
@@ -1574,6 +1670,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         if (!activeProjectiles.has(object)) {
           scene.remove(meshGroup);
           meshGroup.visible = false;
+          releaseRenderQaObject(meshGroup, state.time);
           projectiles.delete(object);
           projectilePool.push(meshGroup);
         }
@@ -1610,6 +1707,9 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         effect = combatEffectPool.pop() || makeCombatEffect();
         combatEffects.set(key, effect);
         scene.add(effect);
+        const name = `${owner.constructor?.name || "effect"}:${suffix}`;
+        effect.name = name;
+        markRenderQaObject(effect, "combat-effect", name, renderTime);
       }
       effect.visible = true;
       effect.userData.effectType = suffix;
@@ -1662,6 +1762,17 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     function syncCombatEffects(state) {
       const activeKeys = new Set();
       activeCombatEffectCount = 0;
+      renderTime = state.time;
+      if (!renderQaIsolation.combatEffects) {
+        for (const [key, effect] of combatEffects) {
+          scene.remove(effect);
+          effect.visible = false;
+          releaseRenderQaObject(effect, state.time);
+          combatEffects.delete(key);
+          combatEffectPool.push(effect);
+        }
+        return;
+      }
       for (const enemy of state.enemies) {
         if (enemy.chargeWarning > 0) {
           syncCombatEffect(enemy, "charge", {
@@ -1902,6 +2013,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         const effect = combatEffects.get(key);
         scene.remove(effect);
         effect.visible = false;
+        releaseRenderQaObject(effect, state.time);
         combatEffects.delete(key);
         combatEffectPool.push(effect);
       }
@@ -1927,6 +2039,11 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           } else {
             crystal = mesh(shared.crystalGeometry, material, scene);
           }
+          crystal.name = gem.kind === "health" ? "health-gem" : "xp-gem";
+          crystal.position.set(0, 0, 0);
+          crystal.rotation.set(0, 0, 0);
+          crystal.scale.set(1, 1, 1);
+          markRenderQaObject(crystal, "gem", crystal.name, state.time);
           crystal.castShadow = true;
           gems.set(gem, crystal);
         }
@@ -1942,6 +2059,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         if (!activeGems.has(object)) {
           scene.remove(crystal);
           crystal.visible = false;
+          releaseRenderQaObject(crystal, state.time);
           gems.delete(object);
           gemPool.push(crystal);
         }
@@ -1968,6 +2086,127 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       }
     }
 
+    function collectRenderQaObjects(state) {
+      const entries = [];
+      const knownSceneRoots = new Set();
+      const suspects = [];
+      const finiteArray = (values) => values.map((value) => (
+        Number.isFinite(value) ? Number(value.toFixed(3)) : String(value)
+      ));
+      const isVisibleInHierarchy = (object) => {
+        for (let item = object; item; item = item.parent) {
+          if (!item.visible) return false;
+        }
+        return true;
+      };
+      const record = (object, category, active, sourceState = null) => {
+        knownSceneRoots.add(object);
+        object.updateWorldMatrix(true, false);
+        const worldPosition = object.getWorldPosition(new THREE.Vector3());
+        const worldScale = object.getWorldScale(new THREE.Vector3());
+        const worldRotation = new THREE.Euler().setFromQuaternion(
+          object.getWorldQuaternion(new THREE.Quaternion()),
+        );
+        const bounds = new THREE.Box3().setFromObject(object);
+        const boundsSize = bounds.getSize(new THREE.Vector3());
+        const data = object.userData;
+        const lifetimeSeconds = active
+          ? Math.max(0, state.time - (data.qaActivatedAt ?? state.time))
+          : data.qaLastActiveDuration ?? 0;
+        const entry = {
+          name: data.qaName || object.name || object.type,
+          type: category,
+          objectType: object.type,
+          localScale: finiteArray(object.scale.toArray()),
+          baseScale: Number.isFinite(object.userData.baseScale)
+            ? Number(object.userData.baseScale.toFixed(3)) : null,
+          sourceState: sourceState ? {
+            kind: sourceState.kind ?? null,
+            radius: sourceState.r ?? null,
+            x: sourceState.x ?? null,
+            y: sourceState.y ?? null,
+            dead: !!sourceState.dead,
+            elite: !!sourceState.elite,
+            evolutionLevel: sourceState.evolutionLevel ?? null,
+          } : null,
+          parent: object.parent
+            ? object.parent === scene ? "Scene" : object.parent.name || object.parent.type
+            : null,
+          worldPosition: finiteArray(worldPosition.toArray()),
+          worldScale: finiteArray(worldScale.toArray()),
+          worldRotation: finiteArray([worldRotation.x, worldRotation.y, worldRotation.z]),
+          boundingBox: {
+            min: finiteArray(bounds.min.toArray()),
+            max: finiteArray(bounds.max.toArray()),
+            size: finiteArray(boundsSize.toArray()),
+          },
+          activationTransform: data.qaActivationTransform || null,
+          lastPoolTransform: data.qaLastPoolTransform || null,
+          visible: isVisibleInHierarchy(object),
+          active,
+          lifetimeSeconds: Number(lifetimeSeconds.toFixed(3)),
+          ageSeconds: Number(Math.max(0, state.time - (data.qaCreatedAt ?? state.time)).toFixed(3)),
+          lifetimeMs: Number((active
+            ? Math.max(0, performance.now() - (data.qaActivatedAtMs ?? performance.now()))
+            : data.qaLastActiveDurationMs ?? 0).toFixed(1)),
+          ageMs: Number(Math.max(0, performance.now() - (data.qaCreatedAtMs ?? performance.now())).toFixed(1)),
+          reuseCount: data.qaReuseCount || 0,
+        };
+        const numbers = [
+          ...worldPosition.toArray(),
+          ...worldScale.toArray(),
+          worldRotation.x, worldRotation.y, worldRotation.z,
+          ...bounds.min.toArray(), ...bounds.max.toArray(), ...boundsSize.toArray(),
+        ];
+        const reasons = [];
+        if (numbers.some((value) => !Number.isFinite(value))) reasons.push("non-finite-transform-or-bounds");
+        if (Math.max(...worldPosition.toArray().map(Math.abs)) > 100000) reasons.push("extreme-world-position");
+        if (Math.max(...worldScale.toArray().map(Math.abs)) > 8) reasons.push("extreme-world-scale");
+        if (Math.max(...boundsSize.toArray()) > 500) reasons.push("oversized-bounding-box");
+        if (active && ["projectile", "combat-effect", "gem"].includes(category)
+          && lifetimeSeconds > 30) reasons.push("transient-object-active-over-30s");
+        if (active && object.parent !== scene) reasons.push("active-object-not-parented-to-scene");
+        if (!active && (object.parent || object.visible)) reasons.push("inactive-pooled-object-still-attached-or-visible");
+        if (reasons.length) suspects.push({ ...entry, reasons });
+        if (entries.length < 500) entries.push(entry);
+      };
+
+      for (const [sourceState, actor] of actors) record(actor, "actor", true, sourceState);
+      for (const cell of terrain.values()) record(cell, "world-decoration", true);
+      for (const meshGroup of projectiles.values()) record(meshGroup, "projectile", true);
+      for (const meshGroup of projectilePool) record(meshGroup, "projectile", false);
+      for (const effect of combatEffects.values()) record(effect, "combat-effect", true);
+      for (const effect of combatEffectPool) record(effect, "combat-effect", false);
+      for (const crystal of gems.values()) record(crystal, "gem", true);
+      for (const crystal of gemPool) record(crystal, "gem", false);
+      for (const blade of orbitBlades) {
+        if (blade.visible) record(blade, "orbit-blade", true);
+      }
+
+      for (const object of scene.children) {
+        if (knownSceneRoots.has(object) || object.userData.isWorldCell || object.isLight
+          || !(object.isMesh || object.isGroup)) continue;
+        object.userData.qaCategory = "untracked";
+        object.userData.qaName ||= object.name || object.type;
+        record(object, "untracked", true);
+        suspects.push({
+          name: object.userData.qaName,
+          type: "untracked",
+          reasons: ["untracked-scene-root"],
+        });
+      }
+
+      return {
+        scanned: entries.length,
+        truncated: Math.max(0, actors.size + projectiles.size + projectilePool.length
+          + combatEffects.size + combatEffectPool.length + gems.size + gemPool.length
+          + orbitBlades.filter((blade) => blade.visible).length - entries.length),
+        objects: entries,
+        suspects: suspects.slice(0, 100),
+        suspectCount: suspects.length,
+      };
+    }
+
     function resize() {
       viewport.width = window.innerWidth;
       viewport.height = window.innerHeight;
@@ -1987,6 +2226,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
 
     window.drawIntegrated3DScene = function drawIntegrated3DScene(state) {
       const started = performance.now();
+      renderTime = state.time;
       const element = setTheme(state.element);
       updateTerrain(state.player, element);
       const focusX = state.player?.x || 0;
@@ -2023,6 +2263,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           }
         });
       }
+      const objectDiagnostics = state.qa ? collectRenderQaObjects(state) : undefined;
 
       const projectedPlayer = state.player
         ? playerNdc.set(
@@ -2098,6 +2339,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           combatEffects.values(),
           (effect) => effect.userData.effectType,
         ).sort(),
+        renderQaIsolation: state.qa ? { ...renderQaIsolation } : undefined,
+        objectDiagnostics,
         gemMeshCount: gems.size,
         orbitBladeCount: Math.floor(state.bladePositions.length / 2),
         terrainTileCount: terrain.size,

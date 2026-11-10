@@ -408,6 +408,22 @@
     addButton(s, "MAX ALL 3 WEAPONS", () => maxLoadout(false));
     addButton(s, "EVOLVE ALL 3 WEAPONS", () => maxLoadout(true));
 
+    const renderIsolation = window.getShadowRenderQAIsolation?.();
+    if (renderIsolation) {
+      s = section(root, "3D RENDER ISOLATION · QA ONLY");
+      for (const [key, label] of [
+        ["projectiles", "PROJECTILES"],
+        ["combatEffects", "COMBAT EFFECTS"],
+        ["decoration", "WORLD DECORATION"],
+      ]) {
+        addButton(s, `${label}: ${renderIsolation[key] ? "ON" : "OFF"}`, () => {
+          if (!window.setShadowRenderQAIsolation?.({ [key]: !renderIsolation[key] })) {
+            notify("DEV · COULD NOT CHANGE 3D RENDER ISOLATION", "wave", 2);
+          }
+        });
+      }
+    }
+
     s = section(root, "SWITCH ELEMENT · SAME RUN");
     for (const id of ["fire", "water", "frost"])
       addButton(s, id.toUpperCase() + " LOADOUT", () => changeRunElement(id));
