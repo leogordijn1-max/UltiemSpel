@@ -58,6 +58,17 @@ test("optional production 3D renderer uses real game entities and an angled orth
   expect(initial.terrainHeightRange[1] - initial.terrainHeightRange[0]).toBeGreaterThan(1);
   expect(initial.ruinMeshCount).toBeGreaterThan(0);
   expect(initial.worldTheme).toBe("water");
+  const worldObjects = initial.objectDiagnostics.objects.filter(
+    (object) => object.type === "world-decoration" && object.active,
+  );
+  expect(worldObjects.length).toBeGreaterThan(20);
+  expect(worldObjects.every((object) =>
+    object.worldPosition.every(Number.isFinite) &&
+    object.worldScale.every(Number.isFinite) &&
+    object.worldRotation.every(Number.isFinite) &&
+    object.boundingBox.size.every(Number.isFinite) &&
+    object.worldScale.every((value) => Math.abs(value) <= 2),
+  )).toBe(true);
   expect(Math.abs(initial.playerScreenX - 720)).toBeLessThan(2);
   expect(Math.abs(initial.playerScreenY - 450)).toBeLessThan(2);
   expect(await page.locator("#game").evaluate((canvas) => getComputedStyle(canvas).visibility))

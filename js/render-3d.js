@@ -51,7 +51,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     const lightTarget = new THREE.Object3D();
     scene.add(lightTarget);
 
-    scene.add(new THREE.HemisphereLight("#d0d9eb", "#28212a", 1.65));
+    const hemisphereLight = new THREE.HemisphereLight("#d0d9eb", "#28212a", 1.65);
+    scene.add(hemisphereLight);
     const keyLight = new THREE.DirectionalLight("#ffe0ba", 3.4);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.set(1024, 1024);
@@ -143,6 +144,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       puddleGeometry: new THREE.CircleGeometry(24, 20),
       puddleRingGeometry: new THREE.RingGeometry(17, 24, 20),
       emberGeometry: new THREE.DodecahedronGeometry(3, 0),
+      fissureGeometry: new THREE.BoxGeometry(28, 0.16, 2.2),
+      frostShardGeometry: new THREE.ConeGeometry(3.2, 18, 6),
       shadowGeometry: new THREE.CircleGeometry(1, 20),
       torsoGeometry: new THREE.CylinderGeometry(6.5, 9.5, 17, 10),
       headGeometry: new THREE.SphereGeometry(6.3, 12, 9),
@@ -380,6 +383,12 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       waterEdgeMaterial: new THREE.MeshBasicMaterial({
         color: "#9df2e9", transparent: true, opacity: 0.48, depthWrite: false,
       }),
+      waterRippleMaterial: new THREE.MeshBasicMaterial({
+        color: "#b1fff1", transparent: true, opacity: 0.3, depthWrite: false,
+      }),
+      lavaFissureMaterial: new THREE.MeshBasicMaterial({
+        color: "#ff7541", transparent: true, opacity: 0.72, depthWrite: false,
+      }),
       frostMaterial: new THREE.MeshStandardMaterial({
         color: "#b5f0ff", emissive: "#55b6df", emissiveIntensity: 0.8,
         roughness: 0.2, metalness: 0.28,
@@ -616,25 +625,34 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
 
     const worldThemes = {
         fire: {
-          floor: "#46312b",
-          stone: ["#49332d", "#594037", "#382823", "#503a31"],
-          inset: ["#684333", "#49332b", "#76503b"],
+          floor: "#2b1d1b",
+          stone: ["#392524", "#4b2d27", "#241a1b", "#563329"],
+          inset: ["#694033", "#49302a", "#80503a"],
           light: "#ff9860",
-          sky: "#160c0c",
+          sky: "#10090d",
+          groundGlow: "#6d2d21",
+          ambientSky: "#b8a0a9",
+          fogDensity: 0.0003,
         },
         water: {
-          floor: "#34474a",
-          stone: ["#34484b", "#415659", "#2c3d40", "#425256"],
-          inset: ["#496164", "#374a4d", "#506467"],
+          floor: "#233b40",
+          stone: ["#2b4a4e", "#3c5b5e", "#1d3339", "#46676a"],
+          inset: ["#496f70", "#365456", "#5a7978"],
           light: "#8ce1d7",
-          sky: "#091719",
+          sky: "#07151b",
+          groundGlow: "#1d6267",
+          ambientSky: "#9bc5ce",
+          fogDensity: 0.00034,
         },
         frost: {
-          floor: "#526879",
-          stone: ["#435767", "#52697a", "#394b5a", "#587080"],
-          inset: ["#607c8e", "#475f70", "#6a8494"],
+          floor: "#3d5365",
+          stone: ["#354b5b", "#496578", "#293e4d", "#557386"],
+          inset: ["#5e8294", "#476575", "#7192a1"],
           light: "#a7e8ff",
-          sky: "#0c1722",
+          sky: "#091522",
+          groundGlow: "#31566f",
+          ambientSky: "#b7d7e8",
+          fogDensity: 0.00028,
         },
     };
     let appliedTheme = "";
@@ -649,6 +667,14 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       theme.stone.forEach((color, index) => shared.stoneMaterials[index].color.set(color));
       theme.inset.forEach((color, index) => shared.insetMaterials[index].color.set(color));
       keyLight.color.set(theme.light);
+      hemisphereLight.color.set(theme.ambientSky);
+      hemisphereLight.groundColor.set(theme.groundGlow);
+      scene.fog.density = theme.fogDensity;
+      shared.waterMaterial.color.set(nextTheme === "water" ? "#3d9b9b" : "#286c70");
+      shared.waterMaterial.emissive.set(nextTheme === "water" ? "#147b80" : "#0c3d43");
+      shared.frostMaterial.color.set(nextTheme === "frost" ? "#9dd9e8" : "#6e9dae");
+      shared.emberMaterial.color.set(nextTheme === "fire" ? "#ff8e4e" : "#a74f3c");
+      shared.lavaFissureMaterial.color.set(nextTheme === "fire" ? "#ff7541" : "#8a5148");
       return nextTheme;
     }
 
@@ -662,6 +688,8 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
           shared.puddleGeometry, shared.waterMaterial, cell, localX, groundY + 0.12, localZ,
         );
         puddle.userData.optionalDecoration = true;
+        puddle.userData.environmentType = "water-surface";
+        puddle.userData.environmentSeed = salt;
         puddle.rotation.x = -Math.PI / 2;
         puddle.scale.set(0.65 + salt * 0.5, 0.55 + salt * 0.35, 1);
         puddle.castShadow = false;
@@ -674,6 +702,19 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         rim.scale.copy(puddle.scale);
         rim.castShadow = false;
         rim.receiveShadow = false;
+        rim.userData.environmentType = "water-ripple";
+        rim.userData.environmentSeed = salt;
+        const innerRipple = mesh(
+          shared.puddleRingGeometry, shared.waterRippleMaterial, cell,
+          localX + (salt - 0.5) * 9, groundY + 0.19, localZ + (0.5 - salt) * 7,
+        );
+        innerRipple.userData.optionalDecoration = true;
+        innerRipple.userData.environmentType = "water-ripple";
+        innerRipple.userData.environmentSeed = salt + 0.37;
+        innerRipple.rotation.x = -Math.PI / 2;
+        innerRipple.scale.setScalar(0.35 + salt * 0.28);
+        innerRipple.castShadow = false;
+        innerRipple.receiveShadow = false;
       } else if (terrainTheme === "frost") {
         const crystal = mesh(
           shared.crystalGeometry, shared.frostMaterial, cell, localX, groundY + 4, localZ,
@@ -682,6 +723,18 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         crystal.scale.set(0.72, 1.1 + salt * 0.55, 0.72);
         crystal.rotation.y = salt * Math.PI * 2;
         crystal.castShadow = true;
+        crystal.userData.environmentType = "frost-crystal";
+        crystal.userData.environmentSeed = salt;
+        const shard = mesh(
+          shared.frostShardGeometry, shared.frostMaterial, cell,
+          localX + 8 + salt * 9, groundY + 3.2, localZ - 6 - salt * 8,
+        );
+        shard.userData.optionalDecoration = true;
+        shard.userData.environmentType = "frost-crystal";
+        shard.userData.environmentSeed = salt + 0.23;
+        shard.scale.set(0.45 + salt * 0.22, 0.62 + salt * 0.5, 0.45 + salt * 0.22);
+        shard.rotation.set(0, salt * Math.PI * 2, salt * 0.35);
+        shard.castShadow = true;
       } else {
         const ember = mesh(
           shared.emberGeometry, shared.emberMaterial, cell, localX, groundY + 2.2, localZ,
@@ -690,6 +743,46 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
         ember.scale.set(1 + salt, 0.7, 0.9 + salt);
         ember.rotation.set(salt, salt * 2, salt * 3);
         ember.castShadow = true;
+        ember.userData.environmentType = "fire-ember";
+        ember.userData.environmentSeed = salt;
+        const fissure = mesh(
+          shared.fissureGeometry, shared.lavaFissureMaterial, cell,
+          localX + (salt - 0.5) * 18, groundY + 0.18, localZ + (0.5 - salt) * 14,
+        );
+        fissure.userData.optionalDecoration = true;
+        fissure.userData.environmentType = "fire-fissure";
+        fissure.userData.environmentSeed = salt + 0.19;
+        fissure.rotation.y = salt * Math.PI * 1.7;
+        fissure.scale.set(0.35 + salt * 0.7, 1, 0.7 + salt * 0.5);
+        fissure.castShadow = false;
+        fissure.receiveShadow = false;
+      }
+    }
+
+    function updateWorldAtmosphere(now) {
+      for (const cell of terrain.values()) {
+        cell.traverse((item) => {
+          const type = item.userData.environmentType;
+          if (!type || item.userData.optionalDecoration !== true) return;
+          const seed = Number(item.userData.environmentSeed) || 0;
+          const wave = Math.sin(now * (type === "fire-fissure" ? 2.1 : 0.8) + seed * 9);
+          if (type === "fire-ember") {
+            item.position.y += 0;
+            item.scale.y = 0.7 + seed * 0.18 + wave * 0.045;
+            item.material.emissiveIntensity = 1.3 + wave * 0.18;
+          } else if (type === "fire-fissure") {
+            item.material.opacity = 0.62 + (wave + 1) * 0.07;
+          } else if (type === "water-ripple") {
+            item.rotation.z = wave * 0.025;
+            item.scale.x = item.scale.x * 0.998 + (0.65 + seed * 0.2 + wave * 0.03) * 0.002;
+            item.scale.y = item.scale.y * 0.998 + (0.58 + seed * 0.16 - wave * 0.03) * 0.002;
+          } else if (type === "water-surface") {
+            item.rotation.z = wave * 0.018;
+          } else if (type === "frost-crystal") {
+            item.material.emissiveIntensity = 0.68 + (wave + 1) * 0.12;
+            item.rotation.y = seed * Math.PI * 2 + Math.sin(now * 0.22 + seed) * 0.035;
+          }
+        });
       }
     }
 
@@ -2309,6 +2402,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
       applyGraphicsQuality();
       const element = setTheme(state.element);
       updateTerrain(state.player, element);
+      updateWorldAtmosphere(state.time);
       const focusX = state.player?.x || 0;
       const focusZ = state.player?.y || 0;
       const focusY = state.player ? terrainHeight(focusX, focusZ) : 0;
