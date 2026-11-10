@@ -61,6 +61,13 @@ test("Pincer Ambush attacks from two flank locations plus Beau, in two volleys",
   assert.equal(h.e.beauFight.mode,"idle");
   assert.ok(h.events.shots.some(a=>a[0].x!==h.e.x && a[0].x!==0));
 });
+test("Phase III Pincer Ambush adds one warned repositioning beat",()=>{
+  const h=setup(3);
+  h.window.forceBeauEncounter(h.e,"pincer",0);
+  run(h,0,7);
+  assert.equal(h.events.hazards.length,9);
+  assert.equal(h.events.shots.length,27);
+});
 test("The Final Hunt has a cinematic intro, three waves and one finisher",()=>{
   const h=setup(3);
   run(h,0,18);

@@ -414,6 +414,7 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     let nextCombatEffectId = 1;
     let activeCombatEffectCount = 0;
     let renderTime = 0;
+    let lastStateTime = -Infinity;
     const effectPools = { rings: [], boxes: [], fans: [] };
     const effectFrame = { rings: 0, boxes: 0, fans: 0 };
     const viewport = { width: window.innerWidth, height: window.innerHeight };
@@ -1600,6 +1601,16 @@ if (new URLSearchParams(location.search).get("render") === "3d") {
     }
 
     function syncActors(state) {
+      // reset() rewinds gameplay time; do not keep an old absolute death
+      // deadline alive across the new run.
+      if (state.time < lastStateTime) {
+        for (const [object, actor] of actors) {
+          if (!object.dead) continue;
+          scene.remove(actor);
+          actors.delete(object);
+        }
+      }
+      lastStateTime = state.time;
       const activeActors = new Set();
       if (state.player) {
         const actor = state.player;

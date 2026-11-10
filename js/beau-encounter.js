@@ -5,6 +5,7 @@
   "use strict";
   const isBeau = e => !!e && e.kind === 3 && e.variant === 0 && !e.isFinalBoss;
   const phase = e => e.phaseThree ? 3 : e.phaseTwo ? 2 : 1;
+  const pincerRounds = e => phase(e) >= 3 ? 3 : 2;
   const TAU = Math.PI * 2;
   const predict = (e,player) => window.bossCombatPredictTarget?.(e,player) || {x:player.x,y:player.y};
   function initialize(e,t=0) {
@@ -142,7 +143,7 @@
       }
       s.stage="pincerPause";s.until=t+.75;s.round++;
     } else if(s.stage==="pincerPause" && t>=s.until){
-      if(s.round>=2)finish(e,t,hooks);
+      if(s.round>=pincerRounds(e))finish(e,t,hooks);
       else {
         s.stage="pincerTell";s.until=t+.96;s.lockedAt=t+.27;
         target(e,player);s.echoes=echoLocations(e);

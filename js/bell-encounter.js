@@ -4,6 +4,7 @@
 const TAU=Math.PI*2;
 const bell=e=>!!e&&e.kind===3&&e.variant===2&&!e.isFinalBoss;
 const predict=(e,p)=>{const q=window.bossCombatPredictTarget?.(e,p)||p;return {x:q.x,y:q.y,a:Math.atan2(q.y-e.y,q.x-e.x)};};
+const normalBeats=e=>e.phaseThree?4:3;
 function init(e,t=0){if(!bell(e))return;e.bellFight={mode:"idle",stage:"",nextAt:t+10.5,until:0,lockAt:0,target:null,round:0,rotation:0,alternate:0,ultimateUsed:false,forced:null};}
 function begin(e,mode,t,p,h){const s=e.bellFight;s.mode=mode;s.stage="tell";s.round=0;s.target=predict(e,p);s.rotation=s.target.a;s.lockAt=t+.35;s.until=t+(mode==="peal"?1.9:1.2);s.forced=null;
 e.shotWarning=0;e.chargeWarning=0;e.chargeActive=0;e.shootCooldown=Math.max(e.shootCooldown||0,3);e.chargeCooldown=Math.max(e.chargeCooldown||0,3);
@@ -20,7 +21,7 @@ if(s.mode==="sweep"){const angle=s.rotation+s.round*.18;for(const off of [-.65,-
 else if(s.mode==="clock"){const angle=s.rotation+s.round*Math.PI/3;for(let i=0;i<6;i++)h.projectile?.(e,angle+i*TAU/6,260,11,"bell");}
 else{const angle=s.rotation+s.round*.43;for(const off of [-.5,-.25,0,.25,.5])h.projectile?.(e,angle+off,325+s.round*20,14,"bell");h.shake?.(8+s.round*2);}
 h.puff?.(q.x,q.y,"#ffe29b",17);s.round++;
-const total=s.mode==="peal"?4:3;
+const total=s.mode==="peal"?4:normalBeats(e);
 if(s.round>=total){s.stage="recover";s.until=t+.6;}else{s.stage="tell";s.until=t+(s.mode==="peal"?1.16:1.02);s.lockAt=t+.27;s.target=null;}}
 function tick(e,t,dt,p,h={}){if(!bell(e)||!e.bellFight)return false;const s=e.bellFight;
 if(s.mode==="idle"){if(!h.visible||!e.phaseTwo||e.phaseIntro>0||e.shotWarning>0||e.chargeWarning>0||e.chargeActive>0||e.guardianWarningUntil>t||e.specialRecoveryUntil>t)return false;

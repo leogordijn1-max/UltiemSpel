@@ -4,6 +4,15 @@ function setup(phase=1){const window={bossCombatPredictTarget:(e,p)=>p};vm.runIn
 function run(h,a,b){for(let t=a;t<b;t+=.05)h.window.updateMemeEncounter(h.e,t,.05,h.p,h.hooks);}
 test("phase one reality scissors uses three telegraphed waves",()=>{const h=setup();run(h,0,16);assert.ok(h.events.warnings.some(w=>w[0].includes("REALITY SCISSORS")));assert.equal(h.events.hazards.length,15);});
 test("broken orbit creates rotating hazard sectors",()=>{const h=setup(2);h.window.forceMemeEncounter(h.e,"orbit",0);run(h,0,8);assert.equal(h.events.hazards.length,33);assert.equal(h.events.shots.length,33);});
+test("phase III broken orbit adds a fourth warned sector rotation",()=>{
+  const h=setup(3);h.window.forceMemeEncounter(h.e,"orbit",0);
+  for(let t=0;t<12;t+=.05){
+    h.window.updateMemeEncounter(h.e,t,.05,h.p,h.hooks);
+    if(h.e.memeFight.mode==="orbit"&&h.e.memeFight.stage==="recovery"&&h.e.memeFight.round===4)break;
+  }
+  assert.equal(h.events.hazards.length,44);
+  assert.equal(h.events.shots.length,44);
+});
 test("final ultimate performs four beats once",()=>{const h=setup(3);run(h,0,9);assert.equal(h.e.memeFight.ultimateUsed,true);assert.equal(h.events.clears,1);assert.equal(h.events.hazards.length,20);run(h,9,30);assert.equal(h.events.clears,1);});
 test("lock position and phase interruption are safe",()=>{const h=setup(2);h.window.forceMemeEncounter(h.e,"cuts",0);h.window.updateMemeEncounter(h.e,0,.05,h.p,h.hooks);h.p.x=420;h.window.updateMemeEncounter(h.e,.2,.05,h.p,h.hooks);const x=h.e.memeFight.target.x;h.p.x=900;h.window.updateMemeEncounter(h.e,.8,.05,h.p,h.hooks);assert.equal(h.e.memeFight.target.x,x);assert.equal(h.window.interruptMemeEncounter(h.e,.8),true);});
 test("final fight loads and remains controllable via Developer Mode",()=>{const read=p=>fs.readFileSync(path.join(__dirname,"..",p),"utf8");assert.match(read("index.html"),/meme-encounter.js/);assert.match(read("js/game.js"),/updateMemeEncounter/);assert.match(read("js/render.js"),/drawMemeTelegraph/);assert.match(read("js/enemies.js"),/initializeMemeEncounter/);assert.match(read("js/developer-mode.js"),/MEME · THE END OF EVERYTHING/);});

@@ -4,6 +4,7 @@
 const TAU=Math.PI*2;
 const isShade=e=>!!e && e.kind===3 && e.variant===1 && !e.isFinalBoss;
 const phase=e=>e.phaseThree?3:e.phaseTwo?2:1;
+const normalBeats=e=>phase(e)>=3?4:2;
 const aimAt=(e,p)=>{const q=window.bossCombatPredictTarget?.(e,p)||p;return {x:q.x,y:q.y,a:Math.atan2(q.y-e.y,q.x-e.x)};};
 function initialize(e,t=0){if(!isShade(e))return; e.shadeFight={mode:"idle",stage:"",until:0,lockAt:0,nextAt:t+11,alternation:0,ultimateUsed:false,round:0,target:null,forced:null};}
 function start(e,mode,t,p,h){const s=e.shadeFight;s.mode=mode;s.round=0;s.target=aimAt(e,p);s.stage="tell";s.until=t+(mode==="eclipse"?1.8:1.15);s.lockAt=t+.33;s.forced=null;
@@ -44,7 +45,7 @@ for(const off of [-.52,-.31,-.1,.1,.31,.52])h.projectile?.(e,q.a+off+s.round*.12
 h.shake?.(7+s.round*2);h.puff?.(q.x,q.y,"#d2a5ff",24);
 }
 s.round++;
-const total=s.mode==="eclipse"?3:s.mode==="collapse"?3:2;
+const total=s.mode==="eclipse"?3:s.mode==="collapse"?3:normalBeats(e);
 if(s.round>=total){s.stage="recovery";s.until=t+.65;}
 else{s.stage="tell";s.until=t+(s.mode==="eclipse"?1.15:.9);s.lockAt=t+.25;s.target=null;}
 }

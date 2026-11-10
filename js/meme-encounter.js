@@ -2,6 +2,7 @@
 (() => {
 "use strict";
 const TAU=Math.PI*2, isFinal=e=>!!e&&e.kind===3&&e.isFinalBoss;
+const normalBeats=e=>(e.finalPhase||1)>=3?4:3;
 function aim(e,p){const q=window.bossCombatPredictTarget?.(e,p)||p;return{x:q.x,y:q.y,a:Math.atan2(q.y-e.y,q.x-e.x)};}
 function init(e,t=0){if(!isFinal(e))return;e.memeFight={mode:"idle",stage:"",nextAt:t+10,until:0,lockAt:0,round:0,alternate:0,ultimateUsed:false,forced:null,target:null,angle:0};}
 function start(e,m,t,p,h){const s=e.memeFight;s.mode=m;s.stage="tell";s.round=0;s.target=aim(e,p);s.angle=s.target.a;s.until=t+(m==="end"?2:1.25);s.lockAt=t+.33;s.forced=null;
@@ -25,7 +26,7 @@ function impact(e,t,h){const s=e.memeFight,q=s.target;if(!q)return;for(const z o
 if(s.mode==="cuts"){for(const off of [-.48,-.22,.22,.48])h.projectile?.(e,s.angle+off,310,13,"shadow");}
 else if(s.mode==="orbit"){for(let i=0;i<11;i++)h.projectile?.(e,s.angle+i*TAU/11+s.round*.3,375,16,"memeOrbit");}
 else{for(const off of [-.65,-.38,-.13,.13,.38,.65])h.projectile?.(e,s.angle+off+s.round*.12,335+s.round*15,16,"shadow");h.shake?.(8+s.round*2);}
-h.puff?.(q.x,q.y,"#ff7ce8",22);s.round++;const count=s.mode==="end"?4:3;
+h.puff?.(q.x,q.y,"#ff7ce8",22);s.round++;const count=s.mode==="end"?4:normalBeats(e);
 if(s.round>=count){s.stage="recovery";s.until=t+.7;}
 else{s.stage="tell";s.until=t+(s.mode==="end"?1.2:1.05);s.lockAt=t+.26;s.target=null;}}
 function update(e,t,dt,p,h={}){if(!isFinal(e)||!e.memeFight)return false;const s=e.memeFight;
